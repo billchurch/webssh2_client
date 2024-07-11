@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSSH2 Minimal Client</title>
+  </head>
+  <body>
+    <h1>WebSSH2 Minimal Client</h1>
+    <form id="credentialsForm">
+      <input type="text" id="host" placeholder="Host" required /><br />
+      <input type="number" id="port" placeholder="Port" required /><br />
+      <input type="text" id="username" placeholder="Username" required /><br />
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        required
+      /><br />
+      <button type="submit">Connect</button>
+    </form>
+    <div id="status"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+    <script>
+      const socket = io("http://localhost:3000", {
+        path: "/ssh/socket.io",
+        withCredentials: true,
+      });
+
+      socket.on("connect", () => {
+        console.log("Connected to server");
+        updateStatus("Connected to server");
+      });
+
+      socket.on("disconnect", (reason) => {
+        console.log("Disconnected from server:", reason);
+        updateStatus("Disconnected from server: " + reason);
+      });
+
+      socket.on("auth_result", (result) => {
+        console.log("Authentication result:", result);
+        updateStatus("Authentication result: " + JSON.stringify(result));
+      });
+
+      document
+        .getElementById("credentialsForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const credentials = {
+            host: document.getElementById("host").value,
+            port: parseInt(document.getElementById("port").value, 10),
+            username: document.getElementById("username").value,
+            password: document.getElementById("password").value,
+          };
+          socket.emit("authenticate", credentials);
+          updateStatus("Sending credentials...");
+        });
+
+      function updateStatus(message) {
+        document.getElementById("status").innerText = message;
+      }
+    </script>
+  </body>
+</html>

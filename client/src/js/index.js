@@ -1,303 +1,252 @@
 // client/src/index.js
-'use strict';
+"use strict";
 
-import * as io from 'socket.io-client';
-import * as Terminal from 'xterm/dist/xterm';
-import * as fit from 'xterm/dist/addons/fit/fit';
-import { library, dom } from '@fortawesome/fontawesome-svg-core';
+import io from "socket.io-client";
+import { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import '../css/menu.css';
+import '@xterm/xterm/css/xterm.css';
+import '../css/terminal.css';
+import '../css/style.css';
+
+
+import { library, dom } from "@fortawesome/fontawesome-svg-core";
 import {
-  faBars,
-  faClipboard,
-  faDownload,
-  faKey,
-  faCog
-} from '@fortawesome/free-solid-svg-icons';
-library.add(faBars, faClipboard, faDownload, faKey, faCog)
-dom.watch()
+  faBars, faClipboard, faDownload, faKey, faCog,
+} from "@fortawesome/free-solid-svg-icons";
 
-require('xterm/dist/xterm.css')
-require('../css/style.css')
+library.add(faBars, faClipboard, faDownload, faKey, faCog);
+dom.watch();
 
-Terminal.applyAddon(fit)
+let sessionLogEnable = false;
+let loggedData = false;
+let allowreplay = false;
+let allowreauth = false;
+let sessionLog, sessionFooter, logDate, currentDate, myFile, errorExists;
+let socket;
 
-/* global Blob, logBtn, credentialsBtn, reauthBtn, downloadLogBtn */
-var sessionLogEnable = false
-var loggedData = false
-var allowreplay = false
-var allowreauth = false
-var sessionLog, sessionFooter, logDate, currentDate, myFile, errorExists
-var socket, termid; // eslint-disable-line
-var term = new Terminal()
-// DOM properties
-var status = document.getElementById('status')
-var header = document.getElementById('header')
-var dropupContent = document.getElementById('dropupContent')
-var footer = document.getElementById('footer')
-var terminalContainer = document.getElementById('terminal-container')
-term.open(terminalContainer)
-term.focus()
-term.fit()
+document.addEventListener("DOMContentLoaded", () => {
+  const term = new Terminal();
+  const fitAddon = new FitAddon();
+  term.loadAddon(fitAddon);
 
-window.addEventListener('resize', resizeScreen, false)
+  const elements = {
+    status: document.getElementById("status"),
+    header: document.getElementById("header"),
+    dropupContent: document.getElementById("dropupContent"),
+    footer: document.getElementById("footer"),
+    terminalContainer: document.getElementById("terminal-container"),
+    loginContainer: document.getElementById("login-container"),
+    loginForm: document.getElementById("login-form"),
+    hostInput: document.getElementById("hostInput"),
+    portInput: document.getElementById("portInput"),
+    usernameInput: document.getElementById("usernameInput"),
+    passwordInput: document.getElementById("passwordInput"),
+    dropupContent: document.getElementById('dropupContent'),
+    logBtn: document.getElementById("logBtn"),
+    downloadLogBtn: document.getElementById("downloadLogBtn"),
+    credentialsBtn: document.getElementById("credentialsBtn"),
+    reauthBtn: document.getElementById("reauthBtn")
+  };
 
-function resizeScreen () {
-  term.fit()
-  socket.emit('resize', { cols: term.cols, rows: term.rows })
-}
-
-socket = io.connect({
-  path: '/ssh/socket.io'
-})
-
-term.on('data', function (data) {
-  socket.emit('data', data)
-})
-
-socket.on('data', function (data) {
-  term.write(data)
-  if (sessionLogEnable) {
-    sessionLog = sessionLog + data
+  if (!elements.loginForm) {
+    console.error("Login form not found");
+    return;
   }
-})
 
-socket.on('connect', function () {
-  socket.emit('geometry', term.cols, term.rows)
-})
+  elements.logBtn.addEventListener('click', toggleLog);
 
-socket.on('setTerminalOpts', function (data) {
-  term.setOption('cursorBlink', data.cursorBlink)
-  term.setOption('scrollback', data.scrollback)
-  term.setOption('tabStopWidth', data.tabStopWidth)
-  term.setOption('bellStyle', data.bellStyle)
-})
+  elements.terminalContainer.style.display = "none";
+  term.open(elements.terminalContainer);
 
-socket.on('title', function (data) {
-  document.title = data
-})
+  window.addEventListener("resize", () => {
+    fitAddon.fit();
+    socket?.emit("resize", { cols: term.cols, rows: term.rows });
+  });
 
-socket.on('menu', function (data) {
-  drawMenu(data)
-})
+  elements.loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    connectToServer();
+  });
 
-socket.on('status', function (data) {
-  status.innerHTML = data
-})
+  function connectToServer() {
+    socket = io("http://localhost:2222", {
+      path: "/ssh/socket.io",
+      withCredentials: true,
+    });
 
-socket.on('ssherror', function (data) {
-  status.innerHTML = data
-  status.style.backgroundColor = 'red';
-  errorExists = true
-})
+    setupSocketListeners();
+    
+    const credentials = {
+      host: elements.hostInput.value,
+      port: parseInt(elements.portInput.value, 10),
+      username: elements.usernameInput.value,
+      password: elements.passwordInput.value,
+      term: "xterm-color",
+      cols: term.cols,
+      rows: term.rows,
+    };
 
-socket.on('headerBackground', function (data) {
-  header.style.backgroundColor = data
-})
-
-socket.on('header', function (data) {
-  if (data) {
-    header.innerHTML = data
-    header.style.display = 'block';
-    // header is 19px and footer is 19px, recaculate new terminal-container and resize
-    terminalContainer.style.height = 'calc(100% - 38px)';
-    resizeScreen()
+    socket.emit("authenticate", credentials);
+    updateStatus("Authenticating...", "yellow");
   }
-})
 
-socket.on('footer', function (data) {
-  sessionFooter = data
-  footer.innerHTML = data
-})
-
-socket.on('statusBackground', function (data) {
-  status.style.backgroundColor = data
-})
-
-socket.on('allowreplay', function (data) {
-  if (data === true) {
-    console.log('allowreplay: ' + data)
-    allowreplay = true
-    drawMenu(
-      dropupContent.innerHTML +
-        '<a id="credentialsBtn"><i class="fas fa-key fa-fw"></i> Credentials</a>'
-    )
-  } else {
-    allowreplay = false
-    console.log('allowreplay: ' + data)
+  function setupSocketListeners() {
+    socket.on("connect_error", (error) => console.error("Connection error:", error));
+    socket.on("connect", () => console.log("Connected to server"));
+    socket.on("disconnect", handleDisconnect);
+    socket.on("auth_result", handleAuthResult);
+    socket.on("data", handleData);
+    socket.on("error", handleError);
+    socket.on("setTerminalOpts", setTerminalOptions);
+    socket.on("title", (data) => document.title = data);
+    socket.on("status", (data) => elements.status.innerHTML = data);
+    socket.on("ssherror", handleSSHError);
+    socket.on("headerBackground", (data) => elements.header.style.backgroundColor = data);
+    socket.on("header", handleHeader);
+    socket.on("footer", (data) => {
+      sessionFooter = data;
+      elements.footer.innerHTML = data;
+    });
+    socket.on("statusBackground", (data) => elements.status.style.backgroundColor = data);
+    socket.on("allowreplay", handleAllowReplay);
+    socket.on("allowreauth", handleAllowReauth);
+    socket.on("reauth", () => allowreauth && reauthSession());
   }
-})
 
-socket.on('allowreauth', function (data) {
-  if (data === true) {
-    console.log('allowreauth: ' + data)
-    allowreauth = true
-    drawMenu(
-      dropupContent.innerHTML +
-        '<a id="reauthBtn"><i class="fas fa-key fa-fw"></i> Switch User</a>'
-    )
-  } else {
-    allowreauth = false
-    console.log('allowreauth: ' + data)
+  function handleDisconnect(reason) {
+    updateStatus(`WEBSOCKET SERVER DISCONNECTED: ${reason}`, "red");
+    elements.loginContainer.style.display = "block";
+    elements.terminalContainer.style.display = "none";
+    socket.io.reconnection(false);
   }
-})
 
-socket.on('disconnect', function (err) {
-  if (!errorExists) {
-    status.style.backgroundColor = 'red';
-    status.innerHTML = 'WEBSOCKET SERVER DISCONNECTED: ' + err
-  }
-  socket.io.reconnection(false)
-})
-
-socket.on('error', function (err) {
-  if (!errorExists) {
-    status.style.backgroundColor = 'red';
-    status.innerHTML = 'ERROR: ' + err
-  }
-})
-
-socket.on('reauth', function () {
-  allowreauth && reauthSession()
-})
-
-term.on('title', function (title) {
-  document.title = title
-})
-
-// draw/re-draw menu and reattach listeners
-// when dom is changed, listeners are abandonded
-function drawMenu (data) {
-  dropupContent.innerHTML = data
-  logBtn.addEventListener('click', toggleLog)
-  allowreauth && reauthBtn.addEventListener('click', reauthSession)
-  allowreplay && credentialsBtn.addEventListener('click', replayCredentials)
-  loggedData && downloadLogBtn.addEventListener('click', downloadLog)
-}
-
-// reauthenticate
-function reauthSession () {
-  // eslint-disable-line
-  console.log('re-authenticating')
-  window.location.href = '/ssh/reauth';
-  return false
-}
-
-// replay password to server, requires
-function replayCredentials () {
-  // eslint-disable-line
-  socket.emit('control', 'replayCredentials')
-  console.log('replaying credentials')
-  term.focus()
-  return false
-}
-
-// Set variable to toggle log data from client/server to a varialble
-// for later download
-function toggleLog () {
-  // eslint-disable-line
-  if (sessionLogEnable === true) {
-    sessionLogEnable = false
-    loggedData = true
-    logBtn.innerHTML = '<i class="fas fa-clipboard fa-fw"></i> Start Log'
-    console.log('stopping log, ' + sessionLogEnable)
-    currentDate = new Date()
-    sessionLog =
-      sessionLog +
-      '\r\n\r\nLog End for ' +
-      sessionFooter +
-      ': ' +
-      currentDate.getFullYear() +
-      '/' +
-      (currentDate.getMonth() + 1) +
-      '/' +
-      currentDate.getDate() +
-      ' @ ' +
-      currentDate.getHours() +
-      ':' +
-      currentDate.getMinutes() +
-      ':' +
-      currentDate.getSeconds() +
-      '\r\n';
-    logDate = currentDate
-    term.focus()
-    return false
-  } else {
-    sessionLogEnable = true
-    loggedData = true
-    logBtn.innerHTML = '<i class="fas fa-cog fa-spin fa-fw"></i> Stop Log'
-    downloadLogBtn.style.color = '#000';
-    downloadLogBtn.addEventListener('click', downloadLog)
-    console.log('starting log, ' + sessionLogEnable)
-    currentDate = new Date()
-    sessionLog =
-      'Log Start for ' +
-      sessionFooter +
-      ': ' +
-      currentDate.getFullYear() +
-      '/' +
-      (currentDate.getMonth() + 1) +
-      '/' +
-      currentDate.getDate() +
-      ' @ ' +
-      currentDate.getHours() +
-      ':' +
-      currentDate.getMinutes() +
-      ':' +
-      currentDate.getSeconds() +
-      '\r\n\r\n';
-    logDate = currentDate
-    term.focus()
-    return false
-  }
-}
-
-// cross browser method to "download" an element to the local system
-// used for our client-side logging feature
-function downloadLog () {
-  // eslint-disable-line
-  if (loggedData === true) {
-    myFile =
-      'WebSSH2-' +
-      logDate.getFullYear() +
-      (logDate.getMonth() + 1) +
-      logDate.getDate() +
-      '_' +
-      logDate.getHours() +
-      logDate.getMinutes() +
-      logDate.getSeconds() +
-      '.log';
-    // regex should eliminate escape sequences from being logged.
-    var blob = new Blob(
-      [
-        sessionLog.replace(
-          /[\u001b\u009b][[\]()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><;]/g,
-          ''
-        )
-      ],
-      {
-        // eslint-disable-line no-control-regex
-        type: 'text/plain'
-      }
-    )
-    if (window.navigator.msSaveOrOpenBlob) {
-      window.navigator.msSaveBlob(blob, myFile)
+  function handleAuthResult(result) {
+    if (result.success) {
+      elements.loginContainer.style.display = "none";
+      elements.terminalContainer.style.display = "block";
+      term.focus();
+      updateStatus("Connected", "green");
     } else {
-      var elem = window.document.createElement('a')
-      elem.href = window.URL.createObjectURL(blob)
-      elem.download = myFile
-      document.body.appendChild(elem)
-      elem.click()
-      document.body.removeChild(elem)
+      updateStatus(`Authentication failed: ${result.message}`, "red");
+      elements.passwordInput.value = "";
     }
   }
-  term.focus()
-}
 
-// Add an event listener for capturing Ctrl + Shift + 6
-document.addEventListener('keydown', function (event) {
-  if (event.ctrlKey && event.shiftKey && event.code === 'Digit6') {
-    // Prevent the default action
-    event.preventDefault()
-    // Emit the desired key sequence to the server
-    socket.emit('data', '\x1E') // 0x1E is the RS control character
+  function handleData(data) {
+    term.write(data);
+    if (sessionLogEnable) {
+      sessionLog += data;
+    }
   }
-})
+
+  function handleError(err) {
+    if (!errorExists) {
+      updateStatus(`ERROR: ${err}`, "red");
+      console.log("ERROR: ", err);
+    }
+  }
+
+  function handleSSHError(data) {
+    updateStatus(data, "red");
+    errorExists = true;
+  }
+
+  function handleHeader(data) {
+    if (data) {
+      elements.header.innerHTML = data;
+      elements.header.style.display = "block";
+      elements.terminalContainer.style.height = "calc(100% - 38px)";
+      fitAddon.fit();
+    }
+  }
+
+  function handleAllowReplay(data) {
+    allowreplay = data;
+    console.log("allowreplay:", data);
+    elements.credentialsBtn.classList.toggle('visible', data);
+    elements.credentialsBtn.addEventListener('click', replayCredentials);
+  }
+
+  function handleAllowReauth(data) {
+    allowreauth = data;
+    console.log("allowreauth:", data);
+    elements.reauthBtn.classList.toggle('visible', data);
+    elements.reauthBtn.addEventListener('click', reauthSession);
+  }
+
+
+  function updateStatus(message, color) {
+    elements.status.innerHTML = message;
+    elements.status.style.backgroundColor = color;
+  }
+
+  function setTerminalOptions(data) {
+    Object.assign(term.options, data);
+  }
+
+  term.onData((data) => socket?.emit("data", data));
+  term.onTitleChange((title) => document.title = title);
+
+  function reauthSession() {
+    elements.loginContainer.style.display = "block";
+    elements.terminalContainer.style.display = "none";
+  }
+
+  function replayCredentials() {
+    socket?.emit("control", "replayCredentials");
+    console.log("replaying credentials");
+    term.focus();
+  }
+
+  function toggleLog() {
+    sessionLogEnable = !sessionLogEnable;
+    loggedData = true;
+    currentDate = new Date();
+
+    if (sessionLogEnable) {
+      elements.logBtn.innerHTML = '<i class="fas fa-cog fa-spin fa-fw"></i> Stop Log';
+      elements.downloadLogBtn.classList.add('visible');
+      elements.downloadLogBtn.addEventListener('click', downloadLog);
+      sessionLog = `Log Start for ${sessionFooter}: ${formatDate(currentDate)}\r\n\r\n`;
+    } else {
+      elements.logBtn.innerHTML = '<i class="fas fa-clipboard fa-fw"></i> Start Log';
+      sessionLog += `\r\n\r\nLog End for ${sessionFooter}: ${formatDate(currentDate)}\r\n`;
+    }
+
+    console.log(`${sessionLogEnable ? "starting" : "stopping"} log, ${sessionLogEnable}`);
+    logDate = currentDate;
+    term.focus();
+  }
+
+  function formatDate(date) {
+    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} @ ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+  }
+
+  function downloadLog() {
+    if (loggedData) {
+      const filename = `WebSSH2-${logDate.getFullYear()}${logDate.getMonth() + 1}${logDate.getDate()}_${logDate.getHours()}${logDate.getMinutes()}${logDate.getSeconds()}.log`;
+      const cleanLog = sessionLog.replace(/[\u001b\u009b][[\]()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><;]/g, "");
+      const blob = new Blob([cleanLog], { type: "text/plain" });
+
+      if (window.navigator.msSaveOrOpenBlob) {
+        window.navigator.msSaveBlob(blob, filename);
+      } else {
+        const elem = document.createElement("a");
+        elem.href = URL.createObjectURL(blob);
+        elem.download = filename;
+        document.body.appendChild(elem);
+        elem.click();
+        document.body.removeChild(elem);
+      }
+    }
+    term.focus();
+  }
+
+  document.addEventListener("keydown", function (event) {
+    if (event.ctrlKey && event.shiftKey && event.code === "Digit6") {
+      event.preventDefault();
+      socket?.emit("data", "\x1E");
+    }
+  });
+});

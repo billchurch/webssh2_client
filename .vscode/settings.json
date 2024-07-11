@@ -1,0 +1,6 @@
+{
+  "vs-code-prettier-eslint.prettierLast": true,
+  "html.format.wrapLineLength": 0,
+  "html.format.enable": false,
+  "css.format.enable": false
+}

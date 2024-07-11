@@ -1,0 +1,59 @@
+#menu {
+    display: inline-block;
+    font-size: 16px;
+    color: rgb(255, 255, 255);
+    padding-left: 10px;
+    z-index: 100;
+    position: relative;
+  }
+  #menu:hover .dropup-content {
+    display: block;
+    cursor: pointer;
+  }
+  #logBtn {
+    color: #000;
+  }
+
+  #downloadLogBtn,
+  #credentialsBtn,
+  #reauthBtn {
+    color: #000;
+    display: none; /* Hide by default */
+  }
+  
+  #logBtn.visible,
+  #downloadLogBtn.visible,
+  #credentialsBtn.visible,
+  #reauthBtn.visible {
+    display: block; /* Show when class 'visible' is added */
+  }
+  
+  .dropup {
+    position: relative;
+    cursor: pointer;
+  }
+  .dropup-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    font-size: 16px;
+    min-width: 160px;
+    bottom: 100%;
+    left: 0;
+    z-index: 101;
+  }
+  .dropup-content a {
+    color: #777;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+  }
+  .dropup-content a:hover {
+    background-color: #ccc;
+  }
+  .dropup:hover .dropbtn {
+    background-color: #3e8e41;
+  }
+  .dropup-content.visible {
+    display: block;
+  }

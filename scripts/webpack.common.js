@@ -1,10 +1,9 @@
-const webpack = require('webpack')
+const path = require('path')
 const { BannerPlugin } = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const path = require('path')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
-const CleanWebpackPlugin = require('clean-webpack-plugin')
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const packageJson = require('../package.json') // Load package.json
 const commitHash = require('child_process')
   .execSync('git rev-parse --short HEAD')
@@ -23,10 +22,7 @@ module.exports = {
       } - ${new Date().toISOString()} - ${commitHash}`,
       include: /\.(js|css|html|htm)$/
     }),
-    new CleanWebpackPlugin(['client/public'], {
-      root: path.resolve('__dirname', '../'),
-      verbose: true
-    }),
+    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       template: './client/src/client.htm', // Path to your source template
       filename: 'client.htm', // Optional: output file name, defaults to index.html
@@ -34,27 +30,26 @@ module.exports = {
       scriptLoading: 'defer',
       version: `Version ${
         packageJson.version
-      } - ${new Date().toISOString()} - ${commitHash}`,
+      } - ${new Date().toISOString()} - ${commitHash}`
       // publicPath: '/ssh/' // Prepend /ssh/ to the script tags
     }),
-    new CopyWebpackPlugin([
-      { from: './client/src/favicon.ico', to: 'favicon.ico' }
-    ]),
-    new ExtractTextPlugin('[name].css')
+    new CopyWebpackPlugin({
+      patterns: [{ from: './client/src/favicon.ico', to: 'favicon.ico' }]
+    }),
+    new MiniCssExtractPlugin({
+      filename: '[name].css'
+    })
   ],
   output: {
     filename: '[name].bundle.js',
-    path: path.resolve(__dirname, '../client/public'),
+    path: path.resolve(__dirname, '../client/public')
     // publicPath: '/ssh/' // Prepend /ssh/ to the script tags
   },
   module: {
     rules: [
       {
         test: /\.css$/,
-        use: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: [{ loader: 'css-loader' }]
-        })
+        use: [MiniCssExtractPlugin.loader, 'css-loader']
       }
     ]
   }
