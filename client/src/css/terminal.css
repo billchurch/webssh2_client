@@ -1,17 +1,17 @@
-#terminal-container {
+#terminalContainer {
     display: block;
     width: calc(100% - 1 px);
     margin: 0 auto;
     padding: 2px;
     height: calc(100% - 19px);
   }
-  #terminal-container .terminal {
+  #terminalContainer .terminal {
     background-color: #000000;
     color: #fafafa;
     padding: 2px;
     height: calc(100% - 19px);
   }
-  #terminal-container .terminal:focus .terminal-cursor {
+  #terminalContainer .terminal:focus .terminal-cursor {
     background-color: #fafafa;
     display: none;
   }
