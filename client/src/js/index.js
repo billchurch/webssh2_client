@@ -1,5 +1,5 @@
 "use strict";
-
+// webclient index.js
 import io from "socket.io-client";
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -276,7 +276,8 @@ function handleAllowReplay(data) {
   allowreplay = data;
   console.log("allowreplay:", data);
   elements.credentialsBtn.classList.toggle('visible', data);
-  elements.credentialsBtn.addEventListener('click', replayCredentials);
+  elements.credentialsBtn.removeEventListener('click', replayCredentials);
+  elements.credentialsBtn.addEventListener('click', () => replayCredentials(socket));
 }
 
 /**
@@ -287,7 +288,8 @@ function handleAllowReauth(data) {
   allowreauth = data;
   console.log("allowreauth:", data);
   elements.reauthBtn.classList.toggle('visible', data);
-  elements.reauthBtn.addEventListener('click', reauthSession);
+  elements.reauthBtn.removeEventListener('click', reauthSession);
+  elements.reauthBtn.addEventListener('click', () => reauthSession(socket));
 }
 
 /**
@@ -310,14 +312,17 @@ function setTerminalOptions(data) {
 
 /**
  * Initiates a reauthentication session.
+ * @param {Object} socket - The socket object for communication.
  */
-function reauthSession() {
+function reauthSession(socket) {
   elements.loginContainer.style.display = "block";
   elements.terminalContainer.style.display = "none";
+  socket.emit("reauth");
 }
 
 /**
  * Replays credentials to the server.
+ * @param {Object} socket - The socket object for communication.
  */
 function replayCredentials(socket) {
   socket.emit("control", "replayCredentials");
