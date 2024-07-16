@@ -26,6 +26,10 @@ let currentDate;
 let socket;
 let term, fitAddon;
 let elements = {};
+let isConnecting = false;
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 5;
+const reconnectDelay = 5000;
 
 document.addEventListener("DOMContentLoaded", () => {
   try {
@@ -128,8 +132,8 @@ function setupEventListeners() {
 }
 
 /**
- * Displays the error modal with a given message.
- * @param {string} message - The error message to display in the modal.
+ * Shows an error modal
+ * @param {string} message - The error message to display
  */
 function showErrorModal(message) {
   if (elements.errorMessage && elements.errorModal) {
@@ -151,10 +155,8 @@ function closeErrorModal() {
 }
 
 /**
- * Handles error events from the server, including SSH-specific errors.
- * Updates the status, logs to console, and shows an error modal.
- * @param {string} err - The error message.
- * @param {boolean} [isSSH=false] - Whether this is an SSH-specific error.
+ * Handles errors
+ * @param {string|Error} err - The error message or object
  */
 function handleError(err) {
   const errorMessage = typeof err === 'string' ? err : (err.message || 'An unknown error occurred');
@@ -192,13 +194,17 @@ function handleKeyDown(event) {
 }
 
 /**
- * Initiates a connection to the server.
- * @param {Object} [basicAuthCreds] - Basic Auth credentials if available.
+ * Connects to the server
  */
-function connectToServer(basicAuthCreds) {
+function connectToServer() {
+  if (socket) {
+    socket.close();
+  }
+
   socket = io("http://localhost:2222", {
     path: "/ssh/socket.io",
     withCredentials: true,
+    reconnection: false, // Disable socket.io's built-in reconnection
   });
 
   setupSocketListeners();
@@ -206,8 +212,8 @@ function connectToServer(basicAuthCreds) {
   const credentials = {
     host: elements.hostInput?.value || '192.168.0.20',
     port: elements.portInput ? parseInt(elements.portInput.value, 10) : 22,
-    username: basicAuthCreds ? basicAuthCreds.username : elements.usernameInput.value,
-    password: basicAuthCreds ? basicAuthCreds.password : elements.passwordInput.value,
+    username: elements.usernameInput.value,
+    password: elements.passwordInput.value,
     term: "xterm-color",
     cols: term.cols,
     rows: term.rows,
@@ -231,7 +237,7 @@ function setupSocketListeners() {
     "setTerminalOpts": setTerminalOptions,
     "title": data => document.title = data,
     "status": data => elements.status.innerHTML = data,
-    "ssherror": handleSSHError,
+    "ssherror": handleError,
     "headerBackground": data => elements.header.style.backgroundColor = data,
     "header": handleHeader,
     "footer": handleFooter,
@@ -278,106 +284,134 @@ function disableTerminalInput() {
   });
 }
 
+/**
+ * Initiates a reconnection to the server
+ */
 function reconnectToServer() {
-  if (socket) {
-    socket.close();
-  }
-  // Reset terminal state
-  enableTerminalInput();
-  // Remove reconnect button if it exists
-  const reconnectButton = document.querySelector('button');
-  if (reconnectButton) {
-    reconnectButton.remove();
-  }
-  // Attempt to reconnect
+  hideReconnectPrompt();
+  reconnectAttempts = 0;
   connectToServer();
 }
 
+/**
+ * Handles connection errors
+ * @param {Error} error - The connection error
+ */
+function handleConnectError(error) {
+  console.log('Connection error:', error);
+  handleDisconnect('connect_error');
+}
 
 /**
- * Handles disconnection from the server.
- * @param {string} reason - The reason for disconnection.
+ * Handles successful connections
+ */
+function handleConnect() {
+  console.log('Connected to server');
+  isConnecting = false;
+  reconnectAttempts = 0;
+  hideReconnectPrompt();
+}
+
+/**
+ * Handles disconnections
+ * @param {string} reason - The reason for disconnection
  */
 function handleDisconnect(reason) {
   console.log(`Disconnected: ${reason}`);
   
-  // Safely update status if the element exists
   if (elements.status) {
     updateStatus(`WEBSOCKET SERVER DISCONNECTED: ${reason}`, "red");
-  } else {
-    console.warn("Status element not found. Cannot update status.");
-  }
-
-  // Safely handle UI elements
-  if (elements.loginContainer) {
-    elements.loginContainer.style.display = "block";
-  } else {
-    console.warn("Login container not found. Cannot display login form.");
   }
 
   if (elements.terminalContainer) {
     elements.terminalContainer.style.display = "none";
-  } else {
-    console.warn("Terminal container not found. Cannot hide terminal.");
   }
 
-  // Close the socket connection if it's still open
-  if (socket && socket.connected) {
-    socket.io.reconnection(false);
-    socket.disconnect();
-  }
-
-  // Additional cleanup or reset operations can be added here
   resetApplication();
+
+  if (reason === 'io server disconnect' || reason === 'connect_error') {
+    // Server initiated disconnect or unable to connect, don't attempt to reconnect
+    showReconnectPrompt();
+  } else {
+    // Attempt to reconnect for other reasons
+    attemptReconnect();
+  }
 }
 
+/**
+ * Resets the application state
+ */
 function resetApplication() {
   // Reset any global states or variables
-  isConnectionClosed = true;
   sessionLogEnable = false;
   loggedData = false;
   // ... reset other global variables as needed
 
-  // Clear any ongoing processes or timers
-  // ... clear any setInterval or setTimeout if you have any
-
   // Reset the terminal if it exists
   if (term) {
     term.clear();
-    // Optionally, you can write a message in the terminal
-    term.write('Disconnected. Please refresh the page to reconnect.\r\n');
+    term.write('Disconnected. Please wait for reconnection or refresh the page.\r\n');
   }
-
-  // Show reconnect button or message
-  showReconnectPrompt();
 }
 
+/**
+ * Attempts to reconnect to the server
+ */
+function attemptReconnect() {
+  if (isConnecting || reconnectAttempts >= maxReconnectAttempts) {
+    showReconnectPrompt();
+    return;
+  }
+
+  isConnecting = true;
+  reconnectAttempts++;
+
+  console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
+  updateStatus(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`, "yellow");
+
+  setTimeout(() => {
+    if (socket) {
+      socket.connect();
+    } else {
+      connectToServer();
+    }
+  }, reconnectDelay);
+}
+
+/**
+ * Shows the reconnect prompt
+ */
 function showReconnectPrompt() {
-  // Check if a reconnect button already exists
   if (document.getElementById('reconnectButton')) {
-    return; // Don't create multiple buttons
+    return;
   }
 
   const reconnectButton = document.createElement('button');
   reconnectButton.id = 'reconnectButton';
   reconnectButton.textContent = 'Reconnect';
-  reconnectButton.onclick = () => {
-    // Refresh the page to restart the application
-    window.location.reload();
-  };
+  reconnectButton.onclick = reconnectToServer;
   
-  // Add some basic styling
   reconnectButton.style.position = 'fixed';
   reconnectButton.style.top = '50%';
   reconnectButton.style.left = '50%';
   reconnectButton.style.transform = 'translate(-50%, -50%)';
   reconnectButton.style.zIndex = '1000';
   
-  // Append to body as it's a critical UI element
   document.body.appendChild(reconnectButton);
 
   console.log('Reconnect button added');
 }
+
+/**
+ * Hides the reconnect prompt
+ */
+function hideReconnectPrompt() {
+  const reconnectButton = document.getElementById('reconnectButton');
+  if (reconnectButton) {
+    reconnectButton.remove();
+  }
+}
+
 /**
  * Handles the result of authentication attempt.
  * @param {Object} result - The authentication result.
@@ -457,13 +491,17 @@ function handleAllowReauth(data) {
 }
 
 /**
- * Updates the status message and color.
- * @param {string} message - The status message.
- * @param {string} color - The color for the status message.
+ * Updates the status message
+ * @param {string} message - The status message
+ * @param {string} color - The color of the status message
  */
 function updateStatus(message, color) {
-  elements.status.innerHTML = message;
-  elements.status.style.backgroundColor = color;
+  if (elements.status) {
+    elements.status.innerHTML = message;
+    elements.status.style.backgroundColor = color;
+  } else {
+    console.warn('Status element not found. Cannot update status.');
+  }
 }
 
 /**
