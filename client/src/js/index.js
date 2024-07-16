@@ -58,12 +58,28 @@ document.addEventListener("DOMContentLoaded", () => {
  * Initializes the terminal instance.
  */
 function initializeTerminal() {
-  term = new Terminal();
-  fitAddon = new FitAddon();
-  term.loadAddon(fitAddon);
-  term.onData((data) => socket?.emit("data", data));
-  term.onTitleChange((title) => document.title = title);
-  applyTerminalOptions({});
+  try {
+    const initialOptions = {
+      logLevel: 'info', // Default log level
+      cursorBlink: true,
+      scrollback: 10000,
+      tabStopWidth: 8,
+      bellStyle: 'sound',
+      fontSize: 12,
+      fontFamily: 'courier-new, courier, monospace',
+      letterSpacing: 0,
+      lineHeight: 1
+    };
+    term = new Terminal(initialOptions);
+    fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+    term.onData((data) => socket?.emit("data", data));
+    term.onTitleChange((title) => document.title = title);
+    applyTerminalOptions(initialOptions);
+  } catch (error) {
+    console.error("Failed to initialize terminal:", error);
+    handleError("Terminal initialization failed", error);
+  }
 }
 
 /**
@@ -309,7 +325,6 @@ function connectToServer(formData = null) {
     showLoginPrompt();
   }
 }
-
 function showLoginPrompt() {
   if (elements.loginModal) {
     elements.loginModal.style.display = "block"
@@ -705,6 +720,14 @@ function formatDate(date) {
   return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} @ ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
 
+/**
+ * Validates a numeric value within a specified range
+ * @param {number|string} value - The value to validate
+ * @param {number} min - The minimum allowed value
+ * @param {number} max - The maximum allowed value
+ * @param {number} defaultValue - The default value if validation fails
+ * @returns {number} The validated number or the default value
+ */
 function validateNumber(value, min, max, defaultValue) {
   const num = Number(value);
   if (isNaN(num) || num < min || num > max) {
@@ -713,6 +736,11 @@ function validateNumber(value, min, max, defaultValue) {
   return num;
 }
 
+/**
+ * Validates the bell style option
+ * @param {string} value - The bell style to validate
+ * @returns {string} The validated bell style or the default 'sound'
+ */
 function validateBellStyle(value) {
   return ['sound', 'none'].includes(value) ? value : 'sound';
 }
