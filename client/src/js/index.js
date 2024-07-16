@@ -215,9 +215,16 @@ function handleKeyDown(event) {
  * Connects to the server
  */
 function connectToServer() {
+  if (isConnecting) {
+    console.log('Connection already in progress');
+    return;
+  }
+
   if (socket) {
     socket.close();
   }
+
+  isConnecting = true;
 
   socket = io("http://localhost:2222", {
     path: "/ssh/socket.io",
@@ -249,6 +256,25 @@ function connectToServer() {
 
   socket.emit("authenticate", credentials);
   updateStatus("Authenticating...", "orange");
+}
+
+function showLoginPrompt() {
+  if (elements.loginModal) {
+    elements.loginModal.style.display = "block"
+  }
+  if (elements.terminalContainer) {
+    elements.terminalContainer.style.display = "none"
+  }
+  if (elements.passwordInput) {
+    elements.passwordInput.value = ""
+  }
+  if (elements.usernameInput) {
+    elements.usernameInput.focus()
+  }
+  // Reset connection status
+  isConnecting = false
+  reconnectAttempts = 0
+  hideReconnectPrompt()
 }
 
 /**
@@ -325,6 +351,7 @@ function reconnectToServer() {
   hideReconnectPrompt();
   closeErrorModal();
   reconnectAttempts = 0;
+  isConnecting = true; // Set this flag to prevent multiple reconnection attempts
   connectToServer();
 }
 
@@ -346,6 +373,7 @@ function handleConnect() {
   reconnectAttempts = 0;
   hideReconnectPrompt();
   closeErrorModal();
+  updateStatus("Connected", "green");
 }
 
 /**
@@ -367,9 +395,10 @@ function handleDisconnect(reason) {
 
   if (reason === 'io server disconnect' || reason === 'connect_error') {
     // Server initiated disconnect or unable to connect, don't attempt to reconnect
+    isConnecting = false;
     showReconnectPrompt();
-  } else {
-    // Attempt to reconnect for other reasons
+  } else if (!isConnecting) {
+    // Only attempt to reconnect if we're not already trying to connect
     attemptReconnect();
   }
 }
@@ -449,9 +478,11 @@ function hideReconnectPrompt() {
  * @param {Object} result - The authentication result.
  */
 function handleAuthResult(result) {
+  console.log("Authentication result:", result)
   if (result.success) {
     if (elements.loginModal) {
       elements.loginModal.style.display = "none";
+      elements.terminalContainer.style.display = "block";
     }
     term.focus();
     console.log("Authentication successful");
