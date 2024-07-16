@@ -176,11 +176,12 @@ function closeErrorModal() {
  * Handles errors
  * @param {string|Error} err - The error message or object
  */
-function handleError(err) {
-  const errorMessage = typeof err === 'string' ? err : (err.message || 'An unknown error occurred');
-  console.error('Error:', errorMessage);
-  updateStatus(`Error: ${errorMessage}`, 'red');
-  showErrorModal(errorMessage);
+function handleError(message, error) {
+  console.error('Error:', message, error);
+  isConnecting = false;
+  updateStatus(`Error: ${message}`, 'red');
+  showErrorModal(message);
+  showReconnectPrompt();
 }
 
 /**
@@ -220,11 +221,11 @@ function connectToServer() {
     return;
   }
 
+  isConnecting = true;
+
   if (socket) {
     socket.close();
   }
-
-  isConnecting = true;
 
   socket = io("http://localhost:2222", {
     path: "/ssh/socket.io",
@@ -234,12 +235,10 @@ function connectToServer() {
 
   setupSocketListeners();
   
-  // Make sure the terminal container is visible
   if (elements.terminalContainer) {
     elements.terminalContainer.style.display = "block";
   }
 
-  // Fit the terminal and get the dimensions
   fitAddon.fit();
   const cols = term.cols;
   const rows = term.rows;
@@ -298,7 +297,7 @@ function setupSocketListeners() {
     "statusBackground": data => elements.status.style.backgroundColor = data,
     "allowreplay": handleAllowReplay,
     "allowreauth": handleAllowReauth,
-    "connection_closed": handleConnectionClosed,
+    "connection_closed": handleConnectionClose,
     "reauth": () => allowreauth && reauthSession()
   };
 
@@ -321,10 +320,13 @@ function setupSocketListeners() {
 /**
  * Handles connection closed event
  */
-function handleConnectionClosed() {
-  console.log('SSH connection closed by server');
-  updateStatus('Connection closed. Please reconnect.', 'red');
-  disableTerminalInput();
+function handleConnectionClose() {
+  console.log(`SSH CONNECTION CLOSED`);
+  isConnecting = false;
+  if (socket) {
+    socket.close();
+    socket = null;
+  }
   showReconnectPrompt();
 }
 
@@ -348,10 +350,14 @@ function disableTerminalInput() {
  * Initiates a reconnection to the server
  */
 function reconnectToServer() {
+  if (isConnecting) {
+    console.log('Reconnection already in progress');
+    return;
+  }
+  
   hideReconnectPrompt();
   closeErrorModal();
   reconnectAttempts = 0;
-  isConnecting = true; // Set this flag to prevent multiple reconnection attempts
   connectToServer();
 }
 
@@ -383,6 +389,8 @@ function handleConnect() {
 function handleDisconnect(reason) {
   console.log(`Disconnected: ${reason}`);
   
+  isConnecting = false;
+  
   if (elements.status) {
     updateStatus(`WEBSOCKET SERVER DISCONNECTED: ${reason}`, "red");
   }
@@ -392,15 +400,7 @@ function handleDisconnect(reason) {
   }
 
   resetApplication();
-
-  if (reason === 'io server disconnect' || reason === 'connect_error') {
-    // Server initiated disconnect or unable to connect, don't attempt to reconnect
-    isConnecting = false;
-    showReconnectPrompt();
-  } else if (!isConnecting) {
-    // Only attempt to reconnect if we're not already trying to connect
-    attemptReconnect();
-  }
+  showReconnectPrompt();
 }
 
 /**
