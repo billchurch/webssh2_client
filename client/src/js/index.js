@@ -39,7 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (elements.loginModal) {
       elements.loginModal.style.display = "block";
-      elements.hostInput.focus();
+      const urlParams = populateFormFromUrl();
+      if (urlParams.host && urlParams.port) {
+        elements.usernameInput.focus();
+      } else {
+        elements.hostInput.focus();
+      }
     } else {
       console.error("Login modal not found. Cannot display login form.");
     }
@@ -122,6 +127,26 @@ function setupEventListeners() {
       closeErrorModal();
     }
   });
+}
+
+/**
+ * Populates form fields from URL parameters.
+ * @returns {Object} The URL parameters for host and port.
+ */
+function populateFormFromUrl() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const host = urlParams.get('host');
+  const port = urlParams.get('port');
+
+  if (host && elements.hostInput) {
+    elements.hostInput.value = host;
+  }
+  
+  if (port && elements.portInput) {
+    elements.portInput.value = port;
+  }
+
+  return { host, port };
 }
 
 /**
