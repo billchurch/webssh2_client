@@ -36,7 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeTerminal();
     initializeElements();
     setupEventListeners();
-    
+    checkSavedSessionLog();
+
     if (elements.loginModal) {
       elements.loginModal.style.display = "block";
       const urlParams = populateFormFromUrl();
@@ -261,6 +262,19 @@ function connectToServer(formData = null) {
 
   isConnecting = true;
 
+  // Reset logging state
+  sessionLogEnable = false;
+  loggedData = false;
+  sessionLog = '';
+
+  // Reset logging UI
+  if (elements.logBtn) {
+    elements.logBtn.innerHTML = '<i class="fas fa-clipboard fa-fw"></i> Start Log';
+  }
+  if (elements.downloadLogBtn) {
+    elements.downloadLogBtn.classList.remove('visible');
+  }
+
   if (socket) {
     socket.close();
   }
@@ -448,6 +462,17 @@ function handleConnect() {
   hideReconnectPrompt();
   closeErrorModal();
   updateStatus("Connected", "green");
+
+  // Reset logging state and UI
+  sessionLogEnable = false;
+  loggedData = false;
+  sessionLog = '';
+  if (elements.logBtn) {
+    elements.logBtn.innerHTML = '<i class="fas fa-clipboard fa-fw"></i> Start Log';
+  }
+  if (elements.downloadLogBtn) {
+    elements.downloadLogBtn.classList.remove('visible');
+  }
 }
 
 /**
@@ -467,6 +492,12 @@ function handleDisconnect(reason) {
     elements.terminalContainer.style.display = "none";
   }
 
+  // Save or download the session log
+  if (sessionLogEnable) {
+    const autoDownload = confirm("Would you like to download the session log?");
+    saveSessionLog(autoDownload);
+  }
+
   resetApplication();
   showReconnectPrompt();
 }
@@ -475,10 +506,20 @@ function handleDisconnect(reason) {
  * Resets the application state
  */
 function resetApplication() {
-  // Reset any global states or variables
+  // Reset logging state
   sessionLogEnable = false;
   loggedData = false;
-  // ... reset other global variables as needed
+  sessionLog = '';
+
+  // Reset UI elements related to logging
+  if (elements.logBtn) {
+    elements.logBtn.innerHTML = '<i class="fas fa-clipboard fa-fw"></i> Start Log';
+  }
+  if (elements.downloadLogBtn) {
+    elements.downloadLogBtn.classList.remove('visible');
+  }
+
+  // Reset any other global states or variables
 
   // Reset the terminal if it exists
   if (term) {
@@ -671,20 +712,25 @@ function replayCredentials(socket) {
  */
 function toggleLog() {
   sessionLogEnable = !sessionLogEnable;
-  loggedData = true;
-  currentDate = new Date();
-
+  
   if (sessionLogEnable) {
+    loggedData = true;
+    currentDate = new Date();
     elements.logBtn.innerHTML = '<i class="fas fa-cog fa-spin fa-fw"></i> Stop Log';
     elements.downloadLogBtn.classList.add('visible');
     elements.downloadLogBtn.addEventListener('click', downloadLog);
     sessionLog = `Log Start for ${sessionFooter}: ${formatDate(currentDate)}\r\n\r\n`;
+    console.log("Starting log");
   } else {
     elements.logBtn.innerHTML = '<i class="fas fa-clipboard fa-fw"></i> Start Log';
-    sessionLog += `\r\n\r\nLog End for ${sessionFooter}: ${formatDate(currentDate)}\r\n`;
+    if (loggedData) {
+      sessionLog += `\r\n\r\nLog End for ${sessionFooter}: ${formatDate(new Date())}\r\n`;
+      console.log("Stopping log");
+    } else {
+      console.log("Log was not actually running, resetting UI");
+    }
   }
 
-  console.log(`${sessionLogEnable ? "starting" : "stopping"} log, ${sessionLogEnable}`);
   term.focus();
 }
 
@@ -761,4 +807,72 @@ function applyTerminalOptions(options) {
   Object.assign(term.options, terminalOptions);
   term.refresh(0, term.rows - 1);
   fitAddon.fit();
+}
+
+/**
+ * Saves or downloads the current session log
+ * @param {boolean} autoDownload - Whether to automatically download the log
+ */
+function saveSessionLog(autoDownload = false) {
+  if (sessionLogEnable && loggedData) {
+    const filename = `WebSSH2-${formatDate(new Date()).replace(/[/:\s@]/g, '')}.log`;
+    const cleanLog = sessionLog.replace(/[\u001b\u009b][[\]()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><;]/g, "");
+    const blob = new Blob([cleanLog], { type: "text/plain" });
+
+    if (autoDownload) {
+      // Automatically download the log
+      if (window.navigator.msSaveOrOpenBlob) {
+        window.navigator.msSaveBlob(blob, filename);
+      } else {
+        const elem = document.createElement("a");
+        elem.href = URL.createObjectURL(blob);
+        elem.download = filename;
+        document.body.appendChild(elem);
+        elem.click();
+        document.body.removeChild(elem);
+      }
+    } else {
+      // Save the log in localStorage
+      try {
+        localStorage.setItem('webssh2_session_log', cleanLog);
+        localStorage.setItem('webssh2_session_log_date', new Date().toISOString());
+        console.log('Session log saved to localStorage');
+      } catch (e) {
+        console.error('Failed to save session log to localStorage:', e);
+        // If localStorage fails, attempt to download
+        saveSessionLog(true);
+      }
+    }
+  }
+}
+
+/**
+ * Checks for and restores a saved session log
+ */
+function checkSavedSessionLog() {
+  const savedLog = localStorage.getItem('webssh2_session_log');
+  const savedDate = localStorage.getItem('webssh2_session_log_date');
+
+  if (savedLog && savedDate) {
+    const restoreLog = confirm(`A saved session log from ${new Date(savedDate).toLocaleString()} was found. Would you like to download it?`);
+    if (restoreLog) {
+      const filename = `WebSSH2-Recovered-${formatDate(new Date(savedDate)).replace(/[/:\s@]/g, '')}.log`;
+      const blob = new Blob([savedLog], { type: "text/plain" });
+
+      if (window.navigator.msSaveOrOpenBlob) {
+        window.navigator.msSaveBlob(blob, filename);
+      } else {
+        const elem = document.createElement("a");
+        elem.href = URL.createObjectURL(blob);
+        elem.download = filename;
+        document.body.appendChild(elem);
+        elem.click();
+        document.body.removeChild(elem);
+      }
+
+      // Clear the saved log after downloading
+      localStorage.removeItem('webssh2_session_log');
+      localStorage.removeItem('webssh2_session_log_date');
+    }
+  }
 }
