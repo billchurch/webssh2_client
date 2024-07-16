@@ -63,6 +63,7 @@ function initializeTerminal() {
   term.loadAddon(fitAddon);
   term.onData((data) => socket?.emit("data", data));
   term.onTitleChange((title) => document.title = title);
+  applyTerminalOptions({});
 }
 
 /**
@@ -86,6 +87,18 @@ function initializeElements() {
       console.warn(`Element with id '${id}' not found`);
     }
   });
+
+  if (elements.loginForm) {
+    ['sshterm', 'readyTimeout', 'cursorBlink', 'scrollback', 'tabStopWidth', 'bellStyle', 
+     'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight', 'logLevel'].forEach(field => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = field;
+      input.id = field + 'Input';
+      elements.loginForm.appendChild(input);
+      elements[field + 'Input'] = input;
+    });
+  }
 
   if (elements.terminalContainer) {
     elements.terminalContainer.style.display = "none";
@@ -135,18 +148,25 @@ function setupEventListeners() {
  */
 function populateFormFromUrl() {
   const urlParams = new URLSearchParams(window.location.search);
-  const host = urlParams.get('host');
-  const port = urlParams.get('port');
-
-  if (host && elements.hostInput) {
-    elements.hostInput.value = host;
-  }
+  const params = {};
   
-  if (port && elements.portInput) {
-    elements.portInput.value = port;
-  }
+  ['host', 'port', 'header', 'headerBackground', 'sshterm', 'readyTimeout', 'cursorBlink', 
+   'scrollback', 'tabStopWidth', 'bellStyle', 'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight',
+   'username', 'userpassword'].forEach(param => {
+    const value = urlParams.get(param);
+    if (value !== null) {
+      params[param] = value;
+    }
+  });
 
-  return { host, port };
+  Object.entries(params).forEach(([key, value]) => {
+    const input = elements[key + 'Input'];
+    if (input) {
+      input.value = value;
+    }
+  });
+
+  return params;
 }
 
 /**
@@ -190,7 +210,9 @@ function handleError(message, error) {
  */
 function handleFormSubmit(e) {
   e.preventDefault();
-  connectToServer();
+  const formData = new FormData(e.target);
+  const formDataObject = Object.fromEntries(formData.entries());
+  connectToServer(formDataObject);
 }
 
 /**
@@ -215,7 +237,7 @@ function handleKeyDown(event) {
 /**
  * Connects to the server
  */
-function connectToServer() {
+function connectToServer(formData = null) {
   if (isConnecting) {
     console.log('Connection already in progress');
     return;
@@ -243,18 +265,49 @@ function connectToServer() {
   const cols = term.cols;
   const rows = term.rows;
   
+  const urlParams = populateFormFromUrl();
   const credentials = {
-    host: elements.hostInput?.value || '192.168.0.20',
-    port: elements.portInput ? parseInt(elements.portInput.value, 10) : 22,
-    username: elements.usernameInput.value,
-    password: elements.passwordInput.value,
-    term: "xterm-color",
+    host: formData?.host || urlParams.host || elements.hostInput?.value || '192.168.0.20',
+    port: parseInt(formData?.port || urlParams.port || elements.portInput?.value || '22', 10),
+    username: formData?.username || urlParams.username || elements.usernameInput?.value,
+    password: formData?.userpassword || urlParams.userpassword || elements.passwordInput?.value,
+    term: formData?.sshterm || urlParams.sshterm || "xterm-color",
     cols: term.cols,
     rows: term.rows,
+    readyTimeout: validateNumber(formData?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
   };
+
+  // Apply xterm.js options
+  applyTerminalOptions({
+    cursorBlink: formData?.cursorBlink || urlParams.cursorBlink,
+    scrollback: formData?.scrollback || urlParams.scrollback,
+    tabStopWidth: formData?.tabStopWidth || urlParams.tabStopWidth,
+    bellStyle: formData?.bellStyle || urlParams.bellStyle,
+    fontSize: formData?.fontSize || urlParams.fontSize,
+    fontFamily: formData?.fontFamily || urlParams.fontFamily,
+    letterSpacing: formData?.letterSpacing || urlParams.letterSpacing,
+    lineHeight: formData?.lineHeight || urlParams.lineHeight
+  });
+
+  if (urlParams.header) {
+    handleHeader(urlParams.header);
+  }
+
+  if (urlParams.headerBackground) {
+    elements.header.style.backgroundColor = urlParams.headerBackground;
+  }
 
   socket.emit("authenticate", credentials);
   updateStatus("Authenticating...", "orange");
+
+  // If username and password are provided, don't show the login modal
+  if (credentials.username && credentials.password) {
+    if (elements.loginModal) {
+      elements.loginModal.style.display = "none";
+    }
+  } else {
+    showLoginPrompt();
+  }
 }
 
 function showLoginPrompt() {
@@ -650,4 +703,34 @@ function downloadLog() {
  */
 function formatDate(date) {
   return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} @ ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+}
+
+function validateNumber(value, min, max, defaultValue) {
+  const num = Number(value);
+  if (isNaN(num) || num < min || num > max) {
+    return defaultValue;
+  }
+  return num;
+}
+
+function validateBellStyle(value) {
+  return ['sound', 'none'].includes(value) ? value : 'sound';
+}
+
+function applyTerminalOptions(options) {
+  const terminalOptions = {
+    cursorBlink: options.cursorBlink !== undefined ? options.cursorBlink === 'true' : true,
+    scrollback: validateNumber(options.scrollback, 1, 200000, 10000),
+    tabStopWidth: validateNumber(options.tabStopWidth, 1, 100, 8),
+    bellStyle: validateBellStyle(options.bellStyle),
+    fontSize: validateNumber(options.fontSize, 1, 72, 12),
+    logLevel: options.logLevel || 'info',
+    fontFamily: options.fontFamily || 'courier-new, courier, monospace',
+    letterSpacing: options.letterSpacing !== undefined ? Number(options.letterSpacing) : 0,
+    lineHeight: options.lineHeight !== undefined ? Number(options.lineHeight) : 1
+  };
+
+  Object.assign(term.options, terminalOptions);
+  term.refresh(0, term.rows - 1);
+  fitAddon.fit();
 }
