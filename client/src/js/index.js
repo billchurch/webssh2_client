@@ -248,7 +248,7 @@ function connectToServer() {
   };
 
   socket.emit("authenticate", credentials);
-  updateStatus("Authenticating...", "yellow");
+  updateStatus("Authenticating...", "orange");
 }
 
 /**
@@ -403,14 +403,10 @@ function attemptReconnect() {
   reconnectAttempts++;
 
   console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
-  updateStatus(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`, "yellow");
+  updateStatus(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`, "orange");
 
   setTimeout(() => {
-    if (socket) {
-      socket.connect();
-    } else {
       connectToServer();
-    }
   }, reconnectDelay);
 }
 
