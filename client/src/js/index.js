@@ -552,7 +552,7 @@ function setTerminalOptions(data) {
  * @param {Object} socket - The socket object for communication.
  */
 function reauthSession(socket) {
-  elements.loginContainer.style.display = "block";
+  elements.loginModal.style.display = "block";
   elements.terminalContainer.style.display = "none";
   socket.emit("reauth");
 }
