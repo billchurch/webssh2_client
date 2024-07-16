@@ -37,9 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeElements();
     setupEventListeners();
     
-    // Show the modal when the page loads
     if (elements.loginModal) {
       elements.loginModal.style.display = "block";
+      elements.hostInput.focus();
     } else {
       console.error("Login modal not found. Cannot display login form.");
     }
@@ -71,7 +71,7 @@ function initializeElements() {
     "errorModal", "errorMessage"
   ];
 
-  elements = {}; // Reset the elements object
+  elements = {};
 
   elementIds.forEach(id => {
     const element = document.getElementById(id);
@@ -85,11 +85,11 @@ function initializeElements() {
   if (elements.terminalContainer) {
     elements.terminalContainer.style.display = "none";
     term.open(elements.terminalContainer);
+    fitAddon.fit();
   } else {
     console.error("Terminal container not found. Terminal cannot be initialized.");
   }
 
-  // Initialize close button for error modal
   if (elements.errorModal) {
     const closeBtn = elements.errorModal.querySelector('.close');
     if (closeBtn) {
@@ -117,18 +117,11 @@ function setupEventListeners() {
   window.addEventListener("resize", handleResize);
   document.addEventListener("keydown", handleKeyDown);
 
-  // Error modal close button
-  if (elements.closeErrorModal) {
-    elements.closeErrorModal.addEventListener('click', closeErrorModal);
-  }
-
-  // Close modal on Escape key press
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       closeErrorModal();
     }
   });
-
 }
 
 /**
@@ -141,7 +134,7 @@ function showErrorModal(message) {
     elements.errorModal.style.display = 'block';
   } else {
     console.error("Error modal or error message element not found");
-    alert(`Error: ${message}`); // Fallback to alert if modal is not available
+    alert(`Error: ${message}`);
   }
 }
 
@@ -204,10 +197,20 @@ function connectToServer() {
   socket = io("http://localhost:2222", {
     path: "/ssh/socket.io",
     withCredentials: true,
-    reconnection: false, // Disable socket.io's built-in reconnection
+    reconnection: false,
   });
 
   setupSocketListeners();
+  
+  // Make sure the terminal container is visible
+  if (elements.terminalContainer) {
+    elements.terminalContainer.style.display = "block";
+  }
+
+  // Fit the terminal and get the dimensions
+  fitAddon.fit();
+  const cols = term.cols;
+  const rows = term.rows;
   
   const credentials = {
     host: elements.hostInput?.value || '192.168.0.20',
@@ -264,6 +267,9 @@ function setupSocketListeners() {
   });
 }
 
+/**
+ * Handles connection closed event
+ */
 function handleConnectionClosed() {
   console.log('SSH connection closed by server');
   updateStatus('Connection closed. Please reconnect.', 'red');
@@ -271,17 +277,20 @@ function handleConnectionClosed() {
   showReconnectPrompt();
 }
 
+/**
+ * Enables terminal input
+ */
 function enableTerminalInput() {
   // Reset the onData handler to allow input again
   term.onData((data) => socket?.emit("data", data));
 }
 
+/**
+ * Disables terminal input
+ */
 function disableTerminalInput() {
   // In xterm.js v5.5.0, we can't directly disable input
-  // Instead, we'll create a custom handler to prevent input
-  term.onData((data) => {
-    // Do nothing, effectively disabling input
-  });
+  term.onData((data) => {  });
 }
 
 /**
@@ -289,6 +298,7 @@ function disableTerminalInput() {
  */
 function reconnectToServer() {
   hideReconnectPrompt();
+  closeErrorModal();
   reconnectAttempts = 0;
   connectToServer();
 }
@@ -310,6 +320,7 @@ function handleConnect() {
   isConnecting = false;
   reconnectAttempts = 0;
   hideReconnectPrompt();
+  closeErrorModal();
 }
 
 /**
@@ -421,13 +432,17 @@ function handleAuthResult(result) {
     if (elements.loginModal) {
       elements.loginModal.style.display = "none";
     }
-    elements.terminalContainer.style.display = "block";
     term.focus();
+    console.log("Authentication successful");
     updateStatus("Connected", "green");
   } else {
     updateStatus(`Authentication failed: ${result.message}`, "red");
     if (elements.passwordInput) {
       elements.passwordInput.value = "";
+    }
+    // Hide the terminal container if authentication fails
+    if (elements.terminalContainer) {
+      elements.terminalContainer.style.display = "none";
     }
   }
 }
@@ -442,7 +457,6 @@ function handleData(data) {
     sessionLog += data;
   }
 }
-
 
 /**
  * Handles updates to the header.
