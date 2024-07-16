@@ -3,16 +3,30 @@
 <html>
   <head>
     <title>WebSSH2</title>
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/pure-min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   </head>
   <body>
-    <div id="loginContainer">
-      <form id="loginForm">
-        <input type="text" id="hostInput" placeholder="Hostname" />
-        <input type="text" id="portInput" placeholder="Port" />
-        <input type="text" id="usernameInput" placeholder="Username" />
-        <input type="password" id="passwordInput" placeholder="Password" />
-        <button type="submit">Connect</button>
-      </form>
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <h2>WebSSH2 Login</h2>
+        <form id="loginForm" class="pure-form pure-form-stacked">
+          <fieldset>
+            <input type="text" id="hostInput" placeholder="Hostname" required>
+            <input type="text" id="portInput" placeholder="Port" required>
+            <input type="text" id="usernameInput" placeholder="Username" required>
+            <input type="password" id="passwordInput" placeholder="Password" required>
+            <button type="submit" class="pure-button pure-button-primary">Connect</button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+    <div id="errorModal" class="modal">
+      <div class="modal-content error-modal">
+        <span class="close">&times;</span>
+        <h2>Error</h2>
+        <p id="errorMessage"></p>
+      </div>
     </div>
     <div class="box">
       <div id="header"></div>

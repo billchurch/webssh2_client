@@ -1,5 +1,5 @@
 "use strict";
-// webclient index.js
+// webclient
 import io from "socket.io-client";
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -33,10 +33,11 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeElements();
     setupEventListeners();
     
-    if (elements.loginContainer) {
-      elements.loginContainer.style.display = "block";
+    // Show the modal when the page loads
+    if (elements.loginModal) {
+      elements.loginModal.style.display = "block";
     } else {
-      console.error("Login container not found. Cannot display login form.");
+      console.error("Login modal not found. Cannot display login form.");
     }
 
   } catch (error) {
@@ -61,30 +62,35 @@ function initializeTerminal() {
 function initializeElements() {
   const elementIds = [
     "status", "header", "dropupContent", "footer", "terminalContainer",
-    "loginContainer", "loginForm", "hostInput", "portInput", "usernameInput",
-    "passwordInput", "logBtn", "downloadLogBtn", "credentialsBtn", "reauthBtn"
+    "loginModal", "loginForm", "hostInput", "portInput", "usernameInput",
+    "passwordInput", "logBtn", "downloadLogBtn", "credentialsBtn", "reauthBtn",
+    "errorModal", "errorMessage"
   ];
 
-  let missingElements = [];
+  elements = {}; // Reset the elements object
 
   elementIds.forEach(id => {
     const element = document.getElementById(id);
     if (element) {
       elements[id] = element;
     } else {
-      missingElements.push(id);
+      console.warn(`Element with id '${id}' not found`);
     }
   });
-
-  if (missingElements.length > 0) {
-    console.error("Missing elements:", missingElements.join(", "));
-  }
 
   if (elements.terminalContainer) {
     elements.terminalContainer.style.display = "none";
     term.open(elements.terminalContainer);
   } else {
     console.error("Terminal container not found. Terminal cannot be initialized.");
+  }
+
+  // Initialize close button for error modal
+  if (elements.errorModal) {
+    const closeBtn = elements.errorModal.querySelector('.close');
+    if (closeBtn) {
+      closeBtn.onclick = () => { elements.errorModal.style.display = 'none'; };
+    }
   }
 }
 
@@ -106,6 +112,55 @@ function setupEventListeners() {
 
   window.addEventListener("resize", handleResize);
   document.addEventListener("keydown", handleKeyDown);
+
+  // Error modal close button
+  if (elements.closeErrorModal) {
+    elements.closeErrorModal.addEventListener('click', closeErrorModal);
+  }
+
+  // Close modal on Escape key press
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeErrorModal();
+    }
+  });
+
+}
+
+/**
+ * Displays the error modal with a given message.
+ * @param {string} message - The error message to display in the modal.
+ */
+function showErrorModal(message) {
+  if (elements.errorMessage && elements.errorModal) {
+    elements.errorMessage.textContent = message;
+    elements.errorModal.style.display = 'block';
+  } else {
+    console.error("Error modal or error message element not found");
+    alert(`Error: ${message}`); // Fallback to alert if modal is not available
+  }
+}
+
+/**
+ * Closes the error modal.
+ */
+function closeErrorModal() {
+  if (elements.errorModal) {
+    elements.errorModal.style.display = 'none';
+  }
+}
+
+/**
+ * Handles error events from the server, including SSH-specific errors.
+ * Updates the status, logs to console, and shows an error modal.
+ * @param {string} err - The error message.
+ * @param {boolean} [isSSH=false] - Whether this is an SSH-specific error.
+ */
+function handleError(err) {
+  const errorMessage = typeof err === 'string' ? err : (err.message || 'An unknown error occurred');
+  console.error('Error:', errorMessage);
+  updateStatus(`Error: ${errorMessage}`, 'red');
+  showErrorModal(errorMessage);
 }
 
 /**
@@ -163,12 +218,12 @@ function connectToServer(basicAuthCreds) {
 }
 
 /**
- * Sets up listeners for various socket events.
+ * Sets up Socket.IO event listeners
  */
 function setupSocketListeners() {
   const listeners = {
-    "connect_error": error => console.error("Connection error:", error),
-    "connect": () => console.log("Connected to server"),
+    "connect_error": handleConnectError,
+    "connect": handleConnect,
     "disconnect": handleDisconnect,
     "auth_result": handleAuthResult,
     "data": handleData,
@@ -183,38 +238,163 @@ function setupSocketListeners() {
     "statusBackground": data => elements.status.style.backgroundColor = data,
     "allowreplay": handleAllowReplay,
     "allowreauth": handleAllowReauth,
+    "connection_closed": handleConnectionClosed,
     "reauth": () => allowreauth && reauthSession()
   };
 
   Object.entries(listeners).forEach(([event, handler]) => {
-    socket.on(event, handler);
+    if (typeof handler === 'function') {
+      socket.on(event, (...args) => {
+        try {
+          handler(...args);
+        } catch (error) {
+          console.error(`Error handling event '${event}':`, error);
+          handleError(`Internal error handling ${event}`);
+        }
+      });
+    } else {
+      console.warn(`Handler for event '${event}' is not a function`);
+    }
   });
 }
+
+function handleConnectionClosed() {
+  console.log('SSH connection closed by server');
+  updateStatus('Connection closed. Please reconnect.', 'red');
+  disableTerminalInput();
+  showReconnectPrompt();
+}
+
+function enableTerminalInput() {
+  // Reset the onData handler to allow input again
+  term.onData((data) => socket?.emit("data", data));
+}
+
+function disableTerminalInput() {
+  // In xterm.js v5.5.0, we can't directly disable input
+  // Instead, we'll create a custom handler to prevent input
+  term.onData((data) => {
+    // Do nothing, effectively disabling input
+  });
+}
+
+function reconnectToServer() {
+  if (socket) {
+    socket.close();
+  }
+  // Reset terminal state
+  enableTerminalInput();
+  // Remove reconnect button if it exists
+  const reconnectButton = document.querySelector('button');
+  if (reconnectButton) {
+    reconnectButton.remove();
+  }
+  // Attempt to reconnect
+  connectToServer();
+}
+
 
 /**
  * Handles disconnection from the server.
  * @param {string} reason - The reason for disconnection.
  */
 function handleDisconnect(reason) {
-  updateStatus(`WEBSOCKET SERVER DISCONNECTED: ${reason}`, "red");
-  elements.loginContainer.style.display = "block";
-  elements.terminalContainer.style.display = "none";
-  socket.io.reconnection(false);
+  console.log(`Disconnected: ${reason}`);
+  
+  // Safely update status if the element exists
+  if (elements.status) {
+    updateStatus(`WEBSOCKET SERVER DISCONNECTED: ${reason}`, "red");
+  } else {
+    console.warn("Status element not found. Cannot update status.");
+  }
+
+  // Safely handle UI elements
+  if (elements.loginContainer) {
+    elements.loginContainer.style.display = "block";
+  } else {
+    console.warn("Login container not found. Cannot display login form.");
+  }
+
+  if (elements.terminalContainer) {
+    elements.terminalContainer.style.display = "none";
+  } else {
+    console.warn("Terminal container not found. Cannot hide terminal.");
+  }
+
+  // Close the socket connection if it's still open
+  if (socket && socket.connected) {
+    socket.io.reconnection(false);
+    socket.disconnect();
+  }
+
+  // Additional cleanup or reset operations can be added here
+  resetApplication();
 }
 
+function resetApplication() {
+  // Reset any global states or variables
+  isConnectionClosed = true;
+  sessionLogEnable = false;
+  loggedData = false;
+  // ... reset other global variables as needed
+
+  // Clear any ongoing processes or timers
+  // ... clear any setInterval or setTimeout if you have any
+
+  // Reset the terminal if it exists
+  if (term) {
+    term.clear();
+    // Optionally, you can write a message in the terminal
+    term.write('Disconnected. Please refresh the page to reconnect.\r\n');
+  }
+
+  // Show reconnect button or message
+  showReconnectPrompt();
+}
+
+function showReconnectPrompt() {
+  // Check if a reconnect button already exists
+  if (document.getElementById('reconnectButton')) {
+    return; // Don't create multiple buttons
+  }
+
+  const reconnectButton = document.createElement('button');
+  reconnectButton.id = 'reconnectButton';
+  reconnectButton.textContent = 'Reconnect';
+  reconnectButton.onclick = () => {
+    // Refresh the page to restart the application
+    window.location.reload();
+  };
+  
+  // Add some basic styling
+  reconnectButton.style.position = 'fixed';
+  reconnectButton.style.top = '50%';
+  reconnectButton.style.left = '50%';
+  reconnectButton.style.transform = 'translate(-50%, -50%)';
+  reconnectButton.style.zIndex = '1000';
+  
+  // Append to body as it's a critical UI element
+  document.body.appendChild(reconnectButton);
+
+  console.log('Reconnect button added');
+}
 /**
  * Handles the result of authentication attempt.
  * @param {Object} result - The authentication result.
  */
 function handleAuthResult(result) {
   if (result.success) {
-    elements.loginContainer.style.display = "none";
+    if (elements.loginModal) {
+      elements.loginModal.style.display = "none";
+    }
     elements.terminalContainer.style.display = "block";
     term.focus();
     updateStatus("Connected", "green");
   } else {
     updateStatus(`Authentication failed: ${result.message}`, "red");
-    elements.passwordInput.value = "";
+    if (elements.passwordInput) {
+      elements.passwordInput.value = "";
+    }
   }
 }
 
@@ -229,22 +409,6 @@ function handleData(data) {
   }
 }
 
-/**
- * Handles error events from the server.
- * @param {string} err - The error message.
- */
-function handleError(err) {
-  updateStatus(`ERROR: ${err}`, "red");
-  console.log("ERROR: ", err);
-}
-
-/**
- * Handles SSH-specific errors.
- * @param {string} data - The SSH error message.
- */
-function handleSSHError(data) {
-  updateStatus(data, "red");
-}
 
 /**
  * Handles updates to the header.
