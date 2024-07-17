@@ -16,7 +16,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "build": "webpack --progress --config scripts/webpack.prod.js",
+    "build": "webpack --mode production --progress --config scripts/webpack.prod.js",
     "builddev": "webpack --progress --config scripts/webpack.dev.js",
     "analyze": "webpack --json --config scripts/webpack.prod.js | webpack-bundle-size-analyzer",
     "watch": "npm-run-all --parallel start watch:build",
@@ -33,6 +33,7 @@
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^7.1.2",
+    "express": "^4.19.2",
     "html-webpack-plugin": "^5.6.0",
     "mini-css-extract-plugin": "^2.9.0",
     "nodemon": "^3.1.4",
@@ -42,8 +43,5 @@
     "webpack": "^5.92.1",
     "webpack-cli": "^5.1.4",
     "webpack-merge": "^6.0.1"
-  },
-  "dependencies": {
-    "express": "^4.19.2"
   }
 }
