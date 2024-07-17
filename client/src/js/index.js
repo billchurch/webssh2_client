@@ -18,8 +18,8 @@ dom.watch();
 
 let sessionLogEnable = false;
 let loggedData = false;
-let allowreplay = false;
-let allowreauth = false;
+let allowReplay = false;
+let allowReauth = false;
 let sessionLog = '';
 let sessionFooter = '';
 let currentDate;
@@ -120,7 +120,6 @@ function initializeElements() {
   if (elements.terminalContainer) {
     elements.terminalContainer.style.display = "none";
     term.open(elements.terminalContainer);
-    fitAddon.fit();
   } else {
     console.error("Terminal container not found. Terminal cannot be initialized.");
   }
@@ -241,8 +240,12 @@ function handleFormSubmit(e) {
  * Handles window resize event.
  */
 function handleResize() {
-  fitAddon.fit();
-  socket?.emit("resize", { cols: term.cols, rows: term.rows });
+  if (fitAddon && term) {
+    fitAddon.fit();
+    const dimensions = { cols: term.cols, rows: term.rows };
+    console.log('Terminal resized:', dimensions);
+    socket?.emit("resize", dimensions);
+  }
 }
 
 /**
@@ -309,11 +312,8 @@ function connectToServer(formData = null) {
     elements.header.style.backgroundColor = urlParams.headerBackground;
   }
 
-  // Now fit the terminal
-  fitAddon.fit();
-  const cols = term.cols;
-  const rows = term.rows;
-  
+  handleResize();
+
   const credentials = {
     host: formData?.host || urlParams.host || elements.hostInput?.value || '192.168.0.20',
     port: parseInt(formData?.port || urlParams.port || elements.portInput?.value || '22', 10),
@@ -334,7 +334,8 @@ function connectToServer(formData = null) {
     fontSize: formData?.fontSize || urlParams.fontSize,
     fontFamily: formData?.fontFamily || urlParams.fontFamily,
     letterSpacing: formData?.letterSpacing || urlParams.letterSpacing,
-    lineHeight: formData?.lineHeight || urlParams.lineHeight
+    lineHeight: formData?.lineHeight || urlParams.lineHeight,
+    logLevel: formData?.logLevel || urlParams.logLevel
   });
 
   socket.emit("authenticate", credentials);
@@ -387,10 +388,10 @@ function setupSocketListeners() {
     "header": handleHeader,
     "footer": handleFooter,
     "statusBackground": data => elements.status.style.backgroundColor = data,
-    "allowreplay": handleAllowReplay,
-    "allowreauth": handleAllowReauth,
+    "allowReplay": handleallowReplay,
+    "allowReauth": handleallowReauth,
     "connection_closed": handleConnectionClose,
-    "reauth": () => allowreauth && reauthSession()
+    "reauth": () => allowReauth && reauthSession()
   };
 
   Object.entries(listeners).forEach(([event, handler]) => {
@@ -578,8 +579,6 @@ function showReconnectPrompt() {
   reconnectButton.style.zIndex = '1000';
   
   document.body.appendChild(reconnectButton);
-
-  console.log('Reconnect button added');
 }
 
 /**
@@ -604,7 +603,6 @@ function handleAuthResult(result) {
       elements.terminalContainer.style.display = "block";
     }
     term.focus();
-    console.log("Authentication successful");
     updateStatus("Connected", "green");
   } else {
     updateStatus(`Authentication failed: ${result.message}`, "red");
@@ -638,18 +636,17 @@ function handleHeader(data) {
     elements.header.innerHTML = data;
     elements.header.style.display = "block";
     elements.terminalContainer.style.height = "calc(100% - 38px)";
-    
-    // Use setTimeout to ensure the DOM has updated before calling fit
-    setTimeout(() => {
-      fitAddon.fit();
-      // doe we need to emit a resize event to the server yet?
-      socket?.emit("resize", { cols: term.cols, rows: term.rows });
-    }, 0);
   } else {
     elements.header.style.display = "none";
-    elements.terminalContainer.style.height = "100%";
-    fitAddon.fit();
+    // We no longer set the height to 100% when there's no header
+    // elements.terminalContainer.style.height = "100%";
   }
+  
+  // Force a redraw to ensure the new height is applied
+  void elements.terminalContainer.offsetHeight;
+  
+  // Resize the terminal
+  handleResize();
 }
 
 /**
@@ -662,24 +659,24 @@ function handleFooter(data) {
 }
 
 /**
- * Handles the allowreplay flag from the server.
+ * Handles the allowReplay flag from the server.
  * @param {boolean} data - Whether replay is allowed.
  */
-function handleAllowReplay(data) {
-  allowreplay = data;
-  console.log("allowreplay:", data);
+function handleallowReplay(data) {
+  allowReplay = data;
+  console.log("allowReplay:", data);
   elements.credentialsBtn.classList.toggle('visible', data);
   elements.credentialsBtn.removeEventListener('click', replayCredentials);
   elements.credentialsBtn.addEventListener('click', () => replayCredentials(socket));
 }
 
 /**
- * Handles the allowreauth flag from the server.
+ * Handles the allowReauth flag from the server.
  * @param {boolean} data - Whether reauthentication is allowed.
  */
-function handleAllowReauth(data) {
-  allowreauth = data;
-  console.log("allowreauth:", data);
+function handleallowReauth(data) {
+  allowReauth = data;
+  console.log("allowReauth:", data);
   elements.reauthBtn.classList.toggle('visible', data);
   elements.reauthBtn.removeEventListener('click', reauthSession);
   elements.reauthBtn.addEventListener('click', () => reauthSession(socket));
@@ -825,8 +822,6 @@ function applyTerminalOptions(options) {
   };
 
   Object.assign(term.options, terminalOptions);
-  term.refresh(0, term.rows - 1);
-  fitAddon.fit();
 }
 
 /**
