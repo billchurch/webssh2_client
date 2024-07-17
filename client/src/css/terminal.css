@@ -1,6 +1,6 @@
 #terminalContainer {
     display: block;
-    width: calc(100% - 1 px);
+    width: calc(100% - 1px);
     margin: 0 auto;
     padding: 2px;
     height: calc(100% - 19px);
