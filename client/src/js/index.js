@@ -296,11 +296,24 @@ function connectToServer(formData = null) {
     elements.terminalContainer.style.display = "block";
   }
 
+  const urlParams = populateFormFromUrl();
+
+  // Handle header first
+  if (urlParams.header) {
+    handleHeader(urlParams.header);
+  } else {
+    handleHeader(null);  // This will hide the header if it's not needed
+  }
+
+  if (urlParams.headerBackground) {
+    elements.header.style.backgroundColor = urlParams.headerBackground;
+  }
+
+  // Now fit the terminal
   fitAddon.fit();
   const cols = term.cols;
   const rows = term.rows;
   
-  const urlParams = populateFormFromUrl();
   const credentials = {
     host: formData?.host || urlParams.host || elements.hostInput?.value || '192.168.0.20',
     port: parseInt(formData?.port || urlParams.port || elements.portInput?.value || '22', 10),
@@ -323,14 +336,6 @@ function connectToServer(formData = null) {
     letterSpacing: formData?.letterSpacing || urlParams.letterSpacing,
     lineHeight: formData?.lineHeight || urlParams.lineHeight
   });
-
-  if (urlParams.header) {
-    handleHeader(urlParams.header);
-  }
-
-  if (urlParams.headerBackground) {
-    elements.header.style.backgroundColor = urlParams.headerBackground;
-  }
 
   socket.emit("authenticate", credentials);
   updateStatus("Authenticating...", "orange");
@@ -633,6 +638,16 @@ function handleHeader(data) {
     elements.header.innerHTML = data;
     elements.header.style.display = "block";
     elements.terminalContainer.style.height = "calc(100% - 38px)";
+    
+    // Use setTimeout to ensure the DOM has updated before calling fit
+    setTimeout(() => {
+      fitAddon.fit();
+      // doe we need to emit a resize event to the server yet?
+      socket?.emit("resize", { cols: term.cols, rows: term.rows });
+    }, 0);
+  } else {
+    elements.header.style.display = "none";
+    elements.terminalContainer.style.height = "100%";
     fitAddon.fit();
   }
 }
