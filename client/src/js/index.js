@@ -812,6 +812,11 @@ function validateBellStyle(value) {
   return ['sound', 'none'].includes(value) ? value : 'sound';
 }
 
+/**
+ * Applies terminal options to the terminal instance.
+ *
+ * @param {Object} options - The options to apply to the terminal.
+ */
 function applyTerminalOptions(options) {
   const terminalOptions = {
     cursorBlink: options.cursorBlink !== undefined ? options.cursorBlink === 'true' : true,
