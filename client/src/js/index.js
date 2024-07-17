@@ -106,7 +106,7 @@ function initializeElements() {
   });
 
   if (elements.loginForm) {
-    ['sshterm', 'readyTimeout', 'cursorBlink', 'scrollback', 'tabStopWidth', 'bellStyle', 
+    ['sshTerm', 'readyTimeout', 'cursorBlink', 'scrollback', 'tabStopWidth', 'bellStyle', 
      'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight', 'logLevel'].forEach(field => {
       const input = document.createElement('input');
       input.type = 'hidden';
@@ -167,9 +167,9 @@ function populateFormFromUrl() {
   const urlParams = new URLSearchParams(window.location.search);
   const params = {};
   
-  ['host', 'port', 'header', 'headerBackground', 'sshterm', 'readyTimeout', 'cursorBlink', 
+  ['host', 'port', 'header', 'headerBackground', 'sshTerm', 'readyTimeout', 'cursorBlink', 
    'scrollback', 'tabStopWidth', 'bellStyle', 'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight',
-   'username', 'userpassword', 'logLevel'].forEach(param => {
+   'username', 'password', 'logLevel'].forEach(param => {
     const value = urlParams.get(param);
     if (value !== null) {
       params[param] = value;
@@ -184,8 +184,8 @@ function populateFormFromUrl() {
   });
 
   // Special handling for password
-  if (params.userpassword && elements.passwordInput) {
-    elements.passwordInput.value = params.userpassword;
+  if (params.password && elements.passwordInput) {
+    elements.passwordInput.value = params.password;
   }
 
   return params;
@@ -305,8 +305,8 @@ function connectToServer(formData = null) {
     host: formData?.host || urlParams.host || elements.hostInput?.value || '192.168.0.20',
     port: parseInt(formData?.port || urlParams.port || elements.portInput?.value || '22', 10),
     username: formData?.username || urlParams.username || elements.usernameInput?.value,
-    password: formData?.userpassword || urlParams.userpassword || elements.passwordInput?.value,
-    term: formData?.sshterm || urlParams.sshterm || "xterm-color",
+    password: formData?.password || urlParams.password || elements.passwordInput?.value,
+    term: formData?.sshTerm || urlParams.sshTerm || "xterm-color",
     cols: term.cols,
     rows: term.rows,
     readyTimeout: validateNumber(formData?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
