@@ -1,18 +1,22 @@
-const express = require("express");
-const path = require("path");
-const app = express();
+// /index.js
 
-const port = 3000; // You can change this to any port you prefer
+if (require.main === module) {
+  // Run the development server
+  const path = require("path");
+  const express = require("express");
+  const app = express();
 
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, "client/public")));
+  const port = 3000;
+  app.use(express.static(path.join(__dirname, "client/public")));
 
-// Serve client.html for the root route
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "client/public", "client.htm"));
-});
+  app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "client/public", "client.htm"));
+  });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Client server listening at http://localhost:${port}`);
-});
+  app.listen(port, () => {
+    console.log(`Client server listening at http://localhost:${port}`);
+  });
+} else {
+  // We're called as a module
+  module.exports = require('./client');
+}
