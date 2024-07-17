@@ -1,5 +1,7 @@
 "use strict";
 // webclient
+// /client/src/js/index.js
+import createDebug from 'debug';
 import io from "socket.io-client";
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -15,6 +17,8 @@ import {
 
 library.add(faBars, faClipboard, faDownload, faKey, faCog);
 dom.watch();
+
+const debug = createDebug('webssh2-client');
 
 let sessionLogEnable = false;
 let loggedData = false;
@@ -243,7 +247,7 @@ function handleResize() {
   if (fitAddon && term) {
     fitAddon.fit();
     const dimensions = { cols: term.cols, rows: term.rows };
-    console.log('Terminal resized:', dimensions);
+    debug('Terminal resized:', dimensions);
     socket?.emit("resize", dimensions);
   }
 }
@@ -264,7 +268,7 @@ function handleKeyDown(event) {
  */
 function connectToServer(formData = null) {
   if (isConnecting) {
-    console.log('Connection already in progress');
+    debug('Connection already in progress');
     return;
   }
 
@@ -414,7 +418,7 @@ function setupSocketListeners() {
  * Handles connection closed event
  */
 function handleConnectionClose() {
-  console.log(`SSH CONNECTION CLOSED`);
+  debug(`SSH CONNECTION CLOSED`);
   isConnecting = false;
   if (socket) {
     socket.close();
@@ -444,7 +448,7 @@ function disableTerminalInput() {
  */
 function reconnectToServer() {
   if (isConnecting) {
-    console.log('Reconnection already in progress');
+    debug('Reconnection already in progress');
     return;
   }
   
@@ -459,7 +463,7 @@ function reconnectToServer() {
  * @param {Error} error - The connection error
  */
 function handleConnectError(error) {
-  console.log('Connection error:', error);
+  console.error('Connection error:', error);
   handleDisconnect('connect_error');
 }
 
@@ -467,7 +471,7 @@ function handleConnectError(error) {
  * Handles successful connections
  */
 function handleConnect() {
-  console.log('Connected to server');
+  debug('Connected to server');
   isConnecting = false;
   reconnectAttempts = 0;
   hideReconnectPrompt();
@@ -491,7 +495,7 @@ function handleConnect() {
  * @param {string} reason - The reason for disconnection
  */
 function handleDisconnect(reason) {
-  console.log(`Disconnected: ${reason}`);
+  debug(`Disconnected: ${reason}`);
   
   isConnecting = false;
   
@@ -551,7 +555,7 @@ function attemptReconnect() {
   isConnecting = true;
   reconnectAttempts++;
 
-  console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
+  debug(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
   updateStatus(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`, "orange");
 
   setTimeout(() => {
@@ -596,7 +600,7 @@ function hideReconnectPrompt() {
  * @param {Object} result - The authentication result.
  */
 function handleAuthResult(result) {
-  console.log("Authentication result:", result)
+  debug("Authentication result:", result)
   if (result.success) {
     if (elements.loginModal) {
       elements.loginModal.style.display = "none";
@@ -664,7 +668,7 @@ function handleFooter(data) {
  */
 function handleallowReplay(data) {
   allowReplay = data;
-  console.log("allowReplay:", data);
+  debug("allowReplay:", data);
   elements.credentialsBtn.classList.toggle('visible', data);
   elements.credentialsBtn.removeEventListener('click', replayCredentials);
   elements.credentialsBtn.addEventListener('click', () => replayCredentials(socket));
@@ -676,7 +680,7 @@ function handleallowReplay(data) {
  */
 function handleallowReauth(data) {
   allowReauth = data;
-  console.log("allowReauth:", data);
+  debug("allowReauth:", data);
   elements.reauthBtn.classList.toggle('visible', data);
   elements.reauthBtn.removeEventListener('click', reauthSession);
   elements.reauthBtn.addEventListener('click', () => reauthSession(socket));
@@ -720,7 +724,7 @@ function reauthSession(socket) {
  */
 function replayCredentials(socket) {
   socket.emit("control", "replayCredentials");
-  console.log("replaying credentials");
+  debug("replaying credentials");
   term.focus();
 }
 
@@ -737,14 +741,14 @@ function toggleLog() {
     elements.downloadLogBtn.classList.add('visible');
     elements.downloadLogBtn.addEventListener('click', downloadLog);
     sessionLog = `Log Start for ${sessionFooter}: ${formatDate(currentDate)}\r\n\r\n`;
-    console.log("Starting log");
+    debug("Starting log");
   } else {
     elements.logBtn.innerHTML = '<i class="fas fa-clipboard fa-fw"></i> Start Log';
     if (loggedData) {
       sessionLog += `\r\n\r\nLog End for ${sessionFooter}: ${formatDate(new Date())}\r\n`;
-      console.log("Stopping log");
+      debug("Stopping log");
     } else {
-      console.log("Log was not actually running, resetting UI");
+      debug("Log was not actually running, resetting UI");
     }
   }
 
@@ -851,7 +855,7 @@ function saveSessionLog(autoDownload = false) {
       try {
         localStorage.setItem('webssh2_session_log', cleanLog);
         localStorage.setItem('webssh2_session_log_date', new Date().toISOString());
-        console.log('Session log saved to localStorage');
+        debug('Session log saved to localStorage');
       } catch (e) {
         console.error('Failed to save session log to localStorage:', e);
         // If localStorage fails, attempt to download
