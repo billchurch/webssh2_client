@@ -34,8 +34,10 @@ module.exports = {
       // publicPath: '/ssh/' // Prepend /ssh/ to the script tags
     }),
     new CopyWebpackPlugin({
-      patterns: [{ from: './client/src/favicon.ico', to: 'favicon.ico' }]
-    }),
+      patterns: [
+        { from: './client/src/favicon.ico', to: 'favicon.ico' },
+        { from: './client/src/test.htm', to: 'test.htm' }
+      ]    }),
     new MiniCssExtractPlugin({
       filename: '[name].css'
     })
