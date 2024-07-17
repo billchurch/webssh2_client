@@ -169,7 +169,7 @@ function populateFormFromUrl() {
   
   ['host', 'port', 'header', 'headerBackground', 'sshterm', 'readyTimeout', 'cursorBlink', 
    'scrollback', 'tabStopWidth', 'bellStyle', 'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight',
-   'username', 'userpassword'].forEach(param => {
+   'username', 'userpassword', 'logLevel'].forEach(param => {
     const value = urlParams.get(param);
     if (value !== null) {
       params[param] = value;
@@ -182,6 +182,11 @@ function populateFormFromUrl() {
       input.value = value;
     }
   });
+
+  // Special handling for password
+  if (params.userpassword && elements.passwordInput) {
+    elements.passwordInput.value = params.userpassword;
+  }
 
   return params;
 }
