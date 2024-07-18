@@ -1,3 +1,6 @@
+/* webssh2-client
+   /client/css/terminal.css
+*/
 #terminalContainer {
     display: block;
     width: calc(100% - 1px);

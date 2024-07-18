@@ -1,3 +1,4 @@
+// webssh2-client
 // /client/index.js
 const path = require('path');
 

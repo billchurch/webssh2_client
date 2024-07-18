@@ -1,3 +1,4 @@
+// webssh2-client
 // /index.js
 
 if (require.main === module) {
