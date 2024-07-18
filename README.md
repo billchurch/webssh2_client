@@ -37,6 +37,23 @@ WebSSH2 Client is a web-based SSH client that allows users to connect to SSH ser
    npm run build
    ```
 
+## Configuration
+The WebSSH2 server uses Express.js to serve the client files. The client files are served from the `/ssh` path.
+
+The WebSocket configuration is injected into the client HTML. This allows for control of the WebSocket URL and path. By default, these values are automatically determined based on the current location of the client.
+
+You can modify the `window.webssh2Config` object in the client's `client.htm` file to customize the WebSocket settings:
+
+```javascript
+    window.webssh2Config = {
+      socket: {
+        // Default values, can be overridden by server
+        url: null, // If null, it will be automatically determined
+        path: '/ssh/socket.io'
+      }
+    };
+```
+
 ## Usage
 
 ### Development

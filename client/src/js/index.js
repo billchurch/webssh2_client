@@ -291,8 +291,8 @@ function connectToServer(formData = null) {
     socket.close();
   }
 
-  socket = io("http://localhost:2222", {
-    path: "/ssh/socket.io",
+  socket = io(getWebSocketUrl(), {
+    path: getSocketIOPath(),
     withCredentials: true,
     reconnection: false,
   });
@@ -899,4 +899,31 @@ function checkSavedSessionLog() {
       localStorage.removeItem('webssh2_session_log_date');
     }
   }
+}
+
+
+/**
+ * Retrieves the WebSocket URL for establishing a connection.
+ * If the WebSocket URL is provided in the `window.webssh2Config.socket.url` property, it will be used.
+ * Otherwise, it constructs the WebSocket URL based on the current window location.
+ * @returns {string} The WebSocket URL.
+ */
+function getWebSocketUrl() {
+  if (window.webssh2Config && window.webssh2Config.socket && window.webssh2Config.socket.url) {
+    return window.webssh2Config.socket.url;
+  }
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.hostname;
+  const port = window.location.port || (protocol === 'wss:' ? '443' : '80');
+  return `${protocol}//${host}:${port}`;
+}
+
+/**
+ * Retrieves the path for the Socket.IO connection.
+ * If the path is not specified in the `window.webssh2Config` object, the default path '/ssh/socket.io' is returned.
+ *
+ * @returns {string} The Socket.IO path.
+ */
+function getSocketIOPath() {
+  return (window.webssh2Config && window.webssh2Config.socket && window.webssh2Config.socket.path) || '/ssh/socket.io';
 }
