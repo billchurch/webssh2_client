@@ -1,10 +1,19 @@
-<!-- Version Version 0.2.14 - 2024-07-18T12:06:10.855Z - ce04ff8 -->
+<!-- Version Version 0.2.14 - 2024-07-18T12:43:51.937Z - 43a78a7 -->
 <!DOCTYPE html>
 <html>
   <head>
     <title>WebSSH2</title>
     <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/pure-min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script>
+    window.webssh2Config = {
+      socket: {
+        // Default values, can be overridden by server
+        url: null, // If null, it will be automatically determined
+        path: '/ssh/socket.io'
+      }
+    };
+    </script>
   <script defer src="webssh2.bundle.js"></script><link href="webssh2.css" rel="stylesheet"></head>
   <body>
     <div id="loginModal" class="modal">
