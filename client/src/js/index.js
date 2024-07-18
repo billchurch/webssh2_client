@@ -40,12 +40,12 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeTerminal();
     initializeElements();
     setupEventListeners();
+    populateFormFromUrl(); // This will now populate form fields from both URL and injected config
     checkSavedSessionLog();
 
     if (elements.loginModal) {
       elements.loginModal.style.display = "block";
-      const urlParams = populateFormFromUrl();
-      if (urlParams.host && urlParams.port) {
+      if (elements.hostInput.value && elements.portInput.value) {
         elements.usernameInput.focus();
       } else {
         elements.hostInput.focus();
@@ -168,15 +168,19 @@ function setupEventListeners() {
  */
 function populateFormFromUrl() {
   const urlParams = new URLSearchParams(window.location.search);
+  const config = window.webssh2Config || {};
   const params = {};
   
   ['host', 'port', 'header', 'headerBackground', 'sshTerm', 'readyTimeout', 'cursorBlink', 
    'scrollback', 'tabStopWidth', 'bellStyle', 'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight',
    'username', 'password', 'logLevel'].forEach(param => {
-    const value = urlParams.get(param);
+    let value = urlParams.get(param);
+    if (value === null && config.ssh && config.ssh[param] !== undefined) {
+      value = config.ssh[param];
+    }
     if (value !== null) {
       params[param] = value;
-      const input = elements[param + 'Input'];
+      const input = document.getElementById(param + 'Input');
       if (input) {
         input.value = value;
       }
