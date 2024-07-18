@@ -268,7 +268,7 @@ function handleKeyDown(event) {
  */
 function connectToServer(formData = null) {
   if (isConnecting) {
-    debug('Connection already in progress');
+    console.log('Connection already in progress');
     return;
   }
 
