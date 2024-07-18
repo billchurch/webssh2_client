@@ -32,6 +32,7 @@ let term, fitAddon;
 let elements = {};
 let isConnecting = false;
 let reconnectAttempts = 0;
+let urlParams;
 const maxReconnectAttempts = 5;
 const reconnectDelay = 5000;
 
@@ -40,10 +41,12 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeTerminal();
     initializeElements();
     setupEventListeners();
-    populateFormFromUrl(); // This will now populate form fields from both URL and injected config
+    urlParams = populateFormFromUrl();
     checkSavedSessionLog();
 
-    if (elements.loginModal) {
+    if (window.webssh2Config && window.webssh2Config.autoConnect) {
+      connectToServer();
+    } else if (elements.loginModal) {
       elements.loginModal.style.display = "block";
       if (elements.hostInput.value && elements.portInput.value) {
         elements.usernameInput.focus();
@@ -167,14 +170,14 @@ function setupEventListeners() {
  * @returns {Object} The URL parameters for host and port.
  */
 function populateFormFromUrl() {
-  const urlParams = new URLSearchParams(window.location.search);
+  const searchParams = new URLSearchParams(window.location.search);
   const config = window.webssh2Config || {};
   const params = {};
   
   ['host', 'port', 'header', 'headerBackground', 'sshTerm', 'readyTimeout', 'cursorBlink', 
    'scrollback', 'tabStopWidth', 'bellStyle', 'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight',
    'username', 'password', 'logLevel'].forEach(param => {
-    let value = urlParams.get(param);
+    let value = searchParams.get(param);
     if (value === null && config.ssh && config.ssh[param] !== undefined) {
       value = config.ssh[param];
     }
@@ -270,6 +273,12 @@ function connectToServer(formData = null) {
 
   isConnecting = true;
 
+  const config = window.webssh2Config || {};
+  // Ensure urlParams is defined
+  if (!urlParams) {
+    urlParams = populateFormFromUrl();
+  }
+
   // Reset logging state
   sessionLogEnable = false;
   loggedData = false;
@@ -299,9 +308,6 @@ function connectToServer(formData = null) {
     elements.terminalContainer.style.display = "block";
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const config = window.webssh2Config || {};
-
   // Handle header first
   if (urlParams.header) {
     handleHeader(urlParams.header);
@@ -315,15 +321,15 @@ function connectToServer(formData = null) {
 
   handleResize();
 
-  const credentials = {
-    host: formData?.host || config.ssh?.host || urlParams.get('host') || elements.hostInput?.value || '',
-    port: parseInt(formData?.port || config.ssh?.port || urlParams.get('port') || elements.portInput?.value || '22', 10),
-    username: formData?.username || urlParams.username || elements.usernameInput?.value,
-    password: formData?.password || urlParams.password || elements.passwordInput?.value,
-    term: formData?.sshTerm || urlParams.sshTerm || "xterm-color",
+    const credentials = {
+      host: formData?.host || config.ssh?.host || urlParams.host || elements.hostInput.value || '',
+      port: parseInt(formData?.port || config.ssh?.port || urlParams.port || elements.portInput.value || '22', 10),
+      username: formData?.username || config.ssh?.username || urlParams.username || elements.usernameInput.value || '',
+      password: formData?.password || config.ssh?.password || urlParams.password || elements.passwordInput.value || '',
+      term: formData?.sshTerm || urlParams.sshTerm || "xterm-color",
+      readyTimeout: validateNumber(formData?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
     cols: term.cols,
-    rows: term.rows,
-    readyTimeout: validateNumber(formData?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
+    rows: term.rows
   };
 
   // Apply xterm.js options
