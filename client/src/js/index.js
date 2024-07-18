@@ -1,5 +1,5 @@
 "use strict";
-// webclient
+// webssh2-client
 // /client/src/js/index.js
 import createDebug from 'debug';
 import io from "socket.io-client";
@@ -176,20 +176,12 @@ function populateFormFromUrl() {
     const value = urlParams.get(param);
     if (value !== null) {
       params[param] = value;
+      const input = elements[param + 'Input'];
+      if (input) {
+        input.value = value;
+      }
     }
   });
-
-  Object.entries(params).forEach(([key, value]) => {
-    const input = elements[key + 'Input'];
-    if (input) {
-      input.value = value;
-    }
-  });
-
-  // Special handling for password
-  if (params.password && elements.passwordInput) {
-    elements.passwordInput.value = params.password;
-  }
 
   return params;
 }
@@ -303,7 +295,8 @@ function connectToServer(formData = null) {
     elements.terminalContainer.style.display = "block";
   }
 
-  const urlParams = populateFormFromUrl();
+  const urlParams = new URLSearchParams(window.location.search);
+  const config = window.webssh2Config || {};
 
   // Handle header first
   if (urlParams.header) {
@@ -319,8 +312,8 @@ function connectToServer(formData = null) {
   handleResize();
 
   const credentials = {
-    host: formData?.host || urlParams.host || elements.hostInput?.value || '192.168.0.20',
-    port: parseInt(formData?.port || urlParams.port || elements.portInput?.value || '22', 10),
+    host: formData?.host || config.ssh?.host || urlParams.get('host') || elements.hostInput?.value || '',
+    port: parseInt(formData?.port || config.ssh?.port || urlParams.get('port') || elements.portInput?.value || '22', 10),
     username: formData?.username || urlParams.username || elements.usernameInput?.value,
     password: formData?.password || urlParams.password || elements.passwordInput?.value,
     term: formData?.sshTerm || urlParams.sshTerm || "xterm-color",
