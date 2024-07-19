@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     checkSavedSessionLog();
   
     if (window.webssh2Config && window.webssh2Config.autoConnect) {
-      console.log("Auto-connect is enabled");
+      debug("Auto-connect is enabled");
       // Silently fill out the form if autoConnect is true
       if (elements.loginForm) {
         fillLoginForm(window.webssh2Config.ssh);
@@ -268,7 +268,7 @@ function handleKeyDown(event) {
  */
 function connectToServer(formData = null) {
   if (isConnecting) {
-    console.log('Connection already in progress');
+    debug('Connection already in progress');
     return;
   }
 
@@ -363,7 +363,7 @@ function connectToServer(formData = null) {
  * Displays the login modal and performs necessary UI updates.
  */
 function showLoginPrompt() {
-  console.log("showLoginPrompt: Displaying login modal");
+  debug("showLoginPrompt: Displaying login modal");
   if (elements.loginModal) {
     elements.loginModal.style.display = "block"
   }
