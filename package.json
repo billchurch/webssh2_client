@@ -1,10 +1,14 @@
 {
   "name": "webssh2_client",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "ignore": [
     ".gitignore"
   ],
   "description": "A client for the webssh2 gateway",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/billchurch/webssh2_client.git"
+  },
   "main": "index.js",
   "files": [
     "index.js",
