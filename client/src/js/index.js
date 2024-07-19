@@ -47,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     checkSavedSessionLog();
   
     if (window.webssh2Config && window.webssh2Config.autoConnect) {
+      console.log("Auto-connect is enabled");
       // Silently fill out the form if autoConnect is true
       if (elements.loginForm) {
         fillLoginForm(window.webssh2Config.ssh);
@@ -56,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       // Only show the modal if autoConnect is false or not set
       if (elements.loginModal) {
+        console.log("Displaying login modal");
         elements.loginModal.style.display = "block";
         focusAppropriateInput();
       } else {
