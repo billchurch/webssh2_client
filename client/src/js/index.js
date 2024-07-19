@@ -346,16 +346,16 @@ function connectToServer(formData = null) {
     logLevel: formData?.logLevel || urlParams.logLevel
   });
 
-  socket.emit("authenticate", credentials);
-  updateStatus("Authenticating...", "orange");
+  // Check if host is present for autoConnect
+  const canAutoConnect = config.autoConnect && credentials.host;
 
-  // If autoConnect is true, don't show the login modal even if credentials are incomplete
-  if (config.autoConnect) {
+  if (canAutoConnect) {
     hideLoginPrompt();
-  } else if (!credentials.username || !credentials.password) {
-    showLoginPrompt();
+    socket.emit("authenticate", credentials);
+    updateStatus("Authenticating...", "orange");
   } else {
-    hideLoginPrompt();
+    showLoginPrompt();
+    isConnecting = false;
   }
 }
 
