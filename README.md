@@ -37,22 +37,126 @@ WebSSH2 Client is a web-based SSH client that allows users to connect to SSH ser
    npm run build
    ```
 
-## Configuration
-The WebSSH2 server uses Express.js to serve the client files. The client files are served from the `/ssh` path.
+## WebSSH2 Configuration
 
-The WebSocket configuration is injected into the client HTML. This allows for control of the WebSocket URL and path. By default, these values are automatically determined based on the current location of the client.
+The WebSSH2 client can be customized using the `window.webssh2Config` object. This object is typically injected by the WebSSH2 server, but it can also be manually set or modified by users for customization purposes.
 
-You can modify the `window.webssh2Config` object in the client's `client.htm` file to customize the WebSocket settings:
+### Basic Usage
+
+In the client HTML file, you'll find this script tag:
+
+```html
+<script>
+window.webssh2Config = null;
+</script>
+```
+
+The WebSSH2 server replaces this null value with a configuration object. However, you can also set this manually to override server-provided settings or to configure the client when using it standalone.
+
+### Configuration Options
+
+Here's a comprehensive list of parameters that can be injected using `window.webssh2Config`:
 
 ```javascript
-    window.webssh2Config = {
-      socket: {
-        // Default values, can be overridden by server
-        url: null, // If null, it will be automatically determined
-        path: '/ssh/socket.io'
-      }
-    };
+window.webssh2Config = {
+  socket: {
+    url: null,  // WebSocket URL. If null, it will be automatically determined
+    path: '/ssh/socket.io',  // Socket.IO path
+  },
+  ssh: {
+    host: null,  // SSH server hostname (required for autoConnect)
+    port: 22,  // SSH server port
+    username: null,  // SSH username (required for autoConnect)
+    password: null,  // SSH password (required for autoConnect)
+    sshTerm: 'xterm-color',  // Terminal type
+    readyTimeout: 20000,  // SSH connection timeout (ms)
+  },
+  terminal: {
+    cursorBlink: true,  // Whether the cursor should blink
+    scrollback: 10000,  // Number of rows to keep in scrollback
+    tabStopWidth: 8,  // Tab width
+    bellStyle: 'sound',  // Terminal bell style ('sound' or 'none')
+    fontSize: 14,  // Font size in pixels
+    fontFamily: 'courier-new, courier, monospace',  // Font family
+    letterSpacing: 0,  // Letter spacing
+    lineHeight: 1,  // Line height
+  },
+  header: {
+    text: null,  // Custom header text
+    background: 'green',  // Header background color
+  },
+  autoConnect: false,  // Whether to connect automatically
+  logLevel: 'info',  // Logging level ('debug', 'info', 'warn', 'error')
+};
 ```
+
+### Auto-Connect Functionality
+
+The `autoConnect` option is used to create pre-configured connections:
+
+- When set to `true`, the client will attempt to connect immediately using the provided SSH configuration, bypassing the login form.
+- For `autoConnect` to work, you must provide at least the `host` in the SSH configuration.
+- Username and password are optional for `autoConnect`. If not provided, the server may use other methods (like basic auth or session data) to authenticate the connection.
+- If the host is missing when `autoConnect` is `true`, the login form will be shown instead.
+
+Example usage:
+
+```javascript
+window.webssh2Config = {
+  ssh: {
+    host: 'example.com',
+    port: 22,
+    username: 'user',  // Optional
+    password: 'password'  // Optional
+  },
+  autoConnect: true
+};
+```
+
+This configuration will attempt to connect to `example.com` as soon as the page loads, using any provided credentials or relying on server-side authentication methods.
+
+### Security Considerations
+
+- The `autoConnect` feature only requires the host to be specified. Authentication is handled by the server, which may use various methods including basic auth or session data.
+- If you do include username and password in the client-side configuration, be cautious as this may pose security risks, especially in production environments.
+- For production use, consider using secure server-side authentication methods rather than including credentials in the client-side configuration.
+- When `autoConnect` is not used, ensure that your server is configured to securely prompt for or handle credentials as needed.
+
+### Customization Examples
+
+1. Changing terminal appearance:
+   ```javascript
+   window.webssh2Config = {
+     terminal: {
+       fontSize: 16,
+       fontFamily: 'Fira Code, monospace',
+       cursorBlink: false
+     }
+   };
+   ```
+
+2. Setting a custom header:
+   ```javascript
+   window.webssh2Config = {
+     header: {
+       text: 'My Custom SSH Client',
+       background: '#007acc'
+     }
+   };
+   ```
+
+3. Configuring for a specific SSH server with auto-connect:
+   ```javascript
+   window.webssh2Config = {
+     ssh: {
+       host: 'myserver.example.com',
+       port: 2222
+     },
+     autoConnect: true
+   };
+   ```
+
+By leveraging these configuration options, you can customize the WebSSH2 client to suit your specific needs or integrate it seamlessly into your existing systems. Remember that the server handles authentication, providing flexibility in how credentials are managed and secured.
 
 ## Usage
 
