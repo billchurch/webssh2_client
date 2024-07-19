@@ -365,6 +365,7 @@ function connectToServer(formData = null) {
   }
 }
 function showLoginPrompt() {
+  console.log("showLoginPrompt: Displaying login modal");
   if (elements.loginModal) {
     elements.loginModal.style.display = "block"
   }
