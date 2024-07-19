@@ -47,18 +47,20 @@ document.addEventListener("DOMContentLoaded", () => {
     checkSavedSessionLog();
   
     if (window.webssh2Config && window.webssh2Config.autoConnect) {
-      // Silently fill out the form
+      // Silently fill out the form if autoConnect is true
       if (elements.loginForm) {
         fillLoginForm(window.webssh2Config.ssh);
       }
       // Attempt connection without showing the modal
       connectToServer();
-    } else if (elements.loginModal) {
-      // Only show the modal if not auto-connecting
-      elements.loginModal.style.display = "block";
-      focusAppropriateInput();
     } else {
-      console.error("Login modal not found. Cannot display login form.");
+      // Only show the modal if autoConnect is false or not set
+      if (elements.loginModal) {
+        elements.loginModal.style.display = "block";
+        focusAppropriateInput();
+      } else {
+        console.error("Login modal not found. Cannot display login form.");
+      }
     }
   } catch (error) {
     console.error("Initialization error:", error);
@@ -315,7 +317,7 @@ function connectToServer(formData = null) {
   if (urlParams.header) {
     handleHeader(urlParams.header);
   } else {
-    handleHeader(null);  // This will hide the header if it's not needed
+    handleHeader(null);  // This will hide the header when it's not needed
   }
 
   if (urlParams.headerBackground) {
