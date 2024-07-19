@@ -56,13 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
       connectToServer();
     } else {
       // Only show the modal if autoConnect is false or not set
-      if (elements.loginModal) {
-        console.log("Displaying login modal");
-        elements.loginModal.style.display = "block";
-        focusAppropriateInput();
-      } else {
-        console.error("Login modal not found. Cannot display login form.");
-      }
+      showLoginPrompt();
     }
   } catch (error) {
     console.error("Initialization error:", error);
@@ -328,13 +322,13 @@ function connectToServer(formData = null) {
 
   handleResize();
 
-    const credentials = {
-      host: formData?.host || config.ssh?.host || urlParams.host || elements.hostInput.value || '',
-      port: parseInt(formData?.port || config.ssh?.port || urlParams.port || elements.portInput.value || '22', 10),
-      username: formData?.username || config.ssh?.username || urlParams.username || elements.usernameInput.value || '',
-      password: formData?.password || config.ssh?.password || urlParams.password || elements.passwordInput.value || '',
-      term: formData?.sshTerm || urlParams.sshTerm || "xterm-color",
-      readyTimeout: validateNumber(formData?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
+  const credentials = {
+    host: formData?.host || config.ssh?.host || urlParams.host || elements.hostInput.value || '',
+    port: parseInt(formData?.port || config.ssh?.port || urlParams.port || elements.portInput.value || '22', 10),
+    username: formData?.username || config.ssh?.username || urlParams.username || elements.usernameInput.value || '',
+    password: formData?.password || config.ssh?.password || urlParams.password || elements.passwordInput.value || '',
+    term: formData?.sshTerm || urlParams.sshTerm || "xterm-color",
+    readyTimeout: validateNumber(formData?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
     cols: term.cols,
     rows: term.rows
   };
@@ -355,15 +349,19 @@ function connectToServer(formData = null) {
   socket.emit("authenticate", credentials);
   updateStatus("Authenticating...", "orange");
 
-  // If username and password are provided, don't show the login modal
-  if (credentials.username && credentials.password) {
-    if (elements.loginModal) {
-      elements.loginModal.style.display = "none";
-    }
-  } else {
+  // If autoConnect is true, don't show the login modal even if credentials are incomplete
+  if (config.autoConnect) {
+    hideLoginPrompt();
+  } else if (!credentials.username || !credentials.password) {
     showLoginPrompt();
+  } else {
+    hideLoginPrompt();
   }
 }
+
+/**
+ * Displays the login modal and performs necessary UI updates.
+ */
 function showLoginPrompt() {
   console.log("showLoginPrompt: Displaying login modal");
   if (elements.loginModal) {
@@ -375,13 +373,20 @@ function showLoginPrompt() {
   if (elements.passwordInput) {
     elements.passwordInput.value = ""
   }
-  if (elements.usernameInput) {
-    elements.usernameInput.focus()
-  }
+  focusAppropriateInput()
   // Reset connection status
   isConnecting = false
   reconnectAttempts = 0
   hideReconnectPrompt()
+}
+
+/**
+ * Hides the login prompt modal.
+ */
+function hideLoginPrompt() {
+  if (elements.loginModal) {
+    elements.loginModal.style.display = "none";
+  }
 }
 
 /**
@@ -613,8 +618,8 @@ function hideReconnectPrompt() {
 function handleAuthResult(result) {
   debug("Authentication result:", result)
   if (result.success) {
-    if (elements.loginModal) {
-      elements.loginModal.style.display = "none";
+    hideLoginPrompt();
+    if (elements.terminalContainer) {
       elements.terminalContainer.style.display = "block";
     }
     term.focus();
@@ -624,10 +629,7 @@ function handleAuthResult(result) {
     if (elements.passwordInput) {
       elements.passwordInput.value = "";
     }
-    // Hide the terminal container if authentication fails
-    if (elements.terminalContainer) {
-      elements.terminalContainer.style.display = "none";
-    }
+    showLoginPrompt();
   }
 }
 
@@ -724,8 +726,7 @@ function setTerminalOptions(data) {
  * @param {Object} socket - The socket object for communication.
  */
 function reauthSession(socket) {
-  elements.loginModal.style.display = "block";
-  elements.terminalContainer.style.display = "none";
+  showLoginPrompt();
   socket.emit("reauth");
 }
 
