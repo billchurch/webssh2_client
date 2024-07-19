@@ -21,7 +21,14 @@
     "analyze": "webpack --json --config scripts/webpack.prod.js | webpack-bundle-size-analyzer",
     "watch": "npm-run-all --parallel start watch:build",
     "watch:build": "webpack --watch --config scripts/webpack.dev.js",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
+    "release": "standard-version",
+    "publish:dry-run": "npm publish --dry-run",
+    "publish:npm": "npm publish",
+    "release:major": "npm run release -- --release-as major",
+    "release:minor": "npm run release -- --release-as minor",
+    "release:patch": "npm run release -- --release-as patch"
   },
   "author": "",
   "license": "SEE LICENSE IN FILE - LICENSE",
@@ -31,6 +38,7 @@
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "clean-webpack-plugin": "^4.0.0",
+    "conventional-changelog-cli": "^5.0.0",
     "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.0",
@@ -41,6 +49,7 @@
     "nodemon": "^3.1.4",
     "npm-run-all": "^4.1.5",
     "socket.io-client": "^2.2.0",
+    "standard-version": "^9.5.0",
     "terser-webpack-plugin": "^5.3.10",
     "uglify-js": "^3.19.0",
     "webpack": "^5.92.1",
@@ -49,5 +58,10 @@
   },
   "dependencies": {
     "purecss": "^3.0.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
