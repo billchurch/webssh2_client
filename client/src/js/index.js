@@ -921,12 +921,19 @@ function checkSavedSessionLog() {
  * @returns {string} The WebSocket URL.
  */
 function getWebSocketUrl() {
+  // Check if a custom URL is provided in the configuration
   if (window.webssh2Config && window.webssh2Config.socket && window.webssh2Config.socket.url) {
-    return window.webssh2Config.socket.url;
+    let url = new URL(window.webssh2Config.socket.url);
+    // Use wss:// if the page is served over https, ws:// otherwise
+    url.protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return url.toString();
   }
+
+  // If no custom URL is provided, construct one based on the current location
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const host = window.location.hostname;
   const port = window.location.port || (protocol === 'wss:' ? '443' : '80');
+
   return `${protocol}//${host}:${port}`;
 }
 
