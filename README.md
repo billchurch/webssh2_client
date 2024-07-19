@@ -209,8 +209,6 @@ This project uses the `debug` module for logging. To enable debugging in the bro
 
 To disable debugging, enter: `localStorage.debug = ''`
 
-You can also use the `toggleDebugging()` function in the console to switch debugging on and off.
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
