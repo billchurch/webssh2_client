@@ -5,6 +5,7 @@ import createDebug from 'debug';
 import io from "socket.io-client";
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import 'purecss/build/pure.css';
 import '../css/menu.css';
 import '@xterm/xterm/css/xterm.css';
 import '../css/terminal.css';

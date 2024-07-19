@@ -38,7 +38,8 @@ module.exports = {
       patterns: [{ from: './client/src/favicon.ico', to: 'favicon.ico' },]
     }),
     new MiniCssExtractPlugin({
-      filename: '[name].css'
+      filename: '[name].css',
+      chunkFilename: '[id].css'
     })
   ],
   output: {
