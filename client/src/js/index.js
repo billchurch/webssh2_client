@@ -38,26 +38,28 @@ const maxReconnectAttempts = 5;
 const reconnectDelay = 5000;
 
 document.addEventListener("DOMContentLoaded", () => {
+
   try {
     initializeTerminal();
     initializeElements();
     setupEventListeners();
     urlParams = populateFormFromUrl();
     checkSavedSessionLog();
-
+  
     if (window.webssh2Config && window.webssh2Config.autoConnect) {
+      // Silently fill out the form
+      if (elements.loginForm) {
+        fillLoginForm(window.webssh2Config.ssh);
+      }
+      // Attempt connection without showing the modal
       connectToServer();
     } else if (elements.loginModal) {
+      // Only show the modal if not auto-connecting
       elements.loginModal.style.display = "block";
-      if (elements.hostInput.value && elements.portInput.value) {
-        elements.usernameInput.focus();
-      } else {
-        elements.hostInput.focus();
-      }
+      focusAppropriateInput();
     } else {
       console.error("Login modal not found. Cannot display login form.");
     }
-
   } catch (error) {
     console.error("Initialization error:", error);
   }
@@ -930,4 +932,27 @@ function getWebSocketUrl() {
  */
 function getSocketIOPath() {
   return (window.webssh2Config && window.webssh2Config.socket && window.webssh2Config.socket.path) || '/ssh/socket.io';
+}
+
+/**
+ * Fills out the login form with provided SSH configuration
+ * @param {Object} sshConfig - The SSH configuration object
+ */
+function fillLoginForm(sshConfig) {
+  if (elements.hostInput) elements.hostInput.value = sshConfig.host || '';
+  if (elements.portInput) elements.portInput.value = sshConfig.port || '';
+  if (elements.usernameInput) elements.usernameInput.value = sshConfig.username || '';
+  // Note: We typically don't pre-fill passwords for security reasons
+  // if (elements.passwordInput) elements.passwordInput.value = sshConfig.password || '';
+}
+
+/**
+ * Focuses on the appropriate input field
+ */
+function focusAppropriateInput() {
+  if (elements.hostInput.value && elements.portInput.value) {
+    elements.usernameInput.focus();
+  } else {
+    elements.hostInput.focus();
+  }
 }
