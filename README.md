@@ -2,6 +2,13 @@
 
 WebSSH2 Client is a web-based SSH client that allows users to connect to SSH servers directly from their web browsers. It's built using modern web technologies and provides a seamless, secure SSH experience.
 
+# EXPERIMENTAL
+The current status of this is experimental and this first version is a refactor of webssh2 v0.2.x to be compatible with a refactor of the same version of webssh2 as a stand-alone server-side component for BIG-IP running Node.js v6.9.1.
+
+The intention is to harmonize the latest release of webssh2 splitting out the client and server as seperate repos (webssh2-client and webssh2-server) but joining them both together as modules in a parent webssh2 in an attempt to provide backwards compatibility.
+
+The main idea for bifurcating the client/server is to make it easier to customize the client to work in other frameworks and use-cases.
+
 ## Features
 
 - Web-based SSH terminal emulation
