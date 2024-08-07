@@ -99,7 +99,7 @@ function initializeElements() {
     "status", "header", "dropupContent", "footer", "terminalContainer",
     "loginModal", "loginForm", "hostInput", "portInput", "usernameInput",
     "passwordInput", "logBtn", "downloadLogBtn", "credentialsBtn", "reauthBtn",
-    "errorModal", "errorMessage"
+    "errorModal", "errorMessage", "reconnectButton"
   ];
 
   elements = {};
@@ -638,8 +638,7 @@ function attemptReconnect() {
  * Shows the reconnect prompt
  */
 function showReconnectPrompt() {
-  const reconnectButton = document.getElementById('reconnectButton');
-  if (reconnectButton) {
+  if (elements.reconnectButton) {
     reconnectButton.style.display = 'block';
     reconnectButton.onclick = reconnectToServer;
   } else {
@@ -651,8 +650,7 @@ function showReconnectPrompt() {
  * Hides the reconnect prompt
  */
 function hideReconnectPrompt() {
-  const reconnectButton = document.getElementById('reconnectButton');
-  if (reconnectButton) {
+  if (elements.reconnectButton) {
     reconnectButton.style.display = 'none';
   }
 }
