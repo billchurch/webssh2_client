@@ -278,8 +278,6 @@ function connectToServer(formData = null) {
     urlParams = populateFormFromUrl();
   }
 
-  initializeSocketConnection();
-
   // Reset logging state
   sessionLogEnable = false;
   loggedData = false;
@@ -293,17 +291,7 @@ function connectToServer(formData = null) {
     elements.downloadLogBtn.classList.remove('visible');
   }
 
-  if (socket) {
-    socket.close();
-  }
-
-  socket = io(getWebSocketUrl(), {
-    path: getSocketIOPath(),
-    withCredentials: true,
-    reconnection: false,
-  });
-
-  setupSocketListeners();
+  initializeSocketConnection();
   
   if (elements.terminalContainer) {
     elements.terminalContainer.style.display = "block";
@@ -366,8 +354,6 @@ function connectToServer(formData = null) {
     }
   }
   
-// In your client-side JavaScript file
-
   function initializeSocketConnection() {
     if (socket) {
       socket.close();
@@ -465,8 +451,8 @@ function setupSocketListeners() {
     "allowReauth": handleallowReauth,
     "connection_closed": handleConnectionClose,
     "reauth": () => allowReauth && reauthSession(),
-    "ping": () => console.log(`Received ping from server ${socket.id}`),
-    "pong": (latency) => console.log(`Received pong from server ${socket.id}. Latency: ${latency}ms`),
+    "ping": () => debug(`Received ping from server ${socket.id}`),
+    "pong": (latency) => debug(`Received pong from server ${socket.id}. Latency: ${latency}ms`),
   };
 
   Object.entries(listeners).forEach(([event, handler]) => {
