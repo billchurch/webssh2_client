@@ -11,10 +11,31 @@ import '@xterm/xterm/css/xterm.css';
 import '../css/terminal.css';
 import '../css/style.css';
 
+import { 
+  closeErrorModal,
+  hideLoginPrompt,
+  hideReconnectPrompt,
+  initializeElements,
+  showErrorModal,
+  showLoginPrompt,
+  updateStatus
+} from './dom.js';
+
+import state from './state.js';
+
 import { library, dom } from "@fortawesome/fontawesome-svg-core";
 import {
   faBars, faClipboard, faDownload, faKey, faCog,
 } from "@fortawesome/free-solid-svg-icons";
+import { 
+  formatDate,
+  initializeConfig,
+  isObject, 
+  mergeDeep, 
+  populateFormFromUrl,
+  validateBellStyle,
+  validateNumber
+} from './utils.js';
 
 library.add(faBars, faClipboard, faDownload, faKey, faCog);
 dom.watch();
@@ -23,11 +44,9 @@ let allowReauth = false;
 let allowReplay = false;
 let config;
 let currentDate;
-let elements = {};
+let elements;
 let fitAddon;
-let isConnecting = false;
 let loggedData = false;
-let reconnectAttempts = 0;
 let sessionFooter = '';
 let sessionLog = '';
 let sessionLogEnable = false;
@@ -65,11 +84,11 @@ document.addEventListener("DOMContentLoaded", initialize);
 
 function initialize() {
   try {
-    initializeConfig();
+    config = initializeConfig();
+    urlParams = populateFormFromUrl(config);
     initializeTerminal();
-    initializeElements();
+    elements = initializeElements(term);
     setupEventListeners();
-    urlParams = populateFormFromUrl();
     checkSavedSessionLog();
     initializeConnection();
   
@@ -91,84 +110,12 @@ function initialize() {
 };
 
 /**
- * Initializes the global configuration.
- * This should be called once at application startup.
- */
-function initializeConfig() {
-  const defaultConfig = {
-    socket: {
-      url: null,
-      path: '/ssh/socket.io',
-    },
-    ssh: {
-      host: null,
-      port: 22,
-      username: null,
-      password: null,
-      sshTerm: 'xterm-color',
-      readyTimeout: 20000,
-    },
-    terminal: {
-      cursorBlink: true,
-      scrollback: 10000,
-      tabStopWidth: 8,
-      bellStyle: 'sound',
-      fontSize: 14,
-      fontFamily: 'courier-new, courier, monospace',
-      letterSpacing: 0,
-      lineHeight: 1,
-    },
-    header: {
-      text: null,
-      background: 'green',
-    },
-    autoConnect: false,
-    logLevel: 'info',
-  };
-
-  const userConfig = window.webssh2Config || {};
-  config = mergeDeep(defaultConfig, userConfig);
-}
-
-/**
- * Recursively merges two objects.
- * @param {Object} target - The target object.
- * @param {Object} source - The source object.
- * @returns {Object} The merged object.
- */
-function mergeDeep(target, source) {
-  const output = Object.assign({}, target);
-  if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach(key => {
-      if (isObject(source[key])) {
-        if (!(key in target)) {
-          Object.assign(output, { [key]: source[key] });
-        } else {
-          output[key] = mergeDeep(target[key], source[key]);
-        }
-      } else {
-        Object.assign(output, { [key]: source[key] });
-      }
-    });
-  }
-  return output;
-}
-
-/**
- * Checks if the value is an object.
- * @param {*} item - The value to check.
- * @returns {boolean} True if the value is an object, false otherwise.
- */
-function isObject(item) {
-  return (item && typeof item === 'object' && !Array.isArray(item));
-}
-
-/**
  * Initializes the terminal instance.
  */
 function initializeTerminal() {
   try {
     const options = getTerminalOptions();
+    console.log('initializeTerminal options:', options);
     term = new Terminal(options);
     fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
@@ -186,66 +133,20 @@ function initializeTerminal() {
  * @returns {Object} The terminal options.
  */
 function getTerminalOptions() {
+  console.log('getTerminalOptions Config:', config);
+  let terminial = config.terminal
+  console.log(`terminal.cursorBlink: ${terminial.cursorBlink}`);
   return {
-    logLevel: config.logLevel ?? 'info',
-    cursorBlink: config.cursorBlink ?? true,
-    scrollback: config.scrollback ?? 10000,
-    tabStopWidth: config.tabStopWidth ?? 8,
-    bellStyle: config.bellStyle ?? 'sound',
-    fontSize: config.fontSize ?? 12,
-    fontFamily: config.fontFamily ?? 'courier-new, courier, monospace',
-    letterSpacing: config.letterSpacing ?? 0,
-    lineHeight: config.lineHeight ?? 1
+    logLevel: terminial.logLevel ?? 'info',
+    cursorBlink: terminial.cursorBlink ?? true,
+    scrollback: terminial.scrollback ?? 10000,
+    tabStopWidth: terminial.tabStopWidth ?? 8,
+    bellStyle: terminial.bellStyle ?? 'sound',
+    fontSize: terminial.fontSize ?? 12,
+    fontFamily: terminial.fontFamily ?? 'courier-new, courier, monospace',
+    letterSpacing: terminial.letterSpacing ?? 0,
+    lineHeight: terminial.lineHeight ?? 1
   };
-}
-
-/**
- * Initializes DOM elements and stores references to them.
- */
-function initializeElements() {
-  const elementIds = [
-    "status", "header", "dropupContent", "footer", "terminalContainer",
-    "loginModal", "loginForm", "hostInput", "portInput", "usernameInput",
-    "passwordInput", "logBtn", "downloadLogBtn", "credentialsBtn", "reauthBtn",
-    "errorModal", "errorMessage", "reconnectButton"
-  ];
-
-  elements = {};
-
-  elementIds.forEach(id => {
-    const element = document.getElementById(id);
-    if (element) {
-      elements[id] = element;
-    } else {
-      console.warn(`Element with id '${id}' not found`);
-    }
-  });
-
-  if (elements.loginForm) {
-    ['sshTerm', 'readyTimeout', 'cursorBlink', 'scrollback', 'tabStopWidth', 'bellStyle', 
-     'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight', 'logLevel'].forEach(field => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = field;
-      input.id = field + 'Input';
-      elements.loginForm.appendChild(input);
-      elements[field + 'Input'] = input;
-    });
-  }
-
-  if (elements.terminalContainer) {
-    elements.terminalContainer.style.display = "none";
-    term.open(elements.terminalContainer);
-  } else {
-    handleError("DOM Error", "Terminal container not found. Terminal cannot be initialized.");
-  }
-
-  if (elements.errorModal) {
-    const closeBtn = elements.errorModal.querySelector('.close');
-    if (closeBtn) {
-      closeBtn.onclick = () => { elements.errorModal.style.display = 'none'; };
-    }
-  }
 }
 
 /**
@@ -275,70 +176,12 @@ function setupEventListeners() {
 }
 
 /**
- * Populates form fields from URL parameters.
- * @returns {Object} The URL parameters for host and port.
- */
-function populateFormFromUrl() {
-  const searchParams = getUrlParams();
-  const params = {};
-  
-  ['host', 'port', 'header', 'headerBackground', 'sshTerm', 'readyTimeout', 'cursorBlink', 
-   'scrollback', 'tabStopWidth', 'bellStyle', 'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight',
-   'username', 'password', 'logLevel'].forEach(param => {
-    let value = searchParams.get(param);
-    if (value === null && config.ssh && config.ssh[param] !== undefined) {
-      value = config.ssh[param];
-    }
-    if (value !== null) {
-      params[param] = value;
-      const input = document.getElementById(param + 'Input');
-      if (input) {
-        input.value = value;
-      }
-    }
-  });
-
-  return params;
-}
-
-/**
- * Retrieves the URL parameters from the current window location.
- * @returns {URLSearchParams} The URL parameters.
- */
-function getUrlParams() {
-  return new URLSearchParams(window.location.search);
-}
-
-/**
- * Shows an error modal
- * @param {string} message - The error message to display
- */
-function showErrorModal(message) {
-  if (elements.errorMessage && elements.errorModal) {
-    elements.errorMessage.textContent = message;
-    elements.errorModal.style.display = 'block';
-  } else {
-    console.error("Error modal or error message element not found");
-    alert(`Error: ${message}`);
-  }
-}
-
-/**
- * Closes the error modal.
- */
-function closeErrorModal() {
-  if (elements.errorModal) {
-    elements.errorModal.style.display = 'none';
-  }
-}
-
-/**
  * Handles errors
  * @param {string|Error} err - The error message or object
  */
 function handleError(message, error) {
   console.error('Error:', message, error);
-  isConnecting = false;
+  state.setIsConnecting(false);
   updateStatus(`Error: ${message}`, 'red');
   showErrorModal(message);
   showReconnectPrompt();
@@ -383,12 +226,13 @@ function handleKeyDown(event) {
  * Connects to the server
  */
 function connectToServer(formData = null) {
+  let isConnecting = state.getIsConnecting();
   if (isConnecting) {
     debug('Connection already in progress');
     return;
   }
 
-  isConnecting = true;
+  state.setIsConnecting(true);
   
   const credentials = getCredentials(formData);
 
@@ -402,6 +246,7 @@ function connectToServer(formData = null) {
 
   handleResize();
 
+  console.log('connectToServer credentials:', credentials);
   socket.emit("authenticate", credentials);
   updateStatus("Authenticating...", "orange");
 }
@@ -412,12 +257,14 @@ function connectToServer(formData = null) {
  * @returns {Object} An object containing the SSH credentials.
  */
 function getCredentials(formData = null) {
+  console.log('getCredentials urlParams:', urlParams);
   return {
     host: formData?.host || config.ssh?.host || urlParams.host || elements.hostInput?.value || '',
     port: parseInt(formData?.port || config.ssh?.port || urlParams.port || elements.portInput?.value || '22', 10),
     username: formData?.username || config.ssh?.username || urlParams.username || elements.usernameInput?.value || '',
     password: formData?.password || config.ssh?.password || urlParams.password || elements.passwordInput?.value || '',
-    term: config.ssh?.term || urlParams.sshTerm || "xterm-color",
+    cursorBlink: urlParams.cursorBlink || config.terminal?.cursorBlink || true,
+    term: urlParams.sshTerm || config.ssh?.term || "xterm-color",
     readyTimeout: validateNumber(config.ssh?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
     cols: term.cols,
     rows: term.rows
@@ -454,36 +301,6 @@ function initializeSocketConnection() {
 }
 
 /**
- * Displays the login modal and performs necessary UI updates.
- */
-function showLoginPrompt() {
-  debug("showLoginPrompt: Displaying login modal");
-  if (elements.loginModal) {
-    elements.loginModal.style.display = "block"
-  }
-  if (elements.terminalContainer) {
-    elements.terminalContainer.style.display = "none"
-  }
-  if (elements.passwordInput) {
-    elements.passwordInput.value = ""
-  }
-  focusAppropriateInput()
-  // Reset connection status
-  isConnecting = false
-  reconnectAttempts = 0
-  hideReconnectPrompt()
-}
-
-/**
- * Hides the login prompt modal.
- */
-function hideLoginPrompt() {
-  if (elements.loginModal) {
-    elements.loginModal.style.display = "none";
-  }
-}
-
-/**
  * Sets up Socket.IO event listeners
  */
 function setupSocketListeners() {
@@ -508,7 +325,7 @@ function setupSocketListeners() {
  */
 function handleConnectionClose() {
   debug(`SSH CONNECTION CLOSED`);
-  isConnecting = false;
+  state.setIsConnecting(false);
   if (socket) {
     socket.close();
     socket = null;
@@ -536,6 +353,7 @@ function disableTerminalInput() {
  * Initiates a reconnection to the server
  */
 function reconnectToServer() {
+  let isConnecting = state.getIsConnecting();
   if (isConnecting) {
     debug('Reconnection already in progress');
     return;
@@ -543,7 +361,7 @@ function reconnectToServer() {
   
   hideReconnectPrompt();
   closeErrorModal();
-  reconnectAttempts = 0;
+  state.setReconnectAttempts(0);
   connectToServer();
 }
 
@@ -561,8 +379,8 @@ function handleConnectError(error) {
  */
 function handleConnect() {
   debug('Connected to server');
-  isConnecting = false;
-  reconnectAttempts = 0;
+  state.setIsConnecting(false);
+  state.setReconnectAttempts(0);
   hideReconnectPrompt();
   closeErrorModal();
   updateStatus("Connected", "green");
@@ -586,7 +404,7 @@ function handleConnect() {
 function handleDisconnect(reason) {
   debug(`Socket Disconnected: ${reason}`);
   
-  isConnecting = false;
+  state.setIsConnecting(false); 
   
   if (elements.status) {
     updateStatus(`WEBSOCKET SERVER DISCONNECTED: ${reason}`, "red");
@@ -611,6 +429,7 @@ function handleDisconnect(reason) {
  */
 function handleRequestAuth() {  
   debug('Server requested authentication');
+  console.log('Server requested authentication');
   const credentials = getCredentials();
   if (credentials.host && credentials.username) {
     socket.emit('authenticate', credentials);
@@ -650,13 +469,16 @@ function resetApplication() {
  * Attempts to reconnect to the server
  */
 function attemptReconnect() {
+  let isConnecting = state.getIsConnecting();
+  let reconnectAttempts = state.getReconnectAttempts();
   if (isConnecting || reconnectAttempts >= maxReconnectAttempts) {
     showReconnectPrompt();
     return;
   }
 
-  isConnecting = true;
   reconnectAttempts++;
+  state.setIsConnecting(true);
+  state.setReconnectAttempts(reconnectAttempts);
 
   debug(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
   updateStatus(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`, "orange");
@@ -678,14 +500,7 @@ function showReconnectPrompt() {
   }
 }
 
-/**
- * Hides the reconnect prompt
- */
-function hideReconnectPrompt() {
-  if (elements.reconnectButton) {
-    reconnectButton.style.display = 'none';
-  }
-}
+
 
 /**
  * Handles the result of authentication attempt.
@@ -693,7 +508,7 @@ function hideReconnectPrompt() {
  */
 function handleAuthResult(result) {
   debug("Authentication result:", result)
-  isConnecting = false
+  state.setIsConnecting(false);
   if (result.success) {
     hideLoginPrompt();
     if (elements.terminalContainer) {
@@ -777,20 +592,6 @@ function handleallowReauth(data) {
 }
 
 /**
- * Updates the status message
- * @param {string} message - The status message
- * @param {string} color - The color of the status message
- */
-function updateStatus(message, color) {
-  if (elements.status) {
-    elements.status.innerHTML = message;
-    elements.status.style.backgroundColor = color;
-  } else {
-    console.warn('Status element not found. Cannot update status.');
-  }
-}
-
-/**
  * Sets terminal options received from the server.
  * @param {Object} data - The terminal options.
  */
@@ -868,47 +669,14 @@ function downloadLog() {
 }
 
 /**
- * Formats a date object into a string.
- * @param {Date} date - The date to format.
- * @returns {string} The formatted date string.
- */
-function formatDate(date) {
-  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} @ ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-}
-
-/**
- * Validates a numeric value within a specified range
- * @param {number|string} value - The value to validate
- * @param {number} min - The minimum allowed value
- * @param {number} max - The maximum allowed value
- * @param {number} defaultValue - The default value if validation fails
- * @returns {number} The validated number or the default value
- */
-function validateNumber(value, min, max, defaultValue) {
-  const num = Number(value);
-  if (isNaN(num) || num < min || num > max) {
-    return defaultValue;
-  }
-  return num;
-}
-
-/**
- * Validates the bell style option
- * @param {string} value - The bell style to validate
- * @returns {string} The validated bell style or the default 'sound'
- */
-function validateBellStyle(value) {
-  return ['sound', 'none'].includes(value) ? value : 'sound';
-}
-
-/**
  * Applies terminal options to the terminal instance.
  *
  * @param {Object} options - The options to apply to the terminal.
  */
 function applyTerminalOptions(options) {
+  console.log(`cursorBlink: ${options.cursorBlink}`);
   const terminalOptions = {
-    cursorBlink: options.cursorBlink !== undefined ? options.cursorBlink === 'true' : true,
+    cursorBlink: options.cursorBlink !== undefined ? options.cursorBlink === true || options.cursorBlink === 'true' : true,
     scrollback: validateNumber(options.scrollback, 1, 200000, 10000),
     tabStopWidth: validateNumber(options.tabStopWidth, 1, 100, 8),
     bellStyle: validateBellStyle(options.bellStyle),
@@ -918,6 +686,7 @@ function applyTerminalOptions(options) {
     letterSpacing: options.letterSpacing !== undefined ? Number(options.letterSpacing) : 0,
     lineHeight: options.lineHeight !== undefined ? Number(options.lineHeight) : 1
   };
+  console.log('Applying terminal options:', terminalOptions);
 
   Object.assign(term.options, terminalOptions);
 }
@@ -990,7 +759,6 @@ function checkSavedSessionLog() {
   }
 }
 
-
 /**
  * Retrieves the WebSocket URL for establishing a connection.
  * If the WebSocket URL is provided in the `config.socket.url` property, it will be used.
@@ -1056,15 +824,4 @@ function fillLoginForm(sshConfig) {
   if (elements.usernameInput) elements.usernameInput.value = sshConfig.username || '';
   // Note: We typically don't pre-fill passwords for security reasons
   // if (elements.passwordInput) elements.passwordInput.value = sshConfig.password || '';
-}
-
-/**
- * Focuses on the appropriate input field
- */
-function focusAppropriateInput() {
-  if (elements.hostInput.value && elements.portInput.value) {
-    elements.usernameInput.focus();
-  } else {
-    elements.hostInput.focus();
-  }
 }
