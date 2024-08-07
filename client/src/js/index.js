@@ -19,38 +19,40 @@ import {
 library.add(faBars, faClipboard, faDownload, faKey, faCog);
 dom.watch();
 
-const debug = createDebug('webssh2-client');
-
-let sessionLogEnable = false;
-let loggedData = false;
-let allowReplay = false;
 let allowReauth = false;
-let sessionLog = '';
-let sessionFooter = '';
+let allowReplay = false;
+let config;
 let currentDate;
-let socket;
-let term, fitAddon;
 let elements = {};
+let fitAddon;
 let isConnecting = false;
+let loggedData = false;
 let reconnectAttempts = 0;
+let sessionFooter = '';
+let sessionLog = '';
+let sessionLogEnable = false;
+let socket;
+let term;
 let urlParams;
+const debug = createDebug('webssh2-client');
 const maxReconnectAttempts = 5;
 const reconnectDelay = 5000;
 
 document.addEventListener("DOMContentLoaded", () => {
 
   try {
+    initializeConfig();
     initializeTerminal();
     initializeElements();
     setupEventListeners();
     urlParams = populateFormFromUrl();
     checkSavedSessionLog();
   
-    if (window.webssh2Config && window.webssh2Config.autoConnect) {
+    if (config.autoConnect) {
       debug("Auto-connect is enabled");
       // Silently fill out the form if autoConnect is true
       if (elements.loginForm) {
-        fillLoginForm(window.webssh2Config.ssh);
+        fillLoginForm(config.ssh);
       }
       // Attempt connection without showing the modal
       connectToServer();
@@ -62,6 +64,79 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error("Initialization error:", error);
   }
 });
+
+/**
+ * Initializes the global configuration.
+ * This should be called once at application startup.
+ */
+function initializeConfig() {
+  const defaultConfig = {
+    socket: {
+      url: null,
+      path: '/ssh/socket.io',
+    },
+    ssh: {
+      host: null,
+      port: 22,
+      username: null,
+      password: null,
+      sshTerm: 'xterm-color',
+      readyTimeout: 20000,
+    },
+    terminal: {
+      cursorBlink: true,
+      scrollback: 10000,
+      tabStopWidth: 8,
+      bellStyle: 'sound',
+      fontSize: 14,
+      fontFamily: 'courier-new, courier, monospace',
+      letterSpacing: 0,
+      lineHeight: 1,
+    },
+    header: {
+      text: null,
+      background: 'green',
+    },
+    autoConnect: false,
+    logLevel: 'info',
+  };
+
+  const userConfig = window.webssh2Config || {};
+  config = mergeDeep(defaultConfig, userConfig);
+}
+
+/**
+ * Recursively merges two objects.
+ * @param {Object} target - The target object.
+ * @param {Object} source - The source object.
+ * @returns {Object} The merged object.
+ */
+function mergeDeep(target, source) {
+  const output = Object.assign({}, target);
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key] });
+        } else {
+          output[key] = mergeDeep(target[key], source[key]);
+        }
+      } else {
+        Object.assign(output, { [key]: source[key] });
+      }
+    });
+  }
+  return output;
+}
+
+/**
+ * Checks if the value is an object.
+ * @param {*} item - The value to check.
+ * @returns {boolean} True if the value is an object, false otherwise.
+ */
+function isObject(item) {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
 
 /**
  * Initializes the terminal instance.
@@ -172,7 +247,6 @@ function setupEventListeners() {
  */
 function populateFormFromUrl() {
   const searchParams = new URLSearchParams(window.location.search);
-  const config = window.webssh2Config || {};
   const params = {};
   
   ['host', 'port', 'header', 'headerBackground', 'sshTerm', 'readyTimeout', 'cursorBlink', 
@@ -273,7 +347,6 @@ function connectToServer(formData = null) {
     return;
   }
 
-  const config = window.webssh2Config || {};
   if (!urlParams) {
     urlParams = populateFormFromUrl();
   }
@@ -325,7 +398,6 @@ function connectToServer(formData = null) {
       return;
     }
   
-    const config = window.webssh2Config || {};
     if (!urlParams) {
       urlParams = populateFormFromUrl();
     }
@@ -462,7 +534,6 @@ function setupSocketListeners() {
  * @returns {Object} An object containing the SSH credentials.
  */
 function getCredentials() {
-  const config = window.webssh2Config || {};
   return {
     host: config.ssh?.host || urlParams.host || elements.hostInput?.value || '',
     port: parseInt(config.ssh?.port || urlParams.port || elements.portInput?.value || '22', 10),
@@ -965,14 +1036,14 @@ function checkSavedSessionLog() {
 
 /**
  * Retrieves the WebSocket URL for establishing a connection.
- * If the WebSocket URL is provided in the `window.webssh2Config.socket.url` property, it will be used.
+ * If the WebSocket URL is provided in the `config.socket.url` property, it will be used.
  * Otherwise, it constructs the WebSocket URL based on the current window location.
  * @returns {string} The WebSocket URL.
  */
 function getWebSocketUrl() {
   // Check if a custom URL is provided in the configuration
-  if (window.webssh2Config && window.webssh2Config.socket && window.webssh2Config.socket.url) {
-    let url = new URL(window.webssh2Config.socket.url);
+  if (config.socket && config.socket.url) {
+    let url = new URL(config.socket.url);
     // Use wss:// if the page is served over https, ws:// otherwise
     url.protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     return url.toString();
@@ -988,12 +1059,12 @@ function getWebSocketUrl() {
 
 /**
  * Retrieves the path for the Socket.IO connection.
- * If the path is not specified in the `window.webssh2Config` object, the default path '/ssh/socket.io' is returned.
+ * If the path is not specified in the `config` object, the default path '/ssh/socket.io' is returned.
  *
  * @returns {string} The Socket.IO path.
  */
 function getSocketIOPath() {
-  return (window.webssh2Config && window.webssh2Config.socket && window.webssh2Config.socket.path) || '/ssh/socket.io';
+  return config.socket?.path || '/ssh/socket.io';
 }
 
 /**
