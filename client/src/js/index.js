@@ -237,6 +237,7 @@ function handleFormSubmit(e) {
   e.preventDefault();
   const formData = new FormData(e.target);
   const formDataObject = Object.fromEntries(formData.entries());
+  hideLoginPrompt();
   connectToServer(formDataObject);
 }
 
@@ -272,13 +273,12 @@ function connectToServer(formData = null) {
     return;
   }
 
-  isConnecting = true;
-
   const config = window.webssh2Config || {};
-  // Ensure urlParams is defined
   if (!urlParams) {
     urlParams = populateFormFromUrl();
   }
+
+  initializeSocketConnection();
 
   // Reset logging state
   sessionLogEnable = false;
@@ -331,31 +331,67 @@ function connectToServer(formData = null) {
     readyTimeout: validateNumber(formData?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
     cols: term.cols,
     rows: term.rows
-  };
+  };function connectToServer(formData = null) {
+    if (isConnecting) {
+      debug('Connection already in progress');
+      return;
+    }
+  
+    const config = window.webssh2Config || {};
+    if (!urlParams) {
+      urlParams = populateFormFromUrl();
+    }
+  
+    const credentials = {
+      host: formData?.host || config.ssh?.host || urlParams.host || elements.hostInput?.value || '',
+      port: parseInt(formData?.port || config.ssh?.port || urlParams.port || elements.portInput?.value || '22', 10),
+      username: formData?.username || config.ssh?.username || urlParams.username || elements.usernameInput?.value || '',
+      password: formData?.password || config.ssh?.password || urlParams.password || elements.passwordInput?.value || '',
+      term: formData?.sshTerm || urlParams.sshTerm || "xterm-color",
+      readyTimeout: validateNumber(formData?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
+      cols: term.cols,
+      rows: term.rows
+    };
+  
+    const canAutoConnect = config.autoConnect && credentials.host && credentials.username;
+  
+    if (canAutoConnect) {
+      isConnecting = true;
+      hideLoginPrompt();
+      initializeSocketConnection();
+      socket.emit("authenticate", credentials);
+      updateStatus("Authenticating...", "orange");
+    } else {
+      showLoginPrompt();
+    }
+  }
+  
+// In your client-side JavaScript file
 
-  // Apply xterm.js options
-  applyTerminalOptions({
-    cursorBlink: formData?.cursorBlink || urlParams.cursorBlink,
-    scrollback: formData?.scrollback || urlParams.scrollback,
-    tabStopWidth: formData?.tabStopWidth || urlParams.tabStopWidth,
-    bellStyle: formData?.bellStyle || urlParams.bellStyle,
-    fontSize: formData?.fontSize || urlParams.fontSize,
-    fontFamily: formData?.fontFamily || urlParams.fontFamily,
-    letterSpacing: formData?.letterSpacing || urlParams.letterSpacing,
-    lineHeight: formData?.lineHeight || urlParams.lineHeight,
-    logLevel: formData?.logLevel || urlParams.logLevel
-  });
+  function initializeSocketConnection() {
+    if (socket) {
+      socket.close();
+    }
 
-  // Check if host is present for autoConnect
-  const canAutoConnect = config.autoConnect && credentials.host;
+    socket = io(getWebSocketUrl(), {
+      path: getSocketIOPath(),
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+      pingTimeout: 60000,  // 1 minute
+      pingInterval: 25000, // 25 seconds
+    });
 
-  if (canAutoConnect) {
-    hideLoginPrompt();
-    socket.emit("authenticate", credentials);
-    updateStatus("Authenticating...", "orange");
-  } else {
-    showLoginPrompt();
-    isConnecting = false;
+    setupSocketListeners();
+    
+    if (elements.terminalContainer) {
+      elements.terminalContainer.style.display = "block";
+    }
+
+    handleResize();
   }
 }
 
@@ -393,6 +429,23 @@ function hideLoginPrompt() {
  * Sets up Socket.IO event listeners
  */
 function setupSocketListeners() {
+  socket.on('connect', () => {
+    debug('Connected to server');
+    updateStatus("Connected to server, waiting for authentication...", "orange");
+  });
+
+  socket.on('request_auth', () => {
+    debug('Server requested authentication');
+    const credentials = getCredentials();
+    if (credentials.host && credentials.username) {
+      socket.emit('authenticate', credentials);
+      updateStatus("Authenticating...", "orange");
+    } else {
+      showLoginPrompt();
+    }
+  });
+
+  socket.on('auth_result', handleAuthResult);  
   const listeners = {
     "connect_error": handleConnectError,
     "connect": handleConnect,
@@ -411,7 +464,9 @@ function setupSocketListeners() {
     "allowReplay": handleallowReplay,
     "allowReauth": handleallowReauth,
     "connection_closed": handleConnectionClose,
-    "reauth": () => allowReauth && reauthSession()
+    "reauth": () => allowReauth && reauthSession(),
+    "ping": () => console.log(`Received ping from server ${socket.id}`),
+    "pong": (latency) => console.log(`Received pong from server ${socket.id}. Latency: ${latency}ms`),
   };
 
   Object.entries(listeners).forEach(([event, handler]) => {
@@ -428,6 +483,20 @@ function setupSocketListeners() {
       console.warn(`Handler for event '${event}' is not a function`);
     }
   });
+  function getCredentials() {
+    const config = window.webssh2Config || {};
+    return {
+      host: config.ssh?.host || urlParams.host || elements.hostInput?.value || '',
+      port: parseInt(config.ssh?.port || urlParams.port || elements.portInput?.value || '22', 10),
+      username: config.ssh?.username || urlParams.username || elements.usernameInput?.value || '',
+      password: config.ssh?.password || urlParams.password || elements.passwordInput?.value || '',
+      term: urlParams.sshTerm || "xterm-color",
+      readyTimeout: validateNumber(urlParams.readyTimeout, 1, 300000, 20000),
+      cols: term.cols,
+      rows: term.rows
+    };
+  }
+
 }
 
 /**
@@ -511,7 +580,7 @@ function handleConnect() {
  * @param {string} reason - The reason for disconnection
  */
 function handleDisconnect(reason) {
-  debug(`Disconnected: ${reason}`);
+  debug(`Socket Disconnected: ${reason}`);
   
   isConnecting = false;
   
@@ -617,6 +686,7 @@ function hideReconnectPrompt() {
  */
 function handleAuthResult(result) {
   debug("Authentication result:", result)
+  isConnecting = false
   if (result.success) {
     hideLoginPrompt();
     if (elements.terminalContainer) {

@@ -1,4 +1,4 @@
-<!-- Version Version 0.2.14 - 2024-07-19T22:58:13.922Z - a00b2d6 -->
+<!-- Version Version 0.2.16 - 2024-08-07T13:35:44.346Z - df7478d -->
 <!-- webssh2-client -->
 <!-- /client/src/client.htm -->
 <!DOCTYPE html>
@@ -7,7 +7,7 @@
     <title>WebSSH2</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script>
-    window.webssh2Config = null;
+      window.webssh2Config = {"socket":{"url":"http://localhost:2222","path":"/ssh/socket.io"},"ssh":{"port":22}};
     </script>
   <script defer src="webssh2.bundle.js"></script><link href="webssh2.css" rel="stylesheet"></head>
   <body>

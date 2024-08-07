@@ -3,11 +3,11 @@
 WebSSH2 Client is a web-based SSH client that allows users to connect to SSH servers directly from their web browsers. It's built using modern web technologies and provides a seamless, secure SSH experience.
 
 # EXPERIMENTAL
-The current status of this is experimental and this first version is a refactor of webssh2 v0.2.x to be compatible with a refactor of the same version of webssh2 as a stand-alone server-side component for BIG-IP running Node.js v6.9.1.
+The current status is experimental, and this first version is a refactor of webssh2 v0.2.x to be compatible with a refactor of the same version of webssh2 as a stand-alone server-side component for BIG-IP running Node.js v6.9.1.
 
-The intention is to harmonize the latest release of webssh2 splitting out the client and server as seperate repos (webssh2-client and webssh2-server) but joining them both together as modules in a parent webssh2 in an attempt to provide backwards compatibility.
+The intention is to harmonize the latest release of webssh2 by splitting out the client and server as separate repos (webssh2-client and webssh2-server) but joining them both together as modules in a parent webssh2 in an attempt to provide backward compatibility.
 
-The main idea for bifurcating the client/server is to make it easier to customize the client to work in other frameworks and use-cases.
+The main idea behind bifurcating the client/server is to make it easier to customize the client to work in other frameworks and use cases.
 
 ## Features
 
@@ -46,7 +46,7 @@ The main idea for bifurcating the client/server is to make it easier to customiz
 
 ## WebSSH2 Configuration
 
-The WebSSH2 client can be customized using the `window.webssh2Config` object. This object is typically injected by the WebSSH2 server, but it can also be manually set or modified by users for customization purposes.
+The WebSSH2 client can be customized using the `window.webssh2Config` object. This object is typically injected by the WebSSH2 server, but users can also manually set or modify it for customization purposes.
 
 ### Basic Usage
 
@@ -103,8 +103,8 @@ The `autoConnect` option is used to create pre-configured connections:
 
 - When set to `true`, the client will attempt to connect immediately using the provided SSH configuration, bypassing the login form.
 - For `autoConnect` to work, you must provide at least the `host` in the SSH configuration.
-- Username and password are optional for `autoConnect`. If not provided, the server may use other methods (like basic auth or session data) to authenticate the connection.
-- If the host is missing when `autoConnect` is `true`, the login form will be shown instead.
+- `autoConnect` requires a username and password. If these are not provided, the server may use other methods (like basic auth or session data) to authenticate the connection.
+- If the host is missing when `autoConnect` is `true,` the login form will be shown instead.
 
 Example usage:
 
@@ -124,10 +124,10 @@ This configuration will attempt to connect to `example.com` as soon as the page 
 
 ### Security Considerations
 
-- The `autoConnect` feature only requires the host to be specified. Authentication is handled by the server, which may use various methods including basic auth or session data.
-- If you do include username and password in the client-side configuration, be cautious as this may pose security risks, especially in production environments.
+The `autoConnect` feature only requires the host to be specified. The server handles authentication, which may use various methods, including basic auth or session data.
+- If you do include a username and password in the client-side configuration, be cautious, as this may pose security risks, especially in production environments.
 - For production use, consider using secure server-side authentication methods rather than including credentials in the client-side configuration.
-- When `autoConnect` is not used, ensure that your server is configured to securely prompt for or handle credentials as needed.
+When `autoConnect` is not used, ensure your server is configured to prompt for or securely handle credentials as needed.
 
 ### Customization Examples
 
@@ -163,7 +163,7 @@ This configuration will attempt to connect to `example.com` as soon as the page 
    };
    ```
 
-By leveraging these configuration options, you can customize the WebSSH2 client to suit your specific needs or integrate it seamlessly into your existing systems. Remember that the server handles authentication, providing flexibility in how credentials are managed and secured.
+By leveraging these configuration options, you can customize the WebSSH2 client to suit your needs or integrate it seamlessly into your existing systems. Remember that the server handles authentication, providing flexibility in managing and securing credentials.
 
 ## Usage
 
@@ -239,7 +239,7 @@ The WebSSH2 client supports various URL parameters to customize the SSH connecti
 
 ### SSH Connection Parameters
 
-- `host`: The hostname or IP address of the SSH server to connect to.
+- `host`: The hostname or IP address of the SSH server to which to connect.
   - Example: `?host=192.168.1.1`
 
 - `port`: The port number of the SSH server (default is 22).
@@ -248,7 +248,7 @@ The WebSSH2 client supports various URL parameters to customize the SSH connecti
 - `username`: The username to use for SSH authentication.
   - Example: `?username=admin`
 
-- `password`: The password to use for SSH authentication (not recommended for production use).
+- `password`: The password for SSH authentication (not recommended for production use).
   - Example: `?password=secretpassword`
 
 ### Terminal Configuration
@@ -306,7 +306,7 @@ A full URL with multiple parameters might look like this:
 http://localhost:2222/ssh/host/192.168.1.100?port=2222&header=Production%20Server&headerBackground=red&fontSize=14&bellStyle=none
 ```
 
-This URL would connect to a SSH server at 192.168.1.100 on port 2222, with a red header displaying "Production Server", using a 14px font size and disabling the audible bell.
+This URL would connect to a SSH server at 192.168.1.100 on port 2222, with a red header displaying "Production Server", using a 14px font size and turning off the audible bell.
 
 Note: Be cautious about including sensitive information like passwords in URL parameters, especially in production environments.
 
@@ -318,7 +318,7 @@ This project uses the `debug` module for logging. To enable debugging in the bro
 2. Enter: `localStorage.debug = 'webssh2-client*'`
 3. Refresh the page.
 
-To disable debugging, enter: `localStorage.debug = ''`
+To turn off debugging, enter: `localStorage.debug = ''`
 
 ## Contributing
 
