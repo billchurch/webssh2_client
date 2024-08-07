@@ -415,24 +415,9 @@ function hideLoginPrompt() {
  * Sets up Socket.IO event listeners
  */
 function setupSocketListeners() {
-  socket.on('connect', () => {
-    debug('Connected to server');
-    updateStatus("Connected to server, waiting for authentication...", "orange");
-  });
 
-  socket.on('request_auth', () => {
-    debug('Server requested authentication');
-    const credentials = getCredentials();
-    if (credentials.host && credentials.username) {
-      socket.emit('authenticate', credentials);
-      updateStatus("Authenticating...", "orange");
-    } else {
-      showLoginPrompt();
-    }
-  });
-
-  socket.on('auth_result', handleAuthResult);  
   const listeners = {
+    "auth_result": handleAuthResult,
     "connect_error": handleConnectError,
     "connect": handleConnect,
     "disconnect": handleDisconnect,
@@ -451,6 +436,7 @@ function setupSocketListeners() {
     "allowReauth": handleallowReauth,
     "connection_closed": handleConnectionClose,
     "reauth": () => allowReauth && reauthSession(),
+    "request_auth": handleRequestAuth,
     "ping": () => debug(`Received ping from server ${socket.id}`),
     "pong": (latency) => debug(`Received pong from server ${socket.id}. Latency: ${latency}ms`),
   };
@@ -469,20 +455,24 @@ function setupSocketListeners() {
       console.warn(`Handler for event '${event}' is not a function`);
     }
   });
-  function getCredentials() {
-    const config = window.webssh2Config || {};
-    return {
-      host: config.ssh?.host || urlParams.host || elements.hostInput?.value || '',
-      port: parseInt(config.ssh?.port || urlParams.port || elements.portInput?.value || '22', 10),
-      username: config.ssh?.username || urlParams.username || elements.usernameInput?.value || '',
-      password: config.ssh?.password || urlParams.password || elements.passwordInput?.value || '',
-      term: urlParams.sshTerm || "xterm-color",
-      readyTimeout: validateNumber(urlParams.readyTimeout, 1, 300000, 20000),
-      cols: term.cols,
-      rows: term.rows
-    };
-  }
+}
 
+/**
+ * Retrieves the SSH credentials from various sources.
+ * @returns {Object} An object containing the SSH credentials.
+ */
+function getCredentials() {
+  const config = window.webssh2Config || {};
+  return {
+    host: config.ssh?.host || urlParams.host || elements.hostInput?.value || '',
+    port: parseInt(config.ssh?.port || urlParams.port || elements.portInput?.value || '22', 10),
+    username: config.ssh?.username || urlParams.username || elements.usernameInput?.value || '',
+    password: config.ssh?.password || urlParams.password || elements.passwordInput?.value || '',
+    term: urlParams.sshTerm || "xterm-color",
+    readyTimeout: validateNumber(urlParams.readyTimeout, 1, 300000, 20000),
+    cols: term.cols,
+    rows: term.rows
+  };
 }
 
 /**
@@ -586,6 +576,20 @@ function handleDisconnect(reason) {
 
   resetApplication();
   showReconnectPrompt();
+}
+
+/**
+ * Handles the request for authentication from the server.
+ */
+function handleRequestAuth() {  
+  debug('Server requested authentication');
+  const credentials = getCredentials();
+  if (credentials.host && credentials.username) {
+    socket.emit('authenticate', credentials);
+    updateStatus("Authenticating...", "orange");
+  } else {
+    showLoginPrompt();
+  }
 }
 
 /**
