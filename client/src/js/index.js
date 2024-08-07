@@ -37,9 +37,33 @@ let urlParams;
 const debug = createDebug('webssh2-client');
 const maxReconnectAttempts = 5;
 const reconnectDelay = 5000;
+const socketHandlers = {
+  auth_result: handleAuthResult,
+  connect_error: handleConnectError,
+  connect: handleConnect,
+  disconnect: handleDisconnect,
+  data: handleData,
+  error: handleError,
+  setTerminalOpts: setTerminalOptions,
+  title: (data) => { document.title = data; },
+  status: (data) => { elements.status.innerHTML = data; },
+  ssherror: handleError,
+  headerBackground: (data) => { elements.header.style.backgroundColor = data; },
+  header: handleHeader,
+  footer: handleFooter,
+  statusBackground: (data) => { elements.status.style.backgroundColor = data; },
+  allowReplay: handleallowReplay,
+  allowReauth: handleallowReauth,
+  connection_closed: handleConnectionClose,
+  reauth: () => { if (allowReauth) reauthSession(); },
+  request_auth: handleRequestAuth,
+  ping: () => { debug(`Received ping from server ${socket.id}`); },
+  pong: (latency) => { debug(`Received pong from server ${socket.id}. Latency: ${latency}ms`); },
+};
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", initialize);
 
+function initialize() {
   try {
     initializeConfig();
     initializeTerminal();
@@ -61,9 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
       showLoginPrompt();
     }
   } catch (error) {
-    console.error("Initialization error:", error);
+    handleError("Initialization error:", error);
   }
-});
+};
 
 /**
  * Initializes the global configuration.
@@ -143,27 +167,35 @@ function isObject(item) {
  */
 function initializeTerminal() {
   try {
-    const initialOptions = {
-      logLevel: 'info', // Default log level
-      cursorBlink: true,
-      scrollback: 10000,
-      tabStopWidth: 8,
-      bellStyle: 'sound',
-      fontSize: 12,
-      fontFamily: 'courier-new, courier, monospace',
-      letterSpacing: 0,
-      lineHeight: 1
-    };
-    term = new Terminal(initialOptions);
+    const options = getTerminalOptions();
+    term = new Terminal(options);
     fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
     term.onData((data) => socket?.emit("data", data));
     term.onTitleChange((title) => document.title = title);
-    applyTerminalOptions(initialOptions);
+    applyTerminalOptions(options);
   } catch (error) {
-    console.error("Failed to initialize terminal:", error);
     handleError("Terminal initialization failed", error);
   }
+}
+
+/**
+ * Returns the options for the terminal.
+ *
+ * @returns {Object} The terminal options.
+ */
+function getTerminalOptions() {
+  return {
+    logLevel: config.logLevel ?? 'info',
+    cursorBlink: config.cursorBlink ?? true,
+    scrollback: config.scrollback ?? 10000,
+    tabStopWidth: config.tabStopWidth ?? 8,
+    bellStyle: config.bellStyle ?? 'sound',
+    fontSize: config.fontSize ?? 12,
+    fontFamily: config.fontFamily ?? 'courier-new, courier, monospace',
+    letterSpacing: config.letterSpacing ?? 0,
+    lineHeight: config.lineHeight ?? 1
+  };
 }
 
 /**
@@ -204,7 +236,7 @@ function initializeElements() {
     elements.terminalContainer.style.display = "none";
     term.open(elements.terminalContainer);
   } else {
-    console.error("Terminal container not found. Terminal cannot be initialized.");
+    handleError("DOM Error", "Terminal container not found. Terminal cannot be initialized.");
   }
 
   if (elements.errorModal) {
@@ -246,7 +278,7 @@ function setupEventListeners() {
  * @returns {Object} The URL parameters for host and port.
  */
 function populateFormFromUrl() {
-  const searchParams = new URLSearchParams(window.location.search);
+  const searchParams = getUrlParams();
   const params = {};
   
   ['host', 'port', 'header', 'headerBackground', 'sshTerm', 'readyTimeout', 'cursorBlink', 
@@ -266,6 +298,14 @@ function populateFormFromUrl() {
   });
 
   return params;
+}
+
+/**
+ * Retrieves the URL parameters from the current window location.
+ * @returns {URLSearchParams} The URL parameters.
+ */
+function getUrlParams() {
+  return new URLSearchParams(window.location.search);
 }
 
 /**
@@ -487,40 +527,14 @@ function hideLoginPrompt() {
  * Sets up Socket.IO event listeners
  */
 function setupSocketListeners() {
-
-  const listeners = {
-    "auth_result": handleAuthResult,
-    "connect_error": handleConnectError,
-    "connect": handleConnect,
-    "disconnect": handleDisconnect,
-    "auth_result": handleAuthResult,
-    "data": handleData,
-    "error": handleError,
-    "setTerminalOpts": setTerminalOptions,
-    "title": data => document.title = data,
-    "status": data => elements.status.innerHTML = data,
-    "ssherror": handleError,
-    "headerBackground": data => elements.header.style.backgroundColor = data,
-    "header": handleHeader,
-    "footer": handleFooter,
-    "statusBackground": data => elements.status.style.backgroundColor = data,
-    "allowReplay": handleallowReplay,
-    "allowReauth": handleallowReauth,
-    "connection_closed": handleConnectionClose,
-    "reauth": () => allowReauth && reauthSession(),
-    "request_auth": handleRequestAuth,
-    "ping": () => debug(`Received ping from server ${socket.id}`),
-    "pong": (latency) => debug(`Received pong from server ${socket.id}. Latency: ${latency}ms`),
-  };
-
-  Object.entries(listeners).forEach(([event, handler]) => {
+  Object.entries(socketHandlers).forEach(([event, handler]) => {
     if (typeof handler === 'function') {
       socket.on(event, (...args) => {
         try {
           handler(...args);
         } catch (error) {
-          console.error(`Error handling event '${event}':`, error);
-          handleError(`Internal error handling ${event}`);
+          console.error(`Error in ${event} handler:`, error);
+          handleError(`Internal error handling ${event}`, error);
         }
       });
     } else {
@@ -595,7 +609,7 @@ function reconnectToServer() {
  * @param {Error} error - The connection error
  */
 function handleConnectError(error) {
-  console.error('Connection error:', error);
+  handleError('Connection error:', error);
   handleDisconnect('connect_error');
 }
 
@@ -717,7 +731,7 @@ function showReconnectPrompt() {
     reconnectButton.style.display = 'block';
     reconnectButton.onclick = reconnectToServer;
   } else {
-    console.error('Reconnect button not found in the DOM');
+    handleError('DOM Error', 'Reconnect button not found in the DOM');
   }
 }
 
@@ -994,7 +1008,7 @@ function saveSessionLog(autoDownload = false) {
         localStorage.setItem('webssh2_session_log_date', new Date().toISOString());
         debug('Session log saved to localStorage');
       } catch (e) {
-        console.error('Failed to save session log to localStorage:', e);
+        handleError('Failed to save session log to localStorage:', e);
         // If localStorage fails, attempt to download
         saveSessionLog(true);
       }
