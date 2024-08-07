@@ -71,6 +71,7 @@ function initialize() {
     setupEventListeners();
     urlParams = populateFormFromUrl();
     checkSavedSessionLog();
+    initializeConnection();
   
     if (config.autoConnect) {
       debug("Auto-connect is enabled");
@@ -387,22 +388,9 @@ function connectToServer(formData = null) {
     return;
   }
 
-  if (!urlParams) {
-    urlParams = populateFormFromUrl();
-  }
-
-  // Reset logging state
-  sessionLogEnable = false;
-  loggedData = false;
-  sessionLog = '';
-
-  // Reset logging UI
-  if (elements.logBtn) {
-    elements.logBtn.innerHTML = '<i class="fas fa-clipboard fa-fw"></i> Start Log';
-  }
-  if (elements.downloadLogBtn) {
-    elements.downloadLogBtn.classList.remove('visible');
-  }
+  isConnecting = true;
+  
+  const credentials = getCredentials(formData);
 
   initializeSocketConnection();
   
@@ -410,87 +398,59 @@ function connectToServer(formData = null) {
     elements.terminalContainer.style.display = "block";
   }
 
-  // Handle header first
-  if (urlParams.header) {
-    handleHeader(urlParams.header);
-  } else {
-    handleHeader(null);  // This will hide the header when it's not needed
-  }
-
-  if (urlParams.headerBackground) {
-    elements.header.style.backgroundColor = urlParams.headerBackground;
-  }
+  handleHeader(credentials.host);  // You might want to customize this
 
   handleResize();
 
-  const credentials = {
-    host: formData?.host || config.ssh?.host || urlParams.host || elements.hostInput.value || '',
-    port: parseInt(formData?.port || config.ssh?.port || urlParams.port || elements.portInput.value || '22', 10),
-    username: formData?.username || config.ssh?.username || urlParams.username || elements.usernameInput.value || '',
-    password: formData?.password || config.ssh?.password || urlParams.password || elements.passwordInput.value || '',
-    term: formData?.sshTerm || urlParams.sshTerm || "xterm-color",
-    readyTimeout: validateNumber(formData?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
+  socket.emit("authenticate", credentials);
+  updateStatus("Authenticating...", "orange");
+}
+
+/**
+ * Retrieves the SSH credentials from various sources.
+ * @param {Object} formData - Optional form data from manual input
+ * @returns {Object} An object containing the SSH credentials.
+ */
+function getCredentials(formData = null) {
+  return {
+    host: formData?.host || config.ssh?.host || urlParams.host || elements.hostInput?.value || '',
+    port: parseInt(formData?.port || config.ssh?.port || urlParams.port || elements.portInput?.value || '22', 10),
+    username: formData?.username || config.ssh?.username || urlParams.username || elements.usernameInput?.value || '',
+    password: formData?.password || config.ssh?.password || urlParams.password || elements.passwordInput?.value || '',
+    term: config.ssh?.term || urlParams.sshTerm || "xterm-color",
+    readyTimeout: validateNumber(config.ssh?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
     cols: term.cols,
     rows: term.rows
-  };function connectToServer(formData = null) {
-    if (isConnecting) {
-      debug('Connection already in progress');
-      return;
-    }
-  
-    if (!urlParams) {
-      urlParams = populateFormFromUrl();
-    }
-  
-    const credentials = {
-      host: formData?.host || config.ssh?.host || urlParams.host || elements.hostInput?.value || '',
-      port: parseInt(formData?.port || config.ssh?.port || urlParams.port || elements.portInput?.value || '22', 10),
-      username: formData?.username || config.ssh?.username || urlParams.username || elements.usernameInput?.value || '',
-      password: formData?.password || config.ssh?.password || urlParams.password || elements.passwordInput?.value || '',
-      term: formData?.sshTerm || urlParams.sshTerm || "xterm-color",
-      readyTimeout: validateNumber(formData?.readyTimeout || urlParams.readyTimeout, 1, 300000, 20000),
-      cols: term.cols,
-      rows: term.rows
-    };
-  
-    const canAutoConnect = config.autoConnect && credentials.host && credentials.username;
-  
-    if (canAutoConnect) {
-      isConnecting = true;
-      hideLoginPrompt();
-      initializeSocketConnection();
-      socket.emit("authenticate", credentials);
-      updateStatus("Authenticating...", "orange");
-    } else {
-      showLoginPrompt();
-    }
+  };
+}
+
+/**
+ * Initializes the socket connection.
+ */
+function initializeSocketConnection() {
+  if (socket) {
+    socket.close();
   }
+
+  socket = io(getWebSocketUrl(), {
+    path: getSocketIOPath(),
+    withCredentials: true,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
+    pingTimeout: 60000,  // 1 minute
+    pingInterval: 25000, // 25 seconds
+  });
+
+  setupSocketListeners();
   
-  function initializeSocketConnection() {
-    if (socket) {
-      socket.close();
-    }
-
-    socket = io(getWebSocketUrl(), {
-      path: getSocketIOPath(),
-      withCredentials: true,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-      pingTimeout: 60000,  // 1 minute
-      pingInterval: 25000, // 25 seconds
-    });
-
-    setupSocketListeners();
-    
-    if (elements.terminalContainer) {
-      elements.terminalContainer.style.display = "block";
-    }
-
-    handleResize();
+  if (elements.terminalContainer) {
+    elements.terminalContainer.style.display = "block";
   }
+
+  handleResize();
 }
 
 /**
@@ -541,23 +501,6 @@ function setupSocketListeners() {
       console.warn(`Handler for event '${event}' is not a function`);
     }
   });
-}
-
-/**
- * Retrieves the SSH credentials from various sources.
- * @returns {Object} An object containing the SSH credentials.
- */
-function getCredentials() {
-  return {
-    host: config.ssh?.host || urlParams.host || elements.hostInput?.value || '',
-    port: parseInt(config.ssh?.port || urlParams.port || elements.portInput?.value || '22', 10),
-    username: config.ssh?.username || urlParams.username || elements.usernameInput?.value || '',
-    password: config.ssh?.password || urlParams.password || elements.passwordInput?.value || '',
-    term: urlParams.sshTerm || "xterm-color",
-    readyTimeout: validateNumber(urlParams.readyTimeout, 1, 300000, 20000),
-    cols: term.cols,
-    rows: term.rows
-  };
 }
 
 /**
@@ -1079,6 +1022,28 @@ function getWebSocketUrl() {
  */
 function getSocketIOPath() {
   return config.socket?.path || '/ssh/socket.io';
+}
+
+/**
+ * Initializes the connection based on configuration and user input.
+ */
+function initializeConnection() {
+  try {
+    if (config.autoConnect) {
+      debug("Auto-connect is enabled");
+      // Silently fill out the form if autoConnect is true
+      if (elements.loginForm) {
+        fillLoginForm(config.ssh);
+      }
+      // Attempt connection without showing the modal
+      connectToServer();
+    } else {
+      // Only show the modal if autoConnect is false or not set
+      showLoginPrompt();
+    }
+  } catch (error) {
+    handleError("Connection initialization failed", error);
+  }
 }
 
 /**
