@@ -638,22 +638,13 @@ function attemptReconnect() {
  * Shows the reconnect prompt
  */
 function showReconnectPrompt() {
-  if (document.getElementById('reconnectButton')) {
-    return;
+  const reconnectButton = document.getElementById('reconnectButton');
+  if (reconnectButton) {
+    reconnectButton.style.display = 'block';
+    reconnectButton.onclick = reconnectToServer;
+  } else {
+    console.error('Reconnect button not found in the DOM');
   }
-
-  const reconnectButton = document.createElement('button');
-  reconnectButton.id = 'reconnectButton';
-  reconnectButton.textContent = 'Reconnect';
-  reconnectButton.onclick = reconnectToServer;
-  
-  reconnectButton.style.position = 'fixed';
-  reconnectButton.style.top = '50%';
-  reconnectButton.style.left = '50%';
-  reconnectButton.style.transform = 'translate(-50%, -50%)';
-  reconnectButton.style.zIndex = '1000';
-  
-  document.body.appendChild(reconnectButton);
 }
 
 /**
@@ -662,7 +653,7 @@ function showReconnectPrompt() {
 function hideReconnectPrompt() {
   const reconnectButton = document.getElementById('reconnectButton');
   if (reconnectButton) {
-    reconnectButton.remove();
+    reconnectButton.style.display = 'none';
   }
 }
 
