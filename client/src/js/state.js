@@ -13,50 +13,27 @@ let state = {
   reconnectAttempts: 0,
   isConnecting: false,
   allowReauth: false,
-  allowReplay: false
-  // Add any other state properties you need here
+  allowReplay: false,
+  reauthRequired: false,
+  sessionLogEnable: false,
+  loggedData: false
 }
 
 const stateManager = {
-  getReconnectAttempts: () => state.reconnectAttempts,
-  setReconnectAttempts: (value) => {
-    state.reconnectAttempts = value
-    debug(`reconnectAttempts set to: ${value}`)
+  getState: (key) => state[key],
+  setState: (key, value) => {
+    state[key] = value
+    debug(`${key} set to: ${value}`)
   },
-
-  getIsConnecting: () => state.isConnecting,
-  setIsConnecting: (value) => {
-    state.isConnecting = value
-    debug(`isConnecting set to: ${value}`)
+  toggleState: (key) => {
+    state[key] = !state[key]
+    debug(`${key} toggled to: ${state[key]}`)
+    return state[key]
   },
-
-  getAllowReauth: () => state.allowReauth,
-  setAllowReauth: (value) => {
-    state.allowReauth = value
-    debug(`allowReauth set to: ${value}`)
-  },
-
-  getAllowReplay: () => state.allowReplay,
-  setAllowReplay: (value) => {
-    state.allowReplay = value
-    debug(`allowReplay set to: ${value}`)
-  },
-
-  // Add a method to reset the state
-  resetState: () => {
-    state = {
-      reconnectAttempts: 0,
-      isConnecting: false,
-      allowReauth: false
-      // Reset any other state properties here
-    }
-    debug('State reset to initial values')
-  },
-
-  // Add a method to get the entire state (for debugging purposes)
   getEntireState: () => {
     return { ...state }
   }
+
 }
 
 export default stateManager
