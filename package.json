@@ -68,5 +68,10 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "standard": {
+    "ignore": [
+      "client/public/**/*"
+    ]
   }
 }
