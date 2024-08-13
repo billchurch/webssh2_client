@@ -1,8 +1,8 @@
 // scripts/webpack.prod.js
-const { merge } = require('webpack-merge');
-const TerserPlugin = require('terser-webpack-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const common = require('./webpack.common.js');
+const { merge } = require('webpack-merge')
+const TerserPlugin = require('terser-webpack-plugin')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
+const common = require('./webpack.common.js')
 
 module.exports = merge(common, {
   mode: 'production',
@@ -12,7 +12,7 @@ module.exports = merge(common, {
       new TerserPlugin({
         terserOptions: {
           format: {
-            comments: false,
+            comments: false
           },
           compress: {
             drop_console: false, // Remove console statements for smaller file size
@@ -20,21 +20,21 @@ module.exports = merge(common, {
             // Reduce the passes and compress options
             passes: 1,
             dead_code: true,
-            unused: true,
+            unused: true
           },
           // Disable property mangling
           mangle: {
-            properties: false,
+            properties: false
           },
         },
-        extractComments: false,
+        extractComments: false
       }),
-      new CssMinimizerPlugin(),
+      new CssMinimizerPlugin()
     ],
   },
   performance: {
     hints: 'warning', // Show performance hints
     maxEntrypointSize: 512000, // 512 KB
-    maxAssetSize: 512000, // 512 KB
+    maxAssetSize: 512000 // 512 KB
   },
-});
+})

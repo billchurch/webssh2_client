@@ -11,6 +11,8 @@ const commitHash = require('child_process')
   .toString()
   .trim()
 
+const isDevelopment = process.env.NODE_ENV === 'development'
+
 module.exports = {
   context: path.resolve(__dirname, '../'),
   entry: {
@@ -31,11 +33,17 @@ module.exports = {
       scriptLoading: 'defer',
       version: `Version ${
         packageJson.version
-      } - ${new Date().toISOString()} - ${commitHash}`
+      } - ${new Date().toISOString()} - ${commitHash}`,
+      webssh2Config: isDevelopment
+        ? JSON.stringify({
+          socket: { url: 'http://localhost:2222', path: '/ssh/socket.io' },
+          ssh: { port: 22 }
+        })
+        : 'null' // Use 'null' or another production config
       // publicPath: '/ssh/' // Prepend /ssh/ to the script tags
     }),
     new CopyWebpackPlugin({
-      patterns: [{ from: './client/src/favicon.ico', to: 'favicon.ico' },]
+      patterns: [{ from: './client/src/favicon.ico', to: 'favicon.ico' }]
     }),
     new MiniCssExtractPlugin({
       filename: '[name].css',

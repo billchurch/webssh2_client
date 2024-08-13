@@ -1,6 +1,5 @@
-const { merge } = require('webpack-merge');
-const common = require('./webpack.common.js');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { merge } = require('webpack-merge')
+const common = require('./webpack.common.js')
 
 module.exports = merge(common, {
   mode: 'development',
@@ -8,12 +7,5 @@ module.exports = merge(common, {
   devServer: {
     static: '../client/public',
     hot: true
-  },
-  plugins: [
-    new CopyWebpackPlugin({
-      patterns: [
-        { from: './client/src/test.htm', to: 'test.htm' }
-      ]
-    })
-  ]
-});
+  }
+})
