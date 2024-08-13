@@ -120,6 +120,7 @@ export function showErrorModal (message) {
     debug(`Error modal shown with message: ${message}`)
     errorMessage.textContent = message
     toggleVisibility(errorModal, true)
+    updateElement('status', 'ERROR', 'red')
   } else {
     console.error('Error modal or error message element not found')
   }

@@ -284,7 +284,6 @@ function onDisconnect (reason) {
  * @function commonPostDisconnectTasks
  */
 function commonPostDisconnectTasks () {
-  toggleTerminalDisplay(false)
   const sessionLogEnable = stateManager.getState('sessionLogEnable')
 
   stateManager.setState('isConnecting', false)
@@ -330,7 +329,6 @@ export function handleError (message, error) {
 function resetApplication () {
   stateManager.setState('sessionLogEnable', false)
   updateLogBtnState(false)
-  resetTerminal()
 }
 
 /**
@@ -345,6 +343,7 @@ function reconnectToServer () {
 
   hideReconnectBtn()
   hideErrorModal()
+  resetTerminal()
   stateManager.setState('reconnectAttempts', 0)
 
   connectToServer()
