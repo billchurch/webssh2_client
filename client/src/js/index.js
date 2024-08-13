@@ -8,82 +8,65 @@ import '../css/terminal.css'
 import '../css/style.css'
 
 import {
-  closeErrorModal,
-  hideLoginPrompt,
-  hideReconnectPrompt,
+  hideErrorModal,
+  fillLoginForm,
+  hideLoginModal,
+  hideReconnectBtn,
   initializeElements,
   showErrorModal,
-  showLoginPrompt,
-  showReconnectPrompt,
-  updateStatus,
+  showLoginModal,
+  showReconnectBtn,
   toggleTerminalDisplay,
-  updateHeader,
-  updateHeaderBackground,
-  updateFooter,
-  updateUIVisibility,
-  updateLogButtonState
+  updateElement,
+  updateLogBtnState
 } from './dom.js'
 
 import {
-  initSocket,
-  initializeSocketConnection,
-  authenticate,
-  getSocket,
-  emitResize,
   emitData,
-  closeConnection,
+  emitResize,
+  initializeSocketConnection,
+  initSocket,
   reauthSession,
   replayCredentials
 } from './socket.js'
 
 import {
+  applyTerminalOptions,
+  focusTerminal,
   initializeTerminal,
   openTerminal,
-  applyTerminalOptions,
+  resetTerminal,
   resizeTerminal,
-  writeToTerminal,
-  clearTerminal,
-  focusTerminal,
-  getTerminalDimensions,
-  disposeTerminal
+  writeToTerminal
 } from './terminal.js'
 
 import stateManager from './state.js'
 
 import { library, dom } from '@fortawesome/fontawesome-svg-core'
-import {
-  faBars, faClipboard, faDownload, faKey, faCog
-} from '@fortawesome/free-solid-svg-icons'
-import {
-  formatDate,
-  initializeConfig,
-  populateFormFromUrl,
-  getCredentials,
-  sanitizeHtml
-} from './utils.js'
+import { faBars, faClipboard, faDownload, faKey, faCog } from '@fortawesome/free-solid-svg-icons'
+import { initializeConfig, populateFormFromUrl } from './utils.js'
+import { addToSessionLog, checkSavedSessionLog, downloadLog, saveSessionLog, toggleLog } from './clientlog.js'
 
 library.add(faBars, faClipboard, faDownload, faKey, faCog)
 dom.watch()
-const debug = createDebug('webssh2-client')
+export const debug = createDebug('webssh2-client')
 
 let config
 let elements
-let term
-let sessionLogEnable = false
-let loggedData = false
-let sessionLog = ''
-const sessionFooter = ''
+export let sessionFooter = ''
 
+// Wait for the html to load before initializing
 document.addEventListener('DOMContentLoaded', initialize)
 
+/**
+ * Initializes the application.
+ * @throws {Error} If there is an initialization error.
+ */
 function initialize () {
   try {
     config = initializeConfig()
     config = populateFormFromUrl(config) // Merge URL parameters into the config
     initializeTerminalAndUI()
-    setupReauthBtn()
-    setupCredentialsBtn()
-    setupDownloadBtn()
     initSocket(
       config,
       onConnect,
@@ -91,7 +74,6 @@ function initialize () {
       onData,
       writeToTerminal,
       focusTerminal
-      // () => showReconnectPrompt(reconnectToServer)
     )
     setupEventListeners()
     checkSavedSessionLog()
@@ -101,18 +83,20 @@ function initialize () {
   }
 }
 
+/**
+ * Initializes the terminal and user interface.
+ */
 function initializeTerminalAndUI () {
-  if (term) {
-    console.warn('Terminal already initialized. Skipping re-initialization.')
-    return
-  }
   const options = getTerminalOptions()
   debug('initializeTerminal options:', options)
-  term = initializeTerminal(config)
+  initializeTerminal(config)
   elements = initializeElements()
+  sessionFooter = config.ssh.host ? `ssh://${config.ssh.host}:${config.ssh.port}` : ''
 
-  if (elements.terminalContainer) {
-    openTerminal(elements.terminalContainer)
+  const { terminalContainer } = elements
+
+  if (terminalContainer) {
+    openTerminal(terminalContainer)
   } else {
     console.error('Terminal container not found. Terminal cannot be initialized.')
   }
@@ -120,6 +104,10 @@ function initializeTerminalAndUI () {
   applyTerminalOptions(options)
 }
 
+/**
+ * Retrieves the terminal options based on the configuration.
+ * @returns {Object} The terminal options.
+ */
 function getTerminalOptions () {
   debug('getTerminalOptions Config:', config)
   const terminal = config.terminal
@@ -136,35 +124,57 @@ function getTerminalOptions () {
   }
 }
 
+/**
+ * Sets up event listeners for various elements in the application.
+ */
 function setupEventListeners () {
   debug('Setting up event listeners')
-  const { logBtn, logBtnStop, loginForm } = elements
-  if (logBtn) {
-    logBtn.addEventListener('click', toggleLog)
+  const { credentialsBtn, downloadLogBtn, logBtn, stopLogBtn, loginForm, reauthBtn } = elements // eslint-disable-line no-unused-vars
+
+  // Event handlers for elements
+  const elementHandlers = {
+    credentialsBtn: replayCredentials,
+    downloadLogBtn: downloadLog,
+    logBtn: toggleLog,
+    stopLogBtn: toggleLog,
+    loginForm: handleFormSubmit,
+    reauthBtn: reauthSession
   }
-  if (logBtnStop) {
-    logBtnStop.addEventListener('click', toggleLog)
-  }
-  if (loginForm) {
-    loginForm.addEventListener('submit', handleFormSubmit)
-  }
+
+  Object.entries(elementHandlers).forEach(([elementName, handler]) => {
+    const element = elements[elementName]
+    if (element) {
+      const eventType = elementName === 'loginForm' ? 'submit' : 'click'
+      element.addEventListener(eventType, handler)
+    }
+  })
+
   window.addEventListener('resize', handleResize)
   document.addEventListener('keydown', handleKeyDown)
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-      closeErrorModal()
+      hideErrorModal()
     }
   })
 }
 
+/**
+ * Handles the form submission event.
+ *
+ * @param {Event} e - The form submission event.
+ */
 function handleFormSubmit (e) {
   e.preventDefault()
   const formData = new FormData(e.target)
   const formDataObject = Object.fromEntries(formData.entries())
-  hideLoginPrompt()
+  hideLoginModal()
   connectToServer(formDataObject)
 }
 
+/**
+ * Handles the resize event and sends the resized dimensions to the server.
+ * @returns {void}
+ */
 function handleResize () {
   const dimensions = resizeTerminal()
   if (dimensions) {
@@ -173,6 +183,13 @@ function handleResize () {
   }
 }
 
+/**
+ * Handles the keydown event.
+ * If the key combination is Ctrl + Shift + 6, it prevents the default behavior
+ * and emits the data '\x1E'.
+ *
+ * @param {KeyboardEvent} event - The keydown event object.
+ */
 function handleKeyDown (event) {
   if (event.ctrlKey && event.shiftKey && event.code === 'Digit6') {
     event.preventDefault()
@@ -185,268 +202,173 @@ function handleKeyDown (event) {
  */
 function connectToServer (formData = null) {
   debug('connectToServer:')
-  const isConnecting = stateManager.getIsConnecting()
-  if (isConnecting) {
-    debug('Connection already in progress')
-    return
-  }
+  const { isConnecting, reauthRequired } = stateManager.getEntireState()
 
-  stateManager.setIsConnecting(true)
+  if (isConnecting) return
 
+  if (reauthRequired) stateManager.setState('reauthRequired', false)
+
+  stateManager.setState('isConnecting', true)
   initializeSocketConnection()
 
-  if (elements.terminalContainer) {
-    elements.terminalContainer.style.display = 'block'
+  const { terminalContainer } = elements
+  if (terminalContainer) {
+    updateElement('header', config.header.text, config.header.background)
+    updateElement('footer', sessionFooter)
+    toggleTerminalDisplay(true)
   }
-
-  // We'll pass formData to authenticate, which will then use it in getCredentials
-  // authenticate(formData)
 
   handleResize()
-
-  // updateStatus('Authenticating...', 'orange')
 }
 
+/**
+ * Handles the logic when a connection is successfully established.
+ */
 function onConnect () {
-  hideReconnectPrompt()
-  closeErrorModal()
+  hideReconnectBtn()
+  hideErrorModal()
 
   // Reset session log settings
-  sessionLogEnable = false
-  loggedData = false
-  sessionLog = ''
-  updateLogButtonState(false)
+  stateManager.setState('sessionLogEnable', false)
+  stateManager.setState('loggedData', false)
+  updateLogBtnState(false)
 
-  debug('Successfully connected to the server');
-
+  debug('Successfully connected to the server')
 }
 
+/**
+ * Handles the disconnection event.
+ *
+ * @param {string} reason - The reason for disconnection.
+ * @returns {void}
+ */
 function onDisconnect (reason) {
+  const reauthRequired = stateManager.getState('reauthRequired')
+
   debug('onDisconnect:', reason)
 
-  if (reason === 'auth_required') {
-    showLoginPrompt()
-    return // Exit the function early to avoid further actions
-  }
-  if (reason === 'auth_failed') {
-    showLoginPrompt()
-    return // Exit the function early to avoid further actions
-  }
+  switch (reason) {
+    case 'auth_required':
+    case 'auth_failed':
+      showLoginModal()
+      break
 
+    case 'reauth_required':
+      stateManager.setState('reauthRequired', true)
+      showLoginModal()
+      break
+
+    case 'error':
+      showErrorModal(`Socket error: ${reason}`)
+      commonPostDisconnectTasks()
+      break
+
+    case 'ssh_error':
+      if (reauthRequired) {
+        debug('Ignoring error due to prior reauth_required')
+        stateManager.setState('reauthRequired', false)
+      } else {
+        showErrorModal(`SSH error: ${reason}`)
+        commonPostDisconnectTasks()
+      }
+      break
+    default:
+      showErrorModal(`Disconnected: ${reason}`)
+      commonPostDisconnectTasks()
+      break
+  }
+}
+
+/**
+ * Performs common tasks after disconnecting from the server.
+ * @function commonPostDisconnectTasks
+ */
+function commonPostDisconnectTasks () {
   toggleTerminalDisplay(false)
-  stateManager.setIsConnecting(false)
+  const sessionLogEnable = stateManager.getState('sessionLogEnable')
 
-  if (reason === 'error') {
-    showErrorModal(`Socket error: ${reason}`)
-  } else {
-    showErrorModal(`Disconnected: ${reason}`)
-  }
+  stateManager.setState('isConnecting', false)
 
   if (sessionLogEnable) {
     const autoDownload = window.confirm('Would you like to download the session log?')
     saveSessionLog(autoDownload)
   }
 
-  // closeConnection()
-
   resetApplication()
-
-  // Explicitly show the reconnect prompt
-  showReconnectPrompt(reconnectToServer)
+  showReconnectBtn(reconnectToServer)
 }
 
+/**
+ * Handles the data received from the server.
+ *
+ * @param {string} data - The data received from the server.
+ */
 function onData (data) {
-  // The terminal should already be updated by the writeToTerminal function in socket.js
-  // So we only need to handle additional logic here, like logging
+  const sessionLogEnable = stateManager.getState('sessionLogEnable')
   if (sessionLogEnable) {
-    sessionLog += data
+    addToSessionLog(data)
   }
-  // Remove any lines that directly write to the terminal, like:
-  // term.write(data);
 }
 
-function handleError (message, error) {
+/**
+ * Handles errors and updates the UI accordingly.
+ *
+ * @param {string} message - The error message.
+ * @param {Error} error - The error object.
+ */
+export function handleError (message, error) {
   console.error('Error:', message, error)
-  stateManager.setIsConnecting(false)
-  updateStatus(`Error: ${message}`, 'red')
+  stateManager.setState('isConnecting', false)
+  updateElement('status', `Error: ${message}`, 'red')
   showErrorModal(message)
-  // showReconnectPrompt()
+  // showReconnectBtn()
 }
 
+/**
+ * Resets the application by disabling session log, updating log button state, and resetting the terminal.
+ */
 function resetApplication () {
-  sessionLogEnable = false
-  loggedData = false
-  sessionLog = ''
-  updateLogButtonState(false)
-
-  clearTerminal()
-  writeToTerminal('Disconnected. Please wait for reconnection or refresh the page.\r\n')
+  stateManager.setState('sessionLogEnable', false)
+  updateLogBtnState(false)
+  resetTerminal()
 }
 
+/**
+ * Reconnects to the server.
+ */
 function reconnectToServer () {
-  const isConnecting = stateManager.getIsConnecting()
+  const isConnecting = stateManager.getState('isConnecting')
   if (isConnecting) {
     debug('Reconnection already in progress')
     return
   }
 
-  hideReconnectPrompt()
-  closeErrorModal()
-  stateManager.setReconnectAttempts(0)
-
-  // closeConnection()
-
-  // initializeSocketConnection()
+  hideReconnectBtn()
+  hideErrorModal()
+  stateManager.setState('reconnectAttempts', 0)
 
   connectToServer()
 }
 
-function toggleLog () {
-  sessionLogEnable = !sessionLogEnable
-
-  if (sessionLogEnable) {
-    loggedData = true
-    const currentDate = new Date()
-    updateLogButtonState(true)
-    sessionLog = `Log Start for ${sessionFooter}: ${formatDate(currentDate)}\r\n\r\n`
-    debug('Starting log')
-  } else {
-    updateLogButtonState(false)
-    if (loggedData) {
-      sessionLog += `\r\n\r\nLog End for ${sessionFooter}: ${formatDate(new Date())}\r\n`
-      debug('Stopping log')
-    } else {
-      debug('Log was not actually running, resetting UI')
-    }
-  }
-
-  focusTerminal()
-}
-
-function downloadLog () {
-  if (loggedData) {
-    const currentDate = new Date()
-    const filename = `WebSSH2-${formatDate(currentDate).replace(/[/:\s@]/g, '')}.log`
-    const cleanLog = sanitizeHtml(sessionLog)
-    const blob = new Blob([cleanLog], { type: 'text/plain' })
-
-    if (window.navigator.msSaveOrOpenBlob) {
-      window.navigator.msSaveBlob(blob, filename)
-    } else {
-      const elem = document.createElement('a')
-      elem.href = URL.createObjectURL(blob)
-      elem.download = filename
-      document.body.appendChild(elem)
-      elem.click()
-      document.body.removeChild(elem)
-    }
-  }
-  focusTerminal()
-}
-
-function saveSessionLog (autoDownload = false) {
-  if (sessionLogEnable && loggedData) {
-    const filename = `WebSSH2-${formatDate(new Date()).replace(/[/:\s@]/g, '')}.log`
-    const cleanLog = sanitizeHtml(sessionLog)
-    const blob = new Blob([cleanLog], { type: 'text/plain' })
-
-    if (autoDownload) {
-      if (window.navigator.msSaveOrOpenBlob) {
-        window.navigator.msSaveBlob(blob, filename)
-      } else {
-        const elem = document.createElement('a')
-        elem.href = URL.createObjectURL(blob)
-        elem.download = filename
-        document.body.appendChild(elem)
-        elem.click()
-        document.body.removeChild(elem)
-      }
-    } else {
-      try {
-        window.localStorage.setItem('webssh2_session_log', cleanLog)
-        window.localStorage.setItem('webssh2_session_log_date', new Date().toISOString())
-        debug('Session log saved to localStorage')
-      } catch (e) {
-        handleError('Failed to save session log to localStorage:', e)
-        saveSessionLog(true)
-      }
-    }
-  }
-}
-
-function checkSavedSessionLog () {
-  const savedLog = window.localStorage.getItem('webssh2_session_log')
-  const savedDate = window.localStorage.getItem('webssh2_session_log_date')
-
-  if (savedLog && savedDate) {
-    const restoreLog = window.confirm(`A saved session log from ${new Date(savedDate).toLocaleString()} was found. Would you like to download it?`)
-    if (restoreLog) {
-      const filename = `WebSSH2-Recovered-${formatDate(new Date(savedDate)).replace(/[/:\s@]/g, '')}.log`
-      const blob = new Blob([savedLog], { type: 'text/plain' })
-
-      if (window.navigator.msSaveOrOpenBlob) {
-        window.navigator.msSaveBlob(blob, filename)
-      } else {
-        const elem = document.createElement('a')
-        elem.href = URL.createObjectURL(blob)
-        elem.download = filename
-        document.body.appendChild(elem)
-        elem.click()
-        document.body.removeChild(elem)
-      }
-
-      window.localStorage.removeItem('webssh2_session_log')
-      window.localStorage.removeItem('webssh2_session_log_date')
-    }
-  }
-}
-
+/**
+ * Initializes the SSH connection.
+ *
+ * @returns {void}
+ */
 function initializeConnection () {
+  debug('initializeConnection')
+  const { autoConnect, ssh } = config
   try {
-    if (config.autoConnect) {
+    if (autoConnect) {
       debug('Auto-connect is enabled')
       if (elements.loginForm) {
-        fillLoginForm(config.ssh)
+        fillLoginForm(ssh)
       }
       connectToServer()
     } else {
-      showLoginPrompt()
+      showLoginModal()
     }
   } catch (error) {
     handleError('Connection initialization failed', error)
-  }
-}
-
-function fillLoginForm (sshConfig) {
-  debug('Filling login form with:', sshConfig)
-  if (elements.hostInput) elements.hostInput.value = sshConfig.host || ''
-  if (elements.portInput) elements.portInput.value = sshConfig.port || ''
-  if (elements.usernameInput) elements.usernameInput.value = sshConfig.username || ''
-}
-
-function setupReauthBtn () {
-  const reauthBtn = document.getElementById('reauthBtn')
-  if (reauthBtn) {
-    reauthBtn.addEventListener('click', () => {
-      reauthSession()
-    })
-  }
-}
-
-function setupDownloadBtn () {
-  const downloadLogBtn = document.getElementById('downloadLogBtn')
-  if (downloadLogBtn) {
-    downloadLogBtn.addEventListener('click', () => {
-      downloadLog()
-    })
-  }
-}
-
-function setupCredentialsBtn () {
-  const credentialsBtn = document.getElementById('credentialsBtn')
-  if (credentialsBtn) {
-    credentialsBtn.addEventListener('click', () => {
-      replayCredentials()
-    })
   }
 }

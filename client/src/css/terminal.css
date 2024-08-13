@@ -2,20 +2,25 @@
    /client/css/terminal.css
 */
 #terminalContainer {
-    display: block;
-    width: calc(100% - 1px);
-    margin: 0 auto;
-    padding: 2px;
-    height: calc(100% - 19px);
-  }
-  #terminalContainer .terminal {
-    background-color: #000000;
-    color: #fafafa;
-    padding: 2px;
-    height: calc(100% - 19px);
-  }
-  #terminalContainer .terminal:focus .terminal-cursor {
-    background-color: #fafafa;
-    display: none;
-  }
-  
+  display: none;
+  width: calc(100% - 1px);
+  margin: 0 auto;
+  padding: 2px;
+  height: calc(100% - 19px);
+}
+#terminalContainer.visible {
+  display: block;
+}
+#terminalContainer.with-header {
+  height: calc(100% - 38px);
+}
+#terminalContainer .terminal {
+  background-color: #000000;
+  color: #fafafa;
+  padding: 2px;
+  height: calc(100% - 19px);
+}
+#terminalContainer .terminal:focus .terminal-cursor {
+  background-color: #fafafa;
+  display: none;
+}

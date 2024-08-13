@@ -19,11 +19,20 @@ let state = { // eslint-disable-line prefer-const
   loggedData: false
 }
 
+/**
+ * Manages the state of the application.
+ *
+ * @typedef {Object} StateManager
+ * @property {function(string): any} getState - Retrieves the value of a specific state key.
+ * @property {function(string, any): void} setState - Sets the value of a specific state key.
+ * @property {function(string): boolean} toggleState - Toggles the value of a specific state key.
+ * @property {function(): Object} getEntireState - Retrieves the entire state object.
+ */
 const stateManager = {
   getState: (key) => state[key],
   setState: (key, value) => {
     state[key] = value
-    debug(`${key} set to: ${value}`)
+    debug(`stateManager ${key} set to: ${value}`)
   },
   toggleState: (key) => {
     state[key] = !state[key]

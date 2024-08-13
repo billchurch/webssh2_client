@@ -73,11 +73,12 @@ export function writeToTerminal (data) {
 }
 
 /**
- * Clears the terminal
+ * Reset the terminal
  */
-export function clearTerminal () {
+export function resetTerminal () {
+  debug('Terminal reset')
   if (term) {
-    term.clear()
+    term.reset()
   }
 }
 
@@ -123,18 +124,6 @@ export function updateTerminalOptions (newOptions) {
   if (term) {
     Object.assign(term.options, newOptions)
     debug('Terminal options updated:', newOptions)
-  }
-}
-
-/**
- * Disposes of the terminal instance
- */
-export function disposeTerminal () {
-  if (term) {
-    term.dispose()
-    term = null
-    fitAddon = null
-    debug('Terminal disposed')
   }
 }
 

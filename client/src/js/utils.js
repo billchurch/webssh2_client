@@ -1,6 +1,5 @@
 // /client/src/js/utils.js
 import createDebug from 'debug'
-import merge from 'webpack-merge'
 const debug = createDebug('webssh2-client:utils')
 
 /**
@@ -90,7 +89,7 @@ export function initializeConfig () {
       readyTimeout: 20000
     },
     terminal: {
-      cursorBlink: true,
+      cursorBlink: false,
       scrollback: 10000,
       tabStopWidth: 8,
       bellStyle: 'sound',
@@ -114,7 +113,11 @@ export function initializeConfig () {
 
 export function populateFormFromUrl (config) {
   const searchParams = getUrlParams()
-  const params = {}
+  const params = {
+    ssh: {},
+    header: {},
+    terminal: {}
+  }
 
   // List of parameters to extract from the URL or form
   const parameterList = ['host', 'port', 'header', 'headerBackground', 'sshTerm', 'readyTimeout',
@@ -129,19 +132,36 @@ export function populateFormFromUrl (config) {
     }
 
     if (value !== null) {
-      params[param] = value
+      // Handle special cases where parameters map to nested fields
+      if (param === 'header') {
+        debug('populateFormFromUrl setting header:', value)
+        params.header.text = value
+      } else if (param === 'headerBackground') {
+        debug('populateFormFromUrl setting headerBackground:', value)
+        params.header.background = value
+      } else if (['cursorBlink', 'scrollback', 'tabStopWidth', 'bellStyle', 'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight'].includes(param)) {
+        // These parameters relate to terminal settings
+        debug('populateFormFromUrl setting terminal param:', param, value)
+        params.terminal[param] = value
+      } else {
+        // For all other SSH-related parameters
+        debug('populateFormFromUrl setting ssh param:', param, value)
+        params.ssh[param] = value
+      }
 
       // Fill form fields if they exist
       const input = document.getElementById(param + 'Input')
       if (input) {
+        debug('populateFormFromUrl setting input:', param, value)
         input.value = value
       }
     }
   })
 
-  // Ensure the params object is correctly merged into the config
+  // Merge the params object into the config
   if (config && typeof config === 'object') {
-    return mergeDeep(config, { ssh: params })
+    debug('populateFormFromUrl merging config with params:', params)
+    return mergeDeep(config, params) // Directly merge params to config
   } else {
     throw new Error('Invalid configuration object provided.')
   }
@@ -179,6 +199,16 @@ export function getCredentials (formData = null, terminalDimensions = {}) {
   debug('getCredentials mergedConfig:', mergedConfig)
 
   return mergedConfig
+}
+
+/**
+ * Validates and sanitizes a color string.
+ * @param {string} color - The color string to validate.
+ * @returns {string|null} - The sanitized color string or null if invalid.
+ */
+export function sanitizeColor (color) {
+  const colorRegex = /^(#([0-9a-fA-F]{3}){1,2}|rgba?\(\s*(\d{1,3}\s*,\s*){2,3}\s*\d{1,3}\s*\)|[a-zA-Z]+)$/
+  return colorRegex.test(color) ? color : null
 }
 
 /**

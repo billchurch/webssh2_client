@@ -9,7 +9,7 @@
     z-index: 100;
     position: relative;
   }
-  #menu:hover .dropup-content {
+  #menu:hover #dropupContent {
     display: block;
     cursor: pointer;
   }
@@ -19,7 +19,7 @@
 
   #downloadLogBtn,
   #logBtn,
-  #logBtnStop,
+  #stopLogBtn,
   #credentialsBtn,
   #reauthBtn {
     color: #000;
@@ -27,7 +27,7 @@
   }
   
   #logBtn.visible,
-  #logBtnStop.visible,
+  #stopLogBtn.visible,
   #downloadLogBtn.visible,
   #credentialsBtn.visible,
   #reauthBtn.visible {
@@ -53,8 +53,10 @@
   .dropup {
     position: relative;
     cursor: pointer;
+    padding-left: 10px;
+    padding-right: 10px;
   }
-  .dropup-content {
+  #dropupContent {
     display: none;
     position: absolute;
     background-color: #f1f1f1;
@@ -64,56 +66,18 @@
     left: 0;
     z-index: 101;
   }
-  .dropup-content a {
+  #dropupContent a {
     color: #777;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
   }
-  .dropup-content a:hover {
+  #dropupContent a:hover {
     background-color: #ccc;
   }
   .dropup:hover .dropbtn {
     background-color: #3e8e41;
   }
-  .dropup-content.visible {
+  #dropupContent.visible {
     display: block;
-  }.reconnect-button {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;
-    padding: 10px 20px;
-    font-size: 16px;
-    color: #fff;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .reconnect-button:hover {
-    background-color: #0056b3;
-  }
-
-  .reconnect-button {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;
-    padding: 10px 20px;
-    font-size: 16px;
-    color: #fff;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .reconnect-button:hover {
-    background-color: #0056b3;
   }

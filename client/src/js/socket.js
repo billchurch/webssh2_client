@@ -4,11 +4,7 @@ import io from 'socket.io-client'
 import createDebug from 'debug'
 import {
   showErrorModal,
-  showLoginPrompt,
-  updateHeader,
-  updateHeaderBackground,
-  updateStatus,
-  updateStatusBackground,
+  updateElement,
   updateUIVisibility
 } from './dom.js'
 import { getCredentials } from './utils.js'
@@ -24,24 +20,6 @@ let onConnectCallback
 let onDisconnectCallback
 let onDataCallback
 let focusTerminalCallback
-
-/**
- * Initiates authentication with the server
- * @param {Object} formData - Optional form data to use for authentication
- */
-export function authenticate (formData = null) {
-  const terminalDimensions = getTerminalDimensions()
-  const credentials = getCredentials(formData, terminalDimensions)
-  debug('Authenticating with credentials:', credentials)
-  if (credentials.host && credentials.username) {
-    socket.emit('authenticate', credentials)
-    updateStatus('Authenticating...', 'orange')
-  } else {
-    if (onDisconnectCallback) {
-      onDisconnectCallback('auth_required')
-    }
-  }
-}
 
 /**
  * Closes the socket connection.
@@ -73,14 +51,6 @@ export function emitResize (dimensions) {
     socket.emit('resize', dimensions)
     debug('Resized terminal:', dimensions)
   }
-}
-
-/**
- * Returns the current socket instance.
- * @returns {SocketIOClient.Socket} The current socket instance
- */
-export function getSocket () {
-  return socket
 }
 
 /**
@@ -125,12 +95,12 @@ export function initSocket (configObj, connectCallback, disconnectCallback, data
  * Initiates a reauthentication session.
  */
 export function reauthSession () {
-  if (stateManager.getAllowReauth()) {
-    debug('Initiating reauth session')
-    showLoginPrompt()
-    socket.emit('reauth')
+  if (stateManager.getState('allowReauth')) {
+    debug('Requesting session reauth')
+    // showLoginModal()
+    socket.emit('control', 'reauth')
   } else {
-    debug('Reauth not allowed')
+    debug('Session reauth not allowed')
     updateUIVisibility({ error: 'Reauthentication not allowed' })
   }
 }
@@ -139,12 +109,31 @@ export function reauthSession () {
  * Replays credentials to the server.
  */
 export function replayCredentials () {
-  if (stateManager.getAllowReplay()) {
+  const allowReplay = stateManager.getState('allowReplay')
+  if (allowReplay) {
     debug('Replaying credentials')
     socket.emit('control', 'replayCredentials')
   } else {
-    debug('Credential replay not allowed')
+    debug('Credential replay not allowed: ', allowReplay)
     showErrorModal('Credential replay not allowed')
+  }
+}
+
+/**
+ * Initiates authentication with the server
+ * @param {Object} formData - Optional form data to use for authentication
+ */
+function authenticate (formData = null) {
+  const terminalDimensions = getTerminalDimensions()
+  const credentials = getCredentials(formData, terminalDimensions)
+  debug('Authenticating with credentials:', credentials)
+  if (credentials.host && credentials.username) {
+    socket.emit('authenticate', credentials)
+    updateElement('status', 'Authenticating...', 'orange')
+  } else {
+    if (onDisconnectCallback) {
+      onDisconnectCallback('auth_required')
+    }
   }
 }
 
@@ -175,47 +164,19 @@ function getWebSocketUrl () {
 }
 
 /**
- * Handles the allowReauth flag from the server.
- * @param {boolean} allowed - Whether reauthentication is allowed
- */
-function handleAllowReauth (allowed) {
-  debug('allowReauth:', allowed)
-
-  // Update the application state
-  stateManager.setAllowReauth(allowed)
-
-  // Update the UI
-  updateUIVisibility({ allowReauth: allowed })
-}
-
-/**
- * Handles the allowReplay flag from the server.
- * @param {boolean} allowed - Whether replaying credentials is allowed
- */
-function handleAllowReplay (allowed) {
-  debug('allowReplay:', allowed)
-
-  // Update the application state
-  stateManager.setAllowReplay(allowed)
-
-  // Update the UI
-  updateUIVisibility({ allowReplay: allowed })
-}
-
-/**
  * Handles the result of authentication attempt.
  * @param {Object} result - The authentication result.
  */
 function handleAuthResult (result) {
   debug('Authentication result:', result)
-  stateManager.setIsConnecting(false)
+  stateManager.setState('isConnecting', false)
   if (result.success) {
-    updateStatus('Connected', 'green')
+    updateElement('status', 'Connected', 'green')
     if (focusTerminalCallback) {
       focusTerminalCallback()
     }
   } else {
-    updateStatus(`Authentication failed: ${result.message}`, 'red')
+    updateElement('status', `Authentication failed: ${result.message}`, 'red')
     if (onDisconnectCallback) {
       onDisconnectCallback('auth_failed', result.message)
     }
@@ -227,9 +188,9 @@ function handleAuthResult (result) {
  */
 function handleConnect () {
   debug('Connected to server')
-  stateManager.setIsConnecting(false)
-  stateManager.setReconnectAttempts(0)
-  updateStatus('Connected', 'green')
+  stateManager.setState('isConnecting', false)
+  stateManager.setState('reconnectAttempts', 0)
+  updateElement('status', 'Connected', 'green')
 
   if (onConnectCallback) {
     onConnectCallback()
@@ -255,8 +216,6 @@ function handleData (data) {
   if (writeToTerminal) {
     writeToTerminal(data)
   }
-  // Remove or comment out the following line if it exists
-  // term.write(data);  // This line might be causing the echo
   if (onDataCallback) {
     onDataCallback(data)
   }
@@ -268,13 +227,13 @@ function handleData (data) {
  */
 function handleDisconnect (reason) {
   debug(`Socket Disconnected: ${reason}`)
-  stateManager.setIsConnecting(false)
-  updateStatus(`WEBSOCKET SERVER DISCONNECTED: ${reason}`, 'red')
+  stateManager.setState('isConnecting', false)
+  updateElement('status', `WEBSOCKET SERVER DISCONNECTED: ${reason}`, 'red')
 
   if (onDisconnectCallback) {
     onDisconnectCallback(reason)
   }
-  // Removed call to showReconnectPromptCallback
+  // Removed call to showReconnectBtnCallback
 }
 
 /**
@@ -288,51 +247,19 @@ function handleError (error) {
   }
 }
 
-/**
- * Handles footer content updates from the server
- * @param {string} content - The new footer content
- */
-function handleFooter (content) {
-  // This function might need to be implemented in dom.js
-  // and then imported and used here
-}
-
-/**
- * Handles header content updates from the server
- * @param {string} content - The new header content
- */
-function handleHeader (content) {
-  updateHeader(content)
-}
-
-/**
- * Handles header background color updates from the server
- * @param {string} color - The new header background color
- */
-function handleHeaderBackground (color) {
-  updateHeaderBackground(color)
-}
-
-/**
- * Handles reauth requests from the server
- */
-function handleReauth () {
-  if (onDisconnectCallback) {
-    onDisconnectCallback('reauth_required')
+function handlePermissions (permissions) {
+  debug('Received permissions:', permissions)
+  const { allowReplay, allowReauth } = permissions
+  if (allowReplay) {
+    debug('Allowing replay:', allowReplay)
+    stateManager.setState('allowReplay', allowReplay)
+    updateUIVisibility({ allowReplay })
   }
-}
-
-/**
- * Handles auth requests from the server
- */
-function handleRequestAuth () {
-  debug('Received request_auth from server')
-  authenticate()
-  updateStatus('Requesting authentication...', 'orange')
-
-  // if (onDisconnectCallback) {
-  //   onDisconnectCallback('auth_required')
-  // }
+  if (allowReauth) {
+    debug('Allowing reauth:', allowReauth)
+    stateManager.setState('allowReauth', allowReauth)
+    updateUIVisibility({ allowReauth })
+  }
 }
 
 /**
@@ -346,28 +273,31 @@ function handleSSHError (error) {
   }
 }
 
-/**
- * Handles status updates from the server
- * @param {string} status - The new status message
- */
-function handleStatus (status) {
-  updateStatus(status)
+function handleAuth (data) {
+  debug('Received authentication event: ', data)
+  if (data.action === 'request_auth') {
+    authenticate()
+    updateElement('status', 'Requesting authentication...', 'orange')
+    return
+  }
+  if (data.action === 'auth_result') {
+    handleAuthResult(data)
+    return
+  }
+  if (data.action === 'reauth') {
+    if (onDisconnectCallback) {
+      onDisconnectCallback('reauth_required')
+    }
+  }
 }
 
-/**
- * Handles status background color updates from the server
- * @param {string} color - The new status background color
- */
-function handleStatusBackground (color) {
-  updateStatusBackground(color)
-}
+function handleUpdateUI (data) {
+  debug('Received updateUI event:', data)
+  const { header } = data
 
-/**
- * Handles title updates from the server
- * @param {string} title - The new title
- */
-function handleTitle (title) {
-  document.title = title
+  if (header !== undefined) {
+    updateElement('header', header)
+  }
 }
 
 /**
@@ -375,23 +305,15 @@ function handleTitle (title) {
  */
 function setupSocketListeners () {
   const handlers = {
-    allowReplay: handleAllowReplay,
-    allowReauth: handleAllowReauth,
-    auth_result: handleAuthResult,
+    authentication: handleAuth,
     connect: handleConnect,
     connect_error: handleConnectError,
     data: handleData,
     disconnect: handleDisconnect,
     error: handleError,
-    footer: handleFooter,
-    header: handleHeader,
-    headerBackground: handleHeaderBackground,
-    reauth: handleReauth,
-    request_auth: handleRequestAuth,
-    status: handleStatus,
+    permissions: handlePermissions,
     ssherror: handleSSHError,
-    statusBackground: handleStatusBackground,
-    title: handleTitle
+    updateUI: handleUpdateUI
   }
 
   Object.entries(handlers).forEach(([event, handler]) => {

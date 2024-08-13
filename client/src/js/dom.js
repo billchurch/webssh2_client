@@ -5,7 +5,7 @@
  */
 
 import createDebug from 'debug'
-import { sanitizeHtml } from './utils.js'
+import { sanitizeColor, sanitizeHtml } from './utils.js'
 
 const debug = createDebug('webssh2-client:dom')
 
@@ -14,54 +14,44 @@ let elements = {}
 /**
  * Closes the error modal.
  */
-export function closeErrorModal () {
+export function hideErrorModal () {
   const { errorModal } = elements
   if (errorModal) {
-    errorModal.style.display = 'none'
+    toggleVisibility(errorModal, false)
   }
 }
 
 /**
-/**
- * Focuses on the appropriate input field in the login form
+ * Fills the login form with the provided SSH configuration.
+ *
+ * @param {Object} sshConfig - The SSH configuration object.
+ * @param {string} sshConfig.host - The SSH host.
+ * @param {number} sshConfig.port - The SSH port.
+ * @param {string} sshConfig.username - The SSH username.
  */
-function focusAppropriateInput () {
-  const { hostInput, usernameInput, passwordInput, portInput } = elements
+export function fillLoginForm (sshConfig) {
+  const { hostInput, portInput, usernameInput } = elements
+  const { host, port, username } = sshConfig
 
-  if (hostInput.value) {
-    if (usernameInput.value) {
-      passwordInput.focus()
-      return
-    }
+  debug('Filling login form with:', sshConfig)
 
-    if (portInput.value) {
-      usernameInput.focus()
-      return
-    }
-  }
-
-  hostInput.focus()
+  if (hostInput) hostInput.value = host || ''
+  if (portInput) portInput.value = port || ''
+  if (usernameInput) usernameInput.value = username || ''
 }
 
 /**
- * Hides the login prompt
+ * Hides the login modal
  */
-export function hideLoginPrompt () {
-  const { loginModal } = elements
-  if (loginModal) {
-    loginModal.style.display = 'none'
-  }
+export function hideLoginModal () {
+  hideModal(elements.loginModal)
 }
 
 /**
- * Hides the reconnect prompt
+ * Hides the reconnect button
  */
-export function hideReconnectPrompt () {
-  const { reconnectButton } = elements
-  if (reconnectButton) {
-    reconnectButton.style.display = 'none'
-    reconnectButton.onclick = null // Remove the onclick handler
-  }
+export function hideReconnectBtn () {
+  hideButton(elements.reconnectButton, true)
 }
 
 /**
@@ -73,7 +63,7 @@ export function initializeElements () {
   const elementIds = [
     'status', 'header', 'dropupContent', 'footer', 'terminalContainer',
     'loginModal', 'loginForm', 'hostInput', 'portInput', 'usernameInput',
-    'passwordInput', 'logBtn', 'logBtnStop', 'downloadLogBtn', 'credentialsBtn',
+    'passwordInput', 'logBtn', 'stopLogBtn', 'downloadLogBtn', 'credentialsBtn',
     'reauthBtn', 'errorModal', 'errorMessage', 'reconnectButton'
   ]
 
@@ -112,7 +102,7 @@ export function initializeElements () {
   if (elements.errorModal) {
     const closeBtn = elements.errorModal.querySelector('.close')
     if (closeBtn) {
-      closeBtn.onclick = () => { elements.errorModal.style.display = 'none' }
+      closeBtn.onclick = () => { hideErrorModal() }
     }
   }
 
@@ -129,53 +119,45 @@ export function showErrorModal (message) {
   if (errorMessage && errorModal) {
     debug(`Error modal shown with message: ${message}`)
     errorMessage.textContent = message
-    errorModal.style.display = 'block'
+    toggleVisibility(errorModal, true)
   } else {
     console.error('Error modal or error message element not found')
   }
 }
 
 /**
- * Shows the login prompt
+ * Shows the login modal
  */
-export function showLoginPrompt () {
+export function showLoginModal () {
   const { loginModal, terminalContainer, passwordInput } = elements
-  debug('showLoginPrompt: Displaying login modal')
-  if (loginModal) {
-    loginModal.style.display = 'block'
-  }
-  if (terminalContainer) {
-    terminalContainer.style.display = 'none'
-  }
-  if (passwordInput) {
-    passwordInput.value = ''
-  }
+  showModal(loginModal)
+  toggleVisibility(terminalContainer, true)
+  if (passwordInput) passwordInput.value = ''
   focusAppropriateInput()
 }
 
 /**
- * Shows the reconnect prompt and sets up the onclick handler
+ * Shows the reconnect button and sets up the onclick handler
  * @param {Function} reconnectCallback - The function to call when the reconnect button is clicked
  */
-export function showReconnectPrompt (reconnectCallback) {
+export function showReconnectBtn (reconnectCallback) {
   const { reconnectButton } = elements
-  debug('showReconnectPrompt: Displaying reconnect button')
-  if (reconnectButton) {
-    reconnectButton.style.display = 'block'
-    reconnectButton.onclick = reconnectCallback
-  } else {
-    console.error('Reconnect button not found in the DOM')
-  }
+  showButton(reconnectButton, reconnectCallback)
+  reconnectButton.focus()
 }
 
 /**
  * Displays or hides the terminal container
- * @param {boolean} show - Whether to show or hide the terminal
+ * @param {boolean} visible - Whether to show or hide the terminal
  */
-export function toggleTerminalDisplay (show) {
+export function toggleTerminalDisplay (visible) {
   const { terminalContainer } = elements
   if (terminalContainer) {
-    terminalContainer.style.display = show ? 'block' : 'none'
+    if (visible) {
+      toggleVisibility(terminalContainer, true)
+    } else {
+      toggleVisibility(terminalContainer, false)
+    }
   }
 }
 
@@ -197,81 +179,65 @@ export function triggerDownload (blob, filename) {
   URL.revokeObjectURL(link.href)
 }
 
-// Export the elements object if needed elsewhere
+/**
+ * Retrieves the elements.
+ *
+ * @returns {Array} The elements.
+ */
 export function getElements () {
   return elements
 }
 
 /**
- * Updates the status message
- * @param {string} message - The status message
- * @param {string} [color] - The color of the status message (optional)
+ * Updates the content and/or background color of a given element.
+ * @param {string} elementName - The name of the element (e.g., 'status', 'header', 'footer').
+ * @param {string|object} content - The new content for the element. Can be a string or an object with 'text' and 'background' properties.
+ * @param {string} [color] - The optional background color for the element (if content is a string). Deprecated in favor of passing an object as content.
  */
-export function updateStatus (message, color) {
-  const { status } = elements
-  if (status) {
-    status.innerHTML = sanitizeHtml(message)
-    if (color) {
-      updateStatusBackground(color)
-    }
+export function updateElement (elementName, content, color) {
+  const element = elements[elementName]
+  if (!element || !content) {
+    console.warn(`${elementName} element not found or content missing.`)
     return
   }
-  console.warn('Status element not found. Cannot update status.')
-}
 
-/**
- * Updates the status background color
- * @param {string} color - The color of the status bar
- */
-export function updateStatusBackground (color) {
-  const { status } = elements
-  if (status) {
-    status.style.backgroundColor = color
-    return
+  const { text = '', background } = typeof content === 'object' ? content : { text: content, background: color }
+  const sanitizedContent = sanitizeHtml(text)
+  const sanitizedColor = background ? sanitizeColor(background) : null
+
+  debug(`Updating ${elementName} element with sanitized content: ${sanitizedContent} and color: ${sanitizedColor || 'undefined'}`)
+
+  element.innerHTML = sanitizedContent
+  if (sanitizedColor) element.style.backgroundColor = sanitizedColor
+
+  if (elementName === 'header') {
+    const { terminalContainer } = elements
+    toggleVisibility(element, true)
+    if (terminalContainer) terminalContainer.classList.add('with-header')
   }
-  console.warn('Status element not found. Cannot update status.')
 }
 
 /**
- * Updates the header content
- * @param {string} content - The new header content
- * @param {string} [color] - The color of the header message (optional)
+ * Updates the log button state
+ * @param {boolean} isLogging - Whether logging is currently active
  */
-export function updateHeader (content, color) {
-  const { header, terminalContainer } = elements
-  if (header) {
-    header.innerHTML = sanitizeHtml(content)
-    header.style.display = content ? 'block' : 'none'
-    if (color) {
-      updateHeaderBackground(color)
+export function updateLogBtnState (isLogging) {
+  const { logBtn, stopLogBtn, downloadLogBtn } = elements
+
+  if (logBtn && stopLogBtn) {
+    if (isLogging) {
+      toggleVisibility(logBtn, false)
+      toggleVisibility(stopLogBtn, true)
+    } else {
+      toggleVisibility(logBtn, true)
+      toggleVisibility(stopLogBtn, false)
     }
-    if (terminalContainer) {
-      terminalContainer.style.height = content ? 'calc(100% - 38px)' : '100%'
+  }
+
+  if (downloadLogBtn) {
+    if (isLogging) {
+      toggleVisibility(downloadLogBtn, true)
     }
-  }
-}
-
-/**
- * Updates the Header background color
- * @param {string} color - The color of the status bar
- */
-export function updateHeaderBackground (color) {
-  const { header } = elements
-  if (header) {
-    header.style.backgroundColor = color
-    return
-  }
-  console.warn('Header element not found. Cannot update status.')
-}
-
-/**
- * Updates the footer content
- * @param {string} content - The new footer content
- */
-export function updateFooter (content) {
-  const { footer } = elements
-  if (footer) {
-    footer.innerHTML = sanitizeHtml(content)
   }
 }
 
@@ -299,27 +265,23 @@ export function updateUIVisibility (permissions) {
 }
 
 /**
- * Updates the log button state
- * @param {boolean} isLogging - Whether logging is currently active
+/**
+ * Focuses on the appropriate input field in the login form
  */
-export function updateLogButtonState (isLogging) {
-  const { logBtn, logBtnStop, downloadLogBtn } = elements
+function focusAppropriateInput () {
+  const { hostInput, usernameInput, passwordInput, portInput } = elements
 
-  if (logBtn && logBtnStop) {
-    if (isLogging) {
-      logBtn.classList.remove('visible')
-      logBtnStop.classList.add('visible')
-    } else {
-      logBtn.classList.add('visible')
-      logBtnStop.classList.remove('visible')
+  if (hostInput.value) {
+    if (usernameInput.value) {
+      passwordInput.focus()
+      return
+    }
+    if (portInput.value) {
+      usernameInput.focus()
+      return
     }
   }
-
-  if (downloadLogBtn) {
-    if (isLogging) {
-      downloadLogBtn.classList.add('visible')
-    }
-  }
+  hostInput.focus()
 }
 
 /**
@@ -328,10 +290,11 @@ export function updateLogButtonState (isLogging) {
  */
 function updateCredentialsBtnVisibility (visible) {
   const { credentialsBtn } = elements
-  debug(`credentialsBtn visibility: ${visible}`)
-  if (credentialsBtn) {
-    credentialsBtn.style.display = visible ? 'block' : 'none'
+  if (visible) {
+    toggleVisibility(credentialsBtn, true)
+    return
   }
+  toggleVisibility(credentialsBtn, false)
 }
 
 /**
@@ -340,8 +303,72 @@ function updateCredentialsBtnVisibility (visible) {
  */
 function updateReauthBtnVisibility (visible) {
   const { reauthBtn } = elements
-  debug(`reauthBtn visibility set to: ${visible}`)
-  if (reauthBtn) {
-    reauthBtn.style.display = visible ? 'block' : 'none'
+  if (visible) {
+    toggleVisibility(reauthBtn, true)
+    return
+  }
+  toggleVisibility(reauthBtn, false)
+}
+
+/**
+ * Toggles the visibility of an element.
+ *
+ * @param {HTMLElement} element - The DOM element to toggle.
+ * @param {boolean} isVisible - If true, show the element; if false, hide it.
+ */
+function toggleVisibility (element, isVisible) {
+  if (!element) return
+  debug(`${element.id} visibility set to: ${isVisible}`)
+
+  if (isVisible) {
+    element.classList.add('visible')
+  } else {
+    element.classList.remove('visible')
+  }
+}
+
+/**
+ * Hides a modal by its element reference.
+ *
+ * @param {HTMLElement} modal - The modal element to hide.
+ */
+export function hideModal (modal) {
+  toggleVisibility(modal, false)
+}
+
+/**
+ * Shows a modal by its element reference.
+ *
+ * @param {HTMLElement} modal - The modal element to show.
+ */
+export function showModal (modal) {
+  toggleVisibility(modal, true)
+}
+
+/**
+ * Hides a button and optionally removes its click handler.
+ *
+ * @param {HTMLElement} button - The button element to hide.
+ * @param {boolean} [removeOnClick=false] - Whether to remove the onclick handler.
+ */
+export function hideButton (button, removeOnClick = false) {
+  toggleVisibility(button, false)
+
+  if (removeOnClick && button) {
+    button.onclick = null
+  }
+}
+
+/**
+ * Shows a button and optionally assigns a click handler.
+ *
+ * @param {HTMLElement} button - The button element to show.
+ * @param {Function} [onClick=null] - The onclick handler to assign.
+ */
+export function showButton (button, onClick = null) {
+  toggleVisibility(button, true)
+
+  if (onClick && button) {
+    button.onclick = onClick
   }
 }
