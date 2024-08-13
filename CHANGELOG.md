@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.17](https://github.com/your-username/your-repo-name/compare/v0.2.16...v0.2.17) (2024-08-13)
+
+
+### Bug Fixes
+
+* ping timeouts due to duplicate session setup ([10e6576](https://github.com/your-username/your-repo-name/commit/10e6576ea09124a923abc34e0cedf6047e7a0ef2))
+
 ### [0.2.16](https://github.com/your-username/your-repo-name/compare/v0.2.15...v0.2.16) (2024-07-19)
 
 ### 0.2.15 (2024-07-19)
