@@ -26,9 +26,8 @@
     "watch": "NODE_ENV=development npm-run-all --parallel start watch:build",
     "watch:build": "webpack --watch --config scripts/webpack.dev.js",
     "prepublishOnly": "npm run build",
-
     "version": "npm run build && conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md client/public/*",
-    "release": "standard-version",
+    "release": "standard-version -a -s",
     "publish:dry-run": "npm publish --dry-run",
     "publish:npm": "npm publish",
     "release:major": "npm run release -- --release-as major",
