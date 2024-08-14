@@ -19,8 +19,8 @@ module.exports = merge(common, {
             drop_debugger: false,
             // Reduce the passes and compress options
             passes: 1,
-            dead_code: true,
-            unused: true
+            dead_code: false,
+            unused: false
           },
           // Disable property mangling
           mangle: {
