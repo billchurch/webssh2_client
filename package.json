@@ -4,7 +4,6 @@
   "ignore": [
     ".gitignore"
   ],
-  "type": "module",
   "description": "A client for the webssh2 gateway",
   "repository": {
     "type": "git",
