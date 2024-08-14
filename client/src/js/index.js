@@ -8,26 +8,24 @@ import '../css/terminal.css'
 import '../css/style.css'
 
 import {
-  hideErrorModal,
   fillLoginForm,
-  hideLoginModal,
+  hideErrorModal,
   hideReconnectBtn,
+  resize,
   initializeElements,
+  setupEventListeners,
   showErrorModal,
   showLoginModal,
   showReconnectBtn,
   toggleTerminalDisplay,
   updateElement,
-  updateLogBtnState
+  updatestartLogBtnState
 } from './dom.js'
 
 import {
-  emitData,
-  emitResize,
+
   initializeSocketConnection,
   initSocket,
-  reauthSession,
-  replayCredentials
 } from './socket.js'
 
 import {
@@ -36,20 +34,26 @@ import {
   initializeTerminal,
   openTerminal,
   resetTerminal,
-  resizeTerminal,
   writeToTerminal
 } from './terminal.js'
 
 import stateManager from './state.js'
 
-import { library, dom } from '@fortawesome/fontawesome-svg-core'
-import { faBars, faClipboard, faDownload, faKey, faCog } from '@fortawesome/free-solid-svg-icons'
 import { initializeConfig, populateFormFromUrl } from './utils.js'
-import { addToSessionLog, checkSavedSessionLog, downloadLog, saveSessionLog, toggleLog } from './clientlog.js'
+import {
+  addToSessionLog,
+  checkSavedSessionLog,
+  downloadLog,
+} from './clientlog.js'
 
-library.add(faBars, faClipboard, faDownload, faKey, faCog)
-dom.watch()
 export const debug = createDebug('webssh2-client')
+
+import { library, dom } from '@fortawesome/fontawesome-svg-core'
+import { faBars, faClipboard, faCog, faDownload, faKey, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+
+library.add(faBars, faClipboard, faDownload, faKey, faCog, faTrashCan)
+
+dom.watch()
 
 let config
 let elements
@@ -62,8 +66,9 @@ document.addEventListener('DOMContentLoaded', initialize)
  * Initializes the application.
  * @throws {Error} If there is an initialization error.
  */
-function initialize () {
+function initialize() {
   try {
+    console.log(`Initializing WebSSH2 client - ${BANNER_STRING}`) // eslint-disable-line no-undef
     config = initializeConfig()
     config = populateFormFromUrl(config) // Merge URL parameters into the config
     initializeTerminalAndUI()
@@ -86,19 +91,23 @@ function initialize () {
 /**
  * Initializes the terminal and user interface.
  */
-function initializeTerminalAndUI () {
+function initializeTerminalAndUI() {
   const options = getTerminalOptions()
   debug('initializeTerminal options:', options)
   initializeTerminal(config)
   elements = initializeElements()
-  sessionFooter = config.ssh.host ? `ssh://${config.ssh.host}:${config.ssh.port}` : ''
+  sessionFooter = config.ssh.host
+    ? `ssh://${config.ssh.host}:${config.ssh.port}`
+    : ''
 
   const { terminalContainer } = elements
 
   if (terminalContainer) {
     openTerminal(terminalContainer)
   } else {
-    console.error('Terminal container not found. Terminal cannot be initialized.')
+    console.error(
+      'Terminal container not found. Terminal cannot be initialized.'
+    )
   }
 
   applyTerminalOptions(options)
@@ -108,7 +117,7 @@ function initializeTerminalAndUI () {
  * Retrieves the terminal options based on the configuration.
  * @returns {Object} The terminal options.
  */
-function getTerminalOptions () {
+function getTerminalOptions() {
   debug('getTerminalOptions Config:', config)
   const terminal = config.terminal
   return {
@@ -125,82 +134,9 @@ function getTerminalOptions () {
 }
 
 /**
- * Sets up event listeners for various elements in the application.
- */
-function setupEventListeners () {
-  debug('Setting up event listeners')
-  const { credentialsBtn, downloadLogBtn, logBtn, stopLogBtn, loginForm, reauthBtn } = elements // eslint-disable-line no-unused-vars
-
-  // Event handlers for elements
-  const elementHandlers = {
-    credentialsBtn: replayCredentials,
-    downloadLogBtn: downloadLog,
-    logBtn: toggleLog,
-    stopLogBtn: toggleLog,
-    loginForm: handleFormSubmit,
-    reauthBtn: reauthSession
-  }
-
-  Object.entries(elementHandlers).forEach(([elementName, handler]) => {
-    const element = elements[elementName]
-    if (element) {
-      const eventType = elementName === 'loginForm' ? 'submit' : 'click'
-      element.addEventListener(eventType, handler)
-    }
-  })
-
-  window.addEventListener('resize', handleResize)
-  document.addEventListener('keydown', handleKeyDown)
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      hideErrorModal()
-    }
-  })
-}
-
-/**
- * Handles the form submission event.
- *
- * @param {Event} e - The form submission event.
- */
-function handleFormSubmit (e) {
-  e.preventDefault()
-  const formData = new FormData(e.target)
-  const formDataObject = Object.fromEntries(formData.entries())
-  hideLoginModal()
-  connectToServer(formDataObject)
-}
-
-/**
- * Handles the resize event and sends the resized dimensions to the server.
- * @returns {void}
- */
-function handleResize () {
-  const dimensions = resizeTerminal()
-  if (dimensions) {
-    debug('Sending resized:', dimensions)
-    emitResize(dimensions)
-  }
-}
-
-/**
- * Handles the keydown event.
- * If the key combination is Ctrl + Shift + 6, it prevents the default behavior
- * and emits the data '\x1E'.
- *
- * @param {KeyboardEvent} event - The keydown event object.
- */
-function handleKeyDown (event) {
-  if (event.ctrlKey && event.shiftKey && event.code === 'Digit6') {
-    event.preventDefault()
-    emitData('\x1E')
-  }
-}
-
-/**
  * Connects to the server
  */
-function connectToServer (formData = null) {
+export function connectToServer(formData = null) {
   debug('connectToServer:')
   const { isConnecting, reauthRequired } = stateManager.getEntireState()
 
@@ -218,20 +154,20 @@ function connectToServer (formData = null) {
     toggleTerminalDisplay(true)
   }
 
-  handleResize()
+  resize()
 }
 
 /**
  * Handles the logic when a connection is successfully established.
  */
-function onConnect () {
+function onConnect() {
   hideReconnectBtn()
   hideErrorModal()
 
   // Reset session log settings
   stateManager.setState('sessionLogEnable', false)
   stateManager.setState('loggedData', false)
-  updateLogBtnState(false)
+  updatestartLogBtnState(false)
 
   debug('Successfully connected to the server')
 }
@@ -242,7 +178,7 @@ function onConnect () {
  * @param {string} reason - The reason for disconnection.
  * @returns {void}
  */
-function onDisconnect (reason) {
+function onDisconnect(reason) {
   const reauthRequired = stateManager.getState('reauthRequired')
 
   debug('onDisconnect:', reason)
@@ -283,14 +219,16 @@ function onDisconnect (reason) {
  * Performs common tasks after disconnecting from the server.
  * @function commonPostDisconnectTasks
  */
-function commonPostDisconnectTasks () {
+function commonPostDisconnectTasks() {
   const sessionLogEnable = stateManager.getState('sessionLogEnable')
 
   stateManager.setState('isConnecting', false)
 
   if (sessionLogEnable) {
-    const autoDownload = window.confirm('Would you like to download the session log?')
-    saveSessionLog(autoDownload)
+    const autoDownload = window.confirm(
+      'Would you like to download the session log?'
+    )
+    downloadLog(autoDownload)
   }
 
   resetApplication()
@@ -302,7 +240,7 @@ function commonPostDisconnectTasks () {
  *
  * @param {string} data - The data received from the server.
  */
-function onData (data) {
+function onData(data) {
   const sessionLogEnable = stateManager.getState('sessionLogEnable')
   if (sessionLogEnable) {
     addToSessionLog(data)
@@ -315,7 +253,7 @@ function onData (data) {
  * @param {string} message - The error message.
  * @param {Error} error - The error object.
  */
-export function handleError (message, error) {
+export function handleError(message, error) {
   console.error('Error:', message, error)
   stateManager.setState('isConnecting', false)
   updateElement('status', `Error: ${message}`, 'red')
@@ -326,15 +264,15 @@ export function handleError (message, error) {
 /**
  * Resets the application by disabling session log, updating log button state, and resetting the terminal.
  */
-function resetApplication () {
+function resetApplication() {
   stateManager.setState('sessionLogEnable', false)
-  updateLogBtnState(false)
+  updatestartLogBtnState(false)
 }
 
 /**
  * Reconnects to the server.
  */
-function reconnectToServer () {
+function reconnectToServer() {
   const isConnecting = stateManager.getState('isConnecting')
   if (isConnecting) {
     debug('Reconnection already in progress')
@@ -354,7 +292,7 @@ function reconnectToServer () {
  *
  * @returns {void}
  */
-function initializeConnection () {
+function initializeConnection() {
   debug('initializeConnection')
   const { autoConnect, ssh } = config
   try {

@@ -94,7 +94,7 @@ export function initSocket (configObj, connectCallback, disconnectCallback, data
 /**
  * Initiates a reauthentication session.
  */
-export function reauthSession () {
+export function reauth () {
   if (stateManager.getState('allowReauth')) {
     debug('Requesting session reauth')
     // showLoginModal()
@@ -167,7 +167,7 @@ function getWebSocketUrl () {
  * Handles the result of authentication attempt.
  * @param {Object} result - The authentication result.
  */
-function handleAuthResult (result) {
+function authResult (result) {
   debug('Authentication result:', result)
   stateManager.setState('isConnecting', false)
   if (result.success) {
@@ -186,7 +186,7 @@ function handleAuthResult (result) {
 /**
  * Handles successful connections
  */
-function handleConnect () {
+function connect () {
   debug('Connected to server')
   stateManager.setState('isConnecting', false)
   stateManager.setState('reconnectAttempts', 0)
@@ -201,7 +201,7 @@ function handleConnect () {
  * Handles connection errors
  * @param {Error} error - The connection error
  */
-function handleConnectError (error) {
+function connect_error (error) {
   debug('Connection error:', error)
   if (onDisconnectCallback) {
     onDisconnectCallback('connect_error', error)
@@ -212,7 +212,7 @@ function handleConnectError (error) {
  * Handles incoming data from the server.
  * @param {string} data - The data received from the server.
  */
-function handleData (data) {
+function data (data) {
   if (writeToTerminal) {
     writeToTerminal(data)
   }
@@ -225,7 +225,7 @@ function handleData (data) {
  * Handles disconnections
  * @param {string} reason - The reason for disconnection
  */
-function handleDisconnect (reason) {
+function disconnect (reason) {
   debug(`Socket Disconnected: ${reason}`)
   stateManager.setState('isConnecting', false)
   updateElement('status', `WEBSOCKET SERVER DISCONNECTED: ${reason}`, 'red')
@@ -240,14 +240,14 @@ function handleDisconnect (reason) {
  * Handles socket errors
  * @param {Error} error - The error object
  */
-function handleError (error) {
+function error (error) {
   debug('Socket error:', error)
   if (onDisconnectCallback) {
     onDisconnectCallback('error', error)
   }
 }
 
-function handlePermissions (permissions) {
+function permissions (permissions) {
   debug('Received permissions:', permissions)
   const { allowReplay, allowReauth } = permissions
   if (allowReplay) {
@@ -266,14 +266,14 @@ function handlePermissions (permissions) {
  * Handles SSH errors from the server
  * @param {string} error - The SSH error message
  */
-function handleSSHError (error) {
+function ssherror (error) {
   debug('SSH Error:', error)
   if (onDisconnectCallback) {
     onDisconnectCallback('ssh_error', error)
   }
 }
 
-function handleAuth (data) {
+function authentication (data) {
   debug('Received authentication event: ', data)
   if (data.action === 'request_auth') {
     authenticate()
@@ -281,7 +281,7 @@ function handleAuth (data) {
     return
   }
   if (data.action === 'auth_result') {
-    handleAuthResult(data)
+    authResult(data)
     return
   }
   if (data.action === 'reauth') {
@@ -291,7 +291,7 @@ function handleAuth (data) {
   }
 }
 
-function handleUpdateUI (data) {
+function updateUI (data) {
   debug('Received updateUI event:', data)
   const { header } = data
 
@@ -304,19 +304,19 @@ function handleUpdateUI (data) {
  * Sets up Socket.IO event listeners
  */
 function setupSocketListeners () {
-  const handlers = {
-    authentication: handleAuth,
-    connect: handleConnect,
-    connect_error: handleConnectError,
-    data: handleData,
-    disconnect: handleDisconnect,
-    error: handleError,
-    permissions: handlePermissions,
-    ssherror: handleSSHError,
-    updateUI: handleUpdateUI
-  }
-
-  Object.entries(handlers).forEach(([event, handler]) => {
-    socket.on(event, handler)
+  Object.entries({
+    authentication,
+    connect,
+    connect_error,
+    data,
+    disconnect,
+    error,
+    permissions,
+    ssherror,
+    updateUI
+  }).forEach(([event, handler]) => {
+    if (typeof handler === 'function') {
+      socket.on(event, handler)
+    }
   })
 }

@@ -5,16 +5,37 @@
  */
 
 import createDebug from 'debug'
-import { sanitizeColor, sanitizeHtml } from './utils.js'
+import { sanitizeColor, sanitizeHtml } from './utils'
+
+import {
+  connectToServer
+} from './index.js'
+
+import {
+  emitData,
+  emitResize,
+  reauth,
+  replayCredentials
+} from './socket.js'
+
+import {
+  downloadLog,
+  clearLog,
+  toggleLog
+} from './clientlog.js'
+
+import {
+  resizeTerminal,
+} from './terminal.js'
+
 
 const debug = createDebug('webssh2-client:dom')
-
 let elements = {}
 
 /**
  * Closes the error modal.
  */
-export function hideErrorModal () {
+export function hideErrorModal() {
   const { errorModal } = elements
   if (errorModal) {
     toggleVisibility(errorModal, false)
@@ -29,7 +50,7 @@ export function hideErrorModal () {
  * @param {number} sshConfig.port - The SSH port.
  * @param {string} sshConfig.username - The SSH username.
  */
-export function fillLoginForm (sshConfig) {
+export function fillLoginForm(sshConfig) {
   const { hostInput, portInput, usernameInput } = elements
   const { host, port, username } = sshConfig
 
@@ -43,14 +64,14 @@ export function fillLoginForm (sshConfig) {
 /**
  * Hides the login modal
  */
-export function hideLoginModal () {
+export function hideLoginModal() {
   hideModal(elements.loginModal)
 }
 
 /**
  * Hides the reconnect button
  */
-export function hideReconnectBtn () {
+export function hideReconnectBtn() {
   hideButton(elements.reconnectButton, true)
 }
 
@@ -59,22 +80,38 @@ export function hideReconnectBtn () {
  * @throws Will throw an error if a critical element is not found
  * @returns {Object} An object containing references to DOM elements
  */
-export function initializeElements () {
+export function initializeElements() {
   const elementIds = [
-    'status', 'header', 'dropupContent', 'footer', 'terminalContainer',
-    'loginModal', 'loginForm', 'hostInput', 'portInput', 'usernameInput',
-    'passwordInput', 'logBtn', 'stopLogBtn', 'downloadLogBtn', 'credentialsBtn',
-    'reauthBtn', 'errorModal', 'errorMessage', 'reconnectButton'
+    'clearLogBtn',
+    'downloadLogBtn',
+    'dropupContent',
+    'errorMessage',
+    'errorModal',
+    'footer',
+    'header',
+    'hostInput',
+    'loginForm',
+    'loginModal',
+    'passwordInput',
+    'portInput',
+    'reauthBtn',
+    'reauthBtn',
+    'reconnectButton',
+    'replayCredentialsBtn',
+    'startLogBtn',
+    'status',
+    'stopLogBtn',
+    'stopLogBtn',
+    'terminalContainer',
+    'usernameInput',
   ]
 
   // Define critical elements that must be present
-  const criticalElements = [
-    'terminalContainer', 'loginForm', 'errorModal'
-  ]
+  const criticalElements = ['terminalContainer', 'loginForm', 'errorModal']
 
   elements = {}
 
-  elementIds.forEach(id => {
+  elementIds.forEach((id) => {
     const element = document.getElementById(id)
     if (element) {
       elements[id] = element
@@ -88,8 +125,19 @@ export function initializeElements () {
   })
 
   if (elements.loginForm) {
-    ['sshTerm', 'readyTimeout', 'cursorBlink', 'scrollback', 'tabStopWidth', 'bellStyle',
-      'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight', 'logLevel'].forEach(field => {
+    ;[
+      'bellStyle',
+      'cursorBlink',
+      'fontFamily',
+      'fontSize',
+      'letterSpacing',
+      'lineHeight',
+      'logLevel',
+      'readyTimeout',
+      'scrollback',
+      'sshTerm',
+      'tabStopWidth'
+    ].forEach((field) => {
       const input = document.createElement('input')
       input.type = 'hidden'
       input.name = field
@@ -102,7 +150,9 @@ export function initializeElements () {
   if (elements.errorModal) {
     const closeBtn = elements.errorModal.querySelector('.close')
     if (closeBtn) {
-      closeBtn.onclick = () => { hideErrorModal() }
+      closeBtn.onclick = () => {
+        hideErrorModal()
+      }
     }
   }
 
@@ -110,10 +160,40 @@ export function initializeElements () {
 }
 
 /**
+ * Sets up event listeners for various elements in the application.
+ */
+export function setupEventListeners() {
+  debug('Setting up event listeners')
+
+  // Event handlers for elements
+  const elementHandlers = {
+    replayCredentialsBtn: replayCredentials,
+    downloadLogBtn: downloadLog,
+    clearLogBtn: clearLog,
+    startLogBtn: toggleLog,
+    loginForm: formSubmit,
+    reauthBtn: reauth,
+    stopLogBtn: toggleLog
+  }
+
+  Object.entries(elementHandlers).forEach(([elementName, handler]) => {
+    const element = elements[elementName]
+    if (element) {
+      const eventType = elementName === 'loginForm' ? 'submit' : 'click'
+      element.addEventListener(eventType, handler)
+    }
+  })
+
+  // Global event listeners
+  window.addEventListener('resize', resize)
+  document.addEventListener('keydown', keydown)
+}
+
+/**
  * Shows an error modal
  * @param {string} message - The error message to display
  */
-export function showErrorModal (message) {
+export function showErrorModal(message) {
   const { errorMessage, errorModal } = elements
 
   if (errorMessage && errorModal) {
@@ -129,7 +209,7 @@ export function showErrorModal (message) {
 /**
  * Shows the login modal
  */
-export function showLoginModal () {
+export function showLoginModal() {
   const { loginModal, terminalContainer, passwordInput } = elements
   showModal(loginModal)
   toggleVisibility(terminalContainer, true)
@@ -141,7 +221,7 @@ export function showLoginModal () {
  * Shows the reconnect button and sets up the onclick handler
  * @param {Function} reconnectCallback - The function to call when the reconnect button is clicked
  */
-export function showReconnectBtn (reconnectCallback) {
+export function showReconnectBtn(reconnectCallback) {
   const { reconnectButton } = elements
   showButton(reconnectButton, reconnectCallback)
   reconnectButton.focus()
@@ -151,7 +231,7 @@ export function showReconnectBtn (reconnectCallback) {
  * Displays or hides the terminal container
  * @param {boolean} visible - Whether to show or hide the terminal
  */
-export function toggleTerminalDisplay (visible) {
+export function toggleTerminalDisplay(visible) {
   const { terminalContainer } = elements
   if (terminalContainer) {
     if (visible) {
@@ -167,7 +247,7 @@ export function toggleTerminalDisplay (visible) {
  * @param {Blob} blob - The blob to download
  * @param {string} filename - The filename for the download
  */
-export function triggerDownload (blob, filename) {
+export function triggerDownload(blob, filename) {
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)
   link.download = filename
@@ -185,7 +265,7 @@ export function triggerDownload (blob, filename) {
  *
  * @returns {Array} The elements.
  */
-export function getElements () {
+export function getElements() {
   return elements
 }
 
@@ -195,18 +275,21 @@ export function getElements () {
  * @param {string|object} content - The new content for the element. Can be a string or an object with 'text' and 'background' properties.
  * @param {string} [color] - The optional background color for the element (if content is a string). Deprecated in favor of passing an object as content.
  */
-export function updateElement (elementName, content, color) {
+export function updateElement(elementName, content, color) {
   const element = elements[elementName]
   if (!element || !content) {
     console.warn(`${elementName} element not found or content missing.`)
     return
   }
 
-  const { text = '', background } = typeof content === 'object' ? content : { text: content, background: color }
+  const { text = '', background } =
+    typeof content === 'object' ? content : { text: content, background: color }
   const sanitizedContent = sanitizeHtml(text)
   const sanitizedColor = background ? sanitizeColor(background) : null
 
-  debug(`Updating ${elementName} element with sanitized content: ${sanitizedContent} and color: ${sanitizedColor || 'undefined'}`)
+  debug(
+    `Updating ${elementName} element with sanitized content: ${sanitizedContent} and color: ${sanitizedColor || 'undefined'}`
+  )
 
   element.innerHTML = sanitizedContent
   if (sanitizedColor) element.style.backgroundColor = sanitizedColor
@@ -222,15 +305,15 @@ export function updateElement (elementName, content, color) {
  * Updates the log button state
  * @param {boolean} isLogging - Whether logging is currently active
  */
-export function updateLogBtnState (isLogging) {
-  const { logBtn, stopLogBtn, downloadLogBtn } = elements
+export function updatestartLogBtnState(isLogging) {
+  const { startLogBtn, stopLogBtn, downloadLogBtn, clearLogBtn } = elements
 
-  if (logBtn && stopLogBtn) {
+  if (startLogBtn && stopLogBtn) {
     if (isLogging) {
-      toggleVisibility(logBtn, false)
+      toggleVisibility(startLogBtn, false)
       toggleVisibility(stopLogBtn, true)
     } else {
-      toggleVisibility(logBtn, true)
+      toggleVisibility(startLogBtn, true)
       toggleVisibility(stopLogBtn, false)
     }
   }
@@ -238,6 +321,7 @@ export function updateLogBtnState (isLogging) {
   if (downloadLogBtn) {
     if (isLogging) {
       toggleVisibility(downloadLogBtn, true)
+      toggleVisibility(clearLogBtn, true)
     }
   }
 }
@@ -246,12 +330,12 @@ export function updateLogBtnState (isLogging) {
  * Updates the visibility of UI elements based on server permissions
  * @param {Object} permissions - Object containing permission flags
  */
-export function updateUIVisibility (permissions) {
+export function updateUIVisibility(permissions) {
   debug(`Updating UI visibility: ${JSON.stringify(permissions)}`)
 
   const permissionHandlers = {
-    allowReplay: updateCredentialsBtnVisibility,
-    allowReauth: updateReauthBtnVisibility
+    allowReauth: updateReauthBtnVisibility,
+    allowReplay: updatereplayCredentialsBtnVisibility
   }
 
   Object.keys(permissions).forEach((key) => {
@@ -269,7 +353,7 @@ export function updateUIVisibility (permissions) {
 /**
  * Focuses on the appropriate input field in the login form
  */
-function focusAppropriateInput () {
+function focusAppropriateInput() {
   const { hostInput, usernameInput, passwordInput, portInput } = elements
 
   if (hostInput.value) {
@@ -286,23 +370,23 @@ function focusAppropriateInput () {
 }
 
 /**
- * Updates the visibility of the credentialsBtn button
+ * Updates the visibility of the replayCredentialsBtn button
  * @param {boolean} visible - Whether the button should be visible
  */
-function updateCredentialsBtnVisibility (visible) {
-  const { credentialsBtn } = elements
+function updatereplayCredentialsBtnVisibility(visible) {
+  const { replayCredentialsBtn } = elements
   if (visible) {
-    toggleVisibility(credentialsBtn, true)
+    toggleVisibility(replayCredentialsBtn, true)
     return
   }
-  toggleVisibility(credentialsBtn, false)
+  toggleVisibility(replayCredentialsBtn, false)
 }
 
 /**
  * Updates the visibility of the reauthentication button
  * @param {boolean} visible - Whether the button should be visible
  */
-function updateReauthBtnVisibility (visible) {
+function updateReauthBtnVisibility(visible) {
   const { reauthBtn } = elements
   if (visible) {
     toggleVisibility(reauthBtn, true)
@@ -317,7 +401,7 @@ function updateReauthBtnVisibility (visible) {
  * @param {HTMLElement} element - The DOM element to toggle.
  * @param {boolean} isVisible - If true, show the element; if false, hide it.
  */
-function toggleVisibility (element, isVisible) {
+function toggleVisibility(element, isVisible) {
   if (!element) return
   debug(`${element.id} visibility set to: ${isVisible}`)
 
@@ -329,11 +413,53 @@ function toggleVisibility (element, isVisible) {
 }
 
 /**
+ * Handles the form submission event.
+ *
+ * @param {Event} e - The form submission event.
+ */
+function formSubmit(e) {
+  e.preventDefault()
+  const formData = new FormData(e.target)
+  const formDataObject = Object.fromEntries(formData.entries())
+  hideLoginModal()
+  connectToServer(formDataObject)
+}
+
+/**
+ * Handles the keydown event.
+ *
+ * @param {KeyboardEvent} event - The keydown event object.
+ */
+function keydown(event) {
+  // If the key combination is Ctrl + Shift + 6, it prevents the default behavior
+  // and emits the data '\x1E'.
+  if (event.ctrlKey && event.shiftKey && event.code === 'Digit6') {
+    event.preventDefault()
+    emitData('\x1E')
+  }
+  if (event.key === 'Escape') {
+    hideErrorModal()
+  }
+}
+
+/**
+ * Handles the resize event and sends the resized dimensions to the server.
+ * @returns {void}
+ */
+export function resize() {
+  const dimensions = resizeTerminal()
+  if (dimensions) {
+    debug('Sending resized:', dimensions)
+    emitResize(dimensions)
+  }
+}
+
+/**
  * Hides a modal by its element reference.
  *
  * @param {HTMLElement} modal - The modal element to hide.
  */
-export function hideModal (modal) {
+export function hideModal(modal) {
   toggleVisibility(modal, false)
 }
 
@@ -342,7 +468,7 @@ export function hideModal (modal) {
  *
  * @param {HTMLElement} modal - The modal element to show.
  */
-export function showModal (modal) {
+export function showModal(modal) {
   toggleVisibility(modal, true)
 }
 
@@ -352,7 +478,7 @@ export function showModal (modal) {
  * @param {HTMLElement} button - The button element to hide.
  * @param {boolean} [removeOnClick=false] - Whether to remove the onclick handler.
  */
-export function hideButton (button, removeOnClick = false) {
+export function hideButton(button, removeOnClick = false) {
   toggleVisibility(button, false)
 
   if (removeOnClick && button) {
@@ -366,7 +492,7 @@ export function hideButton (button, removeOnClick = false) {
  * @param {HTMLElement} button - The button element to show.
  * @param {Function} [onClick=null] - The onclick handler to assign.
  */
-export function showButton (button, onClick = null) {
+export function showButton(button, onClick = null) {
   toggleVisibility(button, true)
 
   if (onClick && button) {
