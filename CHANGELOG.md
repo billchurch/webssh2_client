@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.18](https://github.com/billchurch/webssh2_client/compare/v0.2.17...v0.2.18) (2024-08-14)
+
+
+### Features
+
+* add clearLog feature, refactoring of logging and dom functions ([de92652](https://github.com/billchurch/webssh2_client/commit/de926529c86a8deae4f8a5672d3dce31e82df9ea))
+* change handling of disconnect, maintain terminal display, add error to status, and reset terminal only after reconnect attempt. ([fca5ff3](https://github.com/billchurch/webssh2_client/commit/fca5ff351b2166970c545459ac626612d03fe250))
+* sanatizeObject function to obscure passwords in debug messages ([41a4eb0](https://github.com/billchurch/webssh2_client/commit/41a4eb0c20230b0bbbc97e51d9aa11ae4c58ef31))
+
 ### [0.2.17](https://github.com/billchurch/webssh2_client/compare/v0.2.16...v0.2.17) (2024-08-13)
 
 
