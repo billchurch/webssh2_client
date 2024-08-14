@@ -403,6 +403,15 @@ function updateReauthBtnVisibility(visible) {
 }
 
 /**
+ * Toggles the visibility of the download log button.
+ * 
+ * @param {boolean} visible - Indicates whether the button should be visible or not.
+ */
+export function toggleDownloadLogBtn(visible) { 
+  toggleVisibility(elements.downloadLogBtn, visible)
+}
+
+/**
  * Toggles the visibility of an element.
  *
  * @param {HTMLElement} element - The DOM element to toggle.

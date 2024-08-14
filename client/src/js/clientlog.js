@@ -2,7 +2,7 @@
 
 import createDebug from 'debug'
 import { sessionFooter, handleError } from '.'
-import { updatestartLogBtnState } from './dom'
+import { updatestartLogBtnState, toggleDownloadLogBtn } from './dom'
 import { focusTerminal } from './terminal'
 import { formatDate, sanitizeHtml } from './utils'
 import stateManager from './state.js'
@@ -18,6 +18,12 @@ const LOG_DATE_KEY = 'webssh2_session_log_date'
  */
 export function addToSessionLog (data) {
   let sessionLog = window.localStorage.getItem(LOG_KEY) || ''
+
+  // If the log was previously empty and data is being added, show the download button
+  if (sessionLog === '') {
+    toggleDownloadLogBtn(true);
+  }
+
   sessionLog += data
   window.localStorage.setItem(LOG_KEY, sessionLog)
   // debug('Added data to session log')
@@ -39,6 +45,7 @@ export function clearLog(autoDownload = false) {
     // Clear the session log from LocalStorage
     window.localStorage.removeItem(LOG_KEY);
     window.localStorage.removeItem(LOG_DATE_KEY);
+    toggleDownloadLogBtn(false)
     debug('Session log cleared from localStorage');
   } else {
     debug('No session log found to clear');
