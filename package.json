@@ -25,8 +25,6 @@
     "analyze": "webpack --json --config scripts/webpack.prod.js | webpack-bundle-size-analyzer",
     "watch": "NODE_ENV=development npm-run-all --parallel start watch:build",
     "watch:build": "webpack --watch --config scripts/webpack.dev.js",
-    "prepublishOnly": "npm run build",
-    "version": "npm run build && conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md client/public/*",
     "release": "standard-version -a -s",
     "publish:dry-run": "npm publish --dry-run",
     "publish:npm": "npm publish",
@@ -68,9 +66,7 @@
     "uglify-js": "^3.19.0",
     "webpack": "^5.92.1",
     "webpack-cli": "^5.1.4",
-    "webpack-merge": "^6.0.1"
-  },
-  "dependencies": {
+    "webpack-merge": "^6.0.1",
     "debug": "^4.3.6",
     "purecss": "^3.0.0"
   },
