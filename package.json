@@ -26,8 +26,7 @@
     "watch": "NODE_ENV=development npm-run-all --parallel start watch:build",
     "watch:build": "webpack --watch --config scripts/webpack.dev.js",
     "prepublishOnly": "npm run build",
-    "postbump": "npm run build",
-    "precommit": "git add client/public/*",
+
     "version": "npm run build && conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md client/public/*",
     "release": "standard-version",
     "publish:dry-run": "npm publish --dry-run",
@@ -35,6 +34,12 @@
     "release:major": "npm run release -- --release-as major",
     "release:minor": "npm run release -- --release-as minor",
     "release:patch": "npm run release -- --release-as patch"
+  },
+  "standard-version": {
+    "scripts": {
+      "postbump": "npm run build",
+      "precommit": "git add client/public/*"
+    }
   },
   "author": "",
   "license": "SEE LICENSE IN FILE - LICENSE",
