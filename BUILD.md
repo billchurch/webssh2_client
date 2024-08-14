@@ -27,7 +27,7 @@ Ensure your SSH or GPG key is set up for git commit signing and added to your gi
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/webssh2_client.git
+   git clone https://github.com/billchurch/webssh2_client.git
    cd webssh2_client
    ```
 

@@ -9,6 +9,6 @@
     {"type": "perf", "hidden": true},
     {"type": "test", "hidden": true}
   ],
-  "commitUrlFormat": "https://github.com/your-username/your-repo-name/commit/{{hash}}",
-  "compareUrlFormat": "https://github.com/your-username/your-repo-name/compare/{{previousTag}}...{{currentTag}}"
+  "commitUrlFormat": "https://github.com/billchurch/webssh2_client/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/billchurch/webssh2_client/compare/{{previousTag}}...{{currentTag}}"
 }
