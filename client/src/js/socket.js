@@ -3,7 +3,7 @@
 import io from 'socket.io-client'
 import createDebug from 'debug'
 import {
-  showErrorModal,
+  showErrorDialog,
   updateElement,
   updateUIVisibility
 } from './dom.js'
@@ -97,7 +97,6 @@ export function initSocket (configObj, connectCallback, disconnectCallback, data
 export function reauth () {
   if (stateManager.getState('allowReauth')) {
     debug('Requesting session reauth')
-    // showLoginModal()
     socket.emit('control', 'reauth')
   } else {
     debug('Session reauth not allowed')
@@ -115,7 +114,7 @@ export function replayCredentials () {
     socket.emit('control', 'replayCredentials')
   } else {
     debug('Credential replay not allowed: ', allowReplay)
-    showErrorModal('Credential replay not allowed')
+    showErrorDialog('Credential replay not allowed')
   }
 }
 

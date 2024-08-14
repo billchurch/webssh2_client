@@ -9,13 +9,13 @@ import '../css/style.css'
 
 import {
   fillLoginForm,
-  hideErrorModal,
+  hideErrorDialog,
   hideReconnectBtn,
   resize,
   initializeElements,
   setupEventListeners,
-  showErrorModal,
-  showLoginModal,
+  showErrorDialog,
+  showloginDialog,
   showReconnectBtn,
   toggleTerminalDisplay,
   updateElement,
@@ -162,7 +162,7 @@ export function connectToServer(formData = null) {
  */
 function onConnect() {
   hideReconnectBtn()
-  hideErrorModal()
+  hideErrorDialog()
 
   // Reset session log settings
   stateManager.setState('sessionLogEnable', false)
@@ -186,16 +186,16 @@ function onDisconnect(reason) {
   switch (reason) {
     case 'auth_required':
     case 'auth_failed':
-      showLoginModal()
+      showloginDialog()
       break
 
     case 'reauth_required':
       stateManager.setState('reauthRequired', true)
-      showLoginModal()
+      showloginDialog()
       break
 
     case 'error':
-      showErrorModal(`Socket error: ${reason}`)
+      showErrorDialog(`Socket error: ${reason}`)
       commonPostDisconnectTasks()
       break
 
@@ -204,12 +204,12 @@ function onDisconnect(reason) {
         debug('Ignoring error due to prior reauth_required')
         stateManager.setState('reauthRequired', false)
       } else {
-        showErrorModal(`SSH error: ${reason}`)
+        showErrorDialog(`SSH error: ${reason}`)
         commonPostDisconnectTasks()
       }
       break
     default:
-      showErrorModal(`Disconnected: ${reason}`)
+      showErrorDialog(`Disconnected: ${reason}`)
       commonPostDisconnectTasks()
       break
   }
@@ -257,7 +257,7 @@ export function handleError(message, error) {
   console.error('Error:', message, error)
   stateManager.setState('isConnecting', false)
   updateElement('status', `Error: ${message}`, 'red')
-  showErrorModal(message)
+  showErrorDialog(message)
   // showReconnectBtn()
 }
 
@@ -280,7 +280,7 @@ function reconnectToServer() {
   }
 
   hideReconnectBtn()
-  hideErrorModal()
+  hideErrorDialog()
   resetTerminal()
   stateManager.setState('reconnectAttempts', 0)
 
@@ -303,7 +303,7 @@ function initializeConnection() {
       }
       connectToServer()
     } else {
-      showLoginModal()
+      showloginDialog()
     }
   } catch (error) {
     handleError('Connection initialization failed', error)

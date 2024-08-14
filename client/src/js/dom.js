@@ -35,10 +35,10 @@ let elements = {}
 /**
  * Closes the error modal.
  */
-export function hideErrorModal() {
-  const { errorModal } = elements
-  if (errorModal) {
-    toggleVisibility(errorModal, false)
+export function hideErrorDialog() {
+  const { errorDialog } = elements
+  if (errorDialog) {
+    errorDialog.close()
   }
 }
 
@@ -64,14 +64,15 @@ export function fillLoginForm(sshConfig) {
 /**
  * Hides the login modal
  */
-export function hideLoginModal() {
-  hideModal(elements.loginModal)
+export function hideloginDialog() {
+  elements.loginDialog.close()
 }
 
 /**
  * Hides the reconnect button
  */
 export function hideReconnectBtn() {
+  toggleVisibility(elements.backdrop, false)
   hideButton(elements.reconnectButton, true)
 }
 
@@ -82,16 +83,17 @@ export function hideReconnectBtn() {
  */
 export function initializeElements() {
   const elementIds = [
+    'backdrop',
     'clearLogBtn',
     'downloadLogBtn',
     'dropupContent',
     'errorMessage',
-    'errorModal',
+    'errorDialog',
     'footer',
     'header',
     'hostInput',
     'loginForm',
-    'loginModal',
+    'loginDialog',
     'passwordInput',
     'portInput',
     'reauthBtn',
@@ -107,7 +109,7 @@ export function initializeElements() {
   ]
 
   // Define critical elements that must be present
-  const criticalElements = ['terminalContainer', 'loginForm', 'errorModal']
+  const criticalElements = ['terminalContainer', 'loginForm', 'errorDialog']
 
   elements = {}
 
@@ -147,15 +149,19 @@ export function initializeElements() {
     })
   }
 
-  if (elements.errorModal) {
-    const closeBtn = elements.errorModal.querySelector('.close')
+  if (elements.errorDialog) {
+    const closeBtn = elements.errorDialog.querySelector('.close-button')
     if (closeBtn) {
       closeBtn.onclick = () => {
-        hideErrorModal()
+        hideErrorDialog()
       }
+      elements.errorDialog.addEventListener('close', () => {
+        if (elements.reconnectButton) {
+          elements.reconnectButton.focus();
+        }
+      });
     }
   }
-
   return elements
 }
 
@@ -193,13 +199,13 @@ export function setupEventListeners() {
  * Shows an error modal
  * @param {string} message - The error message to display
  */
-export function showErrorModal(message) {
-  const { errorMessage, errorModal } = elements
+export function showErrorDialog(message) {
+  const { errorMessage, errorDialog } = elements
 
-  if (errorMessage && errorModal) {
+  if (errorMessage && errorDialog) {
     debug(`Error modal shown with message: ${message}`)
     errorMessage.textContent = message
-    toggleVisibility(errorModal, true)
+    errorDialog.showModal()
     updateElement('status', 'ERROR', 'red')
   } else {
     console.error('Error modal or error message element not found')
@@ -209,9 +215,9 @@ export function showErrorModal(message) {
 /**
  * Shows the login modal
  */
-export function showLoginModal() {
-  const { loginModal, terminalContainer, passwordInput } = elements
-  showModal(loginModal)
+export function showloginDialog() {
+  const { loginDialog, terminalContainer, passwordInput } = elements
+  loginDialog.show()
   toggleVisibility(terminalContainer, true)
   if (passwordInput) passwordInput.value = ''
   focusAppropriateInput()
@@ -222,7 +228,8 @@ export function showLoginModal() {
  * @param {Function} reconnectCallback - The function to call when the reconnect button is clicked
  */
 export function showReconnectBtn(reconnectCallback) {
-  const { reconnectButton } = elements
+  const { reconnectButton, backdrop } = elements
+  toggleVisibility(backdrop, true)
   showButton(reconnectButton, reconnectCallback)
   reconnectButton.focus()
 }
@@ -345,7 +352,7 @@ export function updateUIVisibility(permissions) {
   })
 
   if (permissions.error) {
-    showErrorModal(permissions.error)
+    showErrorDialog(permissions.error)
   }
 }
 
@@ -421,7 +428,7 @@ function formSubmit(e) {
   e.preventDefault()
   const formData = new FormData(e.target)
   const formDataObject = Object.fromEntries(formData.entries())
-  hideLoginModal()
+  hideloginDialog()
   connectToServer(formDataObject)
 }
 
@@ -437,9 +444,6 @@ function keydown(event) {
     event.preventDefault()
     emitData('\x1E')
   }
-  if (event.key === 'Escape') {
-    hideErrorModal()
-  }
 }
 
 /**
@@ -452,24 +456,6 @@ export function resize() {
     debug('Sending resized:', dimensions)
     emitResize(dimensions)
   }
-}
-
-/**
- * Hides a modal by its element reference.
- *
- * @param {HTMLElement} modal - The modal element to hide.
- */
-export function hideModal(modal) {
-  toggleVisibility(modal, false)
-}
-
-/**
- * Shows a modal by its element reference.
- *
- * @param {HTMLElement} modal - The modal element to show.
- */
-export function showModal(modal) {
-  toggleVisibility(modal, true)
 }
 
 /**

@@ -100,6 +100,7 @@ export function resizeTerminal () {
  * Focuses the terminal
  */
 export function focusTerminal () {
+  debug('Terminal focused')
   if (term) {
     term.focus()
   }

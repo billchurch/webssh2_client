@@ -11,7 +11,7 @@
     </script>
   <script defer src="webssh2.bundle.js"></script><link href="webssh2.css" rel="stylesheet"></head>
   <body>
-    <div id="loginModal" class="modal">
+    <dialog id="loginDialog" class="modal">
       <div class="modal-content"> 
         <h2>WebSSH2 Login</h2>
         <form id="loginForm" class="pure-form pure-form-stacked">
@@ -24,14 +24,15 @@
           </fieldset>
         </form>
       </div>
-    </div>
-    <div id="errorModal" class="modal">
+    </dialog>
+    <dialog id="errorDialog" class="modal" >
       <div class="modal-content error-modal">
-        <span class="close">&times;</span>
+        <button autofocus class="close-button">&times;</button>
         <h2>Error</h2>
         <p id="errorMessage"></p>
       </div>
-    </div>
+    </dialog>
+    <div id="backdrop" class="backdrop"></div>
     <button id="reconnectButton">Reconnect</button>
     <div class="box">
       <div id="header"></div>
