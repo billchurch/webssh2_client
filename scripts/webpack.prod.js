@@ -25,16 +25,16 @@ module.exports = merge(common, {
           // Disable property mangling
           mangle: {
             properties: false
-          },
+          }
         },
         extractComments: false
       }),
       new CssMinimizerPlugin()
-    ],
+    ]
   },
   performance: {
     hints: 'warning', // Show performance hints
     maxEntrypointSize: 512000, // 512 KB
     maxAssetSize: 512000 // 512 KB
-  },
+  }
 })

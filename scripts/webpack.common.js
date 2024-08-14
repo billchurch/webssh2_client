@@ -1,6 +1,6 @@
 // scripts/webpack.common.js
 const path = require('path')
-const { BannerPlugin } = require('webpack')
+const { BannerPlugin, DefinePlugin } = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
@@ -11,6 +11,8 @@ const commitHash = require('child_process')
   .toString()
   .trim()
 
+const bannerString = `Version ${packageJson.version} - ${new Date().toISOString()} - ${commitHash}`
+
 const isDevelopment = process.env.NODE_ENV === 'development'
 
 module.exports = {
@@ -20,10 +22,11 @@ module.exports = {
   },
   plugins: [
     new BannerPlugin({
-      banner: `Version ${
-        packageJson.version
-      } - ${new Date().toISOString()} - ${commitHash}`,
+      banner: bannerString,
       include: /\.(js|css|html|htm)$/
+    }),
+    new DefinePlugin({
+      BANNER_STRING: JSON.stringify(bannerString)
     }),
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({

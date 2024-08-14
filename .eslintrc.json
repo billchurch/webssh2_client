@@ -1,5 +1,5 @@
 {
-  "extends": ["airbnb", "prettier", "plugin:node/recommended"],
+  "extends": ["airbnb", "plugin:prettier/recommended", "plugin:node/recommended"],
   "plugins": ["prettier"],
   "rules": {
     "prettier/prettier": "error",
@@ -9,5 +9,8 @@
     "no-process-exit": "off",
     "object-shorthand": "off",
     "class-methods-use-this": "off",
+    "space-before-function-paren": "off"
   },
+  "ignores": ["scripts/*", "client/public/*.js"]
+
 }
