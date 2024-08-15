@@ -1,4 +1,4 @@
-<!-- Version Version 0.2.18 - 2024-08-14T17:51:34.594Z - 0381acb -->
+<!-- Version Version 0.2.18 - 2024-08-14T20:24:52.366Z - 2371974 -->
 <!-- webssh2-client -->
 <!-- /client/src/client.htm -->
 <!DOCTYPE html>
@@ -7,7 +7,7 @@
     <title>WebSSH2</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script>
-      window.webssh2Config = null;
+      window.webssh2Config = {"socket":{"url":"http://localhost:2222","path":"/ssh/socket.io"},"ssh":{"port":22}};
     </script>
   <script defer src="webssh2.bundle.js"></script><link href="webssh2.css" rel="stylesheet"></head>
   <body>
@@ -19,7 +19,10 @@
             <input type="text" id="hostInput" placeholder="Hostname" required>
             <input type="text" id="portInput" placeholder="Port" required>
             <input type="text" id="usernameInput" placeholder="Username" required autocomplete="username">
-            <input type="password" id="passwordInput" placeholder="Password" required autocomplete="current-password">
+            <div class="password-wrapper">
+              <input type="password" id="passwordInput" placeholder="Password" required autocomplete="current-password">
+              <i id="capsLockIcon" class="fas fa-circle-up fa-fw"></i>
+            </div>
             <button type="submit" class="pure-button pure-button-primary">Connect</button>
           </fieldset>
         </form>

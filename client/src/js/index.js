@@ -11,8 +11,8 @@ import {
   fillLoginForm,
   hideErrorDialog,
   hideReconnectBtn,
-  resize,
   initializeElements,
+  resize,
   setupEventListeners,
   showErrorDialog,
   showloginDialog,
@@ -49,9 +49,9 @@ import {
 export const debug = createDebug('webssh2-client')
 
 import { library, dom } from '@fortawesome/fontawesome-svg-core'
-import { faBars, faClipboard, faCog, faDownload, faKey, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+import { faBars, faClipboard, faCog, faDownload, faKey, faTrashCan, faCircleUp } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faBars, faClipboard, faDownload, faKey, faCog, faTrashCan)
+library.add(faBars, faClipboard, faDownload, faKey, faCog, faTrashCan, faCircleUp)
 
 dom.watch()
 
@@ -154,7 +154,6 @@ export function connectToServer(formData = null) {
     toggleTerminalDisplay(true)
   }
 
-  resize()
 }
 
 /**
@@ -168,6 +167,7 @@ function onConnect() {
   stateManager.setState('sessionLogEnable', false)
   stateManager.setState('loggedData', false)
   updatestartLogBtnState(false)
+  resize()
 
   debug('Successfully connected to the server')
 }

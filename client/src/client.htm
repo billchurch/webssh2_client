@@ -19,7 +19,10 @@
             <input type="text" id="hostInput" placeholder="Hostname" required>
             <input type="text" id="portInput" placeholder="Port" required>
             <input type="text" id="usernameInput" placeholder="Username" required autocomplete="username">
-            <input type="password" id="passwordInput" placeholder="Password" required autocomplete="current-password">
+            <div class="password-wrapper">
+              <input type="password" id="passwordInput" placeholder="Password" required autocomplete="current-password">
+              <i id="capsLockIcon" class="fas fa-circle-up fa-fw"></i>
+            </div>
             <button type="submit" class="pure-button pure-button-primary">Connect</button>
           </fieldset>
         </form>

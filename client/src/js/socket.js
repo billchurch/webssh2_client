@@ -3,6 +3,7 @@
 import io from 'socket.io-client'
 import createDebug from 'debug'
 import {
+  resize,
   showErrorDialog,
   updateElement,
   updateUIVisibility
@@ -187,9 +188,12 @@ function authResult (result) {
  */
 function connect () {
   debug('Connected to server')
+  // term cols/rows
   stateManager.setState('isConnecting', false)
   stateManager.setState('reconnectAttempts', 0)
   updateElement('status', 'Connected', 'green')
+
+  resize()
 
   if (onConnectCallback) {
     onConnectCallback()

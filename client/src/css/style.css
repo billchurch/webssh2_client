@@ -161,3 +161,28 @@ html {
 #reconnectButton:hover {
   background-color: #0056b3;
 }
+
+#passwordInput {
+  position: relative;
+  padding-right: 30px;
+}
+
+#capsLockIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: red;
+  display: none;
+  pointer-events: none;
+}
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Display the icon when Caps Lock is active */
+#passwordInput.capslock-active ~ #capsLockIcon {
+  display: block;
+}

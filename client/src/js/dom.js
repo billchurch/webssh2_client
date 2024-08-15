@@ -7,27 +7,13 @@
 import createDebug from 'debug'
 import { sanitizeColor, sanitizeHtml } from './utils'
 
-import {
-  connectToServer
-} from './index.js'
+import { connectToServer } from './index.js'
 
-import {
-  emitData,
-  emitResize,
-  reauth,
-  replayCredentials
-} from './socket.js'
+import { emitData, emitResize, reauth, replayCredentials } from './socket.js'
 
-import {
-  downloadLog,
-  clearLog,
-  toggleLog
-} from './clientlog.js'
+import { downloadLog, clearLog, toggleLog } from './clientlog.js'
 
-import {
-  resizeTerminal,
-} from './terminal.js'
-
+import { resizeTerminal } from './terminal.js'
 
 const debug = createDebug('webssh2-client:dom')
 let elements = {}
@@ -105,7 +91,7 @@ export function initializeElements() {
     'stopLogBtn',
     'stopLogBtn',
     'terminalContainer',
-    'usernameInput',
+    'usernameInput'
   ]
 
   // Define critical elements that must be present
@@ -157,9 +143,9 @@ export function initializeElements() {
       }
       elements.errorDialog.addEventListener('close', () => {
         if (elements.reconnectButton) {
-          elements.reconnectButton.focus();
+          elements.reconnectButton.focus()
         }
-      });
+      })
     }
   }
   return elements
@@ -193,6 +179,9 @@ export function setupEventListeners() {
   // Global event listeners
   window.addEventListener('resize', resize)
   document.addEventListener('keydown', keydown)
+
+  passwordInput.addEventListener('keyup', detectCapsLock)
+  passwordInput.addEventListener('keydown', detectCapsLock)
 }
 
 /**
@@ -404,10 +393,10 @@ function updateReauthBtnVisibility(visible) {
 
 /**
  * Toggles the visibility of the download log button.
- * 
+ *
  * @param {boolean} visible - Indicates whether the button should be visible or not.
  */
-export function toggleDownloadLogBtn(visible) { 
+export function toggleDownloadLogBtn(visible) {
   toggleVisibility(elements.downloadLogBtn, visible)
 }
 
@@ -452,6 +441,21 @@ function keydown(event) {
   if (event.ctrlKey && event.shiftKey && event.code === 'Digit6') {
     event.preventDefault()
     emitData('\x1E')
+  }
+}
+
+/**
+ * Detects the state of the Caps Lock key and adds or removes the 'capslock-active' class from the password input element accordingly.
+ *
+ * @param {Event} event - The event object representing the key press event.
+ */
+function detectCapsLock(event) {
+  if (event.getModifierState('CapsLock')) {
+    console.log('Password Caps Lock ON')
+    passwordInput.classList.add('capslock-active');
+  } else {
+    console.log('Password Caps Lock OFF')
+    passwordInput.classList.remove('capslock-active');
   }
 }
 
