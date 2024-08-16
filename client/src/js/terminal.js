@@ -112,8 +112,11 @@ export function focusTerminal () {
  */
 export function getTerminalDimensions () {
   if (term) {
-    return { cols: term.cols, rows: term.rows }
+    let { cols, rows } = term
+    debug('getTerminalDimensions:', { cols, rows }) 
+    return { cols, rows }
   }
+  debug('getTerminalDimensions Error: Terminal not initialized')
   return { cols: undefined, rows: undefined }
 }
 

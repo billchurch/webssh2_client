@@ -16,7 +16,8 @@ let state = { // eslint-disable-line prefer-const
   allowReplay: false,
   reauthRequired: false,
   sessionLogEnable: false,
-  loggedData: false
+  loggedData: false,
+  term: null
 }
 
 /**

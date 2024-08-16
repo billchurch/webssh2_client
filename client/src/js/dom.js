@@ -189,6 +189,9 @@ export function setupEventListeners() {
  * @param {string} message - The error message to display
  */
 export function showErrorDialog(message) {
+  // todo: handle clearing status bar when non-critical error occurs
+  // potentially add a flag to differentiate between critical and non-critical errors
+  // or create a different function/event for warnings...
   const { errorMessage, errorDialog } = elements
 
   if (errorMessage && errorDialog) {
@@ -451,10 +454,8 @@ function keydown(event) {
  */
 function detectCapsLock(event) {
   if (event.getModifierState('CapsLock')) {
-    console.log('Password Caps Lock ON')
     passwordInput.classList.add('capslock-active');
   } else {
-    console.log('Password Caps Lock OFF')
     passwordInput.classList.remove('capslock-active');
   }
 }

@@ -12,7 +12,6 @@ import {
   hideErrorDialog,
   hideReconnectBtn,
   initializeElements,
-  resize,
   setupEventListeners,
   showErrorDialog,
   showloginDialog,
@@ -22,11 +21,7 @@ import {
   updatestartLogBtnState
 } from './dom.js'
 
-import {
-
-  initializeSocketConnection,
-  initSocket,
-} from './socket.js'
+import { initializeSocketConnection, initSocket } from './socket.js'
 
 import {
   applyTerminalOptions,
@@ -43,21 +38,37 @@ import { initializeConfig, populateFormFromUrl } from './utils.js'
 import {
   addToSessionLog,
   checkSavedSessionLog,
-  downloadLog,
+  downloadLog
 } from './clientlog.js'
 
 export const debug = createDebug('webssh2-client')
 
 import { library, dom } from '@fortawesome/fontawesome-svg-core'
-import { faBars, faClipboard, faCog, faDownload, faKey, faTrashCan, faCircleUp } from '@fortawesome/free-solid-svg-icons'
+import {
+  faBars,
+  faClipboard,
+  faCog,
+  faDownload,
+  faKey,
+  faTrashCan,
+  faCircleUp
+} from '@fortawesome/free-solid-svg-icons'
 
-library.add(faBars, faClipboard, faDownload, faKey, faCog, faTrashCan, faCircleUp)
+library.add(
+  faBars,
+  faClipboard,
+  faDownload,
+  faKey,
+  faCog,
+  faTrashCan,
+  faCircleUp
+)
 
 dom.watch()
 
 let config
 let elements
-export let sessionFooter = ''
+export let sessionFooter = null
 
 // Wait for the html to load before initializing
 document.addEventListener('DOMContentLoaded', initialize)
@@ -98,7 +109,7 @@ function initializeTerminalAndUI() {
   elements = initializeElements()
   sessionFooter = config.ssh.host
     ? `ssh://${config.ssh.host}:${config.ssh.port}`
-    : ''
+    : null
 
   const { terminalContainer } = elements
 
@@ -149,11 +160,20 @@ export function connectToServer(formData = null) {
 
   const { terminalContainer } = elements
   if (terminalContainer) {
-    updateElement('header', config.header.text, config.header.background)
-    updateElement('footer', sessionFooter)
+    debug('Terminal container found. Applying header and footer.')
+    if (config?.header?.text != null && config?.header?.background != null) {
+      const headerContent = {
+        text: config.header.text ?? '',
+        background: config.header.background ?? ''
+      }
+      updateElement('header', headerContent)
+    }
+
+    if (sessionFooter != null) {
+      updateElement('footer', { text: sessionFooter })
+    }
     toggleTerminalDisplay(true)
   }
-
 }
 
 /**
@@ -167,7 +187,6 @@ function onConnect() {
   stateManager.setState('sessionLogEnable', false)
   stateManager.setState('loggedData', false)
   updatestartLogBtnState(false)
-  resize()
 
   debug('Successfully connected to the server')
 }
