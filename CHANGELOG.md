@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.19](https://github.com/billchurch/webssh2_client/compare/v0.2.18...v0.2.19) (2024-08-16)
+
+
+### Features
+
+* add allowReconnect, allowReauth, and autoLog features ([77dbada](https://github.com/billchurch/webssh2_client/commit/77dbada3755da853f71aadc4a555ddbc4e2d42a2))
+* capslock indicator for password field ([29d393b](https://github.com/billchurch/webssh2_client/commit/29d393bf43bdc4402073d21e3e43e46780052288))
+
 ### [0.2.18](https://github.com/billchurch/webssh2_client/compare/v0.2.17...v0.2.18) (2024-08-14)
 
 
