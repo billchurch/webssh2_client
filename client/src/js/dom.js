@@ -334,7 +334,7 @@ export function updateUIVisibility(permissions) {
 
   const permissionHandlers = {
     allowReauth: updateReauthBtnVisibility,
-    allowReplay: updatereplayCredentialsBtnVisibility
+    allowReplay: updateReplayCredentialsBtnVisibility
   }
 
   Object.keys(permissions).forEach((key) => {
@@ -369,19 +369,6 @@ function focusAppropriateInput() {
 }
 
 /**
- * Updates the visibility of the replayCredentialsBtn button
- * @param {boolean} visible - Whether the button should be visible
- */
-function updatereplayCredentialsBtnVisibility(visible) {
-  const { replayCredentialsBtn } = elements
-  if (visible) {
-    toggleVisibility(replayCredentialsBtn, true)
-    return
-  }
-  toggleVisibility(replayCredentialsBtn, false)
-}
-
-/**
  * Updates the visibility of the reauthentication button
  * @param {boolean} visible - Whether the button should be visible
  */
@@ -392,6 +379,19 @@ function updateReauthBtnVisibility(visible) {
     return
   }
   toggleVisibility(reauthBtn, false)
+}
+
+/**
+ * Updates the visibility of the replayCredentialsBtn button
+ * @param {boolean} visible - Whether the button should be visible
+ */
+function updateReplayCredentialsBtnVisibility(visible) {
+  const { replayCredentialsBtn } = elements
+  if (visible) {
+    toggleVisibility(replayCredentialsBtn, true)
+    return
+  }
+  toggleVisibility(replayCredentialsBtn, false)
 }
 
 /**

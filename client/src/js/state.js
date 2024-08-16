@@ -13,6 +13,7 @@ let state = { // eslint-disable-line prefer-const
   reconnectAttempts: 0,
   isConnecting: false,
   allowReauth: false,
+  allowReconnect: false,
   allowReplay: false,
   reauthRequired: false,
   sessionLogEnable: false,

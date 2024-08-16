@@ -77,32 +77,44 @@ export function checkSavedSessionLog() {
 }
 
 /**
- * Toggles the session log enable state and updates the log button state.
- * If session log is enabled, it starts the log and updates the log start time.
- * If session log is disabled, it stops the log and updates the log end time.
+ * Toggles or sets the session log enable state and updates the log button state.
+ * If `forceEnable` is provided, the function will definitively enable or disable
+ * the session log based on the boolean value. If `forceEnable` is not provided,
+ * the function will toggle the current state.
+ * 
+ * @param {boolean} [forceEnable] - Optional boolean to force the log to be enabled or disabled.
  */
-export function toggleLog () {
-  const sessionLogEnable = stateManager.toggleState('sessionLogEnable')
-  const { loggedData } = stateManager.getEntireState()
+export function toggleLog(forceEnable) {
+  let sessionLogEnable;
+  
+  if (typeof forceEnable === 'boolean') {
+    sessionLogEnable = forceEnable;
+    stateManager.setState('sessionLogEnable', sessionLogEnable);
+  } else {
+    sessionLogEnable = stateManager.toggleState('sessionLogEnable');
+  }
+
+  const { loggedData } = stateManager.getEntireState();
 
   if (sessionLogEnable) {
-    debug('Starting log')
-    stateManager.setState('loggedData', true)
-    updatestartLogBtnState(true)
-    const logStartMessage = `Log Start for ${sessionFooter} - ${formatDate(new Date())}\r\n\r\n`
-    addToSessionLog(logStartMessage)
-    window.localStorage.setItem(LOG_DATE_KEY, new Date().toISOString())
+    debug('Starting log');
+    stateManager.setState('loggedData', true);
+    updatestartLogBtnState(true);
+    const logStartMessage = `Log Start for ${sessionFooter} - ${formatDate(new Date())}\r\n\r\n`;
+    addToSessionLog(logStartMessage);
+    window.localStorage.setItem(LOG_DATE_KEY, new Date().toISOString());
   } else {
-    debug('Stopping log')
-    updatestartLogBtnState(false)
+    debug('Stopping log');
+    updatestartLogBtnState(false);
     if (loggedData) {
-      const logEndMessage = `\r\n\r\nLog End for ${sessionFooter} - ${formatDate(new Date())}\r\n`
-      addToSessionLog(logEndMessage)
+      const logEndMessage = `\r\n\r\nLog End for ${sessionFooter} - ${formatDate(new Date())}\r\n`;
+      addToSessionLog(logEndMessage);
     } else {
-      debug('Log was not running, resetting UI')
+      debug('Log was not running, resetting UI');
     }
   }
-  focusTerminal()
+
+  focusTerminal();
 }
 
 /**

@@ -11,6 +11,7 @@ import {
 import { getCredentials } from './utils.js'
 import { getTerminalDimensions } from './terminal.js'
 import stateManager from './state.js'
+import { toggleLog } from './clientlog.js'
 
 const debug = createDebug('webssh2-client:socket')
 
@@ -161,9 +162,9 @@ function authenticate(formData = null) {
  * Retrieves the terminal configuration and sends it to the server.
  */
 function getTerminal() {
-  const {cols, rows} = getTerminalDimensions()
+  const { cols, rows } = getTerminalDimensions()
   const term = stateManager.getState('term')
-  const terminal = {cols, rows, term}
+  const terminal = { cols, rows, term }
   debug('getTerminal: Sending terminal config:', terminal)
   if (socket) {
     socket.emit('terminal', terminal)
@@ -287,16 +288,28 @@ function error(error) {
 
 function permissions(permissions) {
   debug('Received permissions:', permissions)
-  const { allowReplay, allowReauth } = permissions
-  if (allowReplay) {
-    debug('Allowing replay:', allowReplay)
-    stateManager.setState('allowReplay', allowReplay)
-    updateUIVisibility({ allowReplay })
+  const { autoLog, allowReconnect, allowReauth, allowReplay } = permissions
+  if (autoLog) {
+    debug('Auto logging enabled:', autoLog)
+    if (autoLog) {
+      toggleLog(autoLog)
+    }
   }
+
   if (allowReauth) {
     debug('Allowing reauth:', allowReauth)
     stateManager.setState('allowReauth', allowReauth)
     updateUIVisibility({ allowReauth })
+  }
+  if (allowReconnect) {
+    debug('Allowing reconnect:', allowReconnect)
+    stateManager.setState('allowReconnect', allowReconnect)
+  }
+
+  if (allowReplay) {
+    debug('Allowing replay:', allowReplay)
+    stateManager.setState('allowReplay', allowReplay)
+    updateUIVisibility({ allowReplay })
   }
 }
 
@@ -335,7 +348,7 @@ function authentication(data) {
 
 /**
  * Handles the "updateUI" event from the server and updates the specified UI element.
- * 
+ *
  * @param {Object} data - The data received from the server.
  * @param {string} data.element - The name of the element to be updated.
  * @param {string|object} data.value - The new content for the element.

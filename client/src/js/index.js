@@ -251,7 +251,9 @@ function commonPostDisconnectTasks() {
   }
 
   resetApplication()
-  showReconnectBtn(reconnectToServer)
+  if (stateManager.getState('allowReconnect')) {
+    showReconnectBtn(reconnectToServer)
+  }
 }
 
 /**
