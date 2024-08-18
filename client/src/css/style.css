@@ -207,3 +207,20 @@ html {
 #terminalOptionsForm button {
   margin-top: 10px;
 }
+
+
+.login-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.login-buttons .pure-button-primary {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+#loginSettingsBtn {
+  padding: 0.5em 1em;
+}

@@ -11,8 +11,8 @@ import {
   fillLoginForm,
   hideErrorDialog,
   hideReconnectBtn,
+  initializeDomAndSettings,
   initializeElements,
-  setupEventListeners,
   showErrorDialog,
   showloginDialog,
   showReconnectBtn,
@@ -82,9 +82,9 @@ document.addEventListener('DOMContentLoaded', initialize)
  */
 function initialize() {
   try {
-    console.log(`Initializing WebSSH2 client - ${BANNER_STRING}`) // eslint-disable-line no-undef
+    console.log(`Initializing WebSSH2 client - ${BANNER_STRING}`)
     config = initializeConfig()
-    config = populateFormFromUrl(config) // Merge URL parameters into the config
+    config = populateFormFromUrl(config)
     initializeTerminalAndUI()
     initSocket(
       config,
@@ -94,7 +94,7 @@ function initialize() {
       writeToTerminal,
       focusTerminal
     )
-    setupEventListeners()
+    initializeDomAndSettings(config)
     checkSavedSessionLog()
     initializeConnection()
   } catch (error) {

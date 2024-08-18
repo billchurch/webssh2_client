@@ -5,7 +5,7 @@ import { FitAddon } from '@xterm/addon-fit'
 import createDebug from 'debug'
 import { validateNumber, validateBellStyle } from './utils.js'
 import { emitData } from './socket.js'
-import { applyStoredSettings } from './settings.js';
+import { applyStoredSettings } from './settings.js'
 
 const debug = createDebug('webssh2-client:terminal')
 
@@ -36,6 +36,7 @@ export function initializeTerminal (config) {
  * @returns {Object} The terminal options
  */
 export function getTerminalOptions(config) {
+  const terminal = config?.terminal || {}
   const defaultOptions = {
     cursorBlink: true,
     scrollback: 10000,
@@ -44,13 +45,23 @@ export function getTerminalOptions(config) {
     fontSize: 14,
     fontFamily: 'courier-new, courier, monospace',
     letterSpacing: 0,
-    lineHeight: 1
-  };
+    lineHeight: 1,
+    logLevel: 'info'
+  }
 
-  const configOptions = config.terminal || {};
-  const mergedOptions = { ...defaultOptions, ...configOptions };
+  const mergedOptions = {
+    cursorBlink: terminal.cursorBlink ?? defaultOptions.cursorBlink,
+    scrollback: validateNumber(terminal.scrollback, 1, 200000, defaultOptions.scrollback),
+    tabStopWidth: validateNumber(terminal.tabStopWidth, 1, 100, defaultOptions.tabStopWidth),
+    bellStyle: validateBellStyle(terminal.bellStyle, defaultOptions.bellStyle),
+    fontSize: validateNumber(terminal.fontSize, 1, 72, defaultOptions.fontSize),
+    fontFamily: terminal.fontFamily || defaultOptions.fontFamily,
+    letterSpacing: terminal.letterSpacing ?? defaultOptions.letterSpacing,
+    lineHeight: terminal.lineHeight ?? defaultOptions.lineHeight,
+    logLevel: terminal.logLevel || defaultOptions.logLevel
+  }
   
-  return applyStoredSettings(mergedOptions);
+  return mergedOptions
 }
 
 
@@ -60,6 +71,7 @@ export function getTerminalOptions(config) {
  * @param {HTMLElement} container - The container element for the terminal
  */
 export function openTerminal (container) {
+  debug('openTerminal: Terminal opened')
   if (term && container) {
     term.open(container)
     fitAddon.fit()

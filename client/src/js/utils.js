@@ -10,7 +10,7 @@ const debug = createDebug('webssh2-client:utils')
  * @param {number} defaultValue - The default value if validation fails
  * @returns {number} The validated number or the default value
  */
-export function validateNumber (value, min, max, defaultValue) {
+export function validateNumber(value, min, max, defaultValue) {
   const num = Number(value)
   if (isNaN(num) || num < min || num > max) {
     return defaultValue
@@ -19,15 +19,15 @@ export function validateNumber (value, min, max, defaultValue) {
 }
 
 /**
-   * Recursively merges two objects.
-   * @param {Object} target - The target object.
-   * @param {Object} source - The source object.
-   * @returns {Object} The merged object.
-   */
-export function mergeDeep (target, source) {
+ * Recursively merges two objects.
+ * @param {Object} target - The target object.
+ * @param {Object} source - The source object.
+ * @returns {Object} The merged object.
+ */
+export function mergeDeep(target, source) {
   const output = Object.assign({}, target)
   if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach(key => {
+    Object.keys(source).forEach((key) => {
       if (isObject(source[key])) {
         if (!(key in target)) {
           Object.assign(output, { [key]: source[key] })
@@ -43,38 +43,38 @@ export function mergeDeep (target, source) {
 }
 
 /**
-   * Checks if the value is an object.
-   * @param {*} item - The value to check.
-   * @returns {boolean} True if the value is an object, false otherwise.
-   */
-export function isObject (item) {
-  return (item && typeof item === 'object' && !Array.isArray(item))
+ * Checks if the value is an object.
+ * @param {*} item - The value to check.
+ * @returns {boolean} True if the value is an object, false otherwise.
+ */
+export function isObject(item) {
+  return item && typeof item === 'object' && !Array.isArray(item)
 }
 
 /**
-   * Formats a date object into a string.
-   * @param {Date} date - The date to format.
-   * @returns {string} The formatted date string.
-   */
-export function formatDate (date) {
+ * Formats a date object into a string.
+ * @param {Date} date - The date to format.
+ * @returns {string} The formatted date string.
+ */
+export function formatDate(date) {
   return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} @ ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
 }
 
 /**
-   * Validates the bell style option
-   * @param {string} value - The bell style to validate
-   * @returns {string} The validated bell style or the default 'sound'
-   */
-export function validateBellStyle (value) {
+ * Validates the bell style option
+ * @param {string} value - The bell style to validate
+ * @returns {string} The validated bell style or the default 'sound'
+ */
+export function validateBellStyle(value) {
   return ['sound', 'none'].includes(value) ? value : 'sound'
 }
 
 /**
-   * Initializes the global configuration.
-   * This should be called once at application startup.
-   * @returns {Object} The initialized configuration object
-   */
-export function initializeConfig () {
+ * Initializes the global configuration.
+ * This should be called once at application startup.
+ * @returns {Object} The initialized configuration object
+ */
+export function initializeConfig() {
   const defaultConfig = {
     socket: {
       url: null,
@@ -111,7 +111,7 @@ export function initializeConfig () {
   return config
 }
 
-export function populateFormFromUrl (config) {
+export function populateFormFromUrl(config) {
   const searchParams = getUrlParams()
   const params = {
     ssh: {},
@@ -120,11 +120,27 @@ export function populateFormFromUrl (config) {
   }
 
   // List of parameters to extract from the URL or form
-  const parameterList = ['host', 'port', 'header', 'headerBackground', 'sshTerm', 'readyTimeout',
-    'cursorBlink', 'scrollback', 'tabStopWidth', 'bellStyle', 'fontSize',
-    'fontFamily', 'letterSpacing', 'lineHeight', 'username', 'password', 'logLevel']
+  const parameterList = [
+    'host',
+    'port',
+    'header',
+    'headerBackground',
+    'sshTerm',
+    'readyTimeout',
+    'cursorBlink',
+    'scrollback',
+    'tabStopWidth',
+    'bellStyle',
+    'fontSize',
+    'fontFamily',
+    'letterSpacing',
+    'lineHeight',
+    'username',
+    'password',
+    'logLevel'
+  ]
 
-  parameterList.forEach(param => {
+  parameterList.forEach((param) => {
     let value = searchParams.get(param)
 
     if (param === 'port' && (value === null || value === '')) {
@@ -139,7 +155,18 @@ export function populateFormFromUrl (config) {
       } else if (param === 'headerBackground') {
         debug('populateFormFromUrl setting headerBackground:', value)
         params.header.background = value
-      } else if (['cursorBlink', 'scrollback', 'tabStopWidth', 'bellStyle', 'fontSize', 'fontFamily', 'letterSpacing', 'lineHeight'].includes(param)) {
+      } else if (
+        [
+          'cursorBlink',
+          'scrollback',
+          'tabStopWidth',
+          'bellStyle',
+          'fontSize',
+          'fontFamily',
+          'letterSpacing',
+          'lineHeight'
+        ].includes(param)
+      ) {
         // These parameters relate to terminal settings
         debug('populateFormFromUrl setting terminal param:', param, value)
         params.terminal[param] = value
@@ -157,7 +184,7 @@ export function populateFormFromUrl (config) {
       }
     }
   })
-
+  debug('populateFormFromUrl: before merge')
   // Merge the params object into the config
   if (config && typeof config === 'object') {
     debug('populateFormFromUrl merging config with params:', params)
@@ -165,33 +192,71 @@ export function populateFormFromUrl (config) {
   } else {
     throw new Error('Invalid configuration object provided.')
   }
+  debug('populateFormFromUrl: complete')
 }
 
 /**
-   * Retrieves the URL parameters from the current window location.
-   * @returns {URLSearchParams} The URL parameters.
-   */
-function getUrlParams () {
+ * Retrieves the URL parameters from the current window location.
+ * @returns {URLSearchParams} The URL parameters.
+ */
+function getUrlParams() {
   return new URLSearchParams(window.location.search)
 }
 
 /**
-   * Retrieves the SSH credentials from various sources.
-   * @param {Object} formData - Optional form data from manual input
-   * @returns {Object} An object containing the SSH credentials.
-   */
-export function getCredentials (formData = null, terminalDimensions = {}) {
+ * Retrieves the SSH credentials from various sources.
+ * @param {Object} formData - Optional form data from manual input
+ * @returns {Object} An object containing the SSH credentials.
+ */
+export function getCredentials(formData = null, terminalDimensions = {}) {
   const config = window.webssh2Config || {}
   const urlParams = getUrlParams()
 
   const mergedConfig = {
-    host: formData?.host || urlParams.get('host') || config.ssh?.host || document.getElementById('hostInput')?.value || '',
-    port: parseInt(formData?.port || urlParams.get('port') || config.ssh?.port || document.getElementById('portInput')?.value || '22', 10),
-    username: formData?.username || document.getElementById('usernameInput')?.value || urlParams.get('username') || config.ssh?.username || '',
-    password: formData?.password || document.getElementById('passwordInput')?.value || urlParams.get('password') || config.ssh?.password || '',
-    term: formData?.term || urlParams.get('sshTerm') || config.ssh?.sshTerm || 'xterm-color',
-    readyTimeout: validateNumber(formData?.readyTimeout || config.ssh?.readyTimeout || urlParams.get('readyTimeout'), 1, 300000, 20000),
-    cursorBlink: formData?.cursorBlink || urlParams.get('cursorBlink') || config.terminal?.cursorBlink || true,
+    host:
+      formData?.host ||
+      urlParams.get('host') ||
+      config.ssh?.host ||
+      document.getElementById('hostInput')?.value ||
+      '',
+    port: parseInt(
+      formData?.port ||
+        urlParams.get('port') ||
+        config.ssh?.port ||
+        document.getElementById('portInput')?.value ||
+        '22',
+      10
+    ),
+    username:
+      formData?.username ||
+      document.getElementById('usernameInput')?.value ||
+      urlParams.get('username') ||
+      config.ssh?.username ||
+      '',
+    password:
+      formData?.password ||
+      document.getElementById('passwordInput')?.value ||
+      urlParams.get('password') ||
+      config.ssh?.password ||
+      '',
+    term:
+      formData?.term ||
+      urlParams.get('sshTerm') ||
+      config.ssh?.sshTerm ||
+      'xterm-color',
+    readyTimeout: validateNumber(
+      formData?.readyTimeout ||
+        config.ssh?.readyTimeout ||
+        urlParams.get('readyTimeout'),
+      1,
+      300000,
+      20000
+    ),
+    cursorBlink:
+      formData?.cursorBlink ||
+      urlParams.get('cursorBlink') ||
+      config.terminal?.cursorBlink ||
+      true,
     cols: terminalDimensions.cols,
     rows: terminalDimensions.rows
   }
@@ -206,17 +271,18 @@ export function getCredentials (formData = null, terminalDimensions = {}) {
  * @param {string} color - The color string to validate.
  * @returns {string|null} - The sanitized color string or null if invalid.
  */
-export function sanitizeColor (color) {
-  const colorRegex = /^(#([0-9a-fA-F]{3}){1,2}|rgba?\(\s*(\d{1,3}\s*,\s*){2,3}\s*\d{1,3}\s*\)|[a-zA-Z]+)$/
+export function sanitizeColor(color) {
+  const colorRegex =
+    /^(#([0-9a-fA-F]{3}){1,2}|rgba?\(\s*(\d{1,3}\s*,\s*){2,3}\s*\d{1,3}\s*\)|[a-zA-Z]+)$/
   return colorRegex.test(color) ? color : null
 }
 
 /**
-   * Sanitizes a string for use in HTML
-   * @param {string} str - The string to sanitize
-   * @returns {string} The sanitized string
-   */
-export function sanitizeHtml (str) {
+ * Sanitizes a string for use in HTML
+ * @param {string} str - The string to sanitize
+ * @returns {string} The sanitized string
+ */
+export function sanitizeHtml(str) {
   const temp = document.createElement('div')
   temp.textContent = str
   return temp.innerHTML
@@ -234,13 +300,14 @@ export function sanitizeObject(obj) {
   if (obj && typeof obj === 'object') {
     // Iterate over each key in the object
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) { // eslint-disable-line no-prototype-builtins
+      if (obj.hasOwnProperty(key)) {
+        // eslint-disable-line no-prototype-builtins
         if (key === 'password' && typeof obj[key] === 'string') {
           // Replace password value with asterisks
-          obj[key] = '*'.repeat(obj[key].length);
+          obj[key] = '*'.repeat(obj[key].length)
         } else if (typeof obj[key] === 'object') {
           // Recursively sanitize nested objects
-          sanitizeObject(obj[key]);
+          sanitizeObject(obj[key])
         }
       }
     }

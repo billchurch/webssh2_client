@@ -23,7 +23,10 @@
               <input type="password" id="passwordInput" placeholder="Password" required autocomplete="current-password">
               <i id="capsLockIcon" class="fas fa-circle-up fa-fw"></i>
             </div>
-            <button type="submit" class="pure-button pure-button-primary">Connect</button>
+            <div class="login-buttons">
+              <button type="submit" class="pure-button pure-button-primary">Connect</button>
+              <button type="button" id="loginSettingsBtn" class="pure-button"><i class="fas fa-cog"></i></button>
+            </div>
           </fieldset>
         </form>
       </div>
@@ -63,7 +66,7 @@
               <option value="sound">Sound</option>
               <option value="none">None</option>
             </select>
-    
+                
             <button type="submit" class="pure-button pure-button-primary">Save</button>
             <button type="button" id="closeTerminalOptionsBtn" class="pure-button">Cancel</button>
           </fieldset>

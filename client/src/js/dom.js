@@ -5,7 +5,7 @@
  */
 
 import createDebug from 'debug'
-import { sanitizeColor, sanitizeHtml } from './utils'
+import { sanitizeColor, sanitizeHtml, validateNumber, validateBellStyle } from './utils'
 
 import { connectToServer } from './index.js'
 
@@ -13,9 +13,17 @@ import { emitData, emitResize, reauth, replayCredentials } from './socket.js'
 
 import { downloadLog, clearLog, toggleLog } from './clientlog.js'
 
-import { getTerminalSettings, saveTerminalSettings } from './settings.js'
+import {
+  getTerminalSettings,
+  initializeSettings,
+  saveTerminalSettings
+} from './settings.js'
 
-import { applyTerminalOptions, resizeTerminal } from './terminal.js'
+import {
+  applyTerminalOptions,
+  getTerminalOptions,
+  resizeTerminal
+} from './terminal.js'
 
 const debug = createDebug('webssh2-client:dom')
 let elements = {}
@@ -97,7 +105,8 @@ export function initializeElements() {
     'terminalOptionsBtn',
     'terminalOptionsDialog',
     'terminalOptionsForm',
-    'usernameInput'
+    'usernameInput',
+    'loginSettingsBtn'
   ]
 
   // Define critical elements that must be present
@@ -118,29 +127,6 @@ export function initializeElements() {
     }
   })
 
-  if (elements.loginForm) {
-    ;[
-      'bellStyle',
-      'cursorBlink',
-      'fontFamily',
-      'fontSize',
-      'letterSpacing',
-      'lineHeight',
-      'logLevel',
-      'readyTimeout',
-      'scrollback',
-      'sshTerm',
-      'tabStopWidth'
-    ].forEach((field) => {
-      const input = document.createElement('input')
-      input.type = 'hidden'
-      input.name = field
-      input.id = field + 'Input'
-      elements.loginForm.appendChild(input)
-      elements[field + 'Input'] = input
-    })
-  }
-
   if (elements.errorDialog) {
     const closeBtn = elements.errorDialog.querySelector('.close-button')
     if (closeBtn) {
@@ -160,7 +146,7 @@ export function initializeElements() {
 /**
  * Sets up event listeners for various elements in the application.
  */
-export function setupEventListeners() {
+export function setupEventListeners(config) {
   debug('Setting up event listeners')
 
   // Event handlers for elements
@@ -169,28 +155,26 @@ export function setupEventListeners() {
     closeTerminalOptionsBtn: hideTerminalOptionsDialog,
     downloadLogBtn: downloadLog,
     loginForm: formSubmit,
+    loginSettingsBtn: () => showTerminalOptionsDialog(config),
     reauthBtn: reauth,
     replayCredentialsBtn: replayCredentials,
     startLogBtn: toggleLog,
     stopLogBtn: toggleLog,
-    terminalOptionsBtn: showTerminalOptionsDialog
+    terminalOptionsBtn: () => showTerminalOptionsDialog(config),
+    terminalOptionsForm: (event) => handleTerminalOptionsSubmit(event, config)
   }
 
   Object.entries(elementHandlers).forEach(([elementName, handler]) => {
     const element = elements[elementName]
     if (element) {
-      const eventType = elementName === 'loginForm' ? 'submit' : 'click'
+      const eventType = ['loginForm', 'terminalOptionsForm'].includes(
+        elementName
+      )
+        ? 'submit'
+        : 'click'
       element.addEventListener(eventType, handler)
     }
   })
-
-  // Add event listener for terminal options form
-  if (elements.terminalOptionsForm) {
-    elements.terminalOptionsForm.addEventListener(
-      'submit',
-      handleTerminalOptionsSubmit
-    )
-  }
 
   // Global event listeners
   window.addEventListener('resize', resize)
@@ -519,10 +503,11 @@ export function showButton(button, onClick = null) {
 
 /**
  * Shows the terminal options dialog.
+ * @param {Object} config - The configuration object
  */
-export function showTerminalOptionsDialog() {
+export function showTerminalOptionsDialog(config) {
   if (elements.terminalOptionsDialog) {
-    populateTerminalOptionsForm()
+    populateTerminalOptionsForm(config)
     elements.terminalOptionsDialog.showModal()
   }
 }
@@ -538,13 +523,13 @@ export function hideTerminalOptionsDialog() {
 
 /**
  * Populates the terminal options form with current settings.
+ * @param {Object} config - The configuration object
  */
-function populateTerminalOptionsForm() {
-  const settings = getTerminalSettings()
-  const form = elements.terminalOptionsForm
-  if (form) {
+function populateTerminalOptionsForm(config) {
+  const settings = getTerminalSettings(config)
+  if (elements.terminalOptionsForm) {
     Object.keys(settings).forEach((key) => {
-      const input = form.elements[key]
+      const input = elements.terminalOptionsForm.elements[key]
       if (input) {
         if (input.type === 'checkbox') {
           input.checked = settings[key]
@@ -553,43 +538,65 @@ function populateTerminalOptionsForm() {
         }
       }
     })
-  } else {
-    debug('Error: Terminal options form not found')
   }
 }
 
 /**
  * Handles the submission of the terminal options form.
  * @param {Event} event - The form submission event.
+ * @param {Object} config - The configuration object
  */
-export function handleTerminalOptionsSubmit(event) {
-  event.preventDefault()
-  const form = event.target
+export function handleTerminalOptionsSubmit(event, config) {
+  event.preventDefault();
+  const form = event.target;
   if (!(form instanceof HTMLFormElement)) {
-    debug('Error: Invalid form element')
-    return
+    debug('Error: Invalid form element');
+    return;
   }
 
-  const settings = {}
-  const formData = new FormData(form)
+  const settings = {};
+  const formData = new FormData(form);
+
+  // Get default values from config
+  const defaultOptions = config.terminal || {};
 
   for (const [key, value] of formData.entries()) {
     switch (key) {
       case 'fontSize':
+        settings[key] = validateNumber(value, 8, 72, defaultOptions.fontSize || 14);
+        break;
       case 'scrollback':
+        settings[key] = validateNumber(value, 1, 200000, defaultOptions.scrollback || 10000);
+        break;
       case 'tabStopWidth':
-        settings[key] = parseInt(value, 10)
-        break
+        settings[key] = validateNumber(value, 1, 100, defaultOptions.tabStopWidth || 8);
+        break;
       case 'cursorBlink':
-        settings[key] = value === 'true'
-        break
+        settings[key] = value === 'true';
+        break;
+      case 'bellStyle':
+        settings[key] = validateBellStyle(value, defaultOptions.bellStyle || 'sound');
+        break;
+      case 'fontFamily':
+        settings[key] = value || defaultOptions.fontFamily || 'courier-new, courier, monospace';
+        break;
       default:
-        settings[key] = value
+        settings[key] = value;
     }
   }
 
-  debug('Saving terminal settings:', settings)
-  saveTerminalSettings(settings)
-  applyTerminalOptions(settings)
-  hideTerminalOptionsDialog()
+  debug('Saving validated terminal settings:', settings);
+  saveTerminalSettings(settings);
+  applyTerminalOptions(settings);
+  hideTerminalOptionsDialog();
+}
+
+/**
+ * Initializes DOM elements, sets up event listeners, and initializes settings
+ * @param {Object} config - The configuration object
+ */
+export function initializeDomAndSettings(config) {
+  initializeElements()
+  setupEventListeners(config)
+  initializeSettings(config)
 }
