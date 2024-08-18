@@ -1,11 +1,17 @@
-// /client/src/js/dom.js
+// client
+// client/src/js/dom.js
 /**
  * @module dom
  * @description Handles DOM manipulations and UI updates for WebSSH2 client
  */
 
 import createDebug from 'debug'
-import { sanitizeColor, sanitizeHtml, validateNumber, validateBellStyle } from './utils'
+import {
+  sanitizeColor,
+  sanitizeHtml,
+  validateNumber,
+  validateBellStyle
+} from './utils'
 
 import { connectToServer } from './index.js'
 
@@ -243,7 +249,7 @@ export function toggleTerminalDisplay(visible) {
 }
 
 /**
- * Creates and triggers a download of a blob
+ * Creates and triggers a download for a blob
  * @param {Blob} blob - The blob to download
  * @param {string} filename - The filename for the download
  */
@@ -516,9 +522,7 @@ export function showTerminalOptionsDialog(config) {
  * Hides the terminal options dialog.
  */
 export function hideTerminalOptionsDialog() {
-  if (elements.terminalOptionsDialog) {
-    elements.terminalOptionsDialog.close()
-  }
+  elements?.terminalOptionsDialog?.close?.()
 }
 
 /**
@@ -547,56 +551,89 @@ function populateTerminalOptionsForm(config) {
  * @param {Object} config - The configuration object
  */
 export function handleTerminalOptionsSubmit(event, config) {
-  event.preventDefault();
-  const form = event.target;
+  event.preventDefault()
+  const form = event.target
   if (!(form instanceof HTMLFormElement)) {
-    debug('Error: Invalid form element');
-    return;
+    debug('Error: Invalid form element')
+    return
   }
 
-  const settings = {};
-  const formData = new FormData(form);
+  const settings = {}
+  const formData = new FormData(form)
 
   // Get default values from config
-  const defaultOptions = config.terminal || {};
+  const defaultOptions = config.terminal || {}
 
   for (const [key, value] of formData.entries()) {
     switch (key) {
       case 'fontSize':
-        settings[key] = validateNumber(value, 8, 72, defaultOptions.fontSize || 14);
-        break;
+        settings[key] = validateNumber(
+          value,
+          8,
+          72,
+          defaultOptions.fontSize || 14
+        )
+        break
       case 'scrollback':
-        settings[key] = validateNumber(value, 1, 200000, defaultOptions.scrollback || 10000);
-        break;
+        settings[key] = validateNumber(
+          value,
+          1,
+          200000,
+          defaultOptions.scrollback || 10000
+        )
+        break
       case 'tabStopWidth':
-        settings[key] = validateNumber(value, 1, 100, defaultOptions.tabStopWidth || 8);
-        break;
+        settings[key] = validateNumber(
+          value,
+          1,
+          100,
+          defaultOptions.tabStopWidth || 8
+        )
+        break
       case 'cursorBlink':
-        settings[key] = value === 'true';
-        break;
+        settings[key] = value === 'true'
+        break
       case 'bellStyle':
-        settings[key] = validateBellStyle(value, defaultOptions.bellStyle || 'sound');
-        break;
+        settings[key] = validateBellStyle(
+          value,
+          defaultOptions.bellStyle || 'sound'
+        )
+        break
       case 'fontFamily':
-        settings[key] = value || defaultOptions.fontFamily || 'courier-new, courier, monospace';
-        break;
+        settings[key] =
+          value ||
+          defaultOptions.fontFamily ||
+          'courier-new, courier, monospace'
+        break
       default:
-        settings[key] = value;
+        settings[key] = value
     }
   }
 
-  debug('Saving validated terminal settings:', settings);
-  saveTerminalSettings(settings);
-  applyTerminalOptions(settings);
-  hideTerminalOptionsDialog();
+  debug('Saving validated terminal settings:', settings)
+  saveTerminalSettings(settings)
+  applyTerminalOptions(settings)
+  hideTerminalOptionsDialog()
 }
 
 /**
- * Initializes DOM elements, sets up event listeners, and initializes settings
+ * Initializes the DOM and sets up event listeners
  * @param {Object} config - The configuration object
+ * @returns {Promise} A promise that resolves when the DOM is ready
  */
-export function initializeDomAndSettings(config) {
-  initializeElements()
-  setupEventListeners(config)
-  initializeSettings(config)
+export function initializeDom(config) {
+  return new Promise((resolve) => {
+    const initializeDomContent = () => {
+      initializeElements()
+      setupEventListeners(config)
+      initializeSettings(config)
+      resolve()
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeDomContent)
+    } else {
+      initializeDomContent()
+    }
+  })
 }

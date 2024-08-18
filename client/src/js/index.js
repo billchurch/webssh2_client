@@ -1,4 +1,5 @@
-// /client/src/js/index.js
+// client
+// client/src/js/index.js
 
 import createDebug from 'debug'
 import 'purecss/build/pure.css'
@@ -11,7 +12,7 @@ import {
   fillLoginForm,
   hideErrorDialog,
   hideReconnectBtn,
-  initializeDomAndSettings,
+  initializeDom,
   initializeElements,
   showErrorDialog,
   showloginDialog,
@@ -73,19 +74,17 @@ let config
 let elements
 export let sessionFooter = null
 
-// Wait for the html to load before initializing
-document.addEventListener('DOMContentLoaded', initialize)
-
 /**
  * Initializes the application.
  * @throws {Error} If there is an initialization error.
  */
-function initialize() {
+async function initialize() {
   try {
-    console.log(`Initializing WebSSH2 client - ${BANNER_STRING}`)
-    config = initializeConfig()
-    config = populateFormFromUrl(config)
-    initializeTerminalAndUI()
+    console.log(`Initializing WebSSH2 client - ${BANNER_STRING}`);
+    config = initializeConfig();
+    config = populateFormFromUrl(config);
+    await initializeDom(config);  // Pass config here
+    initializeTerminalAndUI();
     initSocket(
       config,
       onConnect,
@@ -93,14 +92,20 @@ function initialize() {
       onData,
       writeToTerminal,
       focusTerminal
-    )
-    initializeDomAndSettings(config)
-    checkSavedSessionLog()
-    initializeConnection()
+    );
+    // We can remove this line as it's now handled in initializeDom
+    // initializeDomAndSettings(config);
+    checkSavedSessionLog();
+    initializeConnection();
   } catch (error) {
-    handleError('Initialization error:', error)
+    handleError('Initialization error:', error);
   }
 }
+
+// Immediately Invoked Async Function Expression (IIFE)
+(async () => {
+  await initialize();
+})();
 
 /**
  * Initializes the terminal and user interface.
