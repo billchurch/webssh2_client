@@ -5,6 +5,7 @@ import { FitAddon } from '@xterm/addon-fit'
 import createDebug from 'debug'
 import { validateNumber, validateBellStyle } from './utils.js'
 import { emitData } from './socket.js'
+import { applyStoredSettings } from './settings.js';
 
 const debug = createDebug('webssh2-client:terminal')
 
@@ -34,20 +35,25 @@ export function initializeTerminal (config) {
  * @param {Object} config - The configuration object
  * @returns {Object} The terminal options
  */
-function getTerminalOptions (config) {
-  const terminal = config.terminal || {}
-  return {
-    cursorBlink: terminal.cursorBlink ?? true,
-    scrollback: validateNumber(terminal.scrollback, 1, 200000, 10000),
-    tabStopWidth: validateNumber(terminal.tabStopWidth, 1, 100, 8),
-    bellStyle: validateBellStyle(terminal.bellStyle),
-    fontSize: validateNumber(terminal.fontSize, 1, 72, 14),
-    fontFamily: terminal.fontFamily || 'courier-new, courier, monospace',
-    letterSpacing: terminal.letterSpacing ?? 0,
-    lineHeight: terminal.lineHeight ?? 1,
-    logLevel: terminal.logLevel || 'info'
-  }
+export function getTerminalOptions(config) {
+  const defaultOptions = {
+    cursorBlink: true,
+    scrollback: 10000,
+    tabStopWidth: 8,
+    bellStyle: 'sound',
+    fontSize: 14,
+    fontFamily: 'courier-new, courier, monospace',
+    letterSpacing: 0,
+    lineHeight: 1
+  };
+
+  const configOptions = config.terminal || {};
+  const mergedOptions = { ...defaultOptions, ...configOptions };
+  
+  return applyStoredSettings(mergedOptions);
 }
+
+
 
 /**
  * Opens the terminal in the specified container
@@ -159,30 +165,29 @@ export function detachTerminalEvent (event, handler) {
  * Applies terminal options to the terminal instance
  * @param {Object} options - The options to apply to the terminal
  */
-export function applyTerminalOptions (options) {
+export function applyTerminalOptions(options) {
   if (!term) {
-    debug('Error: Terminal not initialized')
-    return
+    debug('Error: Terminal not initialized');
+    return;
   }
 
   const terminalOptions = {
-    cursorBlink: options.cursorBlink !== undefined ? options.cursorBlink === true || options.cursorBlink === 'true' : true,
+    cursorBlink: options.cursorBlink,
     scrollback: validateNumber(options.scrollback, 1, 200000, 10000),
     tabStopWidth: validateNumber(options.tabStopWidth, 1, 100, 8),
     bellStyle: validateBellStyle(options.bellStyle),
     fontSize: validateNumber(options.fontSize, 1, 72, 14),
     fontFamily: options.fontFamily || 'courier-new, courier, monospace',
     letterSpacing: options.letterSpacing !== undefined ? Number(options.letterSpacing) : 0,
-    lineHeight: options.lineHeight !== undefined ? Number(options.lineHeight) : 1,
-    logLevel: options.logLevel || 'info'
-  }
+    lineHeight: options.lineHeight !== undefined ? Number(options.lineHeight) : 1
+  };
 
-  Object.assign(term.options, terminalOptions)
-  debug('Terminal options applied:', terminalOptions)
+  Object.assign(term.options, terminalOptions);
+  debug('Terminal options applied:', terminalOptions);
 
   // Resize the terminal after applying options
   if (fitAddon) {
-    fitAddon.fit()
+    fitAddon.fit();
   }
 }
 

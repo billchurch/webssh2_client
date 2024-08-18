@@ -13,7 +13,9 @@ import { emitData, emitResize, reauth, replayCredentials } from './socket.js'
 
 import { downloadLog, clearLog, toggleLog } from './clientlog.js'
 
-import { resizeTerminal } from './terminal.js'
+import { getTerminalSettings, saveTerminalSettings } from './settings.js'
+
+import { applyTerminalOptions, resizeTerminal } from './terminal.js'
 
 const debug = createDebug('webssh2-client:dom')
 let elements = {}
@@ -71,15 +73,16 @@ export function initializeElements() {
   const elementIds = [
     'backdrop',
     'clearLogBtn',
+    'closeTerminalOptionsBtn',
     'downloadLogBtn',
     'dropupContent',
-    'errorMessage',
     'errorDialog',
+    'errorMessage',
     'footer',
     'header',
     'hostInput',
-    'loginForm',
     'loginDialog',
+    'loginForm',
     'passwordInput',
     'portInput',
     'reauthBtn',
@@ -91,6 +94,9 @@ export function initializeElements() {
     'stopLogBtn',
     'stopLogBtn',
     'terminalContainer',
+    'terminalOptionsBtn',
+    'terminalOptionsDialog',
+    'terminalOptionsForm',
     'usernameInput'
   ]
 
@@ -159,13 +165,15 @@ export function setupEventListeners() {
 
   // Event handlers for elements
   const elementHandlers = {
-    replayCredentialsBtn: replayCredentials,
-    downloadLogBtn: downloadLog,
     clearLogBtn: clearLog,
-    startLogBtn: toggleLog,
+    closeTerminalOptionsBtn: hideTerminalOptionsDialog,
+    downloadLogBtn: downloadLog,
     loginForm: formSubmit,
     reauthBtn: reauth,
-    stopLogBtn: toggleLog
+    replayCredentialsBtn: replayCredentials,
+    startLogBtn: toggleLog,
+    stopLogBtn: toggleLog,
+    terminalOptionsBtn: showTerminalOptionsDialog
   }
 
   Object.entries(elementHandlers).forEach(([elementName, handler]) => {
@@ -175,6 +183,14 @@ export function setupEventListeners() {
       element.addEventListener(eventType, handler)
     }
   })
+
+  // Add event listener for terminal options form
+  if (elements.terminalOptionsForm) {
+    elements.terminalOptionsForm.addEventListener(
+      'submit',
+      handleTerminalOptionsSubmit
+    )
+  }
 
   // Global event listeners
   window.addEventListener('resize', resize)
@@ -209,6 +225,7 @@ export function showErrorDialog(message) {
  */
 export function showloginDialog() {
   const { loginDialog, terminalContainer, passwordInput } = elements
+  debug('showloginDialog: Showing login dialog')
   loginDialog.show()
   toggleVisibility(terminalContainer, true)
   if (passwordInput) passwordInput.value = ''
@@ -454,9 +471,9 @@ function keydown(event) {
  */
 function detectCapsLock(event) {
   if (event.getModifierState('CapsLock')) {
-    passwordInput.classList.add('capslock-active');
+    passwordInput.classList.add('capslock-active')
   } else {
-    passwordInput.classList.remove('capslock-active');
+    passwordInput.classList.remove('capslock-active')
   }
 }
 
@@ -498,4 +515,81 @@ export function showButton(button, onClick = null) {
   if (onClick && button) {
     button.onclick = onClick
   }
+}
+
+/**
+ * Shows the terminal options dialog.
+ */
+export function showTerminalOptionsDialog() {
+  if (elements.terminalOptionsDialog) {
+    populateTerminalOptionsForm()
+    elements.terminalOptionsDialog.showModal()
+  }
+}
+
+/**
+ * Hides the terminal options dialog.
+ */
+export function hideTerminalOptionsDialog() {
+  if (elements.terminalOptionsDialog) {
+    elements.terminalOptionsDialog.close()
+  }
+}
+
+/**
+ * Populates the terminal options form with current settings.
+ */
+function populateTerminalOptionsForm() {
+  const settings = getTerminalSettings()
+  const form = elements.terminalOptionsForm
+  if (form) {
+    Object.keys(settings).forEach((key) => {
+      const input = form.elements[key]
+      if (input) {
+        if (input.type === 'checkbox') {
+          input.checked = settings[key]
+        } else {
+          input.value = settings[key]
+        }
+      }
+    })
+  } else {
+    debug('Error: Terminal options form not found')
+  }
+}
+
+/**
+ * Handles the submission of the terminal options form.
+ * @param {Event} event - The form submission event.
+ */
+export function handleTerminalOptionsSubmit(event) {
+  event.preventDefault()
+  const form = event.target
+  if (!(form instanceof HTMLFormElement)) {
+    debug('Error: Invalid form element')
+    return
+  }
+
+  const settings = {}
+  const formData = new FormData(form)
+
+  for (const [key, value] of formData.entries()) {
+    switch (key) {
+      case 'fontSize':
+      case 'scrollback':
+      case 'tabStopWidth':
+        settings[key] = parseInt(value, 10)
+        break
+      case 'cursorBlink':
+        settings[key] = value === 'true'
+        break
+      default:
+        settings[key] = value
+    }
+  }
+
+  debug('Saving terminal settings:', settings)
+  saveTerminalSettings(settings)
+  applyTerminalOptions(settings)
+  hideTerminalOptionsDialog()
 }

@@ -17,6 +17,11 @@
     color: #000;
   }
 
+  #terminalOptionsBtn {
+    color: #000;
+    display: block; /* Hide by default */
+  }
+
   #clearLogBtn,
   #downloadLogBtn,
   #reauthBtn,

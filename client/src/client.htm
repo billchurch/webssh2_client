@@ -35,6 +35,41 @@
         <p id="errorMessage"></p>
       </div>
     </dialog>
+    <dialog id="terminalOptionsDialog" class="modal">
+      <div class="modal-content">
+        <h2>Terminal Options</h2>
+        <form id="terminalOptionsForm" class="pure-form pure-form-stacked">
+          <fieldset>
+            <label for="fontSize">Font Size</label>
+            <input type="number" id="fontSize" name="fontSize" min="8" max="72" required>
+    
+            <label for="fontFamily">Font Family</label>
+            <input type="text" id="fontFamily" name="fontFamily" required>
+    
+            <label for="cursorBlink">Cursor Blink</label>
+            <select id="cursorBlink" name="cursorBlink">
+              <option value="true">On</option>
+              <option value="false">Off</option>
+            </select>
+    
+            <label for="scrollback">Scrollback</label>
+            <input type="number" id="scrollback" name="scrollback" min="1" max="200000" required>
+    
+            <label for="tabStopWidth">Tab Stop Width</label>
+            <input type="number" id="tabStopWidth" name="tabStopWidth" min="1" max="100" required>
+    
+            <label for="bellStyle">Bell Style</label>
+            <select id="bellStyle" name="bellStyle">
+              <option value="sound">Sound</option>
+              <option value="none">None</option>
+            </select>
+    
+            <button type="submit" class="pure-button pure-button-primary">Save</button>
+            <button type="button" id="closeTerminalOptionsBtn" class="pure-button">Cancel</button>
+          </fieldset>
+        </form>
+      </div>
+    </dialog>
     <div id="backdrop" class="backdrop"></div>
     <button id="reconnectButton">Reconnect</button>
     <div class="box">
@@ -50,6 +85,7 @@
             <button id="downloadLogBtn" class="menu-button"><i class="fas fa-download fa-fw"></i> Download Log</button>
             <button id="replayCredentialsBtn" class="menu-button"><i class="fas fa-key fa-fw"></i> Credentials</button>
             <button id="reauthBtn" class="menu-button"><i class="fas fa-key fa-fw"></i> Switch User</button>
+            <button id="terminalOptionsBtn" class="menu-button"><i class="fas fa-cog fa-fw"></i> Settings</button>
           </div>
         </div>
         <div id="footer"></div>

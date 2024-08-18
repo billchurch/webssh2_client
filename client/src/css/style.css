@@ -186,3 +186,24 @@ html {
 #passwordInput.capslock-active ~ #capsLockIcon {
   display: block;
 }
+
+/* Add these styles to the existing style.css file */
+
+#terminalOptionsDialog .modal-content {
+  width: 400px;
+}
+
+#terminalOptionsForm label {
+  display: block;
+  margin-top: 10px;
+}
+
+#terminalOptionsForm input,
+#terminalOptionsForm select {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+#terminalOptionsForm button {
+  margin-top: 10px;
+}

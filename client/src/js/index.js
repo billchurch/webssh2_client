@@ -26,11 +26,14 @@ import { initializeSocketConnection, initSocket } from './socket.js'
 import {
   applyTerminalOptions,
   focusTerminal,
+  getTerminalOptions,
   initializeTerminal,
   openTerminal,
   resetTerminal,
   writeToTerminal
 } from './terminal.js'
+
+import { applyStoredSettings } from './settings.js';
 
 import stateManager from './state.js'
 
@@ -103,45 +106,26 @@ function initialize() {
  * Initializes the terminal and user interface.
  */
 function initializeTerminalAndUI() {
-  const options = getTerminalOptions()
-  debug('initializeTerminal options:', options)
-  initializeTerminal(config)
-  elements = initializeElements()
+  const defaultOptions = getTerminalOptions(config);
+  const options = applyStoredSettings(defaultOptions);
+  debug('initializeTerminal options:', options);
+  initializeTerminal(config);
+  elements = initializeElements();
   sessionFooter = config.ssh.host
     ? `ssh://${config.ssh.host}:${config.ssh.port}`
-    : null
+    : null;
 
-  const { terminalContainer } = elements
+  const { terminalContainer } = elements;
 
   if (terminalContainer) {
-    openTerminal(terminalContainer)
+    openTerminal(terminalContainer);
   } else {
     console.error(
       'Terminal container not found. Terminal cannot be initialized.'
-    )
+    );
   }
 
-  applyTerminalOptions(options)
-}
-
-/**
- * Retrieves the terminal options based on the configuration.
- * @returns {Object} The terminal options.
- */
-function getTerminalOptions() {
-  debug('getTerminalOptions Config:', config)
-  const terminal = config.terminal
-  return {
-    logLevel: terminal.logLevel ?? 'info',
-    cursorBlink: terminal.cursorBlink ?? true,
-    scrollback: terminal.scrollback ?? 10000,
-    tabStopWidth: terminal.tabStopWidth ?? 8,
-    bellStyle: terminal.bellStyle ?? 'sound',
-    fontSize: terminal.fontSize ?? 14,
-    fontFamily: terminal.fontFamily ?? 'courier-new, courier, monospace',
-    letterSpacing: terminal.letterSpacing ?? 0,
-    lineHeight: terminal.lineHeight ?? 1
-  }
+  applyTerminalOptions(options);
 }
 
 /**
