@@ -1,5 +1,5 @@
-// webssh2-client
-// /client/index.js
+// client
+// client/index.js
 const path = require('path');
 
 module.exports = {
