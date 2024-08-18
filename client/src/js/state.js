@@ -1,4 +1,5 @@
-// /client/src/js/state.js
+// client
+// client/src/js/state.js
 
 /**
  * @module state

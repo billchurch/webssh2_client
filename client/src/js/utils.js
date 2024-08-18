@@ -1,4 +1,5 @@
-// /client/src/js/utils.js
+// client
+// client/src/js/utils.js
 import createDebug from 'debug'
 const debug = createDebug('webssh2-client:utils')
 

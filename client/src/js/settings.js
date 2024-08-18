@@ -1,3 +1,4 @@
+// client
 // client/src/js/settings.js
 
 import createDebug from 'debug'

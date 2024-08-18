@@ -1,4 +1,5 @@
-// /client/src/js/socket.js
+// client
+// client/src/js/socket.js
 
 import io from 'socket.io-client'
 import createDebug from 'debug'

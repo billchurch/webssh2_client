@@ -1,4 +1,5 @@
-// /client/src/js/terminal.js
+// client
+// client/src/js/terminal.js
 
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'

@@ -1,5 +1,5 @@
-// webssh2-client
-// /index.js
+// client
+// index.js
 
 if (require.main === module) {
   // Run the development server
