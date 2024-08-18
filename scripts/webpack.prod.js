@@ -1,3 +1,4 @@
+// client
 // scripts/webpack.prod.js
 const { merge } = require('webpack-merge')
 const TerserPlugin = require('terser-webpack-plugin')

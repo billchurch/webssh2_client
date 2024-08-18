@@ -1,3 +1,4 @@
+// client
 // scripts/webpack.common.js
 const path = require('path')
 const { BannerPlugin, DefinePlugin } = require('webpack')
