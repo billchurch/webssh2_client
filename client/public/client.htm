@@ -1,4 +1,4 @@
-<!-- Version Version 0.2.20 - 2024-08-18T19:11:38.456Z - f1f00c8 -->
+<!-- Version Version 0.2.20 - 2024-08-18T19:43:07.163Z - ae986fc -->
 <!-- webssh2-client -->
 <!-- /client/src/client.htm -->
 <!DOCTYPE html>
@@ -38,10 +38,10 @@
         <p id="errorMessage"></p>
       </div>
     </dialog>
-    <dialog id="terminalOptionsDialog" class="modal">
+    <dialog id="terminalSettingsDialog" class="modal">
       <div class="modal-content">
-        <h2>Terminal Options</h2>
-        <form id="terminalOptionsForm" class="pure-form pure-form-stacked">
+        <h2>Terminal Settings</h2>
+        <form id="terminalSettingsForm" class="pure-form pure-form-stacked">
           <fieldset>
             <label for="fontSize">Font Size</label>
             <input type="number" id="fontSize" name="fontSize" min="8" max="72" required>
@@ -68,7 +68,7 @@
             </select>
                 
             <button type="submit" class="pure-button pure-button-primary">Save</button>
-            <button type="button" id="closeTerminalOptionsBtn" class="pure-button">Cancel</button>
+            <button type="button" id="closeterminalSettingsBtn" class="pure-button">Cancel</button>
           </fieldset>
         </form>
       </div>
@@ -88,7 +88,7 @@
             <button id="downloadLogBtn" class="menu-button"><i class="fas fa-download fa-fw"></i> Download Log</button>
             <button id="replayCredentialsBtn" class="menu-button"><i class="fas fa-key fa-fw"></i> Credentials</button>
             <button id="reauthBtn" class="menu-button"><i class="fas fa-key fa-fw"></i> Switch User</button>
-            <button id="terminalOptionsBtn" class="menu-button"><i class="fas fa-cog fa-fw"></i> Settings</button>
+            <button id="terminalSettingsBtn" class="menu-button"><i class="fas fa-cog fa-fw"></i> Settings</button>
           </div>
         </div>
         <div id="footer"></div>

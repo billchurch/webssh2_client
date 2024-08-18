@@ -7,6 +7,11 @@ import createDebug from 'debug'
 import { validateNumber, validateBellStyle } from './utils.js'
 import { emitData } from './socket.js'
 import { applyStoredSettings } from './settings.js'
+import {
+  setTerminalInstance,
+  openTerminal as domOpenTerminal,
+  focusTerminal as domFocusTerminal
+} from './dom.js'
 
 const debug = createDebug('webssh2-client:terminal')
 
@@ -18,15 +23,19 @@ let fitAddon
  * @param {Object} config - The configuration object for the terminal
  * @returns {Terminal} The initialized terminal instance
  */
-export function initializeTerminal (config) {
-  const options = getTerminalOptions(config)
-  debug('Terminal options:', options)
+export function initializeTerminal(config) {
+  const options = getTerminalSettings(config)
+  debug('initializeTerminal', options)
   term = new Terminal(options)
   fitAddon = new FitAddon()
   term.loadAddon(fitAddon)
 
   term.onData((data) => emitData(data))
-  term.onTitleChange((title) => { document.title = title })
+  term.onTitleChange((title) => {
+    document.title = title
+  })
+
+  setTerminalInstance(term)
 
   return term
 }
@@ -36,7 +45,7 @@ export function initializeTerminal (config) {
  * @param {Object} config - The configuration object
  * @returns {Object} The terminal options
  */
-export function getTerminalOptions(config) {
+export function getTerminalSettings(config) {
   const terminal = config?.terminal || {}
   const defaultOptions = {
     cursorBlink: true,
@@ -52,8 +61,18 @@ export function getTerminalOptions(config) {
 
   const mergedOptions = {
     cursorBlink: terminal.cursorBlink ?? defaultOptions.cursorBlink,
-    scrollback: validateNumber(terminal.scrollback, 1, 200000, defaultOptions.scrollback),
-    tabStopWidth: validateNumber(terminal.tabStopWidth, 1, 100, defaultOptions.tabStopWidth),
+    scrollback: validateNumber(
+      terminal.scrollback,
+      1,
+      200000,
+      defaultOptions.scrollback
+    ),
+    tabStopWidth: validateNumber(
+      terminal.tabStopWidth,
+      1,
+      100,
+      defaultOptions.tabStopWidth
+    ),
     bellStyle: validateBellStyle(terminal.bellStyle, defaultOptions.bellStyle),
     fontSize: validateNumber(terminal.fontSize, 1, 72, defaultOptions.fontSize),
     fontFamily: terminal.fontFamily || defaultOptions.fontFamily,
@@ -61,23 +80,18 @@ export function getTerminalOptions(config) {
     lineHeight: terminal.lineHeight ?? defaultOptions.lineHeight,
     logLevel: terminal.logLevel || defaultOptions.logLevel
   }
-  
+  debug('getTerminalSettings', mergedOptions)
   return mergedOptions
 }
-
-
 
 /**
  * Opens the terminal in the specified container
  * @param {HTMLElement} container - The container element for the terminal
  */
-export function openTerminal (container) {
-  debug('openTerminal: Terminal opened')
-  if (term && container) {
-    term.open(container)
+export function openTerminal(container) {
+  domOpenTerminal(container)
+  if (fitAddon) {
     fitAddon.fit()
-  } else {
-    debug('Error: Terminal or container not available')
   }
 }
 
@@ -85,7 +99,7 @@ export function openTerminal (container) {
  * Writes data to the terminal
  * @param {string} data - The data to write to the terminal
  */
-export function writeToTerminal (data) {
+export function writeToTerminal(data) {
   if (term) {
     term.write(data)
   }
@@ -94,8 +108,8 @@ export function writeToTerminal (data) {
 /**
  * Reset the terminal
  */
-export function resetTerminal () {
-  debug('Terminal reset')
+export function resetTerminal() {
+  debug('resetTerminal')
   if (term) {
     term.reset()
   }
@@ -105,11 +119,11 @@ export function resetTerminal () {
  * Resizes the terminal
  * @returns {Object} The new dimensions of the terminal
  */
-export function resizeTerminal () {
+export function resizeTerminal() {
   if (fitAddon && term) {
     fitAddon.fit()
     const dimensions = { cols: term.cols, rows: term.rows }
-    debug('Terminal resized:', dimensions)
+    debug('resizeTerminal', dimensions)
     return dimensions
   }
   return null
@@ -118,24 +132,21 @@ export function resizeTerminal () {
 /**
  * Focuses the terminal
  */
-export function focusTerminal () {
-  debug('Terminal focused')
-  if (term) {
-    term.focus()
-  }
+export function focusTerminal() {
+  domFocusTerminal()
 }
 
 /**
  * Gets the current dimensions of the terminal
  * @returns {Object} The current dimensions of the terminal
  */
-export function getTerminalDimensions () {
+export function getTerminalDimensions() {
   if (term) {
     let { cols, rows } = term
-    debug('getTerminalDimensions:', { cols, rows }) 
+    debug('getTerminalDimensions', { cols, rows })
     return { cols, rows }
   }
-  debug('getTerminalDimensions Error: Terminal not initialized')
+  console.error('getTerminalDimensions: Terminal not initialized')
   return { cols: undefined, rows: undefined }
 }
 
@@ -143,10 +154,10 @@ export function getTerminalDimensions () {
  * Updates the terminal options
  * @param {Object} newOptions - The new options to apply to the terminal
  */
-export function updateTerminalOptions (newOptions) {
+export function updateterminalSettings(newOptions) {
   if (term) {
     Object.assign(term.options, newOptions)
-    debug('Terminal options updated:', newOptions)
+    debug('updateterminalSettings', newOptions)
   }
 }
 
@@ -155,10 +166,10 @@ export function updateTerminalOptions (newOptions) {
  * @param {string} event - The event to listen for
  * @param {Function} handler - The event handler function
  */
-export function attachTerminalEvent (event, handler) {
+export function attachTerminalEvent(event, handler) {
   if (term) {
     term.on(event, handler)
-    debug(`Event listener attached: ${event}`)
+    debug(`attachTerminalEvent: ${event}`)
   }
 }
 
@@ -167,10 +178,10 @@ export function attachTerminalEvent (event, handler) {
  * @param {string} event - The event to stop listening for
  * @param {Function} handler - The event handler function to remove
  */
-export function detachTerminalEvent (event, handler) {
+export function detachTerminalEvent(event, handler) {
   if (term) {
     term.off(event, handler)
-    debug(`Event listener detached: ${event}`)
+    debug(`detachTerminalEvent: ${event}`)
   }
 }
 
@@ -178,33 +189,36 @@ export function detachTerminalEvent (event, handler) {
  * Applies terminal options to the terminal instance
  * @param {Object} options - The options to apply to the terminal
  */
-export function applyTerminalOptions(options) {
+export function applyterminalSettings(options) {
   if (!term) {
-    debug('Error: Terminal not initialized');
-    return;
+    console.error('applyterminalSettings: Terminal not initialized')
+    return
   }
+  debug('applyterminalSettings', options)
 
-  const terminalOptions = {
+  const terminalSettings = {
     cursorBlink: options.cursorBlink,
     scrollback: validateNumber(options.scrollback, 1, 200000, 10000),
     tabStopWidth: validateNumber(options.tabStopWidth, 1, 100, 8),
     bellStyle: validateBellStyle(options.bellStyle),
     fontSize: validateNumber(options.fontSize, 1, 72, 14),
     fontFamily: options.fontFamily || 'courier-new, courier, monospace',
-    letterSpacing: options.letterSpacing !== undefined ? Number(options.letterSpacing) : 0,
-    lineHeight: options.lineHeight !== undefined ? Number(options.lineHeight) : 1
-  };
+    letterSpacing:
+      options.letterSpacing !== undefined ? Number(options.letterSpacing) : 0,
+    lineHeight:
+      options.lineHeight !== undefined ? Number(options.lineHeight) : 1
+  }
 
-  Object.assign(term.options, terminalOptions);
-  debug('Terminal options applied:', terminalOptions);
+  Object.assign(term.options, terminalSettings)
+  debug('applyterminalSettings', terminalSettings)
 
   // Resize the terminal after applying options
   if (fitAddon) {
-    fitAddon.fit();
+    fitAddon.fit()
   }
 }
 
 // Export the term instance if direct access is needed
-export function getTerminalInstance () {
+export function getTerminalInstance() {
   return term
 }

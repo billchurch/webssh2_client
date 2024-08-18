@@ -189,22 +189,22 @@ html {
 
 /* Add these styles to the existing style.css file */
 
-#terminalOptionsDialog .modal-content {
+#terminalSettingsDialog .modal-content {
   width: 400px;
 }
 
-#terminalOptionsForm label {
+#terminalSettingsForm label {
   display: block;
   margin-top: 10px;
 }
 
-#terminalOptionsForm input,
-#terminalOptionsForm select {
+#terminalSettingsForm input,
+#terminalSettingsForm select {
   width: 100%;
   margin-bottom: 10px;
 }
 
-#terminalOptionsForm button {
+#terminalSettingsForm button {
   margin-top: 10px;
 }
 

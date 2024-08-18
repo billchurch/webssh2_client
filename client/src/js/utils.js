@@ -108,7 +108,7 @@ export function initializeConfig() {
   }
   const userConfig = window.webssh2Config || {}
   const config = mergeDeep(defaultConfig, userConfig)
-  debug('Config:', config)
+  debug('initializeConfig', config)
   return config
 }
 
@@ -151,10 +151,8 @@ export function populateFormFromUrl(config) {
     if (value !== null) {
       // Handle special cases where parameters map to nested fields
       if (param === 'header') {
-        debug('populateFormFromUrl setting header:', value)
         params.header.text = value
       } else if (param === 'headerBackground') {
-        debug('populateFormFromUrl setting headerBackground:', value)
         params.header.background = value
       } else if (
         [
@@ -169,31 +167,27 @@ export function populateFormFromUrl(config) {
         ].includes(param)
       ) {
         // These parameters relate to terminal settings
-        debug('populateFormFromUrl setting terminal param:', param, value)
         params.terminal[param] = value
       } else {
         // For all other SSH-related parameters
-        debug('populateFormFromUrl setting ssh param:', param, value)
         params.ssh[param] = value
       }
 
       // Fill form fields if they exist
       const input = document.getElementById(param + 'Input')
       if (input) {
-        debug('populateFormFromUrl setting input:', param, value)
         input.value = value
       }
     }
   })
-  debug('populateFormFromUrl: before merge')
   // Merge the params object into the config
   if (config && typeof config === 'object') {
-    debug('populateFormFromUrl merging config with params:', params)
-    return mergeDeep(config, params) // Directly merge params to config
+    const result = mergeDeep(config, params)
+    debug('populateFormFromUrl', result)
+    return result
   } else {
     throw new Error('Invalid configuration object provided.')
   }
-  debug('populateFormFromUrl: complete')
 }
 
 /**

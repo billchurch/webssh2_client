@@ -11,7 +11,6 @@ import createDebug from 'debug'
 const debug = createDebug('webssh2-client:state')
 
 let state = { // eslint-disable-line prefer-const
-  reconnectAttempts: 0,
   isConnecting: false,
   allowReauth: false,
   allowReconnect: false,
@@ -35,11 +34,11 @@ const stateManager = {
   getState: (key) => state[key],
   setState: (key, value) => {
     state[key] = value
-    debug(`stateManager ${key} set to: ${value}`)
+    debug('stateManager', {[key]: value})
   },
   toggleState: (key) => {
     state[key] = !state[key]
-    debug(`${key} toggled to: ${state[key]}`)
+    debug('stateManager', { [key]: state[key] })
     return state[key]
   },
   getEntireState: () => {

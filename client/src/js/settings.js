@@ -2,7 +2,7 @@
 // client/src/js/settings.js
 
 import createDebug from 'debug'
-import { getTerminalOptions } from './terminal.js'
+import { getTerminalSettings } from './terminal.js'
 
 const debug = createDebug('webssh2-client:settings')
 
@@ -14,7 +14,7 @@ const STORAGE_KEY = 'webssh2.settings.global'
  */
 export function initializeSettings(config = {}) {
   if (!localStorage.getItem(STORAGE_KEY)) {
-    const defaultSettings = getTerminalOptions(config)
+    const defaultSettings = getTerminalSettings(config)
     saveTerminalSettings(defaultSettings)
     debug('Initialized default settings in localStorage')
   }
@@ -25,7 +25,7 @@ export function initializeSettings(config = {}) {
  * @param {Object} [config] - The configuration object
  * @returns {Object} The terminal settings object.
  */
-export function getTerminalSettings(config = {}) {
+export function getLocalTerminalSettings(config = {}) {
   const storedSettings = localStorage.getItem(STORAGE_KEY)
   if (storedSettings) {
     try {
@@ -34,7 +34,7 @@ export function getTerminalSettings(config = {}) {
       debug('Error parsing stored settings:', error)
     }
   }
-  return getTerminalOptions(config)
+  return getTerminalSettings(config)
 }
 
 /**
@@ -44,9 +44,9 @@ export function getTerminalSettings(config = {}) {
 export function saveTerminalSettings(settings) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
-    debug('Settings saved successfully')
+    debug('saveTerminalSettings')
   } catch (error) {
-    debug('Error saving settings:', error)
+    console.error('saveTerminalSettings', error)
   }
 }
 
@@ -57,7 +57,7 @@ export function saveTerminalSettings(settings) {
  * @returns {Object} The updated options object.
  */
 export function applyStoredSettings(options, config = {}) {
-  const defaultOptions = getTerminalOptions(config)
-  const storedSettings = getTerminalSettings(config)
+  const defaultOptions = getTerminalSettings(config)
+  const storedSettings = getLocalTerminalSettings(config)
   return { ...defaultOptions, ...options, ...storedSettings }
 }

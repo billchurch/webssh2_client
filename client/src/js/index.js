@@ -10,10 +10,12 @@ import '../css/style.css'
 
 import {
   fillLoginForm,
+  focusTerminal,
   hideErrorDialog,
   hideReconnectBtn,
   initializeDom,
   initializeElements,
+  openTerminal,
   showErrorDialog,
   showloginDialog,
   showReconnectBtn,
@@ -25,16 +27,14 @@ import {
 import { initializeSocketConnection, initSocket } from './socket.js'
 
 import {
-  applyTerminalOptions,
-  focusTerminal,
-  getTerminalOptions,
+  applyterminalSettings,
+  getTerminalSettings,
   initializeTerminal,
-  openTerminal,
   resetTerminal,
   writeToTerminal
 } from './terminal.js'
 
-import { applyStoredSettings } from './settings.js';
+import { applyStoredSettings } from './settings.js'
 
 import stateManager from './state.js'
 
@@ -80,11 +80,11 @@ export let sessionFooter = null
  */
 async function initialize() {
   try {
-    console.log(`Initializing WebSSH2 client - ${BANNER_STRING}`);
-    config = initializeConfig();
-    config = populateFormFromUrl(config);
-    await initializeDom(config);  // Pass config here
-    initializeTerminalAndUI();
+    console.log(`Initializing WebSSH2 client - ${BANNER_STRING}`)
+    config = initializeConfig()
+    config = populateFormFromUrl(config)
+    await initializeDom(config) // Pass config here
+    initializeTerminalAndUI()
     initSocket(
       config,
       onConnect,
@@ -92,45 +92,45 @@ async function initialize() {
       onData,
       writeToTerminal,
       focusTerminal
-    );
+    )
     // We can remove this line as it's now handled in initializeDom
     // initializeDomAndSettings(config);
-    checkSavedSessionLog();
-    initializeConnection();
+    checkSavedSessionLog()
+    initializeConnection()
   } catch (error) {
-    handleError('Initialization error:', error);
+    handleError('Initialization error:', error)
   }
 }
 
 // Immediately Invoked Async Function Expression (IIFE)
-(async () => {
-  await initialize();
-})();
+;(async () => {
+  await initialize()
+})()
 
 /**
  * Initializes the terminal and user interface.
  */
 function initializeTerminalAndUI() {
-  const defaultOptions = getTerminalOptions(config);
-  const options = applyStoredSettings(defaultOptions);
-  debug('initializeTerminal options:', options);
-  initializeTerminal(config);
-  elements = initializeElements();
+  const defaultOptions = getTerminalSettings(config)
+  const options = applyStoredSettings(defaultOptions)
+  debug('initializeTerminalAndUI', options)
+  initializeTerminal(config)
+  elements = initializeElements()
   sessionFooter = config.ssh.host
     ? `ssh://${config.ssh.host}:${config.ssh.port}`
-    : null;
+    : null
 
-  const { terminalContainer } = elements;
+  const { terminalContainer } = elements
 
   if (terminalContainer) {
-    openTerminal(terminalContainer);
+    openTerminal(terminalContainer)
   } else {
     console.error(
       'Terminal container not found. Terminal cannot be initialized.'
-    );
+    )
   }
 
-  applyTerminalOptions(options);
+  applyterminalSettings(options)
 }
 
 /**
@@ -177,7 +177,7 @@ function onConnect() {
   stateManager.setState('loggedData', false)
   updatestartLogBtnState(false)
 
-  debug('Successfully connected to the server')
+  debug('onConnect: Successfully connected to the server')
 }
 
 /**
@@ -292,7 +292,6 @@ function reconnectToServer() {
   hideReconnectBtn()
   hideErrorDialog()
   resetTerminal()
-  stateManager.setState('reconnectAttempts', 0)
 
   connectToServer()
 }
@@ -303,19 +302,16 @@ function reconnectToServer() {
  * @returns {void}
  */
 function initializeConnection() {
-  debug('initializeConnection')
   const { autoConnect, ssh } = config
+  debug('initializeConnection', {autoConnect})
   try {
     if (autoConnect) {
-      debug('Auto-connect is enabled')
-      if (elements.loginForm) {
-        fillLoginForm(ssh)
-      }
+      fillLoginForm(ssh)
       connectToServer()
     } else {
       showloginDialog()
     }
   } catch (error) {
-    handleError('Connection initialization failed', error)
+    handleError('initializeConnection: failed: ', error)
   }
 }

@@ -29,6 +29,7 @@ let focusTerminalCallback
  */
 export function closeConnection() {
   if (socket) {
+    debug('closeConnection')
     socket.close()
   }
 }
@@ -52,7 +53,7 @@ export function emitData(data) {
 export function emitResize(dimensions) {
   if (socket) {
     socket.emit('resize', dimensions)
-    debug('Resized terminal:', dimensions)
+    debug('emitResize', dimensions)
   }
 }
 
@@ -61,18 +62,13 @@ export function emitResize(dimensions) {
  * @returns {SocketIOClient.Socket} The initialized socket
  */
 export function initializeSocketConnection() {
-  debug('Initializing socket connection')
-  if (socket) {
-    socket.close()
-  }
+  debug('initializeSocketConnection')
+  closeConnection
 
   socket = io(getWebSocketUrl(), {
     path: getSocketIOPath(),
     withCredentials: true,
     reconnection: false,
-    // reconnectionAttempts: 5,
-    // reconnectionDelay: 1000,
-    // reconnectionDelayMax: 5000,
     timeout: 20000,
     pingTimeout: 60000,
     pingInterval: 25000
@@ -107,11 +103,11 @@ export function initSocket(
  */
 export function reauth() {
   if (stateManager.getState('allowReauth')) {
-    debug('Requesting session reauth')
+    debug('reauth')
     socket.emit('control', 'reauth')
   } else {
-    debug('Session reauth not allowed')
-    updateUIVisibility({ error: 'Reauthentication not allowed' })
+    console.warn('reauth: Session reauth not permitted')
+    updateUIVisibility({ error: 'Reauthentication not permitted.' })
   }
 }
 
@@ -121,11 +117,11 @@ export function reauth() {
 export function replayCredentials() {
   const allowReplay = stateManager.getState('allowReplay')
   if (allowReplay) {
-    debug('Replaying credentials')
+    debug('replayCredentials')
     socket.emit('control', 'replayCredentials')
   } else {
-    debug('Credential replay not allowed: ', allowReplay)
-    showErrorDialog('Credential replay not allowed')
+    console.warn('replayCredentials: Credential replay not permitted')
+    showErrorDialog('Credential replay not permitted')
   }
 }
 
@@ -137,18 +133,7 @@ function authenticate(formData = null) {
   const terminalDimensions = getTerminalDimensions()
   const credentials = getCredentials(formData, terminalDimensions)
   stateManager.setState('term', credentials.term)
-  debug('Authenticating with credentials:', credentials)
-  // {
-  //     "host": "192.168.0.20",
-  //     "port": 22,
-  //     "username": "test123",
-  //     "password": "Seven888!",
-  //     "term": "xterm-color",
-  //     "readyTimeout": 20000,
-  //     "cursorBlink": "true",
-  //     "cols": 151,
-  //     "rows": 53
-  // }
+  debug('authenticate', credentials)
   if (credentials.host && credentials.username) {
     socket.emit('authenticate', credentials)
     updateElement('status', 'Authenticating...', 'orange')
@@ -166,7 +151,7 @@ function getTerminal() {
   const { cols, rows } = getTerminalDimensions()
   const term = stateManager.getState('term')
   const terminal = { cols, rows, term }
-  debug('getTerminal: Sending terminal config:', terminal)
+  debug('getTerminal', terminal)
   if (socket) {
     socket.emit('terminal', terminal)
   }
@@ -177,9 +162,12 @@ function getTerminal() {
  * @returns {string} The Socket.IO path.
  */
 function getSocketIOPath() {
-  return config && config.socket && config.socket.path
-    ? config.socket.path
-    : '/ssh/socket.io'
+  const socketIOPath =
+    config && config.socket && config.socket.path
+      ? config.socket.path
+      : '/ssh/socket.io'
+  debug('getSocketIOPath', socketIOPath)
+  return socketIOPath
 }
 
 /**
@@ -197,7 +185,10 @@ function getWebSocketUrl() {
   const host = window.location.hostname
   const port = window.location.port || (protocol === 'wss:' ? '443' : '80')
 
-  return `${protocol}//${host}:${port}`
+  const webSocketUrl = `${protocol}//${host}:${port}`
+  debug('getWebSocketUrl', webSocketUrl)
+
+  return webSocketUrl
 }
 
 /**
@@ -205,7 +196,7 @@ function getWebSocketUrl() {
  * @param {Object} result - The authentication result.
  */
 function authResult(result) {
-  debug('Authentication result:', result)
+  debug('authResult', result)
   stateManager.setState('isConnecting', false)
   if (result.success) {
     updateElement('status', 'Connected', 'green')
@@ -224,10 +215,9 @@ function authResult(result) {
  * Handles successful connections
  */
 function connect() {
-  debug('Connected to server')
+  debug('connect: Connected to server')
   // term cols/rows
   stateManager.setState('isConnecting', false)
-  stateManager.setState('reconnectAttempts', 0)
   updateElement('status', 'Connected', 'green')
 
   resize()
@@ -242,7 +232,7 @@ function connect() {
  * @param {Error} error - The connection error
  */
 function connect_error(error) {
-  debug('Connection error:', error)
+  debug('connect_error', error)
   if (onDisconnectCallback) {
     onDisconnectCallback('connect_error', error)
   }
@@ -266,14 +256,13 @@ function data(data) {
  * @param {string} reason - The reason for disconnection
  */
 function disconnect(reason) {
-  debug(`Socket Disconnected: ${reason}`)
+  debug('disconnect', reason)
   stateManager.setState('isConnecting', false)
   updateElement('status', `WEBSOCKET SERVER DISCONNECTED: ${reason}`, 'red')
 
   if (onDisconnectCallback) {
     onDisconnectCallback(reason)
   }
-  // Removed call to showReconnectBtnCallback
 }
 
 /**
@@ -287,31 +276,45 @@ function error(error) {
   }
 }
 
+/**
+ * Applies the given permissions to the corresponding handlers.
+ *
+ * @param {Object} permissions - The permissions object.
+ * @param {boolean} permissions.autoLog - The permission for auto logging.
+ * @param {boolean} permissions.allowReauth - The permission for allowing reauthentication.
+ * @param {boolean} permissions.allowReconnect - The permission for allowing reconnection.
+ * @param {boolean} permissions.allowReplay - The permission for allowing replay.
+ */
 function permissions(permissions) {
-  debug('Received permissions:', permissions)
-  const { autoLog, allowReconnect, allowReauth, allowReplay } = permissions
-  if (autoLog) {
-    debug('Auto logging enabled:', autoLog)
-    if (autoLog) {
-      toggleLog(autoLog)
+  debug('permissions', permissions)
+
+  const handlers = {
+    autoLog: (value) => {
+      if (value) toggleLog(value)
+    },
+
+    allowReauth: (value) => {
+      stateManager.setState('allowReauth', value)
+
+      updateUIVisibility({ allowReauth: value })
+    },
+
+    allowReconnect: (value) => {
+      stateManager.setState('allowReconnect', value)
+    },
+
+    allowReplay: (value) => {
+      stateManager.setState('allowReplay', value)
+
+      updateUIVisibility({ allowReplay: value })
     }
   }
 
-  if (allowReauth) {
-    debug('Allowing reauth:', allowReauth)
-    stateManager.setState('allowReauth', allowReauth)
-    updateUIVisibility({ allowReauth })
-  }
-  if (allowReconnect) {
-    debug('Allowing reconnect:', allowReconnect)
-    stateManager.setState('allowReconnect', allowReconnect)
-  }
-
-  if (allowReplay) {
-    debug('Allowing replay:', allowReplay)
-    stateManager.setState('allowReplay', allowReplay)
-    updateUIVisibility({ allowReplay })
-  }
+  Object.entries(permissions).forEach(([key, value]) => {
+    if (key in handlers) {
+      handlers[key](value)
+    }
+  })
 }
 
 /**
@@ -319,31 +322,44 @@ function permissions(permissions) {
  * @param {string} error - The SSH error message
  */
 function ssherror(error) {
-  debug('SSH Error:', error)
+  debug('ssherror', error)
   if (onDisconnectCallback) {
     onDisconnectCallback('ssh_error', error)
   }
 }
 
+/**
+ * Handles the authentication process.
+ *
+ * @param {Object} data - The data object containing the authentication action.
+ */
 function authentication(data) {
-  debug('Received authentication event: ', data)
-  if (data.action === 'request_auth') {
-    authenticate()
-    updateElement('status', 'Requesting authentication...', 'orange')
-    return
-  }
-  if (data.action === 'auth_result') {
-    authResult(data)
-    return
-  }
-  if (data.action === 'reauth') {
-    if (onDisconnectCallback) {
-      onDisconnectCallback('reauth_required')
-    }
-  }
-  if (data.action === 'dimensions') {
-    const terminalDimensions = getTerminalDimensions()
-    emitResize(terminalDimensions)
+  debug('authentication', data)
+
+  switch (data.action) {
+    case 'request_auth':
+      authenticate()
+      updateElement('status', 'Requesting authentication...', 'orange')
+      break
+
+    case 'auth_result':
+      authResult(data)
+      break
+
+    case 'reauth':
+      if (onDisconnectCallback) {
+        onDisconnectCallback('reauth_required')
+      }
+      break
+
+    case 'dimensions':
+      const terminalDimensions = getTerminalDimensions()
+      emitResize(terminalDimensions)
+      break
+
+    default:
+      debug(`Unhandled authentication action: ${data.action}`)
+      break
   }
 }
 
@@ -355,7 +371,7 @@ function authentication(data) {
  * @param {string|object} data.value - The new content for the element.
  */
 function updateUI(data) {
-  debug('updateUI: Received updateUI event:', JSON.stringify(data))
+  debug('updateUI', JSON.stringify(data))
 
   const { element, value } = data
 
@@ -373,7 +389,7 @@ function updateUI(data) {
  * Sets up Socket.IO event listeners
  */
 function setupSocketListeners() {
-  debug('Setting up socket listeners')
+  debug('setupSocketListeners')
   Object.entries({
     authentication,
     connect,

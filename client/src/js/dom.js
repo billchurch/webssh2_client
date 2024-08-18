@@ -20,19 +20,18 @@ import { emitData, emitResize, reauth, replayCredentials } from './socket.js'
 import { downloadLog, clearLog, toggleLog } from './clientlog.js'
 
 import {
-  getTerminalSettings,
   initializeSettings,
   saveTerminalSettings
 } from './settings.js'
 
 import {
-  applyTerminalOptions,
-  getTerminalOptions,
+  applyterminalSettings,
   resizeTerminal
 } from './terminal.js'
 
 const debug = createDebug('webssh2-client:dom')
 let elements = {}
+let term
 
 /**
  * Closes the error modal.
@@ -53,20 +52,24 @@ export function hideErrorDialog() {
  * @param {string} sshConfig.username - The SSH username.
  */
 export function fillLoginForm(sshConfig) {
-  const { hostInput, portInput, usernameInput } = elements
+  const { hostInput, loginForm, portInput, usernameInput } = elements
   const { host, port, username } = sshConfig
 
-  debug('Filling login form with:', sshConfig)
-
-  if (hostInput) hostInput.value = host || ''
-  if (portInput) portInput.value = port || ''
-  if (usernameInput) usernameInput.value = username || ''
+  if (loginForm) {
+    debug('fillLoginForm', sshConfig)
+    if (hostInput) hostInput.value = host || ''
+    if (portInput) portInput.value = port || ''
+    if (usernameInput) usernameInput.value = username || ''
+  } else {
+    console.error('fillLoginForm: element not found')
+  }
 }
 
 /**
  * Hides the login modal
  */
 export function hideloginDialog() {
+  debug('hideloginDialog')
   elements.loginDialog.close()
 }
 
@@ -84,10 +87,11 @@ export function hideReconnectBtn() {
  * @returns {Object} An object containing references to DOM elements
  */
 export function initializeElements() {
+  debug('initializeElements')
   const elementIds = [
     'backdrop',
     'clearLogBtn',
-    'closeTerminalOptionsBtn',
+    'closeterminalSettingsBtn',
     'downloadLogBtn',
     'dropupContent',
     'errorDialog',
@@ -108,9 +112,9 @@ export function initializeElements() {
     'stopLogBtn',
     'stopLogBtn',
     'terminalContainer',
-    'terminalOptionsBtn',
-    'terminalOptionsDialog',
-    'terminalOptionsForm',
+    'terminalSettingsBtn',
+    'terminalSettingsDialog',
+    'terminalSettingsForm',
     'usernameInput',
     'loginSettingsBtn'
   ]
@@ -126,9 +130,11 @@ export function initializeElements() {
       elements[id] = element
     } else {
       if (criticalElements.includes(id)) {
-        throw new Error(`Critical element with id '${id}' not found`)
+        throw new Error(
+          `initializeElements: Critical element with id '${id}' not found`
+        )
       } else {
-        console.warn(`Element with id '${id}' not found`)
+        console.warn(`initializeElements: Element with id '${id}' not found`)
       }
     }
   })
@@ -153,27 +159,27 @@ export function initializeElements() {
  * Sets up event listeners for various elements in the application.
  */
 export function setupEventListeners(config) {
-  debug('Setting up event listeners')
+  debug('setupEventListeners')
 
   // Event handlers for elements
   const elementHandlers = {
     clearLogBtn: clearLog,
-    closeTerminalOptionsBtn: hideTerminalOptionsDialog,
+    closeterminalSettingsBtn: hideterminalSettingsDialog,
     downloadLogBtn: downloadLog,
     loginForm: formSubmit,
-    loginSettingsBtn: () => showTerminalOptionsDialog(config),
+    loginSettingsBtn: () => showterminalSettingsDialog(config),
     reauthBtn: reauth,
     replayCredentialsBtn: replayCredentials,
     startLogBtn: toggleLog,
     stopLogBtn: toggleLog,
-    terminalOptionsBtn: () => showTerminalOptionsDialog(config),
-    terminalOptionsForm: (event) => handleTerminalOptionsSubmit(event, config)
+    terminalSettingsBtn: () => showterminalSettingsDialog(config),
+    terminalSettingsForm: (event) => handleterminalSettingsSubmit(event, config)
   }
 
   Object.entries(elementHandlers).forEach(([elementName, handler]) => {
     const element = elements[elementName]
     if (element) {
-      const eventType = ['loginForm', 'terminalOptionsForm'].includes(
+      const eventType = ['loginForm', 'terminalSettingsForm'].includes(
         elementName
       )
         ? 'submit'
@@ -214,8 +220,8 @@ export function showErrorDialog(message) {
  * Shows the login modal
  */
 export function showloginDialog() {
+  debug('showloginDialog')
   const { loginDialog, terminalContainer, passwordInput } = elements
-  debug('showloginDialog: Showing login dialog')
   loginDialog.show()
   toggleVisibility(terminalContainer, true)
   if (passwordInput) passwordInput.value = ''
@@ -227,6 +233,7 @@ export function showloginDialog() {
  * @param {Function} reconnectCallback - The function to call when the reconnect button is clicked
  */
 export function showReconnectBtn(reconnectCallback) {
+  debug('showReconnectBtn')
   const { reconnectButton, backdrop } = elements
   toggleVisibility(backdrop, true)
   showButton(reconnectButton, reconnectCallback)
@@ -238,6 +245,7 @@ export function showReconnectBtn(reconnectCallback) {
  * @param {boolean} visible - Whether to show or hide the terminal
  */
 export function toggleTerminalDisplay(visible) {
+  debug(`toggleTerminalDisplay: ${visible}`)
   const { terminalContainer } = elements
   if (terminalContainer) {
     if (visible) {
@@ -254,6 +262,7 @@ export function toggleTerminalDisplay(visible) {
  * @param {string} filename - The filename for the download
  */
 export function triggerDownload(blob, filename) {
+  debug(`triggerDownload: ${filename}`)
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)
   link.download = filename
@@ -284,7 +293,9 @@ export function getElements() {
 export function updateElement(elementName, content, color) {
   const element = elements[elementName]
   if (!element || !content) {
-    console.warn(`${elementName} element not found or content missing.`)
+    console.warn(
+      `updateElement: ${elementName} element not found or content missing.`
+    )
     return
   }
 
@@ -293,9 +304,7 @@ export function updateElement(elementName, content, color) {
   const sanitizedContent = sanitizeHtml(text)
   const sanitizedColor = background ? sanitizeColor(background) : null
 
-  debug(
-    `Updating ${elementName} element with sanitized content: ${sanitizedContent} and color: ${sanitizedColor || 'undefined'}`
-  )
+  debug('updateElement', { elementName, sanitizedContent, sanitizedColor })
 
   element.innerHTML = sanitizedContent
   if (sanitizedColor) element.style.backgroundColor = sanitizedColor
@@ -312,6 +321,7 @@ export function updateElement(elementName, content, color) {
  * @param {boolean} isLogging - Whether logging is currently active
  */
 export function updatestartLogBtnState(isLogging) {
+  debug(`updatestartLogBtnState: ${isLogging}`)
   const { startLogBtn, stopLogBtn, downloadLogBtn, clearLogBtn } = elements
 
   if (startLogBtn && stopLogBtn) {
@@ -337,7 +347,7 @@ export function updatestartLogBtnState(isLogging) {
  * @param {Object} permissions - Object containing permission flags
  */
 export function updateUIVisibility(permissions) {
-  debug(`Updating UI visibility: ${JSON.stringify(permissions)}`)
+  debug('updateUIVisibility', permissions)
 
   const permissionHandlers = {
     allowReauth: updateReauthBtnVisibility,
@@ -360,6 +370,7 @@ export function updateUIVisibility(permissions) {
  * Focuses on the appropriate input field in the login form
  */
 function focusAppropriateInput() {
+  debug('focusAppropriateInput')
   const { hostInput, usernameInput, passwordInput, portInput } = elements
 
   if (hostInput.value) {
@@ -418,7 +429,7 @@ export function toggleDownloadLogBtn(visible) {
  */
 function toggleVisibility(element, isVisible) {
   if (!element) return
-  debug(`${element.id} visibility set to: ${isVisible}`)
+  debug(`toggleVisibility: ${element.id}: ${isVisible}`)
 
   if (isVisible) {
     element.classList.add('visible')
@@ -455,7 +466,8 @@ function keydown(event) {
 }
 
 /**
- * Detects the state of the Caps Lock key and adds or removes the 'capslock-active' class from the password input element accordingly.
+ * Detects the state of the Caps Lock key and adds or removes the 'capslock-active' class
+ * from the password input element accordingly.
  *
  * @param {Event} event - The event object representing the key press event.
  */
@@ -474,7 +486,7 @@ function detectCapsLock(event) {
 export function resize() {
   const dimensions = resizeTerminal()
   if (dimensions) {
-    debug('Sending resized:', dimensions)
+    debug('resize:', dimensions)
     emitResize(dimensions)
   }
 }
@@ -511,38 +523,20 @@ export function showButton(button, onClick = null) {
  * Shows the terminal options dialog.
  * @param {Object} config - The configuration object
  */
-export function showTerminalOptionsDialog(config) {
-  if (elements.terminalOptionsDialog) {
-    populateTerminalOptionsForm(config)
-    elements.terminalOptionsDialog.showModal()
+export function showterminalSettingsDialog(config) {
+  debug('showterminalSettingsDialog')
+  if (elements.terminalSettingsDialog) {
+    populateterminalSettingsForm(config)
+    elements.terminalSettingsDialog.showModal()
   }
 }
 
 /**
  * Hides the terminal options dialog.
  */
-export function hideTerminalOptionsDialog() {
-  elements?.terminalOptionsDialog?.close?.()
-}
-
-/**
- * Populates the terminal options form with current settings.
- * @param {Object} config - The configuration object
- */
-function populateTerminalOptionsForm(config) {
-  const settings = getTerminalSettings(config)
-  if (elements.terminalOptionsForm) {
-    Object.keys(settings).forEach((key) => {
-      const input = elements.terminalOptionsForm.elements[key]
-      if (input) {
-        if (input.type === 'checkbox') {
-          input.checked = settings[key]
-        } else {
-          input.value = settings[key]
-        }
-      }
-    })
-  }
+export function hideterminalSettingsDialog() {
+  debug('hideterminalSettingsDialog')
+  elements?.terminalSettingsDialog?.close?.()
 }
 
 /**
@@ -550,11 +544,12 @@ function populateTerminalOptionsForm(config) {
  * @param {Event} event - The form submission event.
  * @param {Object} config - The configuration object
  */
-export function handleTerminalOptionsSubmit(event, config) {
+export function handleterminalSettingsSubmit(event, config) {
+  debug('handleterminalSettingsSubmit')
   event.preventDefault()
   const form = event.target
   if (!(form instanceof HTMLFormElement)) {
-    debug('Error: Invalid form element')
+    console.error('handleterminalSettingsSubmit: Invalid form element')
     return
   }
 
@@ -610,10 +605,9 @@ export function handleTerminalOptionsSubmit(event, config) {
     }
   }
 
-  debug('Saving validated terminal settings:', settings)
   saveTerminalSettings(settings)
-  applyTerminalOptions(settings)
-  hideTerminalOptionsDialog()
+  applyterminalSettings(settings)
+  hideterminalSettingsDialog()
 }
 
 /**
@@ -624,6 +618,7 @@ export function handleTerminalOptionsSubmit(event, config) {
 export function initializeDom(config) {
   return new Promise((resolve) => {
     const initializeDomContent = () => {
+      debug('initializeDom')
       initializeElements()
       setupEventListeners(config)
       initializeSettings(config)
@@ -636,4 +631,38 @@ export function initializeDom(config) {
       initializeDomContent()
     }
   })
+}
+
+/**
+ * Sets the terminal instance for DOM operations
+ * @param {Terminal} terminalInstance - The terminal instance
+ */
+export function setTerminalInstance(terminalInstance) {
+  term = terminalInstance
+}
+
+/**
+ * Opens the terminal in the specified container
+ * @param {HTMLElement} container - The container element for the terminal
+ */
+export function openTerminal(container) {
+  if (term && container) {
+    term.open(container)
+    // Note: We're not calling fitAddon.fit() here as it's not a DOM operation
+    debug('openTerminal')
+  } else {
+    console.error('openTerminal: Terminal or container not available')
+  }
+}
+
+/**
+ * Focuses the terminal
+ */
+export function focusTerminal() {
+  if (term) {
+    term.focus()
+    debug('focusTerminal: Terminal focused')
+  } else {
+    console.error('openTerminal: Terminal not available')
+  }
 }
