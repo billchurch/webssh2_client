@@ -11,13 +11,14 @@ import createDebug from 'debug'
 const debug = createDebug('webssh2-client:state')
 
 let state = { // eslint-disable-line prefer-const
-  isConnecting: false,
   allowReauth: false,
   allowReconnect: false,
   allowReplay: false,
+  isBasicAuthCookiePresent: false,
+  isConnecting: false,
+  loggedData: false,
   reauthRequired: false,
   sessionLogEnable: false,
-  loggedData: false,
   term: null
 }
 

@@ -285,3 +285,25 @@ export function sanitizeObject(obj) {
   }
   return obj
 }
+
+/**
+ * Checks if the 'basicauth' cookie is present and set to 'true'
+ * @returns {boolean} True if the cookie is present and set to 'true', false otherwise
+ */
+export function isBasicAuthCookiePresent() {
+  const cookies = document.cookie.split(';');
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i].trim();
+    if (cookie.startsWith('basicauth=')) {
+      return cookie.substring('basicauth='.length) === 'true';
+    }
+  }
+  return false;
+}
+
+/**
+ * Clears the 'basicauth' cookie
+ */
+export function clearBasicAuthCookie() {
+  document.cookie = 'basicauth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+}

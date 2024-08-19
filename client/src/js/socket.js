@@ -348,7 +348,7 @@ function authentication(data) {
 
     case 'reauth':
       if (onDisconnectCallback) {
-        onDisconnectCallback('reauth_required')
+        onDisconnectCallback('reauth_required', socket)
       }
       break
 

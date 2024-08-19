@@ -27,8 +27,6 @@ import {
 import { initializeSocketConnection, initSocket } from './socket.js'
 
 import {
-  applyterminalSettings,
-  getTerminalSettings,
   initializeTerminal,
   resetTerminal,
   writeToTerminal
@@ -38,7 +36,11 @@ import { applyStoredSettings } from './settings.js'
 
 import stateManager from './state.js'
 
-import { initializeConfig, populateFormFromUrl } from './utils.js'
+import {
+  initializeConfig,
+  isBasicAuthCookiePresent,
+  populateFormFromUrl
+} from './utils.js'
 import {
   addToSessionLog,
   checkSavedSessionLog,
@@ -141,6 +143,7 @@ export function connectToServer(formData = null) {
   if (reauthRequired) stateManager.setState('reauthRequired', false)
 
   stateManager.setState('isConnecting', true)
+  stateManager.setState('isBasicAuthCookiePresent', isBasicAuthCookiePresent())
   initializeSocketConnection()
 
   const { terminalContainer } = elements
@@ -182,7 +185,7 @@ function onConnect() {
  * @param {string} reason - The reason for disconnection.
  * @returns {void}
  */
-function onDisconnect(reason) {
+function onDisconnect(reason, socket) {
   const reauthRequired = stateManager.getState('reauthRequired')
 
   debug('onDisconnect:', reason)
@@ -194,6 +197,15 @@ function onDisconnect(reason) {
       break
 
     case 'reauth_required':
+      if (stateManager.getState('isBasicAuthCookiePresent')) {
+        debug('onDisconnect: reauth_required: basic auth flow')
+        socket.disconnect()
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        break
+      }
+      debug('onDisconnect: reauth_required: forms auth flow')
       stateManager.setState('reauthRequired', true)
       showloginDialog()
       break
@@ -236,7 +248,7 @@ function commonPostDisconnectTasks() {
   }
 
   resetApplication()
-  if (stateManager.getState('allowReconnect')) {
+  if (stateManager.getState('allowReconnect') && !stateManager.getState('isBasicAuthCookiePresent')) {
     showReconnectBtn(reconnectToServer)
   }
 }
