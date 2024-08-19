@@ -89,7 +89,6 @@ export function initializeConfig() {
       username: null,
       password: null,
       sshTerm: 'xterm-color',
-      readyTimeout: 20000
     },
     terminal: { ...defaultSettings },
     header: {
@@ -120,7 +119,6 @@ export function populateFormFromUrl(config) {
     'header',
     'headerBackground',
     'sshTerm',
-    'readyTimeout',
     'cursorBlink',
     'scrollback',
     'tabStopWidth',
@@ -232,21 +230,6 @@ export function getCredentials(formData = null, terminalDimensions = {}) {
       urlParams.get('sshTerm') ||
       config.ssh?.sshTerm ||
       'xterm-color',
-    readyTimeout: validateNumber(
-      formData?.readyTimeout ||
-        config.ssh?.readyTimeout ||
-        urlParams.get('readyTimeout'),
-      1,
-      300000,
-      20000
-    ),
-    cursorBlink:
-      formData?.cursorBlink ||
-      urlParams.get('cursorBlink') ||
-      config.terminal?.cursorBlink ||
-      true,
-    cols: terminalDimensions.cols,
-    rows: terminalDimensions.rows
   }
 
   debug('getCredentials mergedConfig:', mergedConfig)

@@ -78,16 +78,6 @@ window.webssh2Config = {
     sshTerm: 'xterm-color',  // Terminal type
     readyTimeout: 20000,  // SSH connection timeout (ms)
   },
-  terminal: {
-    cursorBlink: true,  // Whether the cursor should blink
-    scrollback: 10000,  // Number of rows to keep in scrollback
-    tabStopWidth: 8,  // Tab width
-    bellStyle: 'sound',  // Terminal bell style ('sound' or 'none')
-    fontSize: 14,  // Font size in pixels
-    fontFamily: 'courier-new, courier, monospace',  // Font family
-    letterSpacing: 0,  // Letter spacing
-    lineHeight: 1,  // Line height
-  },
   header: {
     text: null,  // Custom header text
     background: 'green',  // Header background color
@@ -131,18 +121,7 @@ When `autoConnect` is not used, ensure your server is configured to prompt for o
 
 ### Customization Examples
 
-1. Changing terminal appearance:
-   ```javascript
-   window.webssh2Config = {
-     terminal: {
-       fontSize: 16,
-       fontFamily: 'Fira Code, monospace',
-       cursorBlink: false
-     }
-   };
-   ```
-
-2. Setting a custom header:
+1. Setting a custom header:
    ```javascript
    window.webssh2Config = {
      header: {
@@ -152,7 +131,7 @@ When `autoConnect` is not used, ensure your server is configured to prompt for o
    };
    ```
 
-3. Configuring for a specific SSH server with auto-connect:
+2. Configuring for a specific SSH server with auto-connect:
    ```javascript
    window.webssh2Config = {
      ssh: {
@@ -251,40 +230,6 @@ The WebSSH2 client supports various URL parameters to customize the SSH connecti
 - `password`: The password for SSH authentication (not recommended for production use).
   - Example: `?password=secretpassword`
 
-### Terminal Configuration
-
-- `sshTerm`: The terminal type to request (default is "xterm-color").
-  - Example: `?sshTerm=xterm-256color`
-
-- `readyTimeout`: The timeout (in milliseconds) for the SSH handshake (default is 20000).
-  - Example: `?readyTimeout=30000`
-
-- `cursorBlink`: Whether the cursor should blink (true/false).
-  - Example: `?cursorBlink=true`
-
-- `scrollback`: The number of lines to keep in the scrollback buffer (default is 10000).
-  - Example: `?scrollback=5000`
-
-- `tabStopWidth`: The width of tab stops (default is 8).
-  - Example: `?tabStopWidth=4`
-
-- `bellStyle`: The style of the terminal bell ("sound" or "none", default is "sound").
-  - Example: `?bellStyle=none`
-
-### Display Options
-
-- `fontSize`: The font size for the terminal (in pixels).
-  - Example: `?fontSize=14`
-
-- `fontFamily`: The font family to use for the terminal.
-  - Example: `?fontFamily=Consolas,Monaco,Lucida%20Console,Liberation%20Mono,DejaVu%20Sans%20Mono,Bitstream%20Vera%20Sans%20Mono,Courier%20New,monospace`
-
-- `letterSpacing`: The letter spacing for the terminal font.
-  - Example: `?letterSpacing=1`
-
-- `lineHeight`: The line height for the terminal.
-  - Example: `?lineHeight=1.2`
-
 ### UI Customization
 
 - `header`: Custom text to display in the header.
@@ -309,6 +254,68 @@ http://localhost:2222/ssh/host/192.168.1.100?port=2222&header=Production%20Serve
 This URL would connect to a SSH server at 192.168.1.100 on port 2222, with a red header displaying "Production Server", using a 14px font size and turning off the audible bell.
 
 Note: Be cautious about including sensitive information like passwords in URL parameters, especially in production environments.
+
+## Terminal Configuration
+
+WebSSH2 Client allows users to customize their terminal experience through a set of configurable options. These settings are stored in the browser's localStorage under the key `webssh2.settings.global`, ensuring your preferences persist across sessions.
+
+### Accessing Terminal Settings
+
+You can access the terminal configuration in two ways:
+
+1. **From an Active Session:**
+   - Click on the menu icon (☰) in the bottom-left corner of the terminal.
+   - Select "Settings" from the dropdown menu.
+
+2. **During Login:**
+   - In the login dialog, click on the gear icon (⚙️) next to the "Connect" button.
+
+### Available Settings
+
+The terminal settings dialog offers the following customization options:
+
+1. **Font Size**
+   - Range: 8-72 pixels
+   - Adjusts the size of the text in the terminal.
+
+2. **Font Family**
+   - Specifies the font used in the terminal.
+   - Example: "Courier New, monospace"
+
+3. **Cursor Blink**
+   - Options: On / Off
+   - Determines whether the cursor blinks in the terminal.
+
+4. **Scrollback**
+   - Range: 1-200000 lines
+   - Sets the number of lines kept in the terminal's scrollback buffer.
+
+5. **Tab Stop Width**
+   - Range: 1-100 spaces
+   - Defines the width of tab stops in the terminal.
+
+6. **Bell Style**
+   - Options: Sound / None
+   - Configures the audible bell behavior in the terminal.
+
+### Applying Settings
+
+After adjusting your preferences:
+
+1. Click "Save" to apply the new settings.
+2. The changes will take effect immediately for the current session and all future sessions.
+3. Click "Cancel" to close the dialog without saving changes.
+
+### Resetting to Defaults
+
+To reset all settings to their default values:
+
+1. Clear your browser's localStorage for the WebSSH2 Client site.
+2. Refresh the page.
+
+### Note on Persistence
+
+These settings are stored locally in your browser. If you use WebSSH2 Client on a different device or browser, you'll need to reconfigure your preferences.
 
 ## Debugging
 

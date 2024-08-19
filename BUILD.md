@@ -89,7 +89,6 @@ Ensure your SSH or GPG key is set up for git commit signing and added to your gi
 ## Additional Notes
 
 - The devcontainer ensures a consistent development environment across different machines.
-- The `prepublishOnly` script in package.json ensures the project is built before publishing.
 - The changelog is automatically updated based on your conventional commit messages.
 - Make sure to update the README.md file if there are significant changes or new features.
 - If you need to customize the changelog generation or version bumping process, you can modify the `.versionrc` file in the project root.
