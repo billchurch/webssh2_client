@@ -111,9 +111,7 @@ async function initialize() {
  * Initializes the terminal and user interface.
  */
 function initializeTerminalAndUI() {
-  const defaultOptions = getTerminalSettings(config)
-  const options = applyStoredSettings(defaultOptions)
-  debug('initializeTerminalAndUI', options)
+  debug('initializeTerminalAndUI')
   initializeTerminal(config)
   elements = initializeElements()
   sessionFooter = config.ssh.host
@@ -129,8 +127,6 @@ function initializeTerminalAndUI() {
       'Terminal container not found. Terminal cannot be initialized.'
     )
   }
-
-  applyterminalSettings(options)
 }
 
 /**
@@ -303,7 +299,7 @@ function reconnectToServer() {
  */
 function initializeConnection() {
   const { autoConnect, ssh } = config
-  debug('initializeConnection', {autoConnect})
+  debug('initializeConnection', { autoConnect })
   try {
     if (autoConnect) {
       fillLoginForm(ssh)

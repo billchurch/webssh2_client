@@ -1,6 +1,8 @@
 // client
 // client/src/js/utils.js
 import createDebug from 'debug'
+import { defaultSettings } from './terminal.js';
+
 const debug = createDebug('webssh2-client:utils')
 
 /**
@@ -89,16 +91,7 @@ export function initializeConfig() {
       sshTerm: 'xterm-color',
       readyTimeout: 20000
     },
-    terminal: {
-      cursorBlink: false,
-      scrollback: 10000,
-      tabStopWidth: 8,
-      bellStyle: 'sound',
-      fontSize: 14,
-      fontFamily: 'courier-new, courier, monospace',
-      letterSpacing: 0,
-      lineHeight: 1
-    },
+    terminal: { ...defaultSettings },
     header: {
       text: null,
       background: 'green'

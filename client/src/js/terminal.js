@@ -6,17 +6,25 @@ import { FitAddon } from '@xterm/addon-fit'
 import createDebug from 'debug'
 import { validateNumber, validateBellStyle } from './utils.js'
 import { emitData } from './socket.js'
-import { applyStoredSettings } from './settings.js'
-import {
-  setTerminalInstance,
-  openTerminal as domOpenTerminal,
-  focusTerminal as domFocusTerminal
-} from './dom.js'
+import { getStoredSettings } from './settings.js'
+import { setTerminalInstance } from './dom.js'
 
 const debug = createDebug('webssh2-client:terminal')
 
 let term
 let fitAddon
+
+export const defaultSettings = {
+  cursorBlink: true,
+  scrollback: 10000,
+  tabStopWidth: 8,
+  bellStyle: 'sound',
+  fontSize: 14,
+  fontFamily: 'courier-new, courier, monospace',
+  letterSpacing: 0,
+  lineHeight: 1,
+  logLevel: 'info'
+}
 
 /**
  * Initializes the terminal
@@ -24,8 +32,9 @@ let fitAddon
  * @returns {Terminal} The initialized terminal instance
  */
 export function initializeTerminal(config) {
+  debug('initializeTerminal')
   const options = getTerminalSettings(config)
-  debug('initializeTerminal', options)
+
   term = new Terminal(options)
   fitAddon = new FitAddon()
   term.loadAddon(fitAddon)
@@ -37,6 +46,8 @@ export function initializeTerminal(config) {
 
   setTerminalInstance(term)
 
+  applyTerminalSettings(options)
+
   return term
 }
 
@@ -46,40 +57,55 @@ export function initializeTerminal(config) {
  * @returns {Object} The terminal options
  */
 export function getTerminalSettings(config) {
-  const terminal = config?.terminal || {}
-  const defaultOptions = {
-    cursorBlink: true,
-    scrollback: 10000,
-    tabStopWidth: 8,
-    bellStyle: 'sound',
-    fontSize: 14,
-    fontFamily: 'courier-new, courier, monospace',
-    letterSpacing: 0,
-    lineHeight: 1,
-    logLevel: 'info'
-  }
+  debug('getTerminalSettings')
+  const storedSettings = getStoredSettings()
+  const terminalConfig = config?.terminal || {}
 
   const mergedOptions = {
-    cursorBlink: terminal.cursorBlink ?? defaultOptions.cursorBlink,
+    cursorBlink:
+      storedSettings.cursorBlink ??
+      terminalConfig.cursorBlink ??
+      defaultSettings.cursorBlink,
     scrollback: validateNumber(
-      terminal.scrollback,
+      storedSettings.scrollback ?? terminalConfig.scrollback,
       1,
       200000,
-      defaultOptions.scrollback
+      defaultSettings.scrollback
     ),
     tabStopWidth: validateNumber(
-      terminal.tabStopWidth,
+      storedSettings.tabStopWidth ?? terminalConfig.tabStopWidth,
       1,
       100,
-      defaultOptions.tabStopWidth
+      defaultSettings.tabStopWidth
     ),
-    bellStyle: validateBellStyle(terminal.bellStyle, defaultOptions.bellStyle),
-    fontSize: validateNumber(terminal.fontSize, 1, 72, defaultOptions.fontSize),
-    fontFamily: terminal.fontFamily || defaultOptions.fontFamily,
-    letterSpacing: terminal.letterSpacing ?? defaultOptions.letterSpacing,
-    lineHeight: terminal.lineHeight ?? defaultOptions.lineHeight,
-    logLevel: terminal.logLevel || defaultOptions.logLevel
+    bellStyle: validateBellStyle(
+      storedSettings.bellStyle ?? terminalConfig.bellStyle,
+      defaultSettings.bellStyle
+    ),
+    fontSize: validateNumber(
+      storedSettings.fontSize ?? terminalConfig.fontSize,
+      1,
+      72,
+      defaultSettings.fontSize
+    ),
+    fontFamily:
+      storedSettings.fontFamily ??
+      terminalConfig.fontFamily ??
+      defaultSettings.fontFamily,
+    letterSpacing:
+      storedSettings.letterSpacing ??
+      terminalConfig.letterSpacing ??
+      defaultSettings.letterSpacing,
+    lineHeight:
+      storedSettings.lineHeight ??
+      terminalConfig.lineHeight ??
+      defaultSettings.lineHeight,
+    logLevel:
+      storedSettings.logLevel ??
+      terminalConfig.logLevel ??
+      defaultSettings.logLevel
   }
+
   debug('getTerminalSettings', mergedOptions)
   return mergedOptions
 }
@@ -189,30 +215,42 @@ export function detachTerminalEvent(event, handler) {
  * Applies terminal options to the terminal instance
  * @param {Object} options - The options to apply to the terminal
  */
-export function applyterminalSettings(options) {
+export function applyTerminalSettings(options) {
   if (!term) {
-    console.error('applyterminalSettings: Terminal not initialized')
+    console.error('applyTerminalSettings: Terminal not initialized')
     return
   }
-  debug('applyterminalSettings', options)
+  debug('applyTerminalSettings', options)
 
   const terminalSettings = {
-    cursorBlink: options.cursorBlink,
-    scrollback: validateNumber(options.scrollback, 1, 200000, 10000),
-    tabStopWidth: validateNumber(options.tabStopWidth, 1, 100, 8),
-    bellStyle: validateBellStyle(options.bellStyle),
-    fontSize: validateNumber(options.fontSize, 1, 72, 14),
-    fontFamily: options.fontFamily || 'courier-new, courier, monospace',
+    cursorBlink: options.cursorBlink ?? defaultSettings.cursorBlink,
+    scrollback: validateNumber(
+      options.scrollback,
+      1,
+      200000,
+      defaultSettings.scrollback
+    ),
+    tabStopWidth: validateNumber(
+      options.tabStopWidth,
+      1,
+      100,
+      defaultSettings.tabStopWidth
+    ),
+    bellStyle: validateBellStyle(options.bellStyle, defaultSettings.bellStyle),
+    fontSize: validateNumber(options.fontSize, 1, 72, defaultSettings.fontSize),
+    fontFamily: options.fontFamily || defaultSettings.fontFamily,
     letterSpacing:
-      options.letterSpacing !== undefined ? Number(options.letterSpacing) : 0,
+      options.letterSpacing !== undefined
+        ? Number(options.letterSpacing)
+        : defaultSettings.letterSpacing,
     lineHeight:
-      options.lineHeight !== undefined ? Number(options.lineHeight) : 1
+      options.lineHeight !== undefined
+        ? Number(options.lineHeight)
+        : defaultSettings.lineHeight
   }
 
   Object.assign(term.options, terminalSettings)
-  debug('applyterminalSettings', terminalSettings)
 
-  // Resize the terminal after applying options
   if (fitAddon) {
     fitAddon.fit()
   }

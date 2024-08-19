@@ -26,7 +26,8 @@ import {
 } from './settings.js'
 
 import {
-  applyterminalSettings,
+  getTerminalSettings,
+  applyTerminalSettings,
   resizeTerminal
 } from './terminal.js'
 
@@ -537,7 +538,7 @@ export function showterminalSettingsDialog(config) {
  * @param {Object} config - The configuration object
  */
 function populateterminalSettingsForm(config) {
-  const settings = getLocalTerminalSettings(config)
+  const settings = getTerminalSettings(config)
   debug('populateterminalSettingsForm', settings)
   if (elements.terminalSettingsForm) {
     Object.keys(settings).forEach((key) => {
@@ -578,25 +579,19 @@ export function handleterminalSettingsSubmit(event, config) {
   const settings = {}
   const formData = new FormData(form)
 
-  // Get default values from config
-  const defaultOptions = config.terminal || {}
+  const currentSettings = getTerminalSettings(config)
 
   for (const [key, value] of formData.entries()) {
     switch (key) {
       case 'fontSize':
-        settings[key] = validateNumber(
-          value,
-          8,
-          72,
-          defaultOptions.fontSize || 14
-        )
+        settings[key] = validateNumber(value, 8, 72, currentSettings.fontSize)
         break
       case 'scrollback':
         settings[key] = validateNumber(
           value,
           1,
           200000,
-          defaultOptions.scrollback || 10000
+          currentSettings.scrollback
         )
         break
       case 'tabStopWidth':
@@ -604,23 +599,17 @@ export function handleterminalSettingsSubmit(event, config) {
           value,
           1,
           100,
-          defaultOptions.tabStopWidth || 8
+          currentSettings.tabStopWidth
         )
         break
       case 'cursorBlink':
         settings[key] = value === 'true'
         break
       case 'bellStyle':
-        settings[key] = validateBellStyle(
-          value,
-          defaultOptions.bellStyle || 'sound'
-        )
+        settings[key] = validateBellStyle(value, currentSettings.bellStyle)
         break
       case 'fontFamily':
-        settings[key] =
-          value ||
-          defaultOptions.fontFamily ||
-          'courier-new, courier, monospace'
+        settings[key] = value || currentSettings.fontFamily
         break
       default:
         settings[key] = value
@@ -628,7 +617,7 @@ export function handleterminalSettingsSubmit(event, config) {
   }
 
   saveTerminalSettings(settings)
-  applyterminalSettings(settings)
+  applyTerminalSettings(settings)
   hideterminalSettingsDialog()
 }
 
