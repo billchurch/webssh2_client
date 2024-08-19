@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.21](https://github.com/billchurch/webssh2_client/compare/v0.2.20...v0.2.21) (2024-08-19)
+
+
+### Features
+
+* Refactor terminal settings handling and apply default options ([72077ba](https://github.com/billchurch/webssh2_client/commit/72077ba65f06b863356b6e0e9332e1f35bcc3371))
+
 ### [0.2.20](https://github.com/billchurch/webssh2_client/compare/v0.2.19...v0.2.20) (2024-08-18)
 
 
