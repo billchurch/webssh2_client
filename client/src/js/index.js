@@ -38,7 +38,7 @@ import stateManager from './state.js'
 
 import {
   initializeConfig,
-  isBasicAuthCookiePresent,
+  getBasicAuthCookie,
   populateFormFromUrl
 } from './utils.js'
 import {
@@ -84,6 +84,16 @@ async function initialize() {
   try {
     console.log(`Initializing WebSSH2 client - ${BANNER_STRING}`)
     config = initializeConfig()
+
+    const basicAuthCookie = getBasicAuthCookie()
+    if (basicAuthCookie) {
+      config.ssh.host = basicAuthCookie.host || config.ssh.host
+      config.ssh.port = basicAuthCookie.port || config.ssh.port
+      stateManager.setState('isBasicAuthCookiePresent', true)
+    } else {
+      stateManager.setState('isBasicAuthCookiePresent', false)
+    }
+
     config = populateFormFromUrl(config)
     await initializeDom(config) // Pass config here
     initializeTerminalAndUI()
@@ -135,7 +145,7 @@ function initializeTerminalAndUI() {
  * Connects to the server
  */
 export function connectToServer(formData = null) {
-  debug('connectToServer:')
+  debug('connectToServer')
   const { isConnecting, reauthRequired } = stateManager.getEntireState()
 
   if (isConnecting) return
@@ -143,7 +153,6 @@ export function connectToServer(formData = null) {
   if (reauthRequired) stateManager.setState('reauthRequired', false)
 
   stateManager.setState('isConnecting', true)
-  stateManager.setState('isBasicAuthCookiePresent', isBasicAuthCookiePresent())
   initializeSocketConnection()
 
   const { terminalContainer } = elements
@@ -197,14 +206,6 @@ function onDisconnect(reason, socket) {
       break
 
     case 'reauth_required':
-      if (stateManager.getState('isBasicAuthCookiePresent')) {
-        debug('onDisconnect: reauth_required: basic auth flow')
-        socket.disconnect()
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-        break
-      }
       debug('onDisconnect: reauth_required: forms auth flow')
       stateManager.setState('reauthRequired', true)
       showloginDialog()

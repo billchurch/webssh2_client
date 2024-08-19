@@ -1,7 +1,7 @@
 // client
 // client/src/js/utils.js
 import createDebug from 'debug'
-import { defaultSettings } from './terminal.js';
+import { defaultSettings } from './terminal.js'
 
 const debug = createDebug('webssh2-client:utils')
 
@@ -88,7 +88,7 @@ export function initializeConfig() {
       port: 22,
       username: null,
       password: null,
-      sshTerm: 'xterm-color',
+      sshTerm: 'xterm-color'
     },
     terminal: { ...defaultSettings },
     header: {
@@ -229,7 +229,7 @@ export function getCredentials(formData = null, terminalDimensions = {}) {
       formData?.term ||
       urlParams.get('sshTerm') ||
       config.ssh?.sshTerm ||
-      'xterm-color',
+      'xterm-color'
   }
 
   debug('getCredentials mergedConfig:', mergedConfig)
@@ -287,23 +287,33 @@ export function sanitizeObject(obj) {
 }
 
 /**
- * Checks if the 'basicauth' cookie is present and set to 'true'
- * @returns {boolean} True if the cookie is present and set to 'true', false otherwise
- */
-export function isBasicAuthCookiePresent() {
-  const cookies = document.cookie.split(';');
-  for (let i = 0; i < cookies.length; i++) {
-    const cookie = cookies[i].trim();
-    if (cookie.startsWith('basicauth=')) {
-      return cookie.substring('basicauth='.length) === 'true';
-    }
-  }
-  return false;
-}
-
-/**
  * Clears the 'basicauth' cookie
  */
 export function clearBasicAuthCookie() {
-  document.cookie = 'basicauth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  document.cookie = 'basicauth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+}
+
+/**
+ * Checks if the 'basicauth' cookie is present and returns its parsed value
+ * @returns {Object|null} The parsed cookie value or null if not present
+ */
+export function getBasicAuthCookie() {
+  const cookies = document.cookie.split(';')
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i].trim()
+    if (cookie.startsWith('basicauth=')) {
+      try {
+        return JSON.parse(
+          decodeURIComponent(cookie.substring('basicauth='.length))
+        )
+      } catch (e) {
+        console.error(
+          'getBasicAuthCookie: Failed to parse basicauth cookie:',
+          e
+        )
+        return null
+      }
+    }
+  }
+  return null
 }
