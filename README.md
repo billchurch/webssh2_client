@@ -3,7 +3,7 @@
 WebSSH2 Client is a web-based SSH client that allows users to connect to SSH servers directly from their web browsers. It's built using modern web technologies and provides a seamless, secure SSH experience.
 
 # EXPERIMENTAL
-The current status is experimental, and this first version is a refactor of webssh2 v0.2.x to be compatible with a refactor of the same version of webssh2 as a stand-alone server-side component for BIG-IP running Node.js v6.9.1.
+The current status is experimental, and this first version is a refactor of webssh2 v0.2.x to be compatible with a refactor of the same version of webssh2 as a stand-alone server-side component  running Node.js v6.9.1.
 
 The intention is to harmonize the latest release of webssh2 by splitting out the client and server as separate repos (webssh2-client and webssh2-server) but joining them both together as modules in a parent webssh2 in an attempt to provide backward compatibility.
 
@@ -82,8 +82,7 @@ window.webssh2Config = {
     text: null,  // Custom header text
     background: 'green',  // Header background color
   },
-  autoConnect: false,  // Whether to connect automatically
-  logLevel: 'info',  // Logging level ('debug', 'info', 'warn', 'error')
+  autoConnect: false  // Whether to connect automatically
 };
 ```
 
@@ -237,11 +236,6 @@ The WebSSH2 client supports various URL parameters to customize the SSH connecti
 
 - `headerBackground`: Background color for the header.
   - Example: `?headerBackground=red`
-
-### Debugging
-
-- `logLevel`: Sets the logging level for debugging purposes.
-  - Example: `?logLevel=debug`
 
 ### Usage Example
 
