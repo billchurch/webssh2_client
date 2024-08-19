@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.22](https://github.com/billchurch/webssh2_client/compare/v0.2.21...v0.2.22) (2024-08-19)
+
+
+### Features
+
+* `Switch User` or `reauth` support for HTTP Basic ([4c2b9ba](https://github.com/billchurch/webssh2_client/commit/4c2b9babf0d0857bc46af67e4eb052dfc1fd3336))
+
 ### [0.2.21](https://github.com/billchurch/webssh2_client/compare/v0.2.20...v0.2.21) (2024-08-19)
 
 
