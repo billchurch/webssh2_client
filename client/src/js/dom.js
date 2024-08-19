@@ -20,6 +20,7 @@ import { emitData, emitResize, reauth, replayCredentials } from './socket.js'
 import { downloadLog, clearLog, toggleLog } from './clientlog.js'
 
 import {
+  getLocalTerminalSettings,
   initializeSettings,
   saveTerminalSettings
 } from './settings.js'
@@ -528,6 +529,27 @@ export function showterminalSettingsDialog(config) {
   if (elements.terminalSettingsDialog) {
     populateterminalSettingsForm(config)
     elements.terminalSettingsDialog.showModal()
+  }
+}
+
+/**
+ * Populates the terminal options form with current settings.
+ * @param {Object} config - The configuration object
+ */
+function populateterminalSettingsForm(config) {
+  const settings = getLocalTerminalSettings(config)
+  debug('populateterminalSettingsForm', settings)
+  if (elements.terminalSettingsForm) {
+    Object.keys(settings).forEach((key) => {
+      const input = elements.terminalSettingsForm.elements[key]
+      if (input) {
+        if (input.type === 'checkbox') {
+          input.checked = settings[key]
+        } else {
+          input.value = settings[key]
+        }
+      }
+    })
   }
 }
 

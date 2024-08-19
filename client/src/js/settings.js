@@ -29,9 +29,10 @@ export function getLocalTerminalSettings(config = {}) {
   const storedSettings = localStorage.getItem(STORAGE_KEY)
   if (storedSettings) {
     try {
+      debug('getLocalTerminalSettings', storedSettings)
       return JSON.parse(storedSettings)
     } catch (error) {
-      debug('Error parsing stored settings:', error)
+      console.error('Error parsing stored settings:', error)
     }
   }
   return getTerminalSettings(config)
