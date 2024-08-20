@@ -234,15 +234,15 @@ The WebSSH2 client supports various URL parameters to customize the SSH connecti
 - `header`: Custom text to display in the header.
   - Example: `?header=My%20SSH%20Session`
 
-- `headerBackground`: Background color for the header.
-  - Example: `?headerBackground=red`
+- `headerbackground`: Background color for the header.
+  - Example: `?headerbackground=red`
 
 ### Usage Example
 
 A full URL with multiple parameters might look like this:
 
 ```
-http://localhost:2222/ssh/host/192.168.1.100?port=2222&header=Production%20Server&headerBackground=red&fontSize=14&bellStyle=none
+http://localhost:2222/ssh/host/192.168.1.100?port=2222&header=Production%20Server&headerbackground=red&fontSize=14&bellStyle=none
 ```
 
 This URL would connect to a SSH server at 192.168.1.100 on port 2222, with a red header displaying "Production Server", using a 14px font size and turning off the audible bell.

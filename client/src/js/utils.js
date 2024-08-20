@@ -117,16 +117,8 @@ export function populateFormFromUrl(config) {
     'host',
     'port',
     'header',
-    'headerBackground',
+    'headerbackground',
     'sshterm',
-    'cursorBlink',
-    'scrollback',
-    'tabStopWidth',
-    'bellStyle',
-    'fontSize',
-    'fontFamily',
-    'letterSpacing',
-    'lineHeight',
     'username',
     'password',
     'logLevel'
@@ -143,25 +135,10 @@ export function populateFormFromUrl(config) {
       // Handle special cases where parameters map to nested fields
       if (param === 'header') {
         params.header.text = value
-      } else if (param === 'headerBackground') {
+      } else if (param === 'headerbackground') {
         params.header.background = value
-      } else if (
-        [
-          'cursorBlink',
-          'scrollback',
-          'tabStopWidth',
-          'bellStyle',
-          'fontSize',
-          'fontFamily',
-          'letterSpacing',
-          'lineHeight'
-        ].includes(param)
-      ) {
-        // These parameters relate to terminal settings
-        params.terminal[param] = value
       } else {
         // For all other SSH-related parameters
-        params.ssh[param] = value
       }
 
       // Fill form fields if they exist
