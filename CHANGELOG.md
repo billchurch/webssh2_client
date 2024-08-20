@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.23](https://github.com/billchurch/webssh2_client/compare/v0.2.22...v0.2.23) (2024-08-20)
+
+
+### Features
+
+* introduce maskerjs to mask sensitive debug logs. ([51739f1](https://github.com/billchurch/webssh2_client/commit/51739f1a2b158d31562a841f20af1bca1945bd76))
+* reauth disables loginDialog hostInput and portInput ([063b0f1](https://github.com/billchurch/webssh2_client/commit/063b0f17664ef257db1df73395df1878748e5e90))
+
+
+### Breaking Changes
+
+* changed case of `sshTerm` to `sshterm` to eliminate usability concerns for entering url parameters ([bf9ec2b](https://github.com/billchurch/webssh2_client/commit/bf9ec2be7712ca8d5f3a6f14c4efb128ff6c495b))
+
 ### [0.2.22](https://github.com/billchurch/webssh2_client/compare/v0.2.21...v0.2.22) (2024-08-19)
 
 
