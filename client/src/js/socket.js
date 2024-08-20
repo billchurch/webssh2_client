@@ -13,6 +13,7 @@ import { getCredentials } from './utils.js'
 import { getTerminalDimensions } from './terminal.js'
 import { state } from './state.js'
 import { toggleLog } from './clientlog.js'
+import maskObject from 'jsmasker';
 
 const debug = createDebug('webssh2-client:socket')
 
@@ -133,7 +134,8 @@ function authenticate(formData = null) {
   const terminalDimensions = getTerminalDimensions()
   const credentials = getCredentials(formData, terminalDimensions)
   state.term = credentials.term
-  debug('authenticate', credentials)
+  const maskedContent = maskObject(credentials)
+  debug('authenticate', maskedContent)
   if (credentials.host && credentials.username) {
     socket.emit('authenticate', credentials)
     updateElement('status', 'Authenticating...', 'orange')
