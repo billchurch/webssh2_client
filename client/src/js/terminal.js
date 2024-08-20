@@ -7,7 +7,7 @@ import createDebug from 'debug'
 import { validateNumber, validateBellStyle } from './utils.js'
 import { emitData } from './socket.js'
 import { getStoredSettings } from './settings.js'
-import { setTerminalInstance } from './dom.js'
+import { setTerminalInstance, focusTerminal as domFocusTerminal } from './dom.js'
 
 const debug = createDebug('webssh2-client:terminal')
 

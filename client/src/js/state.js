@@ -17,19 +17,9 @@ const initialState = {
   term: null
 };
 
-const state = new Proxy(initialState, {
-  get: (target, property) => {
-    debug('getState', { [property]: target[property] });
-    return target[property];
-  },
-  set: (target, property, value) => {
-    debug('setState', { [property]: value });
-    target[property] = value;
-    return true;
-  }
-});
+export const state = { ...initialState };
 
-function toggleState(key) {
+export function toggleState(key) {
   if (typeof state[key] === 'boolean') {
     state[key] = !state[key];
     debug('toggleState', { [key]: state[key] });
@@ -37,6 +27,3 @@ function toggleState(key) {
   }
   throw new Error(`Cannot toggle non-boolean state: ${key}`);
 }
-
-
-export { state, toggleState };
