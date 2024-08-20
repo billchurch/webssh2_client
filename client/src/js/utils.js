@@ -88,7 +88,7 @@ export function initializeConfig() {
       port: 22,
       username: null,
       password: null,
-      sshTerm: 'xterm-color'
+      sshterm: 'xterm-color'
     },
     terminal: { ...defaultSettings },
     header: {
@@ -118,7 +118,7 @@ export function populateFormFromUrl(config) {
     'port',
     'header',
     'headerBackground',
-    'sshTerm',
+    'sshterm',
     'cursorBlink',
     'scrollback',
     'tabStopWidth',
@@ -227,8 +227,8 @@ export function getCredentials(formData = null, terminalDimensions = {}) {
       '',
     term:
       formData?.term ||
-      urlParams.get('sshTerm') ||
-      config.ssh?.sshTerm ||
+      urlParams.get('sshterm') ||
+      config.ssh?.sshterm ||
       'xterm-color'
   }
 

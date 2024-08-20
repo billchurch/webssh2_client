@@ -75,7 +75,7 @@ window.webssh2Config = {
     port: 22,  // SSH server port
     username: null,  // SSH username (required for autoConnect)
     password: null,  // SSH password (required for autoConnect)
-    sshTerm: 'xterm-color',  // Terminal type
+    sshterm: 'xterm-color',  // Terminal type
     readyTimeout: 20000,  // SSH connection timeout (ms)
   },
   header: {
