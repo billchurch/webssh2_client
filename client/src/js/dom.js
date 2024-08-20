@@ -25,6 +25,8 @@ import {
   saveTerminalSettings
 } from './settings.js'
 
+import stateManager from './state.js'
+
 import {
   getTerminalSettings,
   applyTerminalSettings,
@@ -219,15 +221,26 @@ export function showErrorDialog(message) {
 }
 
 /**
- * Shows the login modal
+ * Shows the login modal and handles field disabling for reauthentication
  */
 export function showloginDialog() {
   debug('showloginDialog')
-  const { loginDialog, terminalContainer, passwordInput } = elements
+  const { loginDialog, terminalContainer, usernameInput, passwordInput } =
+    elements
+  const isReauthRequired = stateManager.getState('reauthRequired')
+
   loginDialog.show()
   toggleVisibility(terminalContainer, true)
   if (passwordInput) passwordInput.value = ''
+
+  if (isReauthRequired) {
+    if (passwordInput) usernameInput.value = ''
+
+    toggleLoginFields(isReauthRequired)
+
+  }
   focusAppropriateInput()
+
 }
 
 /**
@@ -368,24 +381,37 @@ export function updateUIVisibility(permissions) {
 }
 
 /**
-/**
  * Focuses on the appropriate input field in the login form
  */
 function focusAppropriateInput() {
   debug('focusAppropriateInput')
   const { hostInput, usernameInput, passwordInput, portInput } = elements
+  const isReauthRequired = stateManager.getState('reauthRequired')
 
-  if (hostInput.value) {
-    if (usernameInput.value) {
-      passwordInput.focus()
+  if (isReauthRequired) {
+    // For reauthentication
+    if (!usernameInput.value) {
+      usernameInput.focus()
       return
     }
+    passwordInput.focus()
+    return
+  }
+
+  // For new connection
+  if (!hostInput.value) {
+    hostInput.focus()
+    return
+  }
+
+  if (!usernameInput.value) {
     if (portInput.value) {
       usernameInput.focus()
       return
     }
   }
-  hostInput.focus()
+
+  passwordInput.focus()
 }
 
 /**
@@ -676,4 +702,21 @@ export function focusTerminal() {
   } else {
     console.error('openTerminal: Terminal not available')
   }
+}
+
+/**
+ * Toggles the enabled state of host and port input fields
+ * @param {boolean} state - Whether reauthentication is required
+ */
+function toggleLoginFields(state) {
+  const { hostInput, portInput } = elements
+
+  if (hostInput) hostInput.disabled = state
+  if (portInput) portInput.disabled = state
+
+  debug(
+    `toggleLoginFields: ${state ? 'disabled' : 'enabled'} for ${
+      state ? 're-authentication' : 'new connection'
+    }`
+  )
 }

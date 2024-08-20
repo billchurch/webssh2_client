@@ -150,7 +150,10 @@ export function connectToServer(formData = null) {
 
   if (isConnecting) return
 
-  if (reauthRequired) stateManager.setState('reauthRequired', false)
+  if (reauthRequired) {
+    stateManager.setState('reauthRequired', false)
+    resetTerminal()
+  }
 
   stateManager.setState('isConnecting', true)
   initializeSocketConnection()
@@ -249,7 +252,10 @@ function commonPostDisconnectTasks() {
   }
 
   resetApplication()
-  if (stateManager.getState('allowReconnect') && !stateManager.getState('isBasicAuthCookiePresent')) {
+  if (
+    stateManager.getState('allowReconnect') &&
+    !stateManager.getState('isBasicAuthCookiePresent')
+  ) {
     showReconnectBtn(reconnectToServer)
   }
 }
