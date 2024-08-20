@@ -11,7 +11,7 @@ import {
 } from './dom.js'
 import { getCredentials } from './utils.js'
 import { getTerminalDimensions } from './terminal.js'
-import stateManager from './state.js'
+import { state } from './state.js'
 import { toggleLog } from './clientlog.js'
 
 const debug = createDebug('webssh2-client:socket')
@@ -102,7 +102,7 @@ export function initSocket(
  * Initiates a reauthentication session.
  */
 export function reauth() {
-  if (stateManager.getState('allowReauth')) {
+  if (state.allowReauth) {
     debug('reauth')
     socket.emit('control', 'reauth')
   } else {
@@ -115,7 +115,7 @@ export function reauth() {
  * Replays credentials to the server.
  */
 export function replayCredentials() {
-  const allowReplay = stateManager.getState('allowReplay')
+  const allowReplay = state.allowReplay
   if (allowReplay) {
     debug('replayCredentials')
     socket.emit('control', 'replayCredentials')
@@ -132,7 +132,7 @@ export function replayCredentials() {
 function authenticate(formData = null) {
   const terminalDimensions = getTerminalDimensions()
   const credentials = getCredentials(formData, terminalDimensions)
-  stateManager.setState('term', credentials.term)
+  state.term = credentials.term
   debug('authenticate', credentials)
   if (credentials.host && credentials.username) {
     socket.emit('authenticate', credentials)
@@ -149,7 +149,7 @@ function authenticate(formData = null) {
  */
 function getTerminal() {
   const { cols, rows } = getTerminalDimensions()
-  const term = stateManager.getState('term')
+  const term = state.term
   const terminal = { cols, rows, term }
   debug('getTerminal', terminal)
   if (socket) {
@@ -197,7 +197,7 @@ function getWebSocketUrl() {
  */
 function authResult(result) {
   debug('authResult', result)
-  stateManager.setState('isConnecting', false)
+  state.isConnecting = false
   if (result.success) {
     updateElement('status', 'Connected', 'green')
     if (focusTerminalCallback) {
@@ -217,7 +217,7 @@ function authResult(result) {
 function connect() {
   debug('connect: Connected to server')
   // term cols/rows
-  stateManager.setState('isConnecting', false)
+  state.isConnecting = false
   updateElement('status', 'Connected', 'green')
 
   resize()
@@ -257,7 +257,7 @@ function data(data) {
  */
 function disconnect(reason) {
   debug('disconnect', reason)
-  stateManager.setState('isConnecting', false)
+  state.isConnecting = false
   updateElement('status', `WEBSOCKET SERVER DISCONNECTED: ${reason}`, 'red')
 
   if (onDisconnectCallback) {
@@ -294,17 +294,17 @@ function permissions(permissions) {
     },
 
     allowReauth: (value) => {
-      stateManager.setState('allowReauth', value)
+      state.allowReauth = value
 
       updateUIVisibility({ allowReauth: value })
     },
 
     allowReconnect: (value) => {
-      stateManager.setState('allowReconnect', value)
+      state.allowReconnect = value
     },
 
     allowReplay: (value) => {
-      stateManager.setState('allowReplay', value)
+      state.allowReplay = value
 
       updateUIVisibility({ allowReplay: value })
     }

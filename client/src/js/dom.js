@@ -25,7 +25,7 @@ import {
   saveTerminalSettings
 } from './settings.js'
 
-import stateManager from './state.js'
+import { state } from './state.js'
 
 import {
   getTerminalSettings,
@@ -227,7 +227,7 @@ export function showloginDialog() {
   debug('showloginDialog')
   const { loginDialog, terminalContainer, usernameInput, passwordInput } =
     elements
-  const isReauthRequired = stateManager.getState('reauthRequired')
+  const isReauthRequired = state.reauthRequired
 
   loginDialog.show()
   toggleVisibility(terminalContainer, true)
@@ -237,10 +237,8 @@ export function showloginDialog() {
     if (passwordInput) usernameInput.value = ''
 
     toggleLoginFields(isReauthRequired)
-
   }
   focusAppropriateInput()
-
 }
 
 /**
@@ -386,7 +384,7 @@ export function updateUIVisibility(permissions) {
 function focusAppropriateInput() {
   debug('focusAppropriateInput')
   const { hostInput, usernameInput, passwordInput, portInput } = elements
-  const isReauthRequired = stateManager.getState('reauthRequired')
+  const isReauthRequired = state.reauthRequired
 
   if (isReauthRequired) {
     // For reauthentication

@@ -34,7 +34,7 @@ import {
 
 import { applyStoredSettings } from './settings.js'
 
-import stateManager from './state.js'
+import { state } from './state.js'
 
 import {
   initializeConfig,
@@ -89,9 +89,9 @@ async function initialize() {
     if (basicAuthCookie) {
       config.ssh.host = basicAuthCookie.host || config.ssh.host
       config.ssh.port = basicAuthCookie.port || config.ssh.port
-      stateManager.setState('isBasicAuthCookiePresent', true)
+      state.isBasicAuthCookiePresent = true
     } else {
-      stateManager.setState('isBasicAuthCookiePresent', false)
+      state.isBasicAuthCookiePresent = false
     }
 
     config = populateFormFromUrl(config)
@@ -146,16 +146,16 @@ function initializeTerminalAndUI() {
  */
 export function connectToServer(formData = null) {
   debug('connectToServer')
-  const { isConnecting, reauthRequired } = stateManager.getEntireState()
+  const { isConnecting, reauthRequired } = state
 
   if (isConnecting) return
 
   if (reauthRequired) {
-    stateManager.setState('reauthRequired', false)
+    state.reauthRequired = false
     resetTerminal()
   }
 
-  stateManager.setState('isConnecting', true)
+  state.isConnecting = true
   initializeSocketConnection()
 
   const { terminalContainer } = elements
@@ -184,8 +184,8 @@ function onConnect() {
   hideErrorDialog()
 
   // Reset session log settings
-  stateManager.setState('sessionLogEnable', false)
-  stateManager.setState('loggedData', false)
+  state.sessionLogEnable = false
+  state.loggedData = false
   updatestartLogBtnState(false)
 
   debug('onConnect: Successfully connected to the server')
@@ -198,7 +198,7 @@ function onConnect() {
  * @returns {void}
  */
 function onDisconnect(reason, socket) {
-  const reauthRequired = stateManager.getState('reauthRequired')
+  const reauthRequired = state.reauthRequired
 
   debug('onDisconnect:', reason)
 
@@ -210,7 +210,7 @@ function onDisconnect(reason, socket) {
 
     case 'reauth_required':
       debug('onDisconnect: reauth_required: forms auth flow')
-      stateManager.setState('reauthRequired', true)
+      state.reauthRequired = true
       showloginDialog()
       break
 
@@ -222,7 +222,7 @@ function onDisconnect(reason, socket) {
     case 'ssh_error':
       if (reauthRequired) {
         debug('Ignoring error due to prior reauth_required')
-        stateManager.setState('reauthRequired', false)
+        state.reauthRequired = false
       } else {
         showErrorDialog(`SSH error: ${reason}`)
         commonPostDisconnectTasks()
@@ -240,9 +240,9 @@ function onDisconnect(reason, socket) {
  * @function commonPostDisconnectTasks
  */
 function commonPostDisconnectTasks() {
-  const sessionLogEnable = stateManager.getState('sessionLogEnable')
+  const sessionLogEnable = state.sessionLogEnable
 
-  stateManager.setState('isConnecting', false)
+  state.isConnecting = false
 
   if (sessionLogEnable) {
     const autoDownload = window.confirm(
@@ -253,8 +253,8 @@ function commonPostDisconnectTasks() {
 
   resetApplication()
   if (
-    stateManager.getState('allowReconnect') &&
-    !stateManager.getState('isBasicAuthCookiePresent')
+    state.allowReconnect &&
+    !state.isBasicAuthCookiePresent
   ) {
     showReconnectBtn(reconnectToServer)
   }
@@ -266,7 +266,7 @@ function commonPostDisconnectTasks() {
  * @param {string} data - The data received from the server.
  */
 function onData(data) {
-  const sessionLogEnable = stateManager.getState('sessionLogEnable')
+  const sessionLogEnable = state.sessionLogEnable
   if (sessionLogEnable) {
     addToSessionLog(data)
   }
@@ -280,7 +280,7 @@ function onData(data) {
  */
 export function handleError(message, error) {
   console.error('Error:', message, error)
-  stateManager.setState('isConnecting', false)
+  state.isConnecting = false
   updateElement('status', `Error: ${message}`, 'red')
   showErrorDialog(message)
   // showReconnectBtn()
@@ -290,7 +290,7 @@ export function handleError(message, error) {
  * Resets the application by disabling session log, updating log button state, and resetting the terminal.
  */
 function resetApplication() {
-  stateManager.setState('sessionLogEnable', false)
+  state.sessionLogEnable = false
   updatestartLogBtnState(false)
 }
 
@@ -298,7 +298,7 @@ function resetApplication() {
  * Reconnects to the server.
  */
 function reconnectToServer() {
-  const isConnecting = stateManager.getState('isConnecting')
+  const isConnecting = state.isConnecting
   if (isConnecting) {
     debug('Reconnection already in progress')
     return

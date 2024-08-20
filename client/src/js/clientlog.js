@@ -3,10 +3,14 @@
 
 import createDebug from 'debug'
 import { sessionFooter, handleError } from '.'
-import { updatestartLogBtnState, toggleDownloadLogBtn, triggerDownload } from './dom'
+import {
+  updatestartLogBtnState,
+  toggleDownloadLogBtn,
+  triggerDownload
+} from './dom'
 import { focusTerminal } from './terminal'
 import { formatDate, sanitizeHtml } from './utils'
-import stateManager from './state.js'
+import { state, toggleState } from './state.js'
 
 const debug = createDebug('webssh2-client:clientlog')
 
@@ -36,7 +40,7 @@ export function addToSessionLog(data) {
  */
 export function clearLog(autoDownload = false) {
   const sessionLog = window.localStorage.getItem(LOG_KEY)
-  const loggedData = stateManager.getState('loggedData')
+  const loggedData = state.loggedData
 
   const deleteLog = window.confirm('Clear the session log?')
 
@@ -87,16 +91,16 @@ export function toggleLog(forceEnable) {
 
   if (typeof forceEnable === 'boolean') {
     sessionLogEnable = forceEnable
-    stateManager.setState('sessionLogEnable', sessionLogEnable)
+    state.sessionLogEnable = sessionLogEnable
   } else {
-    sessionLogEnable = stateManager.toggleState('sessionLogEnable')
+    sessionLogEnable = toggleState('sessionLogEnable')
   }
 
-  const { loggedData } = stateManager.getEntireState()
+  const { loggedData } = state
 
   if (sessionLogEnable) {
     debug('Starting log')
-    stateManager.setState('loggedData', true)
+    state.loggedData = true
     updatestartLogBtnState(true)
     const logStartMessage = `Log Start for ${sessionFooter} - ${formatDate(new Date())}\r\n\r\n`
     addToSessionLog(logStartMessage)
@@ -120,24 +124,24 @@ export function toggleLog(forceEnable) {
  * @param {boolean} [autoDownload=false] - Whether to automatically download the log.
  */
 export function downloadLog(autoDownload = false) {
-  const sessionLog = window.localStorage.getItem(LOG_KEY);
-  const loggedData = stateManager.getState('loggedData');
+  const sessionLog = window.localStorage.getItem(LOG_KEY)
+  const loggedData = state.loggedData
 
   if (sessionLog && loggedData) {
-    const filename = `WebSSH2-${formatDate(new Date()).replace(/[/:\s@]/g, '')}.log`;
-    const cleanLog = sanitizeHtml(sessionLog);
-    const blob = new Blob([cleanLog], { type: 'text/plain' });
+    const filename = `WebSSH2-${formatDate(new Date()).replace(/[/:\s@]/g, '')}.log`
+    const cleanLog = sanitizeHtml(sessionLog)
+    const blob = new Blob([cleanLog], { type: 'text/plain' })
 
     if (autoDownload) {
-      triggerDownload(blob, filename);
+      triggerDownload(blob, filename)
     } else {
       try {
-        window.localStorage.setItem(LOG_KEY, cleanLog);
-        window.localStorage.setItem(LOG_DATE_KEY, new Date().toISOString());
-        debug('Session log saved to localStorage');
+        window.localStorage.setItem(LOG_KEY, cleanLog)
+        window.localStorage.setItem(LOG_DATE_KEY, new Date().toISOString())
+        debug('Session log saved to localStorage')
       } catch (e) {
-        handleError('Failed to save session log to localStorage:', e);
-        triggerDownload(blob, filename); // Fallback to download if saving fails
+        handleError('Failed to save session log to localStorage:', e)
+        triggerDownload(blob, filename) // Fallback to download if saving fails
       }
     }
   }
