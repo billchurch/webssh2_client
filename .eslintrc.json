@@ -1,5 +1,9 @@
 {
-  "extends": ["airbnb", "plugin:prettier/recommended", "plugin:node/recommended"],
+  "extends": [
+    "airbnb-base",
+    "plugin:prettier/recommended",
+    "plugin:node/recommended"
+  ],
   "plugins": ["prettier"],
   "rules": {
     "prettier/prettier": "error",
@@ -12,5 +16,4 @@
     "space-before-function-paren": "off"
   },
   "ignores": ["scripts/*", "client/public/*.js"]
-
 }
