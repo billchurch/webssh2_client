@@ -1,5 +1,7 @@
 # WebSSH2 Client
 
+![Orthrus Mascot](images/orthrus2.png)
+
 WebSSH2 Client is a web-based SSH client that allows users to connect to SSH servers directly from their web browsers. It's built using modern web technologies and provides a seamless, secure SSH experience.
 
 # EXPERIMENTAL
