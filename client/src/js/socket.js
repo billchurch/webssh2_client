@@ -4,8 +4,10 @@
 import io from 'socket.io-client'
 import createDebug from 'debug'
 import {
+  hidePromptDialog,
   resize,
   showErrorDialog,
+  showPromptDialog,
   updateElement,
   updateUIVisibility
 } from './dom.js'
@@ -13,7 +15,7 @@ import { getCredentials } from './utils.js'
 import { getTerminalDimensions } from './terminal.js'
 import { state } from './state.js'
 import { toggleLog } from './clientlog.js'
-import maskObject from 'jsmasker';
+import maskObject from 'jsmasker'
 
 const debug = createDebug('webssh2-client:socket')
 
@@ -320,6 +322,20 @@ function permissions(permissions) {
 }
 
 /**
+ * Handles the keyboard-interactive authentication request from the server.
+ * @param {Object} data - The data object containing prompt information.
+ */
+function handleKeyboardInteractive(data) {
+  debug('handleKeyboardInteractive', data);
+  showPromptDialog(data, (responses) => {
+    socket.emit('authentication', {
+      action: 'keyboard-interactive',
+      responses: responses
+    });
+  });
+}
+
+/**
  * Handles SSH errors from the server
  * @param {string} error - The SSH error message
  */
@@ -346,6 +362,10 @@ function authentication(data) {
 
     case 'auth_result':
       authResult(data)
+      break
+
+    case 'keyboard-interactive':
+      handleKeyboardInteractive(data)
       break
 
     case 'reauth':

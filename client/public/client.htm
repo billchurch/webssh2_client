@@ -1,4 +1,4 @@
-<!-- Version Version 0.2.23 - 2024-08-20T19:53:23.126Z - 497b274 -->
+<!-- Version Version 0.2.23 - 2024-08-22T09:32:09.865Z - 42b12db -->
 <!-- webssh2-client -->
 <!-- /client/src/client.htm -->
 <!DOCTYPE html>
@@ -7,7 +7,7 @@
     <title>WebSSH2</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script>
-      window.webssh2Config = null;
+      window.webssh2Config = {"socket":{"url":"http://localhost:2222","path":"/ssh/socket.io"},"ssh":{"port":22}};
     </script>
   <script defer src="webssh2.bundle.js"></script><link href="webssh2.css" rel="stylesheet"></head>
   <body>
@@ -38,6 +38,16 @@
         <p id="errorMessage"></p>
       </div>
     </dialog>
+<dialog id="promptDialog" class="modal">
+  <div class="modal-content prompt-modal">
+    <button autofocus class="close-button">&times;</button>
+    <h2 id="promptMessage"></h2>
+    <form>
+      <div id="promptInputContainer"></div>
+      <button type="submit" class="pure-button pure-button-primary">Submit</button>
+    </form>
+  </div>
+</dialog>
     <dialog id="terminalSettingsDialog" class="modal">
       <div class="modal-content">
         <h2>Terminal Settings</h2>

@@ -48,6 +48,16 @@ export function hideErrorDialog() {
 }
 
 /**
+ * Closes the prompt modal.
+ */
+export function hidePromptDialog() {
+  const { promptDialog } = elements
+  if (promptDialog) {
+    promptDialog.close()
+  }
+}
+
+/**
  * Fills the login form with the provided SSH configuration.
  *
  * @param {Object} sshConfig - The SSH configuration object.
@@ -107,6 +117,8 @@ export function initializeElements() {
     'loginForm',
     'passwordInput',
     'portInput',
+    'promptDialog',
+    'promptMessage',
     'reauthBtn',
     'reauthBtn',
     'reconnectButton',
@@ -124,7 +136,12 @@ export function initializeElements() {
   ]
 
   // Define critical elements that must be present
-  const criticalElements = ['terminalContainer', 'loginForm', 'errorDialog']
+  const criticalElements = [
+    'terminalContainer',
+    'loginForm',
+    'errorDialog',
+    'promptDialog'
+  ]
 
   elements = {}
 
@@ -154,6 +171,15 @@ export function initializeElements() {
           elements.reconnectButton.focus()
         }
       })
+    }
+  }
+
+  if (elements.promptDialog) {
+    const closeBtn = elements.promptDialog.querySelector('.close-button')
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        hidePromptDialog()
+      }
     }
   }
   return elements
@@ -217,6 +243,55 @@ export function showErrorDialog(message) {
     updateElement('status', 'ERROR', 'red')
   } else {
     console.error('Error modal or error message element not found')
+  }
+}
+
+// Update the showPromptDialog function
+/**
+ * Shows the prompt dialog for keyboard-interactive authentication.
+ * @param {Object} data - The data object containing prompt information.
+ * @param {Function} callback - The function to call with the user's responses.
+ */
+export function showPromptDialog(data, callback) {
+  const { promptDialog, promptMessage } = elements
+  const form = promptDialog.querySelector('form')
+  const inputContainer = form.querySelector('#promptInputContainer')
+
+  if (promptMessage && promptDialog) {
+    debug('Prompt dialog shown', data)
+    promptMessage.textContent = data.name || 'Authentication Required'
+
+    // Clear previous inputs
+    inputContainer.innerHTML = ''
+
+    // Create input fields for each prompt
+    data.prompts.forEach((prompt, index) => {
+      const label = document.createElement('label')
+      label.textContent = prompt.prompt
+
+      const input = document.createElement('input')
+      input.type = prompt.echo ? 'text' : 'password'
+      input.required = true
+      input.id = `promptInput${index}`
+
+      inputContainer.appendChild(label)
+      inputContainer.appendChild(input)
+    })
+
+    form.onsubmit = (e) => {
+      debug('showPromptDialog: form.onsubmit')
+      e.preventDefault()
+      const responses = data.prompts.map(
+        (_, index) => document.getElementById(`promptInput${index}`).value
+      )
+      hidePromptDialog()
+      callback(responses)
+    }
+
+    promptDialog.showModal()
+    updateElement('status', 'RESPONSE REQUIRED', 'orange')
+  } else {
+    console.error('Prompt modal or prompt message element not found')
   }
 }
 
