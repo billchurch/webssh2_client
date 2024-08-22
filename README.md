@@ -1,8 +1,10 @@
-# WebSSH2 Client
+# WebSSH2 Client - Web SSH Client
 
-![Orthrus Mascot](images/orthrus2.png)
+![Orthrus Mascot](images/orthrus.png)
 
-WebSSH2 Client is a web-based SSH client that allows users to connect to SSH servers directly from their web browsers. It's built using modern web technologies and provides a seamless, secure SSH experience.
+WebSSH2 Client is an HTML5 web-based terminal emulator and SSH client. It uses WebSockets to communicate with a WebSSH2 server, which in turn uses SSH2 to connect to SSH servers.
+
+![WebSSH2 demo](https://user-images.githubusercontent.com/1668075/182425293-acc8741e-cc92-4105-afdc-9538e1685d4b.gif)
 
 # EXPERIMENTAL
 The current status is experimental, and this first version is a refactor of webssh2 v0.2.x to be compatible with a refactor of the same version of webssh2 as a stand-alone server-side component  running Node.js v6.9.1.
@@ -11,29 +13,31 @@ The intention is to harmonize the latest release of webssh2 by splitting out the
 
 The main idea behind bifurcating the client/server is to make it easier to customize the client to work in other frameworks and use cases.
 
-## Features
+## Table of Contents
 
-- Web-based SSH terminal emulation
-- Secure authentication
-- Customizable terminal options
-- Session logging
-- Responsive design
-- Support for reconnection and reauthentication
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Features](#features)
+- [Routes](#routes)
+- [Development](#development)
+- [Advanced Configuration](#advanced-configuration)
+- [Support](#support)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
 
-## Technology Stack
+## Requirements
 
-- Node.js (v18+)
-- Socket.IO for real-time communication
-- Xterm.js for terminal emulation
-- Webpack for bundling
-- ES6+ JavaScript
+- Modern web browser with JavaScript enabled
+- WebSSH2 server (see server README for setup instructions)
 
 ## Installation
 
 1. Clone the repository:
    ```
-   git clone https://github.com/billchurch/webssh2-client.git
-   cd webssh2-client
+   git clone https://github.com/billchurch/webssh2_client.git
+   cd webssh2_client
    ```
 
 2. Install dependencies:
@@ -46,11 +50,67 @@ The main idea behind bifurcating the client/server is to make it easier to custo
    npm run build
    ```
 
-## WebSSH2 Configuration
+4. The built client files will be in the `client/public` directory.
 
-The WebSSH2 client can be customized using the `window.webssh2Config` object. This object is typically injected by the WebSSH2 server, but users can also manually set or modify it for customization purposes.
+## Usage
 
-### Basic Usage
+1. Set up and start the WebSSH2 server (see server README for instructions).
+
+2. Access the web client by navigating to the server's URL, typically:
+   ```
+   http://localhost:2222/ssh
+   ```
+
+3. You'll be prompted for host details and SSH credentials.
+
+## Configuration
+
+The client can be configured using URL parameters or through the config file on the server. Some configurable options include:
+
+- `port` - SSH server port (default: 22)
+- `header` - Optional header text
+- `headerBackground` - Optional header background color
+- `sshterm` - Terminal type for pty (default: xterm-color)
+
+For a full list of configuration options, refer to the server README.
+
+## Features
+
+- Web-based SSH client with xterm.js terminal emulation
+- Supports various SSH authentication methods (password and keyboard-interactive)
+- Customizable terminal settings (font size, font family, colors, etc.)
+- Session logging with download option
+- Support for reauthentication and credential replay
+- Responsive design for various screen sizes
+- Keyboard shortcuts support
+- Terminal Mouse support
+- Copy and paste functionality
+- Multi-factor authentication support
+- CORS support for flexible server setups
+
+## Routes
+
+The WebSSH2 Server (not provided by this package) provides two main routes:
+
+### 1. `/ssh`
+
+- Interactive login form
+- Terminal configuration options
+
+### 2. `/ssh/host/:host`
+
+- Quick connections to specific hosts
+- Optional `port` parameter (e.g., `?port=2222`)
+- HTTP Basic Authentication for credentials
+
+## Development
+
+- To add custom JavaScript, modify `./src/client.htm`, `./src/index.js`, or add your file to `webpack.*.js`.
+- For security, use HTTPS when transmitting credentials via HTTP Basic Auth.
+- Terminal settings can be customized after login via `Menu | Settings` and persist across sessions.
+- Debug mode can be enabled by setting the `DEBUG` environment variable.
+
+## Advanced Configuration 
 
 In the client HTML file, you'll find this script tag:
 
@@ -145,231 +205,12 @@ When `autoConnect` is not used, ensure your server is configured to prompt for o
 
 By leveraging these configuration options, you can customize the WebSSH2 client to suit your needs or integrate it seamlessly into your existing systems. Remember that the server handles authentication, providing flexibility in managing and securing credentials.
 
-## Usage
+## Support
 
-### Development
+If you find this project helpful, you can support the developer:
 
-To start the development server:
+[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/billchurch)
 
-```
-npm start
-```
-
-This will run the application using `node index.js`.
-
-To build the development version:
-
-```
-npm run builddev
-```
-
-This will use Webpack to build the development version of the application.
-
-To watch for changes and rebuild automatically:
-
-```
-npm run watch
-```
-
-This will start the server and watch for file changes, rebuilding as necessary.
-
-### Production Build
-
-To create a production build:
-
-```
-npm run build
-```
-
-This will generate optimized files for production using Webpack.
-
-### Analyze Bundle
-
-To analyze the bundle size:
-
-```
-npm run analyze
-```
-
-This will generate a JSON report of the bundle and analyze its size.
-
-### Publishing
-
-Before publishing, the package will automatically run the build script:
-
-```
-npm publish
-```
-
-This ensures that the latest production build is included in the published package.
-
-## Scripts
-
-- `start`: Runs the application using Node.js
-- `build`: Creates a production build using Webpack
-- `builddev`: Creates a development build using Webpack
-- `analyze`: Analyzes the bundle size
-- `watch`: Runs the application and watches for changes, rebuilding as necessary
-- `watch:build`: Watches for changes and rebuilds using Webpack (development config)
-- `prepublishOnly`: Runs before publishing to ensure the latest build is included
-
-## URL Parameters
-
-The WebSSH2 client supports various URL parameters to customize the SSH connection and terminal behavior. These parameters can be added to the URL when accessing the client.
-
-### SSH Connection Parameters
-
-- `host`: The hostname or IP address of the SSH server to which to connect.
-  - Example: `?host=192.168.1.1`
-
-- `port`: The port number of the SSH server (default is 22).
-  - Example: `?port=2222`
-
-- `username`: The username to use for SSH authentication.
-  - Example: `?username=admin`
-
-- `password`: The password for SSH authentication (not recommended for production use).
-  - Example: `?password=secretpassword`
-
-### UI Customization
-
-- `header`: Custom text to display in the header.
-  - Example: `?header=My%20SSH%20Session`
-
-- `headerbackground`: Background color for the header.
-  - Example: `?headerbackground=red`
-
-### Usage Example
-
-A full URL with multiple parameters might look like this:
-
-```
-http://localhost:2222/ssh/host/192.168.1.100?port=2222&header=Production%20Server&headerbackground=red&fontSize=14&bellStyle=none
-```
-
-This URL would connect to a SSH server at 192.168.1.100 on port 2222, with a red header displaying "Production Server", using a 14px font size and turning off the audible bell.
-
-Note: Be cautious about including sensitive information like passwords in URL parameters, especially in production environments.
-
-## Terminal Configuration
-
-WebSSH2 Client allows users to customize their terminal experience through a set of configurable options. These settings are stored in the browser's localStorage under the key `webssh2.settings.global`, ensuring your preferences persist across sessions.
-
-### Accessing Terminal Settings
-
-You can access the terminal configuration in two ways:
-
-1. **From an Active Session:**
-   - Click on the menu icon (☰) in the bottom-left corner of the terminal.
-   - Select "Settings" from the dropdown menu.
-
-2. **During Login:**
-   - In the login dialog, click on the gear icon (⚙️) next to the "Connect" button.
-
-### Available Settings
-
-The terminal settings dialog offers the following customization options:
-
-1. **Font Size**
-   - Range: 8-72 pixels
-   - Adjusts the size of the text in the terminal.
-
-2. **Font Family**
-   - Specifies the font used in the terminal.
-   - Example: "Courier New, monospace"
-
-3. **Cursor Blink**
-   - Options: On / Off
-   - Determines whether the cursor blinks in the terminal.
-
-4. **Scrollback**
-   - Range: 1-200000 lines
-   - Sets the number of lines kept in the terminal's scrollback buffer.
-
-5. **Tab Stop Width**
-   - Range: 1-100 spaces
-   - Defines the width of tab stops in the terminal.
-
-6. **Bell Style**
-   - Options: Sound / None
-   - Configures the audible bell behavior in the terminal.
-
-### Applying Settings
-
-After adjusting your preferences:
-
-1. Click "Save" to apply the new settings.
-2. The changes will take effect immediately for the current session and all future sessions.
-3. Click "Cancel" to close the dialog without saving changes.
-
-### Resetting to Defaults
-
-To reset all settings to their default values:
-
-1. Clear your browser's localStorage for the WebSSH2 Client site.
-2. Refresh the page.
-
-### Note on Persistence
-
-These settings are stored locally in your browser. If you use WebSSH2 Client on a different device or browser, you'll need to reconfigure your preferences.
-
-## Keyboard-Interactive Authentication
-
-WebSSH2 Client supports keyboard-interactive authentication, which allows for more complex authentication scenarios beyond simple password-based authentication. This feature is particularly useful for systems that require multi-factor authentication or challenge-response mechanisms.
-
-### How it Works
-
-1. When the SSH server requests keyboard-interactive authentication, the WebSSH2 Client will display a prompt dialog to the user.
-2. The prompt dialog will show the message sent by the SSH server, which typically includes instructions or questions for the user.
-3. Users can enter their response in the provided input field.
-4. After submitting the response, the client sends it back to the SSH server.
-5. This process may repeat multiple times if the SSH server requires additional information.
-
-### Features
-
-- **Dynamic Prompts**: The content of the prompt dialog is determined by the SSH server, allowing for flexible authentication flows.
-- **Multi-Step Authentication**: Supports multiple rounds of prompts for sophisticated authentication processes.
-- **Seamless Integration**: The prompt appears within the web interface, providing a smooth user experience.
-
-### Security Considerations
-
-- The keyboard-interactive method is more secure than hardcoded passwords, as it allows for dynamic and potentially multi-factor authentication.
-- All communication between the client and server remains encrypted, ensuring the security of sensitive information.
-- Users should always verify that they're connected to the intended server before entering any authentication information.
-
-### Configuration
-
-No additional client-side configuration is needed to use keyboard-interactive authentication. The feature is automatically engaged when the SSH server requests it.
-
-### Limitations
-
-- The appearance and behavior of the prompt are standardized and cannot be customized by the SSH server beyond the prompt message.
-
-For more information on SSH keyboard-interactive authentication, refer to [RFC 4256](https://tools.ietf.org/html/rfc4256).
-
-## Debugging
-
-This project uses the `debug` module for logging. To enable debugging in the browser:
-
-1. Open the browser's console.
-2. Enter: `localStorage.debug = 'webssh2-client*'`
-3. Refresh the page.
-
-To turn off debugging, enter: `localStorage.debug = ''`
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## Style Guide
-
-This project follows the Airbnb JavaScript Style Guide. Please ensure your contributions adhere to this style.
 
 ## License
 
