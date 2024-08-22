@@ -326,9 +326,9 @@ function permissions(permissions) {
  * @param {Object} data - The data object containing prompt information.
  */
 function handleKeyboardInteractive(data) {
-  debug('handleKeyboardInteractive', data);
+  debug('handleKeyboardInteractive')
   showPromptDialog(data, (responses) => {
-    debug('handleKeyboardInteractive: responses', maskObject(responses));
+    debug('handleKeyboardInteractive: response')
     socket.emit('authentication', {
       action: 'keyboard-interactive',
       responses: responses
