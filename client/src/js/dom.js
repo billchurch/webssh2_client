@@ -265,6 +265,7 @@ export function showPromptDialog(data, callback) {
     inputContainer.innerHTML = ''
 
     // Create input fields for each prompt
+    let firstInput = null
     data.prompts.forEach((prompt, index) => {
       const label = document.createElement('label')
       label.textContent = prompt.prompt
@@ -273,6 +274,10 @@ export function showPromptDialog(data, callback) {
       input.type = prompt.echo ? 'text' : 'password'
       input.required = true
       input.id = `promptInput${index}`
+
+      if (index === 0) {
+        firstInput = input
+      }
 
       inputContainer.appendChild(label)
       inputContainer.appendChild(input)
@@ -289,6 +294,12 @@ export function showPromptDialog(data, callback) {
     }
 
     promptDialog.showModal()
+    // Set focus to the first input field
+    if (firstInput) {
+      setTimeout(() => {
+        firstInput.focus()
+      }, 0)
+    }
     updateElement('status', 'RESPONSE REQUIRED', 'orange')
   } else {
     console.error('Prompt modal or prompt message element not found')
