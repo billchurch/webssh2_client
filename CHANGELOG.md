@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.24](https://github.com/billchurch/webssh2_client/compare/v0.2.23...v0.2.24) (2024-08-22)
+
+
+### Features
+
+* keyboard-interactive login ([4c25a2a](https://github.com/billchurch/webssh2_client/commit/4c25a2a9f1960746685801005c7caa45db801075))
+
+
+### Bug Fixes
+
+* sanatize debug message for keyboard-interactive ([233bf6c](https://github.com/billchurch/webssh2_client/commit/233bf6c6054839792725a0f340636df5259064ae))
+
 ### [0.2.23](https://github.com/billchurch/webssh2_client/compare/v0.2.22...v0.2.23) (2024-08-20)
 
 
