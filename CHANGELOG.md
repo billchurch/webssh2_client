@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.25](https://github.com/billchurch/webssh2_client/compare/v0.2.24...v0.2.25) (2024-08-22)
+
+
+### Bug Fixes
+
+* set focus to first prompt-input when keyboard-interactive dialog appears. ([3bb6482](https://github.com/billchurch/webssh2_client/commit/3bb648269097059dc339589c8521cb70ddda70f8))
+
 ### [0.2.24](https://github.com/billchurch/webssh2_client/compare/v0.2.23...v0.2.24) (2024-08-22)
 
 
