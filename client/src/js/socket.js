@@ -328,6 +328,7 @@ function permissions(permissions) {
 function handleKeyboardInteractive(data) {
   debug('handleKeyboardInteractive', data);
   showPromptDialog(data, (responses) => {
+    debug('handleKeyboardInteractive: responses', maskObject(responses));
     socket.emit('authentication', {
       action: 'keyboard-interactive',
       responses: responses
