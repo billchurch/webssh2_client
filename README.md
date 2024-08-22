@@ -313,6 +313,40 @@ To reset all settings to their default values:
 
 These settings are stored locally in your browser. If you use WebSSH2 Client on a different device or browser, you'll need to reconfigure your preferences.
 
+## Keyboard-Interactive Authentication
+
+WebSSH2 Client supports keyboard-interactive authentication, which allows for more complex authentication scenarios beyond simple password-based authentication. This feature is particularly useful for systems that require multi-factor authentication or challenge-response mechanisms.
+
+### How it Works
+
+1. When the SSH server requests keyboard-interactive authentication, the WebSSH2 Client will display a prompt dialog to the user.
+2. The prompt dialog will show the message sent by the SSH server, which typically includes instructions or questions for the user.
+3. Users can enter their response in the provided input field.
+4. After submitting the response, the client sends it back to the SSH server.
+5. This process may repeat multiple times if the SSH server requires additional information.
+
+### Features
+
+- **Dynamic Prompts**: The content of the prompt dialog is determined by the SSH server, allowing for flexible authentication flows.
+- **Multi-Step Authentication**: Supports multiple rounds of prompts for sophisticated authentication processes.
+- **Seamless Integration**: The prompt appears within the web interface, providing a smooth user experience.
+
+### Security Considerations
+
+- The keyboard-interactive method is more secure than hardcoded passwords, as it allows for dynamic and potentially multi-factor authentication.
+- All communication between the client and server remains encrypted, ensuring the security of sensitive information.
+- Users should always verify that they're connected to the intended server before entering any authentication information.
+
+### Configuration
+
+No additional client-side configuration is needed to use keyboard-interactive authentication. The feature is automatically engaged when the SSH server requests it.
+
+### Limitations
+
+- The appearance and behavior of the prompt are standardized and cannot be customized by the SSH server beyond the prompt message.
+
+For more information on SSH keyboard-interactive authentication, refer to [RFC 4256](https://tools.ietf.org/html/rfc4256).
+
 ## Debugging
 
 This project uses the `debug` module for logging. To enable debugging in the browser:
