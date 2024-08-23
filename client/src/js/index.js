@@ -197,7 +197,7 @@ function onConnect() {
  * @param {string} reason - The reason for disconnection.
  * @returns {void}
  */
-function onDisconnect(reason, socket) {
+function onDisconnect(reason, details) {
   const reauthRequired = state.reauthRequired
 
   debug('onDisconnect:', reason)
@@ -208,32 +208,32 @@ function onDisconnect(reason, socket) {
       showloginDialog()
       break
 
-    case 'reauth_required':
-      debug('onDisconnect: reauth_required: forms auth flow')
-      state.reauthRequired = true
-      showloginDialog()
-      break
-
-    case 'error':
-      showErrorDialog(`Socket error: ${reason}`)
-      commonPostDisconnectTasks()
-      break
-
-    case 'ssh_error':
-      if (reauthRequired) {
-        debug('Ignoring error due to prior reauth_required')
-        state.reauthRequired = false
-      } else {
-        showErrorDialog(`SSH error: ${reason}`)
+      case 'reauth_required':
+        debug('onDisconnect: reauth_required: forms auth flow')
+        state.reauthRequired = true
+        showloginDialog()
+        break
+  
+      case 'error':
+        showErrorDialog(`Socket error: ${details || reason}`)
         commonPostDisconnectTasks()
-      }
-      break
-    default:
-      showErrorDialog(`Disconnected: ${reason}`)
-      commonPostDisconnectTasks()
-      break
+        break
+  
+      case 'ssh_error':
+        if (reauthRequired) {
+          debug('Ignoring error due to prior reauth_required')
+          state.reauthRequired = false
+        } else {
+          showErrorDialog(`${details || reason}`)
+          commonPostDisconnectTasks()
+        }
+        break
+      default:
+        showErrorDialog(`Disconnected: ${details || reason}`)
+        commonPostDisconnectTasks()
+        break
+    }
   }
-}
 
 /**
  * Performs common tasks after disconnecting from the server.
