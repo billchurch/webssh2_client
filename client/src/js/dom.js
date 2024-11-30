@@ -187,6 +187,7 @@ export function initializeElements() {
 
 /**
  * Sets up event listeners for various elements in the application.
+ * @param {Object} config - The configuration object containing application settings
  */
 export function setupEventListeners(config) {
   debug('setupEventListeners')
@@ -221,7 +222,10 @@ export function setupEventListeners(config) {
   // Global event listeners
   window.addEventListener('resize', resize)
   document.addEventListener('keydown', keydown)
-
+  // Add beforeunload event listener to prevent accidental tab closure
+  window.addEventListener('beforeunload', (event) => {
+    event.preventDefault()
+  })
   passwordInput.addEventListener('keyup', detectCapsLock)
   passwordInput.addEventListener('keydown', detectCapsLock)
 }
