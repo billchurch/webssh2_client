@@ -109,10 +109,7 @@ window.webssh2Config = {
 
 ## Development
 
-- Modify `./src/client.htm` or `./src/index.js` for custom JavaScript
-- Add webpack configuration in `webpack.*.js`
-- Use HTTPS for credential transmission
-- Debug mode can be enabled via the `DEBUG` environment variable
+- For development information see [DEVELOPMENT.md](./DEVELOPMENT.md).
 
 ## Support
 
