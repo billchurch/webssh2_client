@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.26](https://github.com/billchurch/webssh2_client/compare/v0.2.25...v0.2.26) (2024-11-30)
+
+
+### Features
+
+* Confirmation before closing the tab [#1](https://github.com/billchurch/webssh2_client/issues/1) ([1ce9c13](https://github.com/billchurch/webssh2_client/commit/1ce9c1386c2d0fc34e1c22908a6730d9e5bee058))
+
+
+### Bug Fixes
+
+* better handle ssh error messages ([e731440](https://github.com/billchurch/webssh2_client/commit/e731440634518356239bdcc3ea0d77fc171be62c))
+* fixes docs: explain the "Routes" section in the webssh2_client README [#3](https://github.com/billchurch/webssh2_client/issues/3) ([b43222b](https://github.com/billchurch/webssh2_client/commit/b43222bd61f7cb5a430aac15c1935ae35c29322b))
+* fixes docs: update README on the bigip-server to mention webssh2_client, [#5](https://github.com/billchurch/webssh2_client/issues/5) ([5bfc40f](https://github.com/billchurch/webssh2_client/commit/5bfc40f252d4cf165120437c9963baafb13de5ac))
+
 ### [0.2.25](https://github.com/billchurch/webssh2_client/compare/v0.2.24...v0.2.25) (2024-08-22)
 
 
