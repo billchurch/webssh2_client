@@ -6,6 +6,9 @@ WebSSH2 Client is an HTML5 web-based terminal emulator and SSH client. It uses W
 
 ![WebSSH2 demo](https://user-images.githubusercontent.com/1668075/182425293-acc8741e-cc92-4105-afdc-9538e1685d4b.gif)
 
+# NOTICE
+This is likely not what you’re looking for. This is the client component of the webssh2 server, available at [webssh2 server](https://github.com/billchurch/webssh2/tree/bigip-server). It contains the browser-side code, which is already included in the main distribution. This package is intended for advanced users only.
+
 # EXPERIMENTAL
 The current status is experimental, and this first version is a refactor of webssh2 v0.2.x to be compatible with a refactor of the same version of webssh2 as a stand-alone server-side component  running Node.js v6.9.1.
 
