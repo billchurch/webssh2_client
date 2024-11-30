@@ -95,7 +95,7 @@ html {
   background-color: #fefefe;
   border: 1px solid #888;
   color: #333;
-  margin: 15% auto;
+  margin: auto;
   padding: 20px;
   width: 300px;
 }
@@ -243,4 +243,59 @@ html {
 
 #loginSettingsBtn {
   padding: 0.5em 1em;
+}
+
+.private-key-toggle {
+  margin: 10px 0;
+  text-align: left;
+}
+
+.private-key-toggle button {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.private-key-toggle button:hover {
+  color: #333;
+}
+
+.private-key-input {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+#privatekeyText {
+  width: 100%;
+  margin-bottom: 10px;
+  font-family: monospace;
+  resize: vertical;
+}
+
+.file-upload {
+  margin-bottom: 10px;
+}
+
+.file-upload input[type="file"] {
+  display: none;
+}
+
+.file-upload label {
+  display: inline-block;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.file-upload label i {
+  margin-right: 5px;
+}
+
+.hidden {
+  display: none;
+}
+
+input.optional {
+  border-color: #ccc;
 }

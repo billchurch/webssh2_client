@@ -57,7 +57,8 @@ import {
   faDownload,
   faKey,
   faTrashCan,
-  faCircleUp
+  faCircleUp,
+  faUpload
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -67,7 +68,8 @@ library.add(
   faKey,
   faCog,
   faTrashCan,
-  faCircleUp
+  faCircleUp,
+  faUpload
 )
 
 dom.watch()

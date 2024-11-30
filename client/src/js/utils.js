@@ -170,6 +170,7 @@ function getUrlParams() {
 /**
  * Retrieves the SSH credentials from various sources.
  * @param {Object} formData - Optional form data from manual input
+ * @param {Object} terminalDimensions - Optional terminal dimensions
  * @returns {Object} An object containing the SSH credentials.
  */
 export function getCredentials(formData = null, terminalDimensions = {}) {
@@ -207,10 +208,32 @@ export function getCredentials(formData = null, terminalDimensions = {}) {
       formData?.term ||
       urlParams.get('sshterm') ||
       config.ssh?.sshterm ||
-      'xterm-color'
+      'xterm-color',
   }
-  const maskedContent = maskObject(mergedConfig)
 
+  // Add private key if present in any source
+  const privatekey = formData?.privatekey ||
+    document.getElementById('privatekeyText')?.value ||
+    urlParams.get('privatekey') ||
+    config.ssh?.privatekey ||
+    '';
+  
+  if (privatekey) {
+    mergedConfig.privatekey = privatekey;
+    
+    // Only include keyPassword if privatekey is present
+    const keyPassword = formData?.keyPassword ||
+      document.getElementById('keyPasswordInput')?.value ||
+      urlParams.get('keyPassword') ||
+      config.ssh?.keyPassword ||
+      '';
+      
+    if (keyPassword) {
+      mergedConfig.keyPassword = keyPassword;
+    }
+  }
+
+  const maskedContent = maskObject(mergedConfig)
   debug('getCredentials: mergedConfig:', maskedContent)
 
   return mergedConfig
@@ -269,4 +292,14 @@ export function getBasicAuthCookie() {
     }
   }
   return null
+}
+
+/**
+ * Validates an SSH private key format
+ * @param {string} key - The private key content
+ * @returns {boolean} True if the key appears valid
+ */
+export function validatePrivateKey(key) {
+  const pemRegex = /^-----BEGIN (?:RSA )?PRIVATE KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)\r?\n-----END (?:RSA )?PRIVATE KEY-----\r?\n?$/;
+  return pemRegex.test(key);
 }

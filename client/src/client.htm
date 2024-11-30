@@ -14,20 +14,44 @@
     <dialog id="loginDialog" class="modal">
       <div class="modal-content"> 
         <h2>WebSSH2 Login</h2>
-        <form id="loginForm" class="pure-form pure-form-stacked">
-          <fieldset>
-            <input type="text" id="hostInput" placeholder="Hostname" required>
-            <input type="text" id="portInput" placeholder="Port" required>
-            <input type="text" id="usernameInput" placeholder="Username" required autocomplete="username">
-            <div class="password-wrapper">
-              <input type="password" id="passwordInput" placeholder="Password" required autocomplete="current-password">
-              <i id="capsLockIcon" class="fas fa-circle-up fa-fw"></i>
+        <form id="loginForm" class="pure-form">
+          <input type="text" id="hostInput" name="host" placeholder="Host" required>
+          <input type="text" id="portInput" name="port" placeholder="Port" value="22">
+          <input type="text" id="usernameInput" name="username" placeholder="Username" required>
+          
+          <!-- Password section - always visible -->
+          <div class="password-wrapper">
+            <input type="password" id="passwordInput" name="password" placeholder="Password">
+            <span id="capsLockIcon">⇪</span>
+          </div>
+        
+          <!-- Private key toggle button -->
+          <div class="private-key-toggle">
+            <button type="button" id="privatekeyToggle" class="pure-button">
+              <i class="fa fa-key"></i> Add SSH Key
+            </button>
+          </div>
+        
+          <!-- Private key section (initially hidden) -->
+          <div id="privatekeySection" class="hidden">
+            <div class="private-key-input">
+              <textarea id="privatekeyText" name="privatekey" 
+                placeholder="Paste your private key here" rows="3"></textarea>
+              <div class="file-upload">
+                <input type="file" id="privatekeyFile" accept=".pem,.key">
+                <label for="privatekeyFile" class="pure-button">
+                  <i class="fa fa-upload"></i> Upload Key File
+                </label>
+              </div>
+              <input type="password" id="keyPasswordInput" name="keyPassword" 
+                placeholder="Key password (if encrypted)" class="optional">
             </div>
-            <div class="login-buttons">
-              <button type="submit" class="pure-button pure-button-primary">Connect</button>
-              <button type="button" id="loginSettingsBtn" class="pure-button"><i class="fas fa-cog"></i></button>
-            </div>
-          </fieldset>
+          </div>
+        
+          <div class="login-buttons">
+            <button type="submit" class="pure-button pure-button-primary">Connect</button>
+            <button type="button" id="loginSettingsBtn" class="pure-button">⚙️</button>
+          </div>
         </form>
       </div>
     </dialog>

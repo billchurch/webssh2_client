@@ -133,17 +133,27 @@ export function replayCredentials() {
  * @param {Object} formData - Optional form data to use for authentication
  */
 function authenticate(formData = null) {
-  const terminalDimensions = getTerminalDimensions()
-  const credentials = getCredentials(formData, terminalDimensions)
-  state.term = credentials.term
-  const maskedContent = maskObject(credentials)
-  debug('authenticate', maskedContent)
+  const terminalDimensions = getTerminalDimensions();
+  const credentials = getCredentials(formData, terminalDimensions);
+  
+  // Add private key if present
+  if (formData?.privatekey) {
+    credentials.privatekey = formData.privatekey;
+    if (formData.keyPassword) {
+      credentials.keyPassword = formData.keyPassword;
+    }
+  }
+  
+  state.term = credentials.term;
+  const maskedContent = maskObject(credentials);
+  debug('authenticate', maskedContent);
+  
   if (credentials.host && credentials.username) {
-    socket.emit('authenticate', credentials)
-    updateElement('status', 'Authenticating...', 'orange')
+    socket.emit('authenticate', credentials);
+    updateElement('status', 'Authenticating...', 'orange');
   } else {
     if (onDisconnectCallback) {
-      onDisconnectCallback('auth_required')
+      onDisconnectCallback('auth_required');
     }
   }
 }

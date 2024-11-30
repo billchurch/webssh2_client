@@ -10,7 +10,8 @@ import {
   sanitizeColor,
   sanitizeHtml,
   validateNumber,
-  validateBellStyle
+  validateBellStyle,
+  validatePrivateKey
 } from './utils'
 
 import { connectToServer } from './index.js'
@@ -117,6 +118,10 @@ export function initializeElements() {
     'loginForm',
     'passwordInput',
     'portInput',
+    'privatekeyFile',
+    'privatekeyText',
+    'privatekeySection',
+    'keyPasswordInput',
     'promptDialog',
     'promptMessage',
     'reauthBtn',
@@ -219,6 +224,9 @@ export function setupEventListeners(config) {
     }
   })
 
+  // Set up private key related events
+  setupPrivateKeyEvents()
+  
   // Global event listeners
   window.addEventListener('resize', resize)
   document.addEventListener('keydown', keydown)
@@ -807,4 +815,43 @@ function toggleLoginFields(state) {
       state ? 're-authentication' : 'new connection'
     }`
   )
+}
+
+/**
+ * Sets up private key authentication related event listeners
+ */
+function setupPrivateKeyEvents() {
+  const privatekeyToggle = document.getElementById('privatekeyToggle');
+  const privatekeyFile = document.getElementById('privatekeyFile');
+  const privatekeyText = document.getElementById('privatekeyText');
+  const privatekeySection = document.getElementById('privatekeySection');
+
+  // Handle private key section toggle
+  privatekeyToggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    privatekeySection.classList.toggle('hidden');
+    // Update button text based on state
+    if (privatekeySection.classList.contains('hidden')) {
+      privatekeyToggle.innerHTML = '<i class="fa fa-key"></i> Add SSH Key';
+    } else {
+      privatekeyToggle.innerHTML = '<i class="fa fa-key"></i> Hide SSH Key';
+    }
+  });
+
+  // Handle file upload
+  privatekeyFile.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const content = await file.text();
+        if (validatePrivateKey(content)) {
+          privatekeyText.value = content;
+        } else {
+          showErrorDialog('Invalid private key format');
+        }
+      } catch (error) {
+        showErrorDialog('Error reading private key file');
+      }
+    }
+  });
 }
