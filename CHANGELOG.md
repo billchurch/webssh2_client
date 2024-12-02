@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.27](https://github.com/billchurch/webssh2_client/compare/v0.2.26...v0.2.27) (2024-12-02)
+
+
+### Features
+
+* support uploading of ssh-rsa private key from client for authentication [#6](https://github.com/billchurch/webssh2_client/issues/6) ([2188e67](https://github.com/billchurch/webssh2_client/commit/2188e6732f1510fecca82b169ddd79604a98776d))
+* update jsmasker to v1.4.0 ([1989d45](https://github.com/billchurch/webssh2_client/commit/1989d45b8ec951e5af080b8ac30e94035d9fac5d))
+
 ### [0.2.26](https://github.com/billchurch/webssh2_client/compare/v0.2.25...v0.2.26) (2024-11-30)
 
 
