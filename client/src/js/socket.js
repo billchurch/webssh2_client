@@ -139,8 +139,8 @@ function authenticate(formData = null) {
   // Add private key if present
   if (formData?.privateKey) {
     credentials.privateKey = formData.privateKey;
-    if (formData.keyPassword) {
-      credentials.keyPassword = formData.keyPassword;
+    if (formData.passphrase) {
+      credentials.passphrase = formData.passphrase;
     }
   }
   

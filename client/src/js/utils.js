@@ -221,15 +221,15 @@ export function getCredentials(formData = null, terminalDimensions = {}) {
   if (privateKey) {
     mergedConfig.privateKey = privateKey;
     
-    // Only include keyPassword if privateKey is present
-    const keyPassword = formData?.keyPassword ||
-      document.getElementById('keyPasswordInput')?.value ||
-      urlParams.get('keyPassword') ||
-      config.ssh?.keyPassword ||
+    // Only include passphrase if privateKey is present
+    const passphrase = formData?.passphrase ||
+      document.getElementById('passphraseInput')?.value ||
+      urlParams.get('passphrase') ||
+      config.ssh?.passphrase ||
       '';
       
-    if (keyPassword) {
-      mergedConfig.keyPassword = keyPassword;
+    if (passphrase) {
+      mergedConfig.passphrase = passphrase;
     }
   }
 

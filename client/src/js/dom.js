@@ -121,7 +121,7 @@ export function initializeElements() {
     'privateKeyFile',
     'privateKeyText',
     'privateKeySection',
-    'keyPasswordInput',
+    'passphraseInput',
     'promptDialog',
     'promptMessage',
     'reauthBtn',
