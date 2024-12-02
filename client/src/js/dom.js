@@ -118,9 +118,9 @@ export function initializeElements() {
     'loginForm',
     'passwordInput',
     'portInput',
-    'privatekeyFile',
-    'privatekeyText',
-    'privatekeySection',
+    'privateKeyFile',
+    'privateKeyText',
+    'privateKeySection',
     'keyPasswordInput',
     'promptDialog',
     'promptMessage',
@@ -821,31 +821,31 @@ function toggleLoginFields(state) {
  * Sets up private key authentication related event listeners
  */
 function setupPrivateKeyEvents() {
-  const privatekeyToggle = document.getElementById('privatekeyToggle');
-  const privatekeyFile = document.getElementById('privatekeyFile');
-  const privatekeyText = document.getElementById('privatekeyText');
-  const privatekeySection = document.getElementById('privatekeySection');
+  const privateKeyToggle = document.getElementById('privateKeyToggle');
+  const privateKeyFile = document.getElementById('privateKeyFile');
+  const privateKeyText = document.getElementById('privateKeyText');
+  const privateKeySection = document.getElementById('privateKeySection');
 
   // Handle private key section toggle
-  privatekeyToggle.addEventListener('click', (e) => {
+  privateKeyToggle.addEventListener('click', (e) => {
     e.preventDefault();
-    privatekeySection.classList.toggle('hidden');
+    privateKeySection.classList.toggle('hidden');
     // Update button text based on state
-    if (privatekeySection.classList.contains('hidden')) {
-      privatekeyToggle.innerHTML = '<i class="fa fa-key"></i> Add SSH Key';
+    if (privateKeySection.classList.contains('hidden')) {
+      privateKeyToggle.innerHTML = '<i class="fa fa-key"></i> Add SSH Key';
     } else {
-      privatekeyToggle.innerHTML = '<i class="fa fa-key"></i> Hide SSH Key';
+      privateKeyToggle.innerHTML = '<i class="fa fa-key"></i> Hide SSH Key';
     }
   });
 
   // Handle file upload
-  privatekeyFile.addEventListener('change', async (e) => {
+  privateKeyFile.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (file) {
       try {
         const content = await file.text();
         if (validatePrivateKey(content)) {
-          privatekeyText.value = content;
+          privateKeyText.value = content;
         } else {
           showErrorDialog('Invalid private key format');
         }

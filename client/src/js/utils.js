@@ -212,16 +212,16 @@ export function getCredentials(formData = null, terminalDimensions = {}) {
   }
 
   // Add private key if present in any source
-  const privatekey = formData?.privatekey ||
-    document.getElementById('privatekeyText')?.value ||
-    urlParams.get('privatekey') ||
-    config.ssh?.privatekey ||
+  const privateKey = formData?.privateKey ||
+    document.getElementById('privateKeyText')?.value ||
+    urlParams.get('privateKey') ||
+    config.ssh?.privateKey ||
     '';
   
-  if (privatekey) {
-    mergedConfig.privatekey = privatekey;
+  if (privateKey) {
+    mergedConfig.privateKey = privateKey;
     
-    // Only include keyPassword if privatekey is present
+    // Only include keyPassword if privateKey is present
     const keyPassword = formData?.keyPassword ||
       document.getElementById('keyPasswordInput')?.value ||
       urlParams.get('keyPassword') ||

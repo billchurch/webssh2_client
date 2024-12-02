@@ -137,8 +137,8 @@ function authenticate(formData = null) {
   const credentials = getCredentials(formData, terminalDimensions);
   
   // Add private key if present
-  if (formData?.privatekey) {
-    credentials.privatekey = formData.privatekey;
+  if (formData?.privateKey) {
+    credentials.privateKey = formData.privateKey;
     if (formData.keyPassword) {
       credentials.keyPassword = formData.keyPassword;
     }

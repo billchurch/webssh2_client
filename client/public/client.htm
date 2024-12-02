@@ -1,4 +1,4 @@
-<!-- Version Version 0.2.26 - 2024-11-30T12:49:04.445Z - 502da1e -->
+<!-- Version Version 0.2.26 - 2024-12-02T12:55:46.729Z - 2188e67 -->
 <!-- webssh2-client -->
 <!-- /client/src/client.htm -->
 <!DOCTYPE html>
@@ -27,19 +27,19 @@
         
           <!-- Private key toggle button -->
           <div class="private-key-toggle">
-            <button type="button" id="privatekeyToggle" class="pure-button">
+            <button type="button" id="privateKeyToggle" class="pure-button">
               <i class="fa fa-key"></i> Add SSH Key
             </button>
           </div>
         
           <!-- Private key section (initially hidden) -->
-          <div id="privatekeySection" class="hidden">
+          <div id="privateKeySection" class="hidden">
             <div class="private-key-input">
-              <textarea id="privatekeyText" name="privatekey" 
+              <textarea id="privateKeyText" name="privateKey" 
                 placeholder="Paste your private key here" rows="3"></textarea>
               <div class="file-upload">
-                <input type="file" id="privatekeyFile" accept=".pem,.key">
-                <label for="privatekeyFile" class="pure-button">
+                <input type="file" id="privateKeyFile" accept=".pem,.key">
+                <label for="privateKeyFile" class="pure-button">
                   <i class="fa fa-upload"></i> Upload Key File
                 </label>
               </div>
