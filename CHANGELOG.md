@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.28](https://github.com/billchurch/webssh2_client/compare/v0.2.27...v0.2.28) (2024-12-03)
+
+
+### Bug Fixes
+
+* passphrase encrypted RSA keys now pass validation [#7](https://github.com/billchurch/webssh2_client/issues/7) ([d41e6de](https://github.com/billchurch/webssh2_client/commit/d41e6dec4d6120ef001e528007f5eeaff3734d15))
+
 ### [0.2.27](https://github.com/billchurch/webssh2_client/compare/v0.2.26...v0.2.27) (2024-12-02)
 
 
