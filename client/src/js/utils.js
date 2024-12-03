@@ -295,11 +295,17 @@ export function getBasicAuthCookie() {
 }
 
 /**
- * Validates an SSH private key format
- * @param {string} key - The private key content
- * @returns {boolean} True if the key appears valid
+ * Validates the format of an RSA private key, supporting both standard and encrypted keys
+ * @param {string} key - The private key string to validate
+ * @returns {boolean} - Whether the key appears to be valid
  */
 export function validatePrivateKey(key) {
-  const pemRegex = /^-----BEGIN (?:RSA )?PRIVATE KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)\r?\n-----END (?:RSA )?PRIVATE KEY-----\r?\n?$/;
-  return pemRegex.test(key);
+  // Pattern for standard RSA private key
+  const standardKeyPattern = /^-----BEGIN (?:RSA )?PRIVATE KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)\r?\n-----END (?:RSA )?PRIVATE KEY-----\r?\n?$/;
+
+  // Pattern for encrypted RSA private key
+  const encryptedKeyPattern = /^-----BEGIN RSA PRIVATE KEY-----\r?\n(?:Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: ([^\r\n]+)\r?\n\r?\n)([A-Za-z0-9+/=\r\n]+)\r?\n-----END RSA PRIVATE KEY-----\r?\n?$/;
+
+  // Test for either standard or encrypted key format
+  return standardKeyPattern.test(key) || encryptedKeyPattern.test(key);
 }
