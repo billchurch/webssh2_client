@@ -1,6 +1,6 @@
 {
   "name": "webssh2_client",
-  "version": "2.0.0-alpha",
+  "version": "2.0.0-alpha.0",
   "ignore": [
     ".gitignore"
   ],
@@ -18,7 +18,7 @@
     "client/public/**/*"
   ],
   "engines": {
-    "node": ">= 18"
+    "node": ">= 22"
   },
   "scripts": {
     "start": "node index.js",
