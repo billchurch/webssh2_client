@@ -8,17 +8,16 @@
         "draft": false,
         "prerelease": true,
         "prerelease-type": "alpha",
-        "release-as": "2.0.0-alpha.0",
         "include-v-in-tag": true,
         "changelog-sections": [
             {"type": "feat", "section": "Features", "hidden": false},
             {"type": "fix", "section": "Bug Fixes", "hidden": false},
             {"type": "breaking", "section": "Breaking Changes", "hidden": false}
         ],
-        "last-release-sha": "71c9a08",
+        "last-release-sha": "520cda1",
         "skip-github-release": false
         }
     },
-    "bootstrap-sha": "71c9a08",
+    "bootstrap-sha": "520cda1",
     "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
 }
