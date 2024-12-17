@@ -20,4 +20,5 @@ jobs:
             prerelease: true
             default-branch: newmain
             versioning-strategy: default
+            release-as: "2.0.0-alpha.0"
             pull-request-title-pattern: "chore${scope}: release${component} ${version}"
