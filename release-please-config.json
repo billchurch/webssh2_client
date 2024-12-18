@@ -1,24 +1,26 @@
 {
     "packages": {
-        ".": {
+      ".": {
         "changelog-path": "CHANGELOG.md",
         "release-type": "node",
-        "bump-minor-pre-major": false,
-        "bump-patch-for-minor-pre-major": false,
         "draft": false,
         "prerelease": true,
         "prerelease-type": "alpha",
         "include-v-in-tag": true,
-        "versioning-strategy": "always-bump-prerelease",
+        "versioning": "always-bump-prerelease",
         "changelog-sections": [
-            {"type": "feat", "section": "Features", "hidden": false},
-            {"type": "fix", "section": "Bug Fixes", "hidden": false},
-            {"type": "breaking", "section": "Breaking Changes", "hidden": false}
+          {"type": "feat", "section": "Features", "hidden": false},
+          {"type": "fix", "section": "Bug Fixes", "hidden": false},
+          {"type": "breaking", "section": "Breaking Changes", "hidden": false}
         ],
-        "last-release-sha": "520cda1",
-        "skip-github-release": false
-        }
+        "extra-files": [
+          "package.json",
+          "package-lock.json"
+        ]
+      }
     },
-    "bootstrap-sha": "520cda1",
+    "release-search-depth": 100,
+    "pull-request-header": "Automated Release PR",
+    "pull-request-title-pattern": "chore${scope}: release${component} ${version}",
     "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
-}
+  }

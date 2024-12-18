@@ -1,8 +1,7 @@
 on:
     push:
         branches:
-        - newmain
-
+            - newmain
 permissions:
     contents: write
     pull-requests: write
@@ -13,10 +12,9 @@ jobs:
     release-please:
         runs-on: ubuntu-latest
         steps:
-        - uses: google-github-actions/release-please-action@v3
-          with:
-            release-type: node
-            package-name: webssh2_client
-            prerelease: true
-            default-branch: newmain
-            pull-request-title-pattern: "chore${scope}: release${component} ${version}"
+            - uses: googleapis/release-please-action@v4
+              with:
+                # Configuration file relative to repository root
+                config-file: release-please-config.json
+                # Target branch for pull requests
+                target-branch: newmain
