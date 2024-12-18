@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.1-alpha1](https://github.com/billchurch/webssh2_client/compare/webssh2_client-v2.0.0-alpha1...webssh2_client-v2.0.1-alpha1) (2024-12-18)
+
+
+### Bug Fixes
+
+* testing ([b417d72](https://github.com/billchurch/webssh2_client/commit/b417d72ca1ff367d652654a3b6fddac6ff9d6f74))
+
 ## [2.0.0-alpha1](https://github.com/billchurch/webssh2_client/compare/webssh2_client-v2.1.0-alpha.0...webssh2_client-v2.0.0-alpha1) (2024-12-18)
 
 
