@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0-alpha.0](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.0...v2.1.0-alpha.0) (2024-12-18)
+
+
+### Features
+
+* trivial change to test release-please and npm publish workflows. ([19e0c76](https://github.com/billchurch/webssh2_client/commit/19e0c76c5812c3de0afc13ddf7d2033aa1dce5fd))
+
+
+### Bug Fixes
+
+* testing out release-please workflow ([8747d15](https://github.com/billchurch/webssh2_client/commit/8747d152abe2ae4aa773ecf026ab6c392b73ba44))
+* testing release-please workflow ([2e1de68](https://github.com/billchurch/webssh2_client/commit/2e1de68ae063e9901405da91b345552d0afbaa4a))
+* testing workflows ([9b209ee](https://github.com/billchurch/webssh2_client/commit/9b209ee7d37535f5ab9604376e346f86a7abc3bc))
+
 ## [2.0.0-alpha.0](https://github.com/billchurch/webssh2_client/compare/v0.2.27...v2.0.0-alpha.0) (2024-12-17)
 
 
