@@ -19,5 +19,5 @@ jobs:
             package-name: webssh2_client
             prerelease: true
             default-branch: newmain
-            versioning-strategy: default
+            versioning-strategy: always-bump-prerelease
             pull-request-title-pattern: "chore${scope}: release${component} ${version}"
