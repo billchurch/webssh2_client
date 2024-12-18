@@ -9,6 +9,7 @@
         "prerelease": true,
         "prerelease-type": "alpha",
         "include-v-in-tag": true,
+        "versioning-strategy": "always-bump-prerelease",
         "changelog-sections": [
             {"type": "feat", "section": "Features", "hidden": false},
             {"type": "fix", "section": "Bug Fixes", "hidden": false},
