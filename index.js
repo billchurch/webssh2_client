@@ -1,6 +1,5 @@
 // client
 // index.js
-// test
 
 if (require.main === module) {
   // Run the development server
