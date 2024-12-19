@@ -1,13 +1,13 @@
 {
   "name": "webssh2_client",
   "version": "2.0.0-alpha",
-  "ignore": [
-    ".gitignore"
-  ],
   "description": "A client for the webssh2 gateway",
+  "author": "Bill Church",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/billchurch/webssh2_client.git"
+    "url": "git+https://github.com/billchurch/webssh2_client.git",
+    "directory": "."
   },
   "main": "index.js",
   "files": [
@@ -16,8 +16,11 @@
     "client/public/**/*"
   ],
   "engines": {
-    "node": ">= 18"
+    "node": ">= 22"
   },
+  "ignore": [
+    ".gitignore"
+  ],
   "scripts": {
     "start": "node index.js",
     "build": "webpack --mode production --progress --config scripts/webpack.prod.js",
@@ -25,28 +28,15 @@
     "analyze": "webpack --json --config scripts/webpack.prod.js | webpack-bundle-size-analyzer",
     "watch": "NODE_ENV=development npm-run-all --parallel start watch:build",
     "watch:build": "webpack --watch --config scripts/webpack.dev.js",
-    "release": "standard-version -a -s",
     "publish:dry-run": "npm publish --dry-run",
-    "publish:npm": "npm publish",
-    "release:major": "npm run release -- --release-as major",
-    "release:minor": "npm run release -- --release-as minor",
-    "release:patch": "npm run release -- --release-as patch"
+    "publish:npm": "npm publish"
   },
-  "standard-version": {
-    "scripts": {
-      "postbump": "npm run build",
-      "precommit": "git add client/public/*"
-    }
-  },
-  "author": "",
-  "license": "SEE LICENSE IN FILE - LICENSE",
   "devDependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.7.1",
-    "@fortawesome/free-solid-svg-icons": "^6.7.1",
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "clean-webpack-plugin": "^4.0.0",
-    "conventional-changelog-cli": "^5.0.0",
     "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.0",
@@ -64,7 +54,6 @@
     "prettier": "^3.4.2",
     "purecss": "^3.0.0",
     "socket.io-client": "4.8.1",
-    "standard-version": "^9.5.0",
     "terser-webpack-plugin": "^5.3.11",
     "uglify-js": "^3.19.3",
     "webpack": "^5.97.1",

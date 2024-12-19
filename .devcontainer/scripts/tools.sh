@@ -13,10 +13,6 @@ sudo chown -R vscode:vscode ~/.ssh && \
   sudo chmod 600 ~/.ssh/config && \
   sudo chmod 600 ~/.ssh/known_hosts
 
-# Install Node.js 18.20.4
-asdf install nodejs 18.20.4
-asdf global nodejs 18.20.4
-
 git config --global --add safe.directory ${PWD}
 
 # Get the signing key from git config
@@ -43,3 +39,5 @@ echo "$user_email $signing_key" > ~/.ssh/allowed_signers
 chmod 644 ~/.ssh/allowed_signers
 
 echo "allowed_signers file created successfully."
+
+npm install
