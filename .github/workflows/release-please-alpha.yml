@@ -1,0 +1,25 @@
+on:
+    push:
+        branches:
+        - newmain
+
+permissions:
+    contents: write
+    pull-requests: write
+
+name: release-please-alpha
+
+jobs:
+    release-please:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: googleapis/release-please-action@v4
+          with:
+            config-file: release-please-config.json
+            release-type: node
+            package-name: webssh2_client
+            prerelease: true
+            default-branch: newmain
+            versioning-strategy: default
+            release-as: '2.0.0-alpha.${{ github.run_number }}'
+            pull-request-title-pattern: "chore${scope}: release${component} ${version}"
