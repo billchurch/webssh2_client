@@ -7,21 +7,21 @@
       "prerelease": true,
       "prerelease-type": "alpha",
       "include-v-in-tag": true,
-      "target-branch": "newmain",
       "versioning": "always-bump-prerelease",
+      "default-branch": "newmain",
       "changelog-sections": [
         {"type": "feat", "section": "Features", "hidden": false},
         {"type": "fix", "section": "Bug Fixes", "hidden": false},
         {"type": "breaking", "section": "Breaking Changes", "hidden": false}
       ],
-      "last-release-sha": "520cda1",
+      "last-release-sha": "71c9a0823ee3dec3eabf0ab42bf3141287bf34a2",
       "extra-files": [
         "package.json",
         "package-lock.json"
       ]
     }
   },
-  "bootstrap-sha": "520cda1",
+  "bootstrap-sha": "71c9a0823ee3dec3eabf0ab42bf3141287bf34a2",
   "release-search-depth": 100,
   "pull-request-header": "Automated Release PR",
   "pull-request-title-pattern": "chore${scope}: release${component} ${version}",
