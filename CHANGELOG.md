@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-alpha.${github.run_number}](https://github.com/billchurch/webssh2_client/compare/webssh2_client-v0.2.27...webssh2_client-v2.0.0-alpha.${github.run_number}) (2024-12-19)
+
+
+### Features
+
+* update fontawesome to 6.7.2 ([7f44f2b](https://github.com/billchurch/webssh2_client/commit/7f44f2b70f35a9b3a2f9930e6ca3a4a3fb40ccfa))
+
 ### [0.2.27](https://github.com/billchurch/webssh2_client/compare/v0.2.26...v0.2.27) (2024-12-02)
 
 
