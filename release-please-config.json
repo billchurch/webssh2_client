@@ -7,6 +7,7 @@
       "prerelease": true,
       "prerelease-type": "alpha",
       "include-v-in-tag": true,
+      "target-branch": "newmain",
       "versioning": "always-bump-prerelease",
       "changelog-sections": [
         {"type": "feat", "section": "Features", "hidden": false},
