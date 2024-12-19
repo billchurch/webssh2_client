@@ -8,7 +8,7 @@
       "prerelease-type": "alpha",
       "include-v-in-tag": true,
       "default-branch": "newmain",
-      "release-as": "2.0.0-alpha.${{ github.run_number }}",
+      "release-as": "2.0.0-alpha.${github.run_number}",
       "changelog-sections": [
         {"type": "feat", "section": "Features", "hidden": false},
         {"type": "fix", "section": "Bug Fixes", "hidden": false},
