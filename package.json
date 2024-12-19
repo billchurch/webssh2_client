@@ -1,6 +1,6 @@
 {
   "name": "webssh2_client",
-  "version": "2.0.0-alpha",
+  "version": "0.3.0",
   "description": "A client for the webssh2 gateway",
   "author": "Bill Church",
   "license": "MIT",
