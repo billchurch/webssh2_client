@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-alpha](https://github.com/billchurch/webssh2_client/compare/webssh2_client-v0.2.27...webssh2_client-v2.0.0-alpha) (2025-04-10)
+
+
+### Features
+
+* update fontawesome to 6.7.2 ([7f44f2b](https://github.com/billchurch/webssh2_client/commit/7f44f2b70f35a9b3a2f9930e6ca3a4a3fb40ccfa))
+
+
+### Breaking Changes
+
+* update socket.io-client to 4.8.1 ([bb7ad5d](https://github.com/billchurch/webssh2_client/commit/bb7ad5dc01e28bce769547658c9bf09062392dee))
+
 ### [0.2.27](https://github.com/billchurch/webssh2_client/compare/v0.2.26...v0.2.27) (2024-12-02)
 
 
