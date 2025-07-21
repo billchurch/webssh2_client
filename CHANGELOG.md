@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.29](https://github.com/billchurch/webssh2_client/compare/v0.2.28...v0.2.29) (2025-07-21)
+
+
+### Features
+
+* upgrade webssh2 client to Node.js 22 ([f5f776c](https://github.com/billchurch/webssh2_client/commit/f5f776c3dd7a04beb1a049eb857f8ff3c62a068f))
+
+
+### Bug Fixes
+
+* improve port handling and form data persistence ([fd0b12d](https://github.com/billchurch/webssh2_client/commit/fd0b12d954fc3ed55f1f7cad75da9767f5465298))
+
 ### [0.2.28](https://github.com/billchurch/webssh2_client/compare/v0.2.27...v0.2.28) (2024-12-03)
 
 
