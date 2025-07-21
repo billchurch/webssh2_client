@@ -571,6 +571,19 @@ function formSubmit(e) {
   e.preventDefault()
   const formData = new FormData(e.target)
   const formDataObject = Object.fromEntries(formData.entries())
+  
+  // Convert port to integer and validate
+  if (formDataObject.port) {
+    const portNum = parseInt(formDataObject.port, 10)
+    if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+      showErrorDialog(`Invalid port number: ${formDataObject.port}. Port must be between 1 and 65535.`)
+      return
+    }
+    formDataObject.port = portNum
+  }
+  
+  // Debug logging
+  
   hideloginDialog()
   connectToServer(formDataObject)
 }

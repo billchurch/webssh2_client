@@ -26,6 +26,16 @@ let onConnectCallback
 let onDisconnectCallback
 let onDataCallback
 let focusTerminalCallback
+let storedFormData = null
+
+/**
+ * Sets the form data to be used for authentication
+ * @param {Object} formData - The form data containing credentials
+ */
+export function setFormData(formData) {
+  storedFormData = formData
+  debug('setFormData: stored formData with port:', formData?.port)
+}
 
 /**
  * Closes the socket connection.
@@ -134,13 +144,14 @@ export function replayCredentials() {
  */
 function authenticate(formData = null) {
   const terminalDimensions = getTerminalDimensions();
-  const credentials = getCredentials(formData, terminalDimensions);
+  const credentials = getCredentials(formData || storedFormData, terminalDimensions);
   
   // Add private key if present
-  if (formData?.privateKey) {
-    credentials.privateKey = formData.privateKey;
-    if (formData.passphrase) {
-      credentials.passphrase = formData.passphrase;
+  const effectiveFormData = formData || storedFormData;
+  if (effectiveFormData?.privateKey) {
+    credentials.privateKey = effectiveFormData.privateKey;
+    if (effectiveFormData.passphrase) {
+      credentials.passphrase = effectiveFormData.passphrase;
     }
   }
   

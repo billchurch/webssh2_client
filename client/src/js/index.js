@@ -24,7 +24,7 @@ import {
   updatestartLogBtnState
 } from './dom.js'
 
-import { initializeSocketConnection, initSocket } from './socket.js'
+import { initializeSocketConnection, initSocket, setFormData } from './socket.js'
 
 import {
   initializeTerminal,
@@ -158,6 +158,12 @@ export function connectToServer(formData = null) {
   }
 
   state.isConnecting = true
+  
+  // Store formData for later use during authentication
+  if (formData) {
+    setFormData(formData)
+  }
+  
   initializeSocketConnection()
 
   const { terminalContainer } = elements

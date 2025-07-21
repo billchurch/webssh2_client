@@ -177,6 +177,20 @@ export function getCredentials(formData = null, terminalDimensions = {}) {
   const config = window.webssh2Config || {}
   const urlParams = getUrlParams()
 
+  // Get port value from various sources
+  let portValue = formData?.port ||
+    urlParams.get('port') ||
+    config.ssh?.port ||
+    document.getElementById('portInput')?.value ||
+    '22'
+  
+  // Ensure port is a valid integer
+  let port = parseInt(portValue, 10)
+  if (isNaN(port) || port < 1 || port > 65535) {
+    console.warn(`Invalid port value: ${portValue}, defaulting to 22`)
+    port = 22
+  }
+
   const mergedConfig = {
     host:
       formData?.host ||
@@ -184,14 +198,7 @@ export function getCredentials(formData = null, terminalDimensions = {}) {
       config.ssh?.host ||
       document.getElementById('hostInput')?.value ||
       '',
-    port: parseInt(
-      formData?.port ||
-        urlParams.get('port') ||
-        config.ssh?.port ||
-        document.getElementById('portInput')?.value ||
-        '22',
-      10
-    ),
+    port: port,
     username:
       formData?.username ||
       document.getElementById('usernameInput')?.value ||
