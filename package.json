@@ -47,7 +47,7 @@
     "@xterm/xterm": "^5.5.0",
     "clean-webpack-plugin": "^4.0.0",
     "conventional-changelog-cli": "^5.0.0",
-    "copy-webpack-plugin": "^12.0.2",
+    "copy-webpack-plugin": "^13.0.0",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.2",
     "debug": "^4.4.1",
@@ -57,7 +57,6 @@
     "eslint-plugin-prettier": "^5.5.3",
     "express": "^4.19.2",
     "html-webpack-plugin": "^5.6.3",
-    "jsmasker": "^1.4.0",
     "mini-css-extract-plugin": "^2.9.2",
     "nodemon": "^3.1.10",
     "npm-run-all": "^4.1.5",
@@ -68,7 +67,7 @@
     "terser-webpack-plugin": "^5.3.14",
     "uglify-js": "^3.19.3",
     "webpack": "^5.100.2",
-    "webpack-cli": "^5.1.4",
+    "webpack-cli": "^6.0.1",
     "webpack-merge": "^6.0.1"
   },
   "config": {
@@ -80,5 +79,8 @@
     "ignore": [
       "client/public/**/*"
     ]
+  },
+  "dependencies": {
+    "jsmasker": "^1.4.0"
   }
 }
