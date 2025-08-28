@@ -1,16 +1,15 @@
-<!-- Version Version 0.2.30 - 2025-08-28T18:49:47.230Z - 5454989 -->
+<!-- Version <%= htmlWebpackPlugin.options.version %> -->
 <!-- webssh2-client -->
 <!-- /client/src/client.htm -->
 <!DOCTYPE html>
 <html>
   <head>
     <title>WebSSH2</title>
-    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script>
-      window.webssh2Config = null;
+      window.webssh2Config = <%= htmlWebpackPlugin.options.webssh2Config %>;
     </script>
-    <script type="module" crossorigin src="./webssh2.bundle.js"></script>
-    <link rel="stylesheet" crossorigin href="./webssh2.css">
+    <script type="module" src="./js/index.js"></script>
   </head>
   <body>
     <dialog id="loginDialog" class="modal">

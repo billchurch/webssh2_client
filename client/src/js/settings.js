@@ -50,3 +50,17 @@ export function saveTerminalSettings(settings) {
   }
 }
 
+/**
+ * Alias for getStoredSettings for backward compatibility
+ */
+export const getLocalTerminalSettings = getStoredSettings
+
+/**
+ * Apply stored settings (placeholder for now)
+ */
+export function applyStoredSettings() {
+  debug('applyStoredSettings called')
+  // This function might need to be implemented based on how settings are applied
+  return getStoredSettings()
+}
+
