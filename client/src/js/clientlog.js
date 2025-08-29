@@ -2,14 +2,19 @@
 // client/src/js/clientlog.js
 
 import createDebug from 'debug'
-import { sessionFooter, handleError } from '.'
+// Session footer will be passed as parameter to avoid circular dependency
+let sessionFooter = null
+
+export function setSessionFooter(footer) {
+  sessionFooter = footer
+}
 import {
   updatestartLogBtnState,
   toggleDownloadLogBtn,
   triggerDownload
-} from './dom'
-import { focusTerminal } from './terminal'
-import { formatDate, sanitizeHtml } from './utils'
+} from './dom.js'
+import { focusTerminal } from './terminal.js'
+import { formatDate, sanitizeHtml } from './utils.js'
 import { state, toggleState } from './state.js'
 
 const debug = createDebug('webssh2-client:clientlog')
@@ -140,7 +145,7 @@ export function downloadLog(autoDownload = false) {
         window.localStorage.setItem(LOG_DATE_KEY, new Date().toISOString())
         debug('Session log saved to localStorage')
       } catch (e) {
-        handleError('Failed to save session log to localStorage:', e)
+        console.error('Failed to save session log to localStorage:', e)
         triggerDownload(blob, filename) // Fallback to download if saving fails
       }
     }

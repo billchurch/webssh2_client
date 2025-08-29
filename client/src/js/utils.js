@@ -1,10 +1,21 @@
 // client
 // client/src/js/utils.js
 import createDebug from 'debug'
-import { defaultSettings } from './terminal.js'
 import maskObject from 'jsmasker';
 
 const debug = createDebug('webssh2-client:utils')
+
+export const defaultSettings = {
+  cursorBlink: true,
+  scrollback: 10000,
+  tabStopWidth: 8,
+  bellStyle: 'sound',
+  fontSize: 14,
+  fontFamily: 'courier-new, courier, monospace',
+  letterSpacing: 0,
+  lineHeight: 1,
+  logLevel: 'info'
+}
 
 /**
  * Validates a numeric value within a specified range
@@ -238,6 +249,14 @@ export function getCredentials(formData = null, terminalDimensions = {}) {
     if (passphrase) {
       mergedConfig.passphrase = passphrase;
     }
+  }
+
+  // Add terminal dimensions if provided
+  if (terminalDimensions.cols) {
+    mergedConfig.cols = terminalDimensions.cols;
+  }
+  if (terminalDimensions.rows) {
+    mergedConfig.rows = terminalDimensions.rows;
   }
 
   const maskedContent = maskObject(mergedConfig)

@@ -21,7 +21,9 @@ import {
   showReconnectBtn,
   toggleTerminalDisplay,
   updateElement,
-  updatestartLogBtnState
+  updatestartLogBtnState,
+  setTerminalFunctions,
+  setConnectToServerFunction
 } from './dom.js'
 
 import { initializeSocketConnection, initSocket, setFormData } from './socket.js'
@@ -29,7 +31,10 @@ import { initializeSocketConnection, initSocket, setFormData } from './socket.js
 import {
   initializeTerminal,
   resetTerminal,
-  writeToTerminal
+  writeToTerminal,
+  getTerminalSettings,
+  applyTerminalSettings,
+  resizeTerminal
 } from './terminal.js'
 
 import { applyStoredSettings } from './settings.js'
@@ -44,7 +49,8 @@ import {
 import {
   addToSessionLog,
   checkSavedSessionLog,
-  downloadLog
+  downloadLog,
+  setSessionFooter
 } from './clientlog.js'
 
 export const debug = createDebug('webssh2-client')
@@ -127,10 +133,22 @@ async function initialize() {
 function initializeTerminalAndUI() {
   debug('initializeTerminalAndUI')
   initializeTerminal(config)
+  
+  // Inject functions into DOM module to avoid circular dependency
+  setTerminalFunctions({
+    getTerminalSettings,
+    applyTerminalSettings,
+    resizeTerminal
+  })
+  setConnectToServerFunction(connectToServer)
+  
   elements = initializeElements()
   sessionFooter = config.ssh.host
     ? `ssh://${config.ssh.host}:${config.ssh.port}`
     : null
+  
+  // Set sessionFooter in clientlog module
+  setSessionFooter(sessionFooter)
 
   const { terminalContainer } = elements
 

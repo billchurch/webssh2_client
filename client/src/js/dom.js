@@ -12,9 +12,18 @@ import {
   validateNumber,
   validateBellStyle,
   validatePrivateKey
-} from './utils'
+} from './utils.js'
 
-import { connectToServer } from './index.js'
+// connectToServer will be injected to avoid circular dependency
+let connectToServer = null
+
+/**
+ * Sets the connectToServer function to avoid circular dependency
+ * @param {Function} connectFn - The connectToServer function
+ */
+export function setConnectToServerFunction(connectFn) {
+  connectToServer = connectFn
+}
 
 import { emitData, emitResize, reauth, replayCredentials } from './socket.js'
 
@@ -28,11 +37,20 @@ import {
 
 import { state } from './state.js'
 
-import {
-  getTerminalSettings,
-  applyTerminalSettings,
-  resizeTerminal
-} from './terminal.js'
+// Terminal functions will be injected to avoid circular dependency
+let getTerminalSettings = null
+let applyTerminalSettings = null
+let resizeTerminal = null
+
+/**
+ * Sets the terminal functions to avoid circular dependency
+ * @param {Object} terminalFunctions - The terminal functions
+ */
+export function setTerminalFunctions(terminalFunctions) {
+  getTerminalSettings = terminalFunctions.getTerminalSettings
+  applyTerminalSettings = terminalFunctions.applyTerminalSettings
+  resizeTerminal = terminalFunctions.resizeTerminal
+}
 
 const debug = createDebug('webssh2-client:dom')
 let elements = {}
@@ -585,7 +603,11 @@ function formSubmit(e) {
   // Debug logging
   
   hideloginDialog()
-  connectToServer(formDataObject)
+  if (connectToServer) {
+    connectToServer(formDataObject)
+  } else {
+    console.error('connectToServer function not available')
+  }
 }
 
 /**
@@ -621,10 +643,12 @@ function detectCapsLock(event) {
  * @returns {void}
  */
 export function resize() {
-  const dimensions = resizeTerminal()
-  if (dimensions) {
-    debug('resize:', dimensions)
-    emitResize(dimensions)
+  if (resizeTerminal) {
+    const dimensions = resizeTerminal()
+    if (dimensions) {
+      debug('resize:', dimensions)
+      emitResize(dimensions)
+    }
   }
 }
 
@@ -673,7 +697,7 @@ export function showterminalSettingsDialog(config) {
  * @param {Object} config - The configuration object
  */
 function populateterminalSettingsForm(config) {
-  const settings = getTerminalSettings(config)
+  const settings = getTerminalSettings ? getTerminalSettings(config) : {}
   debug('populateterminalSettingsForm', settings)
   if (elements.terminalSettingsForm) {
     Object.keys(settings).forEach((key) => {
@@ -714,7 +738,7 @@ export function handleterminalSettingsSubmit(event, config) {
   const settings = {}
   const formData = new FormData(form)
 
-  const currentSettings = getTerminalSettings(config)
+  const currentSettings = getTerminalSettings ? getTerminalSettings(config) : {}
 
   for (const [key, value] of formData.entries()) {
     switch (key) {
@@ -752,7 +776,9 @@ export function handleterminalSettingsSubmit(event, config) {
   }
 
   saveTerminalSettings(settings)
-  applyTerminalSettings(settings)
+  if (applyTerminalSettings) {
+    applyTerminalSettings(settings)
+  }
   hideterminalSettingsDialog()
 }
 

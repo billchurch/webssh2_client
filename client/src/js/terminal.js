@@ -4,27 +4,15 @@
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import createDebug from 'debug'
-import { validateNumber, validateBellStyle } from './utils.js'
+import { validateNumber, validateBellStyle, defaultSettings } from './utils.js'
 import { emitData } from './socket.js'
 import { getStoredSettings } from './settings.js'
-import { setTerminalInstance, focusTerminal as domFocusTerminal } from './dom.js'
+import { setTerminalInstance, focusTerminal as domFocusTerminal, openTerminal as domOpenTerminal } from './dom.js'
 
 const debug = createDebug('webssh2-client:terminal')
 
 let term
 let fitAddon
-
-export const defaultSettings = {
-  cursorBlink: true,
-  scrollback: 10000,
-  tabStopWidth: 8,
-  bellStyle: 'sound',
-  fontSize: 14,
-  fontFamily: 'courier-new, courier, monospace',
-  letterSpacing: 0,
-  lineHeight: 1,
-  logLevel: 'info'
-}
 
 /**
  * Initializes the terminal
@@ -117,7 +105,12 @@ export function getTerminalSettings(config) {
 export function openTerminal(container) {
   domOpenTerminal(container)
   if (fitAddon) {
+    // Initial fit
     fitAddon.fit()
+    // Ensure proper fit after DOM settles
+    requestAnimationFrame(() => {
+      fitAddon.fit()
+    })
   }
 }
 
