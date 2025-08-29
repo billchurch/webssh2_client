@@ -84,7 +84,8 @@ export function initializeSocketConnection() {
     reconnection: false,
     timeout: 20000,
     pingTimeout: 60000,
-    pingInterval: 25000
+    pingInterval: 25000,
+    transports: ['websocket', 'polling']
   })
 
   setupSocketListeners()
