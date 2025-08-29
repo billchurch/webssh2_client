@@ -14,7 +14,7 @@ import {
   triggerDownload
 } from './dom.js'
 import { focusTerminal } from './terminal.js'
-import { formatDate, sanitizeHtml } from './utils.js'
+import { formatDate } from './utils.js'
 import { state, toggleState } from './state.js'
 
 const debug = createDebug('webssh2-client:clientlog')
@@ -74,7 +74,7 @@ export function checkSavedSessionLog() {
 
     if (restoreLog) {
       const filename = `WebSSH2-Recovered-${formatDate(new Date(savedDate)).replace(/[/:\s@]/g, '')}.log`
-      const blob = new Blob([sanitizeHtml(savedLog)], { type: 'text/plain' })
+      const blob = new Blob([savedLog], { type: 'text/plain' })
 
       triggerDownload(blob, filename)
 
@@ -134,14 +134,13 @@ export function downloadLog(autoDownload = false) {
 
   if (sessionLog && loggedData) {
     const filename = `WebSSH2-${formatDate(new Date()).replace(/[/:\s@]/g, '')}.log`
-    const cleanLog = sanitizeHtml(sessionLog)
-    const blob = new Blob([cleanLog], { type: 'text/plain' })
+    const blob = new Blob([sessionLog], { type: 'text/plain' })
 
     if (autoDownload) {
       triggerDownload(blob, filename)
     } else {
       try {
-        window.localStorage.setItem(LOG_KEY, cleanLog)
+        window.localStorage.setItem(LOG_KEY, sessionLog)
         window.localStorage.setItem(LOG_DATE_KEY, new Date().toISOString())
         debug('Session log saved to localStorage')
       } catch (e) {

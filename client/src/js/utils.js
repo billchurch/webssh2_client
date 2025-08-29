@@ -2,6 +2,16 @@
 // client/src/js/utils.js
 import createDebug from 'debug'
 import maskObject from 'jsmasker';
+import { 
+  validateHost, 
+  validatePort, 
+  validateUsername, 
+  validatePassword,
+  validateText,
+  validateColor,
+  validateTerminalType,
+  validateLogLevel 
+} from './input-validator.js'
 
 const debug = createDebug('webssh2-client:utils')
 
@@ -144,19 +154,50 @@ export function populateFormFromUrl(config) {
     }
 
     if (value !== null) {
-      // Handle special cases where parameters map to nested fields
-      if (param === 'header') {
-        params.header.text = value
-      } else if (param === 'headerbackground') {
-        params.header.background = value
-      } else {
-        // For all other SSH-related parameters
+      // Validate and sanitize input based on parameter type
+      let validatedValue = null
+      
+      switch(param) {
+        case 'host':
+          validatedValue = validateHost(value)
+          break
+        case 'port':
+          validatedValue = validatePort(value)
+          break
+        case 'username':
+          validatedValue = validateUsername(value)
+          break
+        case 'password':
+          validatedValue = validatePassword(value)
+          break
+        case 'header':
+          validatedValue = validateText(value)
+          if (validatedValue !== null) {
+            params.header.text = validatedValue
+          }
+          break
+        case 'headerbackground':
+          validatedValue = validateColor(value)
+          if (validatedValue !== null) {
+            params.header.background = validatedValue
+          }
+          break
+        case 'sshterm':
+          validatedValue = validateTerminalType(value)
+          break
+        case 'logLevel':
+          validatedValue = validateLogLevel(value)
+          break
+        default:
+          validatedValue = value // For any other parameters
       }
 
-      // Fill form fields if they exist
-      const input = document.getElementById(param + 'Input')
-      if (input) {
-        input.value = value
+      // Only set validated values in form fields
+      if (validatedValue !== null && param !== 'header' && param !== 'headerbackground') {
+        const input = document.getElementById(param + 'Input')
+        if (input) {
+          input.value = validatedValue
+        }
       }
     }
   })
@@ -275,18 +316,6 @@ export function sanitizeColor(color) {
     /^(#([0-9a-fA-F]{3}){1,2}|rgba?\(\s*(\d{1,3}\s*,\s*){2,3}\s*\d{1,3}\s*\)|[a-zA-Z]+)$/
   return colorRegex.test(color) ? color : null
 }
-
-/**
- * Sanitizes a string for use in HTML
- * @param {string} str - The string to sanitize
- * @returns {string} The sanitized string
- */
-export function sanitizeHtml(str) {
-  const temp = document.createElement('div')
-  temp.textContent = str
-  return temp.innerHTML
-}
-
 
 /**
  * Clears the 'basicauth' cookie

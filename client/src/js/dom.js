@@ -8,7 +8,6 @@
 import createDebug from 'debug'
 import {
   sanitizeColor,
-  sanitizeHtml,
   validateNumber,
   validateBellStyle,
   validatePrivateKey
@@ -430,12 +429,12 @@ export function updateElement(elementName, content, color) {
 
   const { text = '', background } =
     typeof content === 'object' ? content : { text: content, background: color }
-  const sanitizedContent = sanitizeHtml(text)
+  // Use textContent instead of innerHTML to prevent XSS
   const sanitizedColor = background ? sanitizeColor(background) : null
 
-  debug('updateElement', { elementName, sanitizedContent, sanitizedColor })
+  debug('updateElement', { elementName, text, sanitizedColor })
 
-  element.innerHTML = sanitizedContent
+  element.textContent = text
   if (sanitizedColor) element.style.backgroundColor = sanitizedColor
 
   if (elementName === 'header') {
