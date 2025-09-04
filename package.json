@@ -27,6 +27,7 @@
     "analyze": "cd client/src && vite build --mode production && vite-bundle-visualizer",
     "typecheck": "tsc -b --pretty --noEmit",
     "typecheck:client": "tsc -p client/tsconfig.json --pretty --noEmit",
+    "build:server": "tsc -p tsconfig.json",
     "release": "standard-version -a -s",
     "publish:dry-run": "npm publish --dry-run",
     "publish:npm": "npm publish",
@@ -36,7 +37,7 @@
   },
   "standard-version": {
     "scripts": {
-      "postbump": "npm run build",
+      "postbump": "npm run build && npm run build:server",
       "precommit": "git add client/public/*"
     }
   },

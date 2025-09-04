@@ -5,12 +5,13 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2023"],
-    "outDir": "./dist-node",
-    "rootDir": "."
+    "outDir": ".",
+    "rootDir": ".",
+    "declaration": false
   },
   "include": [
     "**/*.ts",
-    "client/src/types/**/*.d.ts"
+    "types/**/*.d.ts"
   ],
   "exclude": [
     "client/public",
@@ -18,4 +19,3 @@
     "client/src/**"
   ]
 }
-
