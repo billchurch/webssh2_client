@@ -1,6 +1,6 @@
 {
   "name": "webssh2_client",
-  "version": "0.2.31-alpha.4",
+  "version": "1.0.0-alpha.0",
   "ignore": [
     ".gitignore"
   ],
