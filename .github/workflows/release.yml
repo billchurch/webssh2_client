@@ -14,33 +14,3 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-
-      - name: Checkout
-        if: steps.release.outputs.release_created == 'true'
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        if: steps.release.outputs.release_created == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          registry-url: 'https://registry.npmjs.org/'
-
-      - name: Install dependencies
-        if: steps.release.outputs.release_created == 'true'
-        run: npm ci
-
-      - name: Build client
-        if: steps.release.outputs.release_created == 'true'
-        run: npm run build
-
-      - name: Build server entries
-        if: steps.release.outputs.release_created == 'true'
-        run: npm run build:server
-
-      - name: Publish to npm
-        if: steps.release.outputs.release_created == 'true'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish

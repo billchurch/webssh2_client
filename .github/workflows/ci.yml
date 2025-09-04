@@ -2,8 +2,6 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches: [ main ]
 
 jobs:
   build:
@@ -36,6 +34,8 @@ jobs:
       - name: Build server entries
         run: npm run build:server
 
+      - name: Publish dry run
+        run: npm publish --dry-run
+
       - name: Run tests
         run: node --test
-
