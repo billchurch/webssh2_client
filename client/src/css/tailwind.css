@@ -12,7 +12,8 @@
 
   /* Header visibility handled via Tailwind classes in markup */
 
-  .box { @apply block h-full; }
+  /* Main app container: flex column so header, terminal, and footer stack */
+  .box { @apply flex flex-col h-full; }
 
   /* Footer/status styles now set via Tailwind classes in HTML */
 

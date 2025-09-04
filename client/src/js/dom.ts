@@ -391,16 +391,8 @@ export function updateElement(
   element.textContent = text
   if (sanitizedColor) element.style.backgroundColor = sanitizedColor
   if (elementName === 'header') {
-    const { terminalContainer } = elements
-    // show header (Tailwind-driven)
+    // Show header; flex layout handles sizing
     element.classList.remove('hidden')
-    // Tailwind-based height adjust
-    if (terminalContainer) {
-      terminalContainer.classList.remove('h-[calc(100%-var(--bar-h))]')
-      terminalContainer.classList.add('h-[calc(100%-(var(--bar-h)*2))]')
-      // Back-compat for legacy CSS rule
-      terminalContainer.classList.add('with-header')
-    }
   }
 }
 
@@ -664,6 +656,8 @@ export function handleterminalSettingsSubmit(
   }
   saveTerminalSettings(settings)
   if (applyTerminalSettings) applyTerminalSettings(settings)
+  // Changing font-size/lineHeight/letterSpacing affects geometry; trigger resize
+  resize()
   hideterminalSettingsDialog()
 }
 
