@@ -23,8 +23,10 @@ import type {
   ClientAuthenticatePayload,
   ClientResizePayload,
   ClientToServerEvents,
-  ServerToClientEvents
+  ServerToClientEvents,
+  PermissionsPayload
 } from '../types/events.d'
+import type { ElementId } from '../types/dom.d'
 
 import type { WebSSH2Config } from '../types/config.d'
 
@@ -82,8 +84,6 @@ export function initializeSocketConnection(): Socket<
     withCredentials: true,
     reconnection: false,
     timeout: 20000,
-    pingTimeout: 60000,
-    pingInterval: 25000,
     transports: ['websocket', 'polling']
   }) as Socket<ServerToClientEvents, ClientToServerEvents>
 
@@ -229,13 +229,8 @@ function disconnect(reason: string): void {
   if (onDisconnectCallback) onDisconnectCallback(reason)
 }
 
-function error(err: unknown): void {
-  debug('Socket error:', err)
-  if (onDisconnectCallback) onDisconnectCallback('error', err)
-}
-
-function permissions(permissions: Record<string, boolean>): void {
-  debug('permissions', permissions)
+function permissions(payload: PermissionsPayload): void {
+  debug('permissions', payload)
   const handlers = {
     autoLog: (value: boolean) => {
       if (value) toggleLog(value)
@@ -253,7 +248,7 @@ function permissions(permissions: Record<string, boolean>): void {
     }
   } as const
 
-  Object.entries(permissions).forEach(([key, value]) => {
+  Object.entries(payload).forEach(([key, value]) => {
     const handler = (handlers as Record<string, (v: boolean) => void>)[key]
     if (handler) handler(Boolean(value))
   })
@@ -269,7 +264,7 @@ function handleKeyboardInteractive(data: {
     socket?.emit('authentication', {
       action: 'keyboard-interactive',
       responses
-    } as unknown as Record<string, unknown>)
+    })
   })
 }
 
@@ -290,7 +285,13 @@ function authentication(data: {
       updateElement('status', 'Requesting authentication...', 'orange')
       break
     case 'auth_result':
-      authResult({ success: Boolean(data.success), message: data.message })
+      {
+        const payload: { success: boolean; message?: string } = {
+          success: Boolean(data.success)
+        }
+        if (typeof data.message === 'string') payload.message = data.message
+        authResult(payload)
+      }
       break
     case 'keyboard-interactive':
       handleKeyboardInteractive(
@@ -320,7 +321,7 @@ function updateUI(data: { element?: string; value?: unknown }): void {
     return
   }
   updateElement(
-    element,
+    element as unknown as ElementId,
     value as unknown as { text: string; background?: string }
   )
 }
@@ -338,5 +339,4 @@ function setupSocketListeners(): void {
   socket.on('connect', connect)
   socket.on('connect_error', connect_error)
   socket.on('disconnect', disconnect)
-  socket.on('error', error)
 }

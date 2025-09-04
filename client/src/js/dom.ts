@@ -24,9 +24,12 @@ const debug = createDebug('webssh2-client:dom')
 
 type TerminalDimensions = { cols: number; rows: number }
 
+import type { ITerminalOptions as TerminalOptions } from '@xterm/xterm'
+import type { WebSSH2Config } from '../types/config.d'
+
 type TerminalFunctions = {
-  getTerminalSettings: (config: unknown) => Record<string, unknown>
-  applyTerminalSettings: (settings: Record<string, unknown>) => void
+  getTerminalSettings: (config: WebSSH2Config) => Partial<TerminalOptions>
+  applyTerminalSettings: (settings: Partial<TerminalOptions>) => void
   resizeTerminal: () => TerminalDimensions | null
 }
 
@@ -474,9 +477,11 @@ function formSubmit(e: Event): void {
   e.preventDefault()
   const form = e.target as HTMLFormElement
   const formData = new FormData(form)
-  const entries = Object.fromEntries(
-    formData.entries()
-  ) as Partial<ClientAuthenticatePayload>
+  const entriesObj: Record<string, unknown> = {}
+  formData.forEach((v, k) => {
+    entriesObj[k] = v
+  })
+  const entries = entriesObj as Partial<ClientAuthenticatePayload>
   if (entries.port) {
     const portNum = parseInt(String(entries.port), 10)
     if (Number.isNaN(portNum) || portNum < 1 || portNum > 65535) {
@@ -541,7 +546,9 @@ export function showterminalSettingsDialog(config: unknown): void {
 }
 
 function populateterminalSettingsForm(config: unknown): void {
-  const settings = getTerminalSettings ? getTerminalSettings(config) : {}
+  const settings = getTerminalSettings
+    ? getTerminalSettings(config as WebSSH2Config)
+    : {}
   debug('populateterminalSettingsForm', settings)
   if (elements.terminalSettingsForm) {
     const form = elements.terminalSettingsForm
@@ -584,15 +591,19 @@ export function handleterminalSettingsSubmit(
   }
   const formData = new FormData(form)
   const settings: Record<string, unknown> = {}
-  const currentSettings = getTerminalSettings ? getTerminalSettings(config) : {}
-  for (const [key, value] of formData.entries()) {
+  const currentSettings = getTerminalSettings
+    ? getTerminalSettings(config as WebSSH2Config)
+    : {}
+  const entries: Array<[string, FormDataEntryValue]> = []
+  formData.forEach((v, k) => entries.push([k, v]))
+  for (const [key, value] of entries) {
     switch (key) {
       case 'fontSize':
         settings[key] = validateNumber(
           value as string,
           8,
           72,
-          (currentSettings as Record<string, number>).fontSize as number
+          (currentSettings as Record<string, number>)['fontSize'] as number
         )
         break
       case 'scrollback':
@@ -600,7 +611,7 @@ export function handleterminalSettingsSubmit(
           value as string,
           1,
           200000,
-          (currentSettings as Record<string, number>).scrollback as number
+          (currentSettings as Record<string, number>)['scrollback'] as number
         )
         break
       case 'tabStopWidth':
@@ -608,7 +619,7 @@ export function handleterminalSettingsSubmit(
           value as string,
           1,
           100,
-          (currentSettings as Record<string, number>).tabStopWidth as number
+          (currentSettings as Record<string, number>)['tabStopWidth'] as number
         )
         break
       case 'cursorBlink':
@@ -617,7 +628,7 @@ export function handleterminalSettingsSubmit(
       case 'bellStyle':
         settings[key] = validateBellStyle(
           value as string,
-          (currentSettings as Record<string, 'sound' | 'none'>).bellStyle as
+          (currentSettings as Record<string, 'sound' | 'none'>)['bellStyle'] as
             | 'sound'
             | 'none'
         )
@@ -625,7 +636,7 @@ export function handleterminalSettingsSubmit(
       case 'fontFamily':
         settings[key] =
           (value as string) ||
-          (currentSettings as Record<string, string>).fontFamily
+          (currentSettings as Record<string, string>)['fontFamily']
         break
       default:
         settings[key] = value

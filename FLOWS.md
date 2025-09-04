@@ -40,12 +40,12 @@ sequenceDiagram
     SSHConn-->>SSH: Create shell session
     SSHConn-->>IO: Shell created
     IO-->>Browser: Ready for input/output
-```
 
     Note over Browser,SSH: Bidirectional data flow established
 
     Note over Browser,IO: Control events available post-auth: reauth, replayCredentials.
-    Note over Browser,CDN: CSP: script-src 'self' (no inline scripts). Terminal output rendered as text via xterm (no HTML).
+    Note over Browser,CDN: CSP: script-src 'self' (no inline scripts). Terminal<br> output rendered as text via xterm (no HTML).
+```
 
 ## Development Flow
 
@@ -89,9 +89,7 @@ sequenceDiagram
     SSHConn-->>SSH: Create shell session
     SSHConn-->>IO: Shell created
     IO-->>Browser: Ready for input/output
+    Note over Browser,SSH: Bidirectional data flow established
+    Note over Browser,Vite: CSP enforced in dev: script-src 'self' inline<br> scripts disallowed. Inline styles allowed for<br>xterm.
 
 ```
-
-    Note over Browser,SSH: Bidirectional data flow established
-
-    Note over Browser,Vite: CSP enforced in dev: script-src 'self'; inline scripts disallowed. Inline styles allowed for xterm.

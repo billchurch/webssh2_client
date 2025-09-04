@@ -62,4 +62,8 @@ export interface ClientToServerEvents {
   data: (chunk: string) => void
   resize: (payload: ClientResizePayload) => void
   control: (payload: ClientControlPayload) => void
+  authentication: (payload: {
+    action: 'keyboard-interactive'
+    responses: string[]
+  }) => void
 }

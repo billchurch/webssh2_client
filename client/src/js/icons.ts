@@ -27,7 +27,7 @@ export function createIconNode(
   const svgRaw = (name && ICONS[name]) || ''
   const parser = new DOMParser()
   const doc = parser.parseFromString(svgRaw, 'image/svg+xml')
-  const svgEl = doc.documentElement as SVGElement
+  const svgEl = doc.documentElement as unknown as Node
   const wrapper = document.createElement('span')
   wrapper.className = `icon ${extraClasses}`.trim()
   const imported = document.importNode(svgEl, true)

@@ -7,7 +7,7 @@ import {
 } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import createDebug from 'debug'
-import { validateNumber, validateBellStyle, defaultSettings } from './utils.js'
+import { validateNumber, defaultSettings } from './utils.js'
 import { emitData } from './socket.js'
 import { getStoredSettings } from './settings.js'
 import {
@@ -49,12 +49,14 @@ export function initializeTerminal(config: WebSSH2Config): Terminal {
 /**
  * Gets the terminal options based on the configuration
  */
-export function getTerminalSettings(config: WebSSH2Config): TerminalOptions {
+export function getTerminalSettings(
+  config: WebSSH2Config
+): Partial<TerminalOptions> {
   debug('getTerminalSettings')
   const storedSettings = getStoredSettings() as Partial<TerminalSettings>
   const terminalConfig = (config?.terminal ?? {}) as Partial<TerminalSettings>
 
-  const mergedOptions: TerminalOptions = {
+  const mergedOptions: Partial<TerminalOptions> = {
     cursorBlink: (storedSettings.cursorBlink ??
       terminalConfig.cursorBlink ??
       defaultSettings.cursorBlink) as boolean,
@@ -69,14 +71,6 @@ export function getTerminalSettings(config: WebSSH2Config): TerminalOptions {
       1,
       100,
       defaultSettings.tabStopWidth
-    ),
-    bellStyle: validateBellStyle(
-      String(
-        storedSettings.bellStyle ??
-          terminalConfig.bellStyle ??
-          defaultSettings.bellStyle
-      ),
-      defaultSettings.bellStyle
     ),
     fontSize: validateNumber(
       (storedSettings.fontSize ?? terminalConfig.fontSize) as number,
@@ -151,14 +145,14 @@ export function focusTerminal(): void {
 }
 
 /** Returns current dimensions */
-export function getTerminalDimensions(): { cols?: number; rows?: number } {
+export function getTerminalDimensions(): { cols: number; rows: number } {
   if (term) {
     const { cols, rows } = term
     debug('getTerminalDimensions', { cols, rows })
     return { cols, rows }
   }
   console.error('getTerminalDimensions: Terminal not initialized')
-  return { cols: undefined, rows: undefined }
+  return { cols: 0, rows: 0 }
 }
 
 /** Updates terminal options */
@@ -199,16 +193,14 @@ export function detachTerminalEvent(
 }
 
 /** Applies options to the terminal instance */
-export function applyTerminalSettings(
-  options: Partial<TerminalOptions> & Partial<TerminalSettings>
-): void {
+export function applyTerminalSettings(options: Partial<TerminalOptions>): void {
   if (!term) {
     console.error('applyTerminalSettings: Terminal not initialized')
     return
   }
   debug('applyTerminalSettings', options)
 
-  const terminalSettings: TerminalOptions = {
+  const terminalSettings: Partial<TerminalOptions> = {
     cursorBlink: (options.cursorBlink ??
       defaultSettings.cursorBlink) as boolean,
     scrollback: validateNumber(
@@ -222,10 +214,6 @@ export function applyTerminalSettings(
       1,
       100,
       defaultSettings.tabStopWidth
-    ),
-    bellStyle: validateBellStyle(
-      String(options.bellStyle ?? defaultSettings.bellStyle),
-      defaultSettings.bellStyle
     ),
     fontSize: validateNumber(
       options.fontSize as number,

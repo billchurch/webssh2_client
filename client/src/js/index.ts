@@ -245,7 +245,11 @@ function initializeConnection(): void {
   debug('initializeConnection', { autoConnect })
   try {
     if (autoConnect) {
-      fillLoginForm(ssh)
+      const loginInfo: { host?: string; port?: number; username?: string } = {}
+      if (ssh.host) loginInfo.host = ssh.host
+      loginInfo.port = ssh.port
+      if (ssh.username) loginInfo.username = ssh.username
+      fillLoginForm(loginInfo)
       connectToServer()
     } else {
       showloginDialog()

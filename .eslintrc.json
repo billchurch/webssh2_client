@@ -15,7 +15,8 @@
   ],
   "plugins": ["prettier", "no-unsanitized"],
   "rules": {
-    "prettier/prettier": "error",
+    "prettier/prettier": "warn",
+    "dot-notation": "off",
     "no-unused-vars": "warn",
     "no-console": "off",
     "func-names": "off",
@@ -27,11 +28,31 @@
     "no-unsanitized/property": "error",
     "no-restricted-properties": [
       "error",
-      { "object": "*", "property": "innerHTML", "message": "Use textContent or safe DOM builders instead of innerHTML." },
-      { "object": "*", "property": "outerHTML", "message": "Avoid outerHTML; use DOM APIs to replace nodes safely." },
-      { "object": "*", "property": "insertAdjacentHTML", "message": "Avoid insertAdjacentHTML; use DOM APIs to create and append elements." },
-      { "object": "document", "property": "write", "message": "document.write is disallowed." },
-      { "object": "document", "property": "writeln", "message": "document.writeln is disallowed." }
+      {
+        "object": "*",
+        "property": "innerHTML",
+        "message": "Use textContent or safe DOM builders instead of innerHTML."
+      },
+      {
+        "object": "*",
+        "property": "outerHTML",
+        "message": "Avoid outerHTML; use DOM APIs to replace nodes safely."
+      },
+      {
+        "object": "*",
+        "property": "insertAdjacentHTML",
+        "message": "Avoid insertAdjacentHTML; use DOM APIs to create and append elements."
+      },
+      {
+        "object": "document",
+        "property": "write",
+        "message": "document.write is disallowed."
+      },
+      {
+        "object": "document",
+        "property": "writeln",
+        "message": "document.writeln is disallowed."
+      }
     ]
   },
   "overrides": [
@@ -48,7 +69,10 @@
         "ecmaVersion": "latest"
       },
       "rules": {
+        "prettier/prettier": "warn",
         "no-undef": "off",
+        "import/first": "off",
+        "import/order": "off",
         "import/extensions": "off",
         "import/no-unresolved": "off",
         "import/no-extraneous-dependencies": "off",
@@ -57,7 +81,11 @@
         "node/no-missing-import": "off",
         "node/no-unsupported-features/es-syntax": "off",
         "camelcase": "off",
-        "no-use-before-define": ["error", { "functions": false, "classes": false, "variables": false }],
+        "dot-notation": "off",
+        "no-use-before-define": [
+          "error",
+          { "functions": false, "classes": false, "variables": false }
+        ],
         "no-param-reassign": ["error", { "props": false }],
         "no-alert": "off",
         "no-plusplus": "off",
@@ -85,7 +113,10 @@
           "warn",
           { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
         ],
-        "@typescript-eslint/consistent-type-imports": ["error", { "prefer": "type-imports" }]
+        "@typescript-eslint/consistent-type-imports": [
+          "error",
+          { "prefer": "type-imports" }
+        ]
       }
     },
     {

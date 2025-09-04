@@ -33,9 +33,9 @@ export function validateHost(host: unknown): string | null {
   // Remove any protocol prefixes
   value = value.replace(/^https?:\/\//, '')
   // Remove any path components
-  value = value.split('/')[0]
+  value = value.split('/')[0] ?? value
   // Remove port if present
-  value = value.split(':')[0]
+  value = value.split(':')[0] ?? value
 
   if (value.length > MAX_LENGTHS.host) return null
 
@@ -204,45 +204,45 @@ export function validateFormData(formData: unknown) {
   const fd = formData as Record<string, unknown>
   const validated: Record<string, unknown> = {}
 
-  if (!fd.host || !validateHost(fd.host)) {
+  if (!fd['host'] || !validateHost(fd['host'])) {
     debug('Invalid or missing host')
     return null
   }
-  validated.host = validateHost(fd.host)
+  validated['host'] = validateHost(fd['host'])
 
-  if (!fd.username || !validateUsername(fd.username)) {
+  if (!fd['username'] || !validateUsername(fd['username'])) {
     debug('Invalid or missing username')
     return null
   }
-  validated.username = validateUsername(fd.username)
+  validated['username'] = validateUsername(fd['username'])
 
-  if (fd.port !== undefined) {
-    const port = validatePort(fd.port)
+  if (fd['port'] !== undefined) {
+    const port = validatePort(fd['port'])
     if (!port) {
       debug('Invalid port')
       return null
     }
-    validated.port = port
+    validated['port'] = port
   } else {
-    validated.port = 22
+    validated['port'] = 22
   }
 
-  if (fd.password) validated.password = validatePassword(fd.password)
-  if (fd.privateKey) {
-    const pk = String(fd.privateKey)
+  if (fd['password']) validated['password'] = validatePassword(fd['password'])
+  if (fd['privateKey']) {
+    const pk = String(fd['privateKey'])
     if (pk.length > MAX_LENGTHS.privateKey) {
       debug('Private key too large')
       return null
     }
-    validated.privateKey = pk
+    validated['privateKey'] = pk
   }
-  if (fd.passphrase) {
-    const pp = String(fd.passphrase)
+  if (fd['passphrase']) {
+    const pp = String(fd['passphrase'])
     if (pp.length > MAX_LENGTHS.passphrase) {
       debug('Passphrase too long')
       return null
     }
-    validated.passphrase = pp
+    validated['passphrase'] = pp
   }
   return validated
 }

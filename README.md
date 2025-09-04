@@ -10,9 +10,11 @@ WebSSH2 Client is an HTML5 web-based terminal emulator and SSH client component.
 ![WebSSH2 demo](https://user-images.githubusercontent.com/1668075/182425293-acc8741e-cc92-4105-afdc-9538e1685d4b.gif)
 
 # Important Notice
+
 This package contains only the browser-side client component of WebSSH2. It requires a compatible WebSSH2 server to function. The server component is available at [webssh2 server](https://github.com/billchurch/webssh2/tree/bigip-server). This package is intended for advanced users who want to customize or integrate the client component independently.
 
 # Status
+
 This is an experimental refactor of the WebSSH2 v0.2.x client to function as a standalone component. It has been separated from the server-side code to facilitate customization and integration with different frameworks.
 
 ## Requirements
@@ -24,17 +26,20 @@ This is an experimental refactor of the WebSSH2 v0.2.x client to function as a s
 ## Installation
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/billchurch/webssh2_client.git
    cd webssh2_client
    ```
 
 2. Install dependencies:
+
    ```
    npm install
    ```
 
 3. Build the client:
+
    ```
    npm run build
    ```
@@ -102,12 +107,12 @@ You can configure the client by setting `window.webssh2Config`:
 ```javascript
 window.webssh2Config = {
   socket: {
-    url: null,  // WebSocket URL (auto-detected if null)
-    path: '/ssh/socket.io'  // Socket.IO path
+    url: null, // WebSocket URL (auto-detected if null)
+    path: '/ssh/socket.io' // Socket.IO path
   },
   ssh: {
-    host: null,  // SSH server hostname
-    port: 22,    // SSH server port
+    host: null, // SSH server hostname
+    port: 22, // SSH server port
     username: null,
     sshterm: 'xterm-color'
   },
@@ -116,7 +121,7 @@ window.webssh2Config = {
     background: 'green'
   },
   autoConnect: false
-};
+}
 ```
 
 ## Development

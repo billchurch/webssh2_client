@@ -45,30 +45,32 @@ export function validateNumber(
 
 type Obj = Record<string, unknown>
 
-export function isObject(item: unknown): item is Obj {
+export function isObject(item: unknown): item is Record<string, unknown> {
   return !!item && typeof item === 'object' && !Array.isArray(item)
 }
 
-export function mergeDeep<T extends Obj, U extends Obj>(
+export function mergeDeep<T, U extends Record<string, unknown>>(
   target: T,
   source: U
 ): T & U {
-  const output: Obj = { ...target }
+  const output: Record<string, unknown> = {
+    ...(target as unknown as Record<string, unknown>)
+  }
   if (isObject(target) && isObject(source)) {
     Object.keys(source).forEach((key) => {
-      const sVal = (source as Obj)[key]
-      const tVal = (target as Obj)[key]
+      const sVal = (source as Record<string, unknown>)[key]
+      const tVal = (target as unknown as Record<string, unknown>)[key]
       if (isObject(sVal)) {
-        if (!(key in target)) {
-          ;(output as Obj)[key] = sVal
+        if (!(key in (target as Record<string, unknown>))) {
+          output[key] = sVal
         } else {
-          ;(output as Obj)[key] = mergeDeep(
-            isObject(tVal) ? (tVal as Obj) : {},
-            sVal as Obj
+          output[key] = mergeDeep(
+            isObject(tVal) ? (tVal as Record<string, unknown>) : {},
+            sVal as Record<string, unknown>
           )
         }
       } else {
-        ;(output as Obj)[key] = sVal
+        output[key] = sVal
       }
     })
   }
@@ -163,14 +165,26 @@ export function populateFormFromUrl(config: WebSSH2Config): WebSSH2Config {
         case 'header': {
           const text = validateText(value)
           if (text !== null) {
-            ;(params as Obj).header = { ...(params as Obj).header, text }
+            const header = (params as Record<string, unknown>)['header'] as
+              | Record<string, unknown>
+              | undefined
+            ;(params as Record<string, unknown>)['header'] = {
+              ...(header ?? {}),
+              text
+            }
           }
           break
         }
         case 'headerbackground': {
           const background = validateColor(value)
           if (background !== null) {
-            ;(params as Obj).header = { ...(params as Obj).header, background }
+            const header = (params as Record<string, unknown>)['header'] as
+              | Record<string, unknown>
+              | undefined
+            ;(params as Record<string, unknown>)['header'] = {
+              ...(header ?? {}),
+              background
+            }
           }
           break
         }
@@ -212,8 +226,10 @@ export function getCredentials(
   const cfg = (window as Window).webssh2Config || {}
   const urlParams = getUrlParams()
 
+  const fd = formData as Record<string, unknown> | null
+
   const portValue =
-    (formData?.port as number | string | undefined) ||
+    (fd?.['port'] as number | string | undefined) ||
     urlParams.get('port') ||
     (cfg.ssh?.port as number | undefined) ||
     (document.getElementById('portInput') as HTMLInputElement | null)?.value ||
@@ -227,7 +243,7 @@ export function getCredentials(
 
   const mergedConfig: ClientAuthenticatePayload = {
     host:
-      (formData?.host as string | undefined) ||
+      (fd?.['host'] as string | undefined) ||
       urlParams.get('host') ||
       (cfg.ssh?.host as string | undefined) ||
       (document.getElementById('hostInput') as HTMLInputElement | null)
@@ -235,28 +251,28 @@ export function getCredentials(
       '',
     port,
     username:
-      (formData?.username as string | undefined) ||
+      (fd?.['username'] as string | undefined) ||
       (document.getElementById('usernameInput') as HTMLInputElement | null)
         ?.value ||
       urlParams.get('username') ||
       (cfg.ssh?.username as string | undefined) ||
       '',
     password:
-      (formData?.password as string | undefined) ||
+      (fd?.['password'] as string | undefined) ||
       (document.getElementById('passwordInput') as HTMLInputElement | null)
         ?.value ||
       urlParams.get('password') ||
       (cfg.ssh?.password as string | undefined) ||
       '',
     term:
-      (formData?.term as string | undefined) ||
+      (fd?.['term'] as string | undefined) ||
       urlParams.get('sshterm') ||
       (cfg.ssh?.sshterm as string | undefined) ||
       'xterm-color'
   }
 
   const privateKey =
-    (formData?.privateKey as string | undefined) ||
+    (fd?.['privateKey'] as string | undefined) ||
     (document.getElementById('privateKeyText') as HTMLTextAreaElement | null)
       ?.value ||
     urlParams.get('privateKey') ||
@@ -265,7 +281,7 @@ export function getCredentials(
   if (privateKey) {
     mergedConfig.privateKey = privateKey
     const passphrase =
-      (formData?.passphrase as string | undefined) ||
+      (fd?.['passphrase'] as string | undefined) ||
       (document.getElementById('passphraseInput') as HTMLInputElement | null)
         ?.value ||
       urlParams.get('passphrase') ||

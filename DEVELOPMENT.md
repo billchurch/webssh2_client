@@ -53,6 +53,7 @@ npm run watch
 ```
 
 This will:
+
 - Start the WebSSH2 server on port `2222`
 - Enable automatic reloading when server files change
 - Allow CORS for the development client
@@ -72,6 +73,7 @@ npm run dev
 ```
 
 This will:
+
 - Start the Vite dev server on port `3000` with live reload
 - Proxy `/ssh/socket.io` to `http://localhost:2222` (see `client/src/vite.config.js`)
 - Expose a banner define for version/build stamp
@@ -79,6 +81,7 @@ This will:
 ### Accessing the Development Environment
 
 1. Open your web browser and navigate to:
+
 ```
 http://localhost:3000
 ```
@@ -95,16 +98,16 @@ sequenceDiagram
     participant SSH as SSH Server<br/>(Port 22)
 
     Note over Browser,SSH: Development Data Flow
-    
+
     Browser->>+Client: HTTP Request
     Client->>-Browser: Serve Client Files
-    
+
     Browser->>+Client: WebSocket Connection
     Client->>+Server: Socket.IO Connection
     Server->>+SSH: SSH Connection
-    
+
     Note over Browser,SSH: Bidirectional Communication
-    
+
     SSH-->>-Server: SSH Data
     Server-->>-Client: Socket.IO Events
     Client-->>-Browser: WebSocket Events
@@ -145,6 +148,7 @@ npm run build:server # Node entrypoints to JS
 ```
 
 Artifacts:
+
 - Client: `client/public/{webssh2.bundle.js, webssh2.css, client.htm}`
 - Node: root `index.js`, `client/index.js` (compiled from TypeScript)
 

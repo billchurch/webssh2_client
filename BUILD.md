@@ -26,6 +26,7 @@ Ensure your SSH or GPG key is set up for git commit signing and added to your gi
 ## Build Process
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/billchurch/webssh2_client.git
    cd webssh2_client
@@ -34,11 +35,13 @@ Ensure your SSH or GPG key is set up for git commit signing and added to your gi
 2. If using VSCode with the devcontainer, open the project in VSCode and reopen in the container when prompted.
 
 3. Install dependencies:
+
    ```
    npm install
    ```
 
 4. Build the client bundle:
+
    ```
    npm run build
    ```
@@ -46,17 +49,20 @@ Ensure your SSH or GPG key is set up for git commit signing and added to your gi
    This runs Vite in production mode and outputs to `client/public/` (e.g., `webssh2.bundle.js`, `webssh2.css`, `client.htm`).
 
 5. Type-check (recommended):
+
    ```
    npm run typecheck
    npm run typecheck:client
    ```
 
 6. Lint (recommended):
+
    ```
    npm run lint
    ```
 
 7. Build Node entrypoints (for local testing or publish):
+
    ```
    npm run build:server
    ```

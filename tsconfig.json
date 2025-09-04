@@ -9,14 +9,6 @@
     "rootDir": ".",
     "declaration": false
   },
-  "include": [
-    "**/*.ts",
-    "types/**/*.d.ts",
-    "client/src/js/csp-config.ts"
-  ],
-  "exclude": [
-    "client/public",
-    "node_modules",
-    "client/src/**"
-  ]
+  "include": ["**/*.ts", "types/**/*.d.ts", "client/src/js/csp-config.ts"],
+  "exclude": ["client/public", "node_modules", "client/src/**"]
 }
