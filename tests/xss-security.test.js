@@ -84,16 +84,14 @@ describe('XSS Security Tests', () => {
         // Check that no script tags were created
         assert.equal(headerElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
         
-        // Check that no event handlers were added
-        assert.equal(headerElement.innerHTML.includes('onerror'), false, 'Event handlers should not be present')
-        assert.equal(headerElement.innerHTML.includes('onload'), false, 'Event handlers should not be present')
-        assert.equal(headerElement.innerHTML.includes('onfocus'), false, 'Event handlers should not be present')
-        
-        // Check that the text content is properly escaped
+        // Check that the text content is properly escaped and no HTML is interpreted
         assert.equal(headerElement.textContent, vector, 'Text should be escaped and displayed as plain text')
         
-        // Verify no executable JavaScript
-        assert.equal(headerElement.innerHTML.includes('javascript:'), false, 'JavaScript URLs should not be present')
+        // Verify that innerHTML contains escaped HTML entities (safe representation)
+        const innerHTML = headerElement.innerHTML
+        assert.equal(innerHTML.includes('<script'), false, 'Script tags should not be present in HTML')
+        assert.equal(innerHTML.includes('<img'), false, 'Image tags should not be present in HTML')
+        assert.equal(innerHTML.includes('<svg'), false, 'SVG tags should not be present in HTML')
       })
     })
 
@@ -105,8 +103,14 @@ describe('XSS Security Tests', () => {
         // Check that no script tags were created
         assert.equal(footerElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
         
-        // Check that the text content is properly escaped
+        // Check that the text content is properly escaped and no HTML is interpreted
         assert.equal(footerElement.textContent, vector, 'Text should be escaped and displayed as plain text')
+        
+        // Verify that innerHTML contains escaped HTML entities (safe representation)
+        const innerHTML = footerElement.innerHTML
+        assert.equal(innerHTML.includes('<script'), false, 'Script tags should not be present in HTML')
+        assert.equal(innerHTML.includes('<img'), false, 'Image tags should not be present in HTML')
+        assert.equal(innerHTML.includes('<svg'), false, 'SVG tags should not be present in HTML')
       })
     })
   })
@@ -120,8 +124,13 @@ describe('XSS Security Tests', () => {
         // Check that no script tags were created
         assert.equal(statusElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
         
-        // Check that the text content is properly escaped
+        // Check that the text content is properly escaped and no HTML is interpreted
         assert.equal(statusElement.textContent, vector, 'Text should be escaped and displayed as plain text')
+        
+        // Verify that innerHTML contains escaped HTML entities (safe representation)
+        const innerHTML = statusElement.innerHTML
+        assert.equal(innerHTML.includes('<script'), false, 'Script tags should not be present in HTML')
+        assert.equal(innerHTML.includes('<img'), false, 'Image tags should not be present in HTML')
       })
     })
 
@@ -133,8 +142,13 @@ describe('XSS Security Tests', () => {
         // Check that no script tags were created
         assert.equal(errorElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
         
-        // Check that the text content is properly escaped
+        // Check that the text content is properly escaped and no HTML is interpreted
         assert.equal(errorElement.textContent, vector, 'Text should be escaped and displayed as plain text')
+        
+        // Verify that innerHTML contains escaped HTML entities (safe representation)  
+        const innerHTML = errorElement.innerHTML
+        assert.equal(innerHTML.includes('<script'), false, 'Script tags should not be present in HTML')
+        assert.equal(innerHTML.includes('<img'), false, 'Image tags should not be present in HTML')
       })
     })
   })
@@ -159,9 +173,13 @@ describe('XSS Security Tests', () => {
       // Simulate URL parameter processing
       updateElement('footer', maliciousFooter)
       
-      // Verify no image tag with onerror
+      // Verify no image tag with onerror  
       assert.equal(footerElement.getElementsByTagName('img').length, 0, 'Image tags should not be present')
       assert.equal(footerElement.textContent, maliciousFooter, 'Malicious content should be displayed as text')
+      
+      // Verify that innerHTML contains escaped HTML entities (safe representation)
+      const innerHTML = footerElement.innerHTML
+      assert.equal(innerHTML.includes('<img'), false, 'Image tags should not be present in HTML')
     })
   })
 

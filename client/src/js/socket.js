@@ -15,7 +15,7 @@ import { getCredentials } from './utils.js'
 import { getTerminalDimensions } from './terminal.js'
 import { state } from './state.js'
 import { toggleLog } from './clientlog.js'
-import maskObject from 'jsmasker'
+import maskObject from 'jsmasker/src/index.js'
 
 const debug = createDebug('webssh2-client:socket')
 

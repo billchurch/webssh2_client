@@ -1,7 +1,7 @@
 // client
 // client/src/js/utils.js
 import createDebug from 'debug'
-import maskObject from 'jsmasker';
+import maskObject from 'jsmasker/src/index.js'
 import { 
   validateHost, 
   validatePort, 

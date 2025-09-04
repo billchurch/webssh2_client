@@ -70,6 +70,6 @@
     ]
   },
   "dependencies": {
-    "jsmasker": "^1.4.0"
+    "jsmasker": "^1.7.0"
   }
 }
