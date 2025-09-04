@@ -5,6 +5,7 @@ import createDebug from 'debug'
 import {
   updatestartLogBtnState,
   toggleDownloadLogBtn,
+  toggleClearLogBtn,
   triggerDownload
 } from './dom.js'
 import { focusTerminal } from './terminal.js'
@@ -25,6 +26,7 @@ export function addToSessionLog(data: string): void {
   let sessionLog = window.localStorage.getItem(LOG_KEY) || ''
   if (sessionLog === '') {
     toggleDownloadLogBtn(true)
+    toggleClearLogBtn(true)
   }
   sessionLog += data
   window.localStorage.setItem(LOG_KEY, sessionLog)
@@ -37,6 +39,7 @@ export function clearLog(): void {
     window.localStorage.removeItem(LOG_KEY)
     window.localStorage.removeItem(LOG_DATE_KEY)
     toggleDownloadLogBtn(false)
+    toggleClearLogBtn(false)
     debug('Session log cleared from localStorage')
   } else {
     debug('No session log found to clear')
@@ -58,6 +61,7 @@ export function checkSavedSessionLog(): void {
       window.localStorage.removeItem(LOG_KEY)
       window.localStorage.removeItem(LOG_DATE_KEY)
       toggleDownloadLogBtn(false)
+      toggleClearLogBtn(false)
     }
   }
 }
@@ -107,6 +111,7 @@ export function downloadLog(autoDownload: boolean = false): void {
       window.localStorage.removeItem(LOG_KEY)
       window.localStorage.removeItem(LOG_DATE_KEY)
       toggleDownloadLogBtn(false)
+      toggleClearLogBtn(false)
     } else {
       try {
         window.localStorage.setItem(LOG_KEY, sessionLog)

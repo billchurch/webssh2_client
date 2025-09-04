@@ -390,7 +390,13 @@ export function updateElement(
   if (elementName === 'header') {
     const { terminalContainer } = elements
     toggleVisibility(element, true)
-    terminalContainer?.classList.add('with-header')
+    // Tailwind-based height adjust
+    if (terminalContainer) {
+      terminalContainer.classList.remove('h-[calc(100%-var(--bar-h))]')
+      terminalContainer.classList.add('h-[calc(100%-(var(--bar-h)*2))]')
+      // Back-compat for legacy CSS rule
+      terminalContainer.classList.add('with-header')
+    }
   }
 }
 
@@ -463,14 +469,23 @@ export function toggleDownloadLogBtn(visible: boolean): void {
     toggleVisibility(elements.downloadLogBtn, visible)
 }
 
+export function toggleClearLogBtn(visible: boolean): void {
+  if (elements.clearLogBtn) toggleVisibility(elements.clearLogBtn, visible)
+}
+
 function toggleVisibility(
   element: HTMLElement | null,
   isVisible: boolean
 ): void {
   if (!element) return
   debug(`toggleVisibility: ${element.id}: ${isVisible}`)
-  if (isVisible) element.classList.add('visible')
-  else element.classList.remove('visible')
+  if (isVisible) {
+    element.classList.remove('hidden')
+    element.classList.add('visible')
+  } else {
+    element.classList.add('hidden')
+    element.classList.remove('visible')
+  }
 }
 
 function formSubmit(e: Event): void {
@@ -719,7 +734,7 @@ function setupPrivateKeyEvents(): void {
     e.preventDefault()
     privateKeySection.classList.toggle('hidden')
     privateKeyToggle.replaceChildren()
-    const iconEl = createIconNode('key', 'icon-fw')
+    const iconEl = createIconNode('key', 'w-5 h-5 inline-block')
     if (privateKeySection.classList.contains('hidden')) {
       privateKeyToggle.append(iconEl, document.createTextNode(' Add SSH Key'))
     } else {

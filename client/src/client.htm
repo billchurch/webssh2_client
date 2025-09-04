@@ -113,18 +113,18 @@
     <button id="reconnectButton" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Reconnect</button>
     <div class="box">
       <div id="header" class="hidden w-full text-center z-[99] h-6 leading-6 bg-green-600 text-white border-b border-neutral-200"></div>
-      <div id="terminalContainer" class="terminal"></div>
+      <div id="terminalContainer" class="terminal h-[calc(100%-var(--bar-h))] w-[calc(100%-1px)] mx-auto p-[2px]"></div>
       <div id="bottomdiv" class="fixed inset-x-0 bottom-0 z-[99] h-6 flex items-center bg-neutral-800 text-neutral-100 border-t border-neutral-200">
-        <div class="dropup" id="menu">
-          <i data-icon="menu" class="icon-fw"></i> Menu
-          <div id="dropupContent">
-            <button id="clearLogBtn" class="menu-button"><i data-icon="trash-can" class="icon-fw"></i> Clear Log</button>
-            <button id="stopLogBtn" class="menu-button"><i data-icon="settings" class="icon-spin icon-fw"></i> Stop Log</button>
-            <button id="startLogBtn" class="menu-button"><i data-icon="clipboard" class="icon-fw"></i> Start Log</button>
-            <button id="downloadLogBtn" class="menu-button"><i data-icon="download" class="icon-fw"></i> Download Log</button>
-            <button id="replayCredentialsBtn" class="menu-button"><i data-icon="key" class="icon-fw"></i> Credentials</button>
-            <button id="reauthBtn" class="menu-button"><i data-icon="key" class="icon-fw"></i> Switch User</button>
-            <button id="terminalSettingsBtn" class="menu-button"><i data-icon="settings" class="icon-fw"></i> Settings</button>
+        <div id="menu" class="relative group cursor-pointer px-2">
+          <span class="inline-flex items-center gap-1"><i data-icon="menu" class="w-5 h-5 inline-block"></i> Menu</span>
+          <div id="dropupContent" class="hidden group-hover:block absolute bottom-full left-0 min-w-56 bg-neutral-50 text-neutral-700 text-base shadow-md border border-neutral-200 z-[101]">
+            <button id="clearLogBtn" class="hidden w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="trash-can" class="w-5 h-5 inline-block"></i> Clear Log</button>
+            <button id="stopLogBtn" class="hidden w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="settings" class="animate-spin origin-center w-5 h-5 inline-block"></i> Stop Log</button>
+            <button id="startLogBtn" class="w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="clipboard" class="w-5 h-5 inline-block"></i> Start Log</button>
+            <button id="downloadLogBtn" class="hidden w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="download" class="w-5 h-5 inline-block"></i> Download Log</button>
+            <button id="replayCredentialsBtn" class="w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="key" class="w-5 h-5 inline-block"></i> Credentials</button>
+            <button id="reauthBtn" class="w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="key" class="w-5 h-5 inline-block"></i> Switch User</button>
+            <button id="terminalSettingsBtn" class="w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="settings" class="w-5 h-5 inline-block"></i> Settings</button>
           </div>
         </div>
         <div id="footer" class="inline-block text-left px-[10px] border-l border-neutral-200"></div>

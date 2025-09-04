@@ -1,7 +1,7 @@
 .icon svg {
   width: 1em;
   height: 1em;
-  vertical-align: -0.125em;
+  display: block;
   stroke: currentColor;
   fill: none;
 }
@@ -11,12 +11,4 @@
   display: inline-block;
 }
 
-.icon-spin svg {
-  animation: icon-spin 1s linear infinite;
-  transform-origin: center;
-}
-
-@keyframes icon-spin {
-  to { transform: rotate(360deg); }
-}
-
+/* spin now handled via Tailwind animate-spin + origin-center */

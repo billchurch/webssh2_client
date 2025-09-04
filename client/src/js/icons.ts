@@ -27,10 +27,26 @@ export function createIconNode(
   const svgRaw = (name && ICONS[name]) || ''
   const parser = new DOMParser()
   const doc = parser.parseFromString(svgRaw, 'image/svg+xml')
-  const svgEl = doc.documentElement as unknown as Node
+  const svgEl = doc.documentElement as SVGElement
+
+  // Split classes: apply sizing/animation to SVG, container/layout to wrapper
+  const tokens = (extraClasses || '').split(/\s+/).filter(Boolean)
+  const svgClass: string[] = []
+  const wrapperClass: string[] = ['icon']
+  tokens.forEach((t) => {
+    if (t.startsWith('w-') || t.startsWith('h-') || t.startsWith('animate-') || t.startsWith('origin-')) {
+      svgClass.push(t)
+    } else {
+      wrapperClass.push(t)
+    }
+  })
+
   const wrapper = document.createElement('span')
-  wrapper.className = `icon ${extraClasses}`.trim()
-  const imported = document.importNode(svgEl, true)
+  wrapper.className = wrapperClass.join(' ').trim()
+
+  const imported = document.importNode(svgEl, true) as SVGElement
+  const existing = imported.getAttribute('class') || ''
+  imported.setAttribute('class', `${existing} ${svgClass.join(' ')}`.trim())
   wrapper.appendChild(imported)
   return wrapper
 }
