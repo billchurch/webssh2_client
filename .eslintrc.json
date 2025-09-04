@@ -15,5 +15,29 @@
     "class-methods-use-this": "off",
     "space-before-function-paren": "off"
   },
-  "ignores": ["scripts/*", "client/public/*.js"]
+  "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint", "prettier"],
+      "extends": [
+        "plugin:@typescript-eslint/recommended",
+        "plugin:prettier/recommended"
+      ],
+      "parserOptions": {
+        "sourceType": "module",
+        "ecmaVersion": "latest"
+      },
+      "rules": {
+        "no-undef": "off",
+        "@typescript-eslint/no-explicit-any": "error",
+        "@typescript-eslint/no-unused-vars": [
+          "warn",
+          { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+        ],
+        "@typescript-eslint/consistent-type-imports": ["error", { "prefer": "type-imports" }]
+      }
+    }
+  ],
+  "ignorePatterns": ["scripts/*", "client/public/**"]
 }
