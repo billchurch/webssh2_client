@@ -1,0 +1,147 @@
+/* Tailwind CSS entry */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* App components migrated from style.css and visibility helpers */
+@layer components {
+  :root { --bar-h: 24px; }
+  /* visibility helpers for JS toggles */
+  .visible { display: block; }
+
+  /* Body and base layout */
+  html, body {
+    @apply h-full m-0 font-sans text-base;
+    background-color: rgb(0, 0, 0);
+    color: rgb(240, 240, 240);
+  }
+
+  /* Header bar */
+  #header {
+    @apply hidden w-full text-center z-[99] flex-[0_1_auto];
+    height: var(--bar-h);
+    line-height: var(--bar-h);
+    background-color: rgb(0, 128, 0);
+    border-color: white;
+    border-style: none none solid none;
+    border-width: 1px;
+    color: rgb(240, 240, 240);
+  }
+  #header.visible { display: block; }
+
+  .box { @apply block h-full; }
+
+  /* Bottom status bar */
+  #bottomdiv {
+    @apply fixed left-0 w-full z-[99] flex items-center border-t border-neutral-200 box-border;
+    height: var(--bar-h);
+    bottom: 0;
+    background-color: rgb(50, 50, 50);
+  }
+  #footer {
+    @apply inline-block text-left px-[10px] border-l border-neutral-200 box-border;
+    background-color: rgb(50, 50, 50);
+    color: rgb(240, 240, 240);
+  }
+  #status {
+    @apply inline-block text-left px-[10px] z-[100] border-x border-neutral-200 box-border;
+    background-color: rgb(50, 50, 50);
+    color: rgb(240, 240, 240);
+  }
+
+  /* Manual backdrop for login (non-modal dialog) */
+  .backdrop {
+    @apply fixed inset-0 z-[1000];
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+  }
+  .backdrop.visible { display: block; }
+  /* Use dialog's native ::backdrop for modal dimming */
+  dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+  .modal { @apply m-0 p-0 border-0 bg-transparent overflow-visible; }
+  /* Robust centering across browsers */
+  .modal[open] { @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] m-0 overflow-visible; }
+  .modal-content {
+    @apply mx-auto p-5 w-[300px] overflow-visible;
+    background-color: #fefefe;
+    border: 1px solid #888;
+    color: #333;
+  }
+  .modal-content h2 {
+    @apply mt-0;
+    color: #333;
+  }
+
+  /* Login form spacing */
+  #loginForm input { @apply w-full mb-[10px]; }
+  #loginForm button { @apply w-full; }
+
+  /* Error modal */
+  .error-modal {
+    background-color: #ffebee;
+    border: 1px solid #ef5350;
+  }
+  .error-modal h2 {
+    color: #c62828;
+    margin-top: 0;
+  }
+
+  /* Prompt dialog */
+  #promptDialog .modal-content { @apply w-[400px]; }
+  #promptInputContainer { @apply mb-[15px]; }
+  #promptInputContainer label { @apply block mt-[10px] mb-[5px]; }
+  #promptInputContainer input { @apply w-full p-[5px] mb-[10px]; }
+
+  /* Close button */
+  .close-button {
+    @apply float-right cursor-pointer m-0 p-0 text-[28px] font-bold;
+    background: none; border: none; color: #aaa; height: auto; line-height: 1; width: auto;
+  }
+
+  /* Reconnect button */
+  #reconnectButton {
+    @apply fixed left-1/2 top-1/2 text-white rounded z-[1001] text-[16px] px-5 py-[10px];
+    background-color: #007bff;
+    border: none;
+    transform: translate(-50%, -50%);
+    transition: background-color 0.3s;
+    display: none;
+  }
+  #reconnectButton.visible { display: block; }
+  #reconnectButton:hover { background-color: #0056b3; }
+
+  /* Password field + caps lock */
+  #passwordInput { position: relative; padding-right: 30px; }
+  #capsLockIcon {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    color: red; display: none; pointer-events: none;
+  }
+  .password-wrapper { position: relative; width: 100%; }
+  #passwordInput.capslock-active ~ #capsLockIcon { display: block; }
+
+  /* Terminal settings form */
+  #terminalSettingsDialog .modal-content { @apply w-[400px]; }
+  #terminalSettingsForm label { @apply block mt-[10px]; }
+  #terminalSettingsForm input, #terminalSettingsForm select { @apply w-full mb-[10px]; }
+  #terminalSettingsForm button { @apply mt-[10px]; }
+
+  /* Login buttons layout */
+  .login-buttons { @apply flex justify-between items-center mt-[10px]; }
+
+  /* Private key section */
+  .private-key-toggle { @apply my-[10px] text-left; }
+  .private-key-toggle button { @apply text-[0.9em] text-[#666]; }
+  .private-key-toggle button:hover { @apply text-[#333]; }
+
+  .private-key-input {
+    @apply mt-[10px] p-[10px] rounded;
+    border: 1px solid #ddd; background-color: #f9f9f9;
+  }
+  #privateKeyText { @apply w-full mb-[10px]; font-family: monospace; resize: vertical; }
+  .file-upload { @apply mb-[10px]; }
+  .file-upload input[type="file"] { display: none; }
+  .file-upload label { @apply inline-block cursor-pointer text-[0.9em]; }
+  .file-upload label i { @apply mr-[5px]; }
+
+  input.optional { border-color: #ccc; }
+}

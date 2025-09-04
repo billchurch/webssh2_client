@@ -14,7 +14,7 @@
     <dialog id="loginDialog" class="modal">
       <div class="modal-content"> 
         <h2>WebSSH2 Login</h2>
-        <form id="loginForm" class="pure-form">
+        <form id="loginForm" class="space-y-3">
           <input type="text" id="hostInput" name="host" placeholder="Host" required>
           <input type="text" id="portInput" name="port" placeholder="Port" value="22">
           <input type="text" id="usernameInput" name="username" placeholder="Username" required>
@@ -27,7 +27,7 @@
         
           <!-- Private key toggle button -->
           <div class="private-key-toggle">
-            <button type="button" id="privateKeyToggle" class="pure-button">
+            <button type="button" id="privateKeyToggle" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
               <i data-icon="key" class="icon-fw"></i> Add SSH Key
             </button>
           </div>
@@ -39,7 +39,7 @@
                 placeholder="Paste your private key here" rows="3"></textarea>
               <div class="file-upload">
                 <input type="file" id="privateKeyFile" accept=".pem,.key">
-                <label for="privateKeyFile" class="pure-button">
+                <label for="privateKeyFile" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
                   <i data-icon="upload" class="icon-fw"></i> Upload Key File
                 </label>
               </div>
@@ -48,9 +48,9 @@
             </div>
           </div>
         
-          <div class="login-buttons">
-            <button type="submit" class="pure-button pure-button-primary">Connect</button>
-            <button type="button" id="loginSettingsBtn" class="pure-button" aria-label="Settings" title="Settings">
+          <div class="login-buttons flex items-center justify-between gap-2 mt-2">
+            <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none grow mr-2">Connect</button>
+            <button type="button" id="loginSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none" aria-label="Settings" title="Settings">
               <i data-icon="settings"></i>
             </button>
           </div>
@@ -77,7 +77,7 @@
     <dialog id="terminalSettingsDialog" class="modal">
       <div class="modal-content">
         <h2>Terminal Settings</h2>
-        <form id="terminalSettingsForm" class="pure-form pure-form-stacked">
+        <form id="terminalSettingsForm" class="space-y-3">
           <fieldset>
             <label for="fontSize">Font Size</label>
             <input type="number" id="fontSize" name="fontSize" min="8" max="72" required>
@@ -103,8 +103,8 @@
               <option value="none">None</option>
             </select>
                 
-            <button type="submit" class="pure-button pure-button-primary">Save</button>
-            <button type="button" id="closeterminalSettingsBtn" class="pure-button">Cancel</button>
+            <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Save</button>
+            <button type="button" id="closeterminalSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none">Cancel</button>
           </fieldset>
         </form>
       </div>

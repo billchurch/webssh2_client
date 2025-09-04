@@ -324,7 +324,7 @@ export function showloginDialog(): void {
   const { loginDialog, terminalContainer, usernameInput, passwordInput } =
     elements
   const isReauthRequired = state.reauthRequired
-  loginDialog?.show?.()
+  loginDialog?.showModal?.()
   if (terminalContainer) toggleVisibility(terminalContainer, true)
   if (passwordInput) passwordInput.value = ''
   if (isReauthRequired && usernameInput) {
