@@ -1,4 +1,4 @@
-<!-- Version Version 1.0.0-alpha.0 - 2025-09-04T18:41:04.844Z - 7e50951 -->
+<!-- Version Version 1.0.0-alpha.0 - 2025-09-04T19:50:09.897Z - 9cb10c6 -->
 <!-- webssh2-client -->
 <!-- /client/src/client.htm -->
 <!DOCTYPE html>
@@ -9,19 +9,19 @@
     <script type="module" crossorigin src="./webssh2.bundle.js"></script>
     <link rel="stylesheet" crossorigin href="./webssh2.css">
   </head>
-  <body>
+  <body class="bg-black text-neutral-100">
     <dialog id="loginDialog" class="modal">
-      <div class="modal-content bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-5 w-80 sm:w-96"> 
-        <h2>WebSSH2 Login</h2>
+      <div class="modal-content relative bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-6 w-80 sm:w-[28rem]"> 
+        <h2 class="text-lg font-semibold text-slate-900 mb-2">WebSSH2 Login</h2>
         <form id="loginForm" class="space-y-3">
-          <input type="text" id="hostInput" name="host" placeholder="Host" required>
-          <input type="text" id="portInput" name="port" placeholder="Port" value="22">
-          <input type="text" id="usernameInput" name="username" placeholder="Username" required>
+          <input type="text" id="hostInput" name="host" placeholder="Host" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <input type="text" id="portInput" name="port" placeholder="Port" value="22" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <input type="text" id="usernameInput" name="username" placeholder="Username" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           
           <!-- Password section - always visible -->
-          <div class="password-wrapper">
-            <input type="password" id="passwordInput" name="password" placeholder="Password">
-            <span id="capsLockIcon">⇪</span>
+          <div class="password-wrapper relative w-full">
+            <input type="password" id="passwordInput" name="password" placeholder="Password" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <span id="capsLockIcon" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">⇪</span>
           </div>
         
           <!-- Private key toggle button -->
@@ -33,17 +33,17 @@
         
           <!-- Private key section (initially hidden) -->
           <div id="privateKeySection" class="hidden">
-            <div class="private-key-input">
+            <div class="private-key-input mt-2 p-3 rounded border border-neutral-300 bg-neutral-50 text-neutral-800">
               <textarea id="privateKeyText" name="privateKey" 
-                placeholder="Paste your private key here" rows="3"></textarea>
+                placeholder="Paste your private key here" rows="3" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
               <div class="file-upload">
-                <input type="file" id="privateKeyFile" accept=".pem,.key">
+                <input type="file" id="privateKeyFile" accept=".pem,.key" class="sr-only">
                 <label for="privateKeyFile" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
                   <i data-icon="upload" class="icon-fw"></i> Upload Key File
                 </label>
               </div>
               <input type="password" id="passphraseInput" name="passphrase" 
-                placeholder="Key password (if encrypted)" class="optional">
+                placeholder="Key password (if encrypted)" class="optional block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
           </div>
         
@@ -57,62 +57,63 @@
       </div>
     </dialog>
     <dialog id="errorDialog" class="modal" >
-      <div class="modal-content error-modal bg-red-50 border border-red-400 rounded-md shadow-md p-5 w-80 sm:w-96">
-        <button autofocus class="close-button">&times;</button>
-        <h2>Error</h2>
+      <div class="modal-content relative error-modal bg-red-50 border border-red-400 rounded-md shadow-md p-5 w-80 sm:w-96">
+        <button autofocus class="absolute top-2 right-2 text-neutral-400 hover:text-neutral-600 text-xl leading-none p-0 bg-transparent border-0">&times;</button>
+        <h2 class="text-red-700">Error</h2>
         <p id="errorMessage"></p>
       </div>
     </dialog>
 <dialog id="promptDialog" class="modal">
-  <div class="modal-content prompt-modal bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-5 w-80 sm:w-96">
-    <button autofocus class="close-button">&times;</button>
+  <div class="modal-content relative prompt-modal bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-5 w-80 sm:w-96">
+    <button autofocus class="absolute top-2 right-2 text-neutral-400 hover:text-neutral-600 text-xl leading-none p-0 bg-transparent border-0">&times;</button>
     <h2 id="promptMessage"></h2>
     <form>
-      <div id="promptInputContainer"></div>
+      <div id="promptInputContainer" class="mb-4 space-y-2"></div>
       <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Submit</button>
     </form>
   </div>
 </dialog>
     <dialog id="terminalSettingsDialog" class="modal">
-      <div class="modal-content bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-5 w-80 sm:w-96">
-        <h2>Terminal Settings</h2>
-        <form id="terminalSettingsForm" class="space-y-3">
-          <fieldset>
-            <label for="fontSize">Font Size</label>
-            <input type="number" id="fontSize" name="fontSize" min="8" max="72" required>
-    
-            <label for="fontFamily">Font Family</label>
-            <input type="text" id="fontFamily" name="fontFamily" required>
-    
-            <label for="cursorBlink">Cursor Blink</label>
-            <select id="cursorBlink" name="cursorBlink">
+      <div class="modal-content relative bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-6 w-80 sm:w-[36rem]">
+        <h2 class="text-lg font-semibold text-slate-900 mb-2">Terminal Settings</h2>
+        <form id="terminalSettingsForm" class="space-y-2">
+          <fieldset class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label for="fontSize" class="text-sm font-medium text-slate-700">Font Size</label>
+            <input type="number" id="fontSize" name="fontSize" min="8" max="72" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+
+            <label for="fontFamily" class="text-sm font-medium text-slate-700">Font Family</label>
+            <input type="text" id="fontFamily" name="fontFamily" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+
+            <label for="cursorBlink" class="text-sm font-medium text-slate-700">Cursor Blink</label>
+            <select id="cursorBlink" name="cursorBlink" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="true">On</option>
               <option value="false">Off</option>
             </select>
-    
-            <label for="scrollback">Scrollback</label>
-            <input type="number" id="scrollback" name="scrollback" min="1" max="200000" required>
-    
-            <label for="tabStopWidth">Tab Stop Width</label>
-            <input type="number" id="tabStopWidth" name="tabStopWidth" min="1" max="100" required>
-    
-            <label for="bellStyle">Bell Style</label>
-            <select id="bellStyle" name="bellStyle">
+
+            <label for="scrollback" class="text-sm font-medium text-slate-700">Scrollback</label>
+            <input type="number" id="scrollback" name="scrollback" min="1" max="200000" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+
+            <label for="tabStopWidth" class="text-sm font-medium text-slate-700">Tab Stop Width</label>
+            <input type="number" id="tabStopWidth" name="tabStopWidth" min="1" max="100" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+
+            <label for="bellStyle" class="text-sm font-medium text-slate-700">Bell Style</label>
+            <select id="bellStyle" name="bellStyle" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="sound">Sound</option>
               <option value="none">None</option>
             </select>
-                
+          </fieldset>
+          <div class="flex gap-2 pt-2">
             <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Save</button>
             <button type="button" id="closeterminalSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none">Cancel</button>
-          </fieldset>
+          </div>
         </form>
       </div>
     </dialog>
-    <div id="backdrop" class="backdrop"></div>
-    <button id="reconnectButton" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Reconnect</button>
+    <div id="backdrop" class="backdrop hidden"></div>
+    <button id="reconnectButton" class="hidden fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Reconnect</button>
     <div class="box">
       <div id="header" class="hidden w-full text-center z-[99] h-6 leading-6 bg-green-600 text-white border-b border-neutral-200"></div>
-      <div id="terminalContainer" class="terminal h-[calc(100%-var(--bar-h))] w-[calc(100%-1px)] mx-auto p-[2px]"></div>
+      <div id="terminalContainer" class="terminal hidden h-[calc(100%-var(--bar-h))] w-[calc(100%-1px)] mx-auto p-[2px]"></div>
       <div id="bottomdiv" class="fixed inset-x-0 bottom-0 z-[99] h-6 flex items-center bg-neutral-800 text-neutral-100 border-t border-neutral-200">
         <div id="menu" class="relative group cursor-pointer px-2">
           <span class="inline-flex items-center gap-1"><i data-icon="menu" class="w-5 h-5 inline-block"></i> Menu</span>

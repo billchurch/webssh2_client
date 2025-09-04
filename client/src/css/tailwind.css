@@ -8,12 +8,7 @@
   :root { --bar-h: 24px; }
   /* visibility handled via Tailwind `hidden` on elements */
 
-  /* Body and base layout */
-  html, body {
-    @apply h-full m-0 font-sans text-base;
-    background-color: rgb(0, 0, 0);
-    color: rgb(240, 240, 240);
-  }
+  /* Body/base now set via markup classes */
 
   /* Header visibility handled via Tailwind classes in markup */
 
@@ -33,65 +28,22 @@
   .modal[open] { @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] m-0 overflow-visible; }
   /* Modal content styles moved to HTML classes */
 
-  /* Login form spacing */
-  #loginForm input { @apply w-full mb-[10px]; }
-  #loginForm button { @apply w-full; }
+  /* Login form spacing handled by Tailwind Forms + markup */
 
-  /* Error modal */
-  .error-modal {
-    background-color: #ffebee;
-    border: 1px solid #ef5350;
-  }
-  .error-modal h2 {
-    color: #c62828;
-    margin-top: 0;
-  }
+  /* Error modal styles via markup */
 
-  /* Prompt dialog */
-  #promptDialog .modal-content { @apply w-[400px]; }
-  #promptInputContainer { @apply mb-[15px]; }
-  #promptInputContainer label { @apply block mt-[10px] mb-[5px]; }
-  #promptInputContainer input { @apply w-full p-[5px] mb-[10px]; }
+  /* Prompt dialog styles via markup/JS */
 
-  /* Close button */
-  .close-button {
-    @apply float-right cursor-pointer m-0 p-0 text-[28px] font-bold;
-    background: none; border: none; color: #aaa; height: auto; line-height: 1; width: auto;
-  }
+  /* Close button now styled via markup */
 
   /* Reconnect button show/hide (styles moved to HTML classes) */
   /* button visibility handled via Tailwind `hidden` */
 
-  /* Password field + caps lock */
-  #passwordInput { position: relative; padding-right: 30px; }
-  #capsLockIcon {
-    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    color: red; display: none; pointer-events: none;
-  }
-  .password-wrapper { position: relative; width: 100%; }
-  #passwordInput.capslock-active ~ #capsLockIcon { display: block; }
+  /* Password field + caps lock handled via markup/JS */
 
-  /* Terminal settings form */
-  #terminalSettingsDialog .modal-content { @apply w-[400px]; }
-  #terminalSettingsForm label { @apply block mt-[10px]; }
-  #terminalSettingsForm input, #terminalSettingsForm select { @apply w-full mb-[10px]; }
-  #terminalSettingsForm button { @apply mt-[10px]; }
+  /* Terminal settings form via markup */
 
-  /* Login buttons layout */
-  .login-buttons { @apply flex justify-between items-center mt-[10px]; }
+  /* Login buttons layout via markup */
 
-  /* Private key section */
-  .private-key-toggle { @apply my-[10px] text-left; }
-
-  .private-key-input {
-    @apply mt-[10px] p-[10px] rounded;
-    border: 1px solid #ddd; background-color: #f9f9f9;
-  }
-  #privateKeyText { @apply w-full mb-[10px]; font-family: monospace; resize: vertical; }
-  .file-upload { @apply mb-[10px]; }
-  .file-upload input[type="file"] { display: none; }
-  .file-upload label { @apply inline-block cursor-pointer text-[0.9em]; }
-  .file-upload label i { @apply mr-[5px]; }
-
-  input.optional { border-color: #ccc; }
+  /* Private key section via markup */
 }

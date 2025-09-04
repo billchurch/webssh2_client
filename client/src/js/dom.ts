@@ -287,15 +287,18 @@ export function showPromptDialog(
   debug('Prompt dialog shown', data)
   promptMessage.textContent = data.name || 'Authentication Required'
   inputContainer.textContent = ''
+  inputContainer.classList.add('mb-4', 'space-y-2')
 
   let firstInput: HTMLInputElement | null = null
   data.prompts.forEach((prompt, index) => {
     const label = document.createElement('label')
     label.textContent = prompt.prompt
+    label.className = 'block text-sm font-medium'
     const input = document.createElement('input')
     input.type = prompt.echo ? 'text' : 'password'
     input.required = true
     input.id = `promptInput${index}`
+    input.className = 'mt-1 block w-full rounded-md border border-slate-600 bg-slate-800 text-slate-100 placeholder-slate-400 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
     if (index === 0) firstInput = input
     inputContainer.appendChild(label)
     inputContainer.appendChild(input)
@@ -517,9 +520,15 @@ function keydown(event: KeyboardEvent): void {
 
 function detectCapsLock(event: KeyboardEvent): void {
   const input = elements.passwordInput
+  const icon = elements.loginForm?.querySelector('#capsLockIcon') as HTMLElement | null
   if (!input) return
-  if (event.getModifierState('CapsLock')) input.classList.add('capslock-active')
-  else input.classList.remove('capslock-active')
+  if (event.getModifierState('CapsLock')) {
+    input.classList.add('capslock-active')
+    icon?.classList.remove('hidden')
+  } else {
+    input.classList.remove('capslock-active')
+    icon?.classList.add('hidden')
+  }
 }
 
 export function resize(): void {
