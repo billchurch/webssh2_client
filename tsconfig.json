@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023"],
+    "outDir": ".",
+    "rootDir": ".",
+    "declaration": false
+  },
+  "include": ["**/*.ts", "types/**/*.d.ts", "client/src/js/csp-config.ts"],
+  "exclude": ["client/public", "node_modules", "client/src/**"]
+}

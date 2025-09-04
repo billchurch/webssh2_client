@@ -1,13 +1,7 @@
 // client
-// client/src/js/clientlog.js
+// client/src/js/clientlog.ts
 
 import createDebug from 'debug'
-// Session footer will be passed as parameter to avoid circular dependency
-let sessionFooter = null
-
-export function setSessionFooter(footer) {
-  sessionFooter = footer
-}
 import {
   updatestartLogBtnState,
   toggleDownloadLogBtn,
@@ -22,35 +16,24 @@ const debug = createDebug('webssh2-client:clientlog')
 const LOG_KEY = 'webssh2_session_log'
 const LOG_DATE_KEY = 'webssh2_session_log_date'
 
-/**
- * Adds content to the session log stored in LocalStorage.
- * @param {string} data - The data to log.
- */
-export function addToSessionLog(data) {
-  let sessionLog = window.localStorage.getItem(LOG_KEY) || ''
+let sessionFooter: string | null = null
+export function setSessionFooter(footer: string | null): void {
+  sessionFooter = footer
+}
 
-  // If the log was previously empty and data is being added, show the download button
+export function addToSessionLog(data: string): void {
+  let sessionLog = window.localStorage.getItem(LOG_KEY) || ''
   if (sessionLog === '') {
     toggleDownloadLogBtn(true)
   }
-
   sessionLog += data
   window.localStorage.setItem(LOG_KEY, sessionLog)
-  // debug('Added data to session log')
 }
 
-/**
- * Clears the session log from LocalStorage and optionally triggers a download.
- * @param {boolean} autoDownload - If true, downloads the log before clearing.
- */
-export function clearLog(autoDownload = false) {
+export function clearLog(): void {
   const sessionLog = window.localStorage.getItem(LOG_KEY)
-  const loggedData = state.loggedData
-
   const deleteLog = window.confirm('Clear the session log?')
-
   if (sessionLog && deleteLog) {
-    // Clear the session log from LocalStorage
     window.localStorage.removeItem(LOG_KEY)
     window.localStorage.removeItem(LOG_DATE_KEY)
     toggleDownloadLogBtn(false)
@@ -60,40 +43,27 @@ export function clearLog(autoDownload = false) {
   }
 }
 
-/**
- * Checks if a saved session log exists and prompts the user to download it.
- */
-export function checkSavedSessionLog() {
+export function checkSavedSessionLog(): void {
   const savedLog = window.localStorage.getItem(LOG_KEY)
   const savedDate = window.localStorage.getItem(LOG_DATE_KEY)
-
   if (savedLog && savedDate) {
     const restoreLog = window.confirm(
       `A saved session log from ${new Date(savedDate).toLocaleString()} was found. Would you like to download it?`
     )
-
     if (restoreLog) {
       const filename = `WebSSH2-Recovered-${formatDate(new Date(savedDate)).replace(/[/:\s@]/g, '')}.log`
       const blob = new Blob([savedLog], { type: 'text/plain' })
-
       triggerDownload(blob, filename)
-
-      clearLog()
+      // Clear stored log after successful recovery download (no prompt)
+      window.localStorage.removeItem(LOG_KEY)
+      window.localStorage.removeItem(LOG_DATE_KEY)
+      toggleDownloadLogBtn(false)
     }
   }
 }
 
-/**
- * Toggles or sets the session log enable state and updates the log button state.
- * If `forceEnable` is provided, the function will definitively enable or disable
- * the session log based on the boolean value. If `forceEnable` is not provided,
- * the function will toggle the current state.
- *
- * @param {boolean} [forceEnable] - Optional boolean to force the log to be enabled or disabled.
- */
-export function toggleLog(forceEnable) {
-  let sessionLogEnable
-
+export function toggleLog(forceEnable?: boolean): void {
+  let sessionLogEnable: boolean
   if (typeof forceEnable === 'boolean') {
     sessionLogEnable = forceEnable
     state.sessionLogEnable = sessionLogEnable
@@ -107,37 +77,36 @@ export function toggleLog(forceEnable) {
     debug('Starting log')
     state.loggedData = true
     updatestartLogBtnState(true)
-    const logStartMessage = `Log Start for ${sessionFooter} - ${formatDate(new Date())}\r\n\r\n`
+    const footer = sessionFooter ?? ''
+    const logStartMessage = `Log Start for ${footer} - ${formatDate(new Date())}\r\n\r\n`
     addToSessionLog(logStartMessage)
     window.localStorage.setItem(LOG_DATE_KEY, new Date().toISOString())
   } else {
     debug('Stopping log')
     updatestartLogBtnState(false)
     if (loggedData) {
-      const logEndMessage = `\r\n\r\nLog End for ${sessionFooter} - ${formatDate(new Date())}\r\n`
+      const footer = sessionFooter ?? ''
+      const logEndMessage = `\r\n\r\nLog End for ${footer} - ${formatDate(new Date())}\r\n`
       addToSessionLog(logEndMessage)
     } else {
       debug('Log was not running, resetting UI')
     }
   }
-
   focusTerminal()
 }
 
-/**
- * Downloads the session log.
- * @param {boolean} [autoDownload=false] - Whether to automatically download the log.
- */
-export function downloadLog(autoDownload = false) {
+export function downloadLog(autoDownload: boolean = false): void {
   const sessionLog = window.localStorage.getItem(LOG_KEY)
-  const loggedData = state.loggedData
-
+  const { loggedData } = state
   if (sessionLog && loggedData) {
     const filename = `WebSSH2-${formatDate(new Date()).replace(/[/:\s@]/g, '')}.log`
     const blob = new Blob([sessionLog], { type: 'text/plain' })
-
     if (autoDownload) {
+      // Download immediately then clear the stored log
       triggerDownload(blob, filename)
+      window.localStorage.removeItem(LOG_KEY)
+      window.localStorage.removeItem(LOG_DATE_KEY)
+      toggleDownloadLogBtn(false)
     } else {
       try {
         window.localStorage.setItem(LOG_KEY, sessionLog)
@@ -145,7 +114,11 @@ export function downloadLog(autoDownload = false) {
         debug('Session log saved to localStorage')
       } catch (e) {
         console.error('Failed to save session log to localStorage:', e)
-        triggerDownload(blob, filename) // Fallback to download if saving fails
+        triggerDownload(blob, filename)
+        // Clear as we already downloaded due to save failure
+        window.localStorage.removeItem(LOG_KEY)
+        window.localStorage.removeItem(LOG_DATE_KEY)
+        toggleDownloadLogBtn(false)
       }
     }
   }

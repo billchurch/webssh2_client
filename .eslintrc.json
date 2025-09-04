@@ -1,19 +1,140 @@
 {
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
   "extends": [
     "airbnb-base",
     "plugin:prettier/recommended",
     "plugin:node/recommended"
   ],
-  "plugins": ["prettier"],
+  "plugins": ["prettier", "no-unsanitized"],
   "rules": {
-    "prettier/prettier": "error",
+    "prettier/prettier": "warn",
+    "dot-notation": "off",
     "no-unused-vars": "warn",
     "no-console": "off",
     "func-names": "off",
     "no-process-exit": "off",
     "object-shorthand": "off",
     "class-methods-use-this": "off",
-    "space-before-function-paren": "off"
+    "space-before-function-paren": "off",
+    "no-unsanitized/method": "error",
+    "no-unsanitized/property": "error",
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "*",
+        "property": "innerHTML",
+        "message": "Use textContent or safe DOM builders instead of innerHTML."
+      },
+      {
+        "object": "*",
+        "property": "outerHTML",
+        "message": "Avoid outerHTML; use DOM APIs to replace nodes safely."
+      },
+      {
+        "object": "*",
+        "property": "insertAdjacentHTML",
+        "message": "Avoid insertAdjacentHTML; use DOM APIs to create and append elements."
+      },
+      {
+        "object": "document",
+        "property": "write",
+        "message": "document.write is disallowed."
+      },
+      {
+        "object": "document",
+        "property": "writeln",
+        "message": "document.writeln is disallowed."
+      }
+    ]
   },
-  "ignores": ["scripts/*", "client/public/*.js"]
+  "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint", "prettier"],
+      "extends": [
+        "plugin:@typescript-eslint/recommended",
+        "plugin:prettier/recommended"
+      ],
+      "parserOptions": {
+        "sourceType": "module",
+        "ecmaVersion": "latest"
+      },
+      "rules": {
+        "prettier/prettier": "warn",
+        "no-undef": "off",
+        "import/first": "off",
+        "import/order": "off",
+        "import/extensions": "off",
+        "import/no-unresolved": "off",
+        "import/no-extraneous-dependencies": "off",
+        "import/prefer-default-export": "off",
+        "import/no-mutable-exports": "off",
+        "node/no-missing-import": "off",
+        "node/no-unsupported-features/es-syntax": "off",
+        "camelcase": "off",
+        "dot-notation": "off",
+        "no-use-before-define": [
+          "error",
+          { "functions": false, "classes": false, "variables": false }
+        ],
+        "no-param-reassign": ["error", { "props": false }],
+        "no-alert": "off",
+        "no-plusplus": "off",
+        "prefer-destructuring": "off",
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "CallExpression[callee.name='setTimeout'][arguments.0.type='Literal']",
+            "message": "Avoid string-based setTimeout; pass a function instead."
+          },
+          {
+            "selector": "CallExpression[callee.name='setInterval'][arguments.0.type='Literal']",
+            "message": "Avoid string-based setInterval; pass a function instead."
+          },
+          {
+            "selector": "NewExpression[callee.name='Function']",
+            "message": "Do not use the Function constructor."
+          }
+        ],
+        "no-shadow": "off",
+        "no-underscore-dangle": "off",
+        "node/no-extraneous-import": "off",
+        "@typescript-eslint/no-explicit-any": "error",
+        "@typescript-eslint/no-unused-vars": [
+          "warn",
+          { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+        ],
+        "@typescript-eslint/consistent-type-imports": [
+          "error",
+          { "prefer": "type-imports" }
+        ]
+      }
+    },
+    {
+      "files": ["tests/**/*.js"],
+      "env": { "node": true, "browser": false, "es2021": true },
+      "rules": {
+        "no-undef": "off",
+        "no-plusplus": "off",
+        "no-script-url": "off",
+        "import/prefer-default-export": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "scripts/*",
+    "client/public/**",
+    "client/index.js",
+    "index.js",
+    "client/src/vite.config.js"
+  ]
 }

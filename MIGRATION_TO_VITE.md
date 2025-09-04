@@ -29,25 +29,25 @@ All critical features from the Webpack configuration have been preserved:
 
 ### Webpack → Vite
 
-| Webpack Feature | Vite Implementation |
-|----------------|---------------------|
-| `BannerPlugin` | Custom `bannerPlugin()` in vite.config.js |
-| `DefinePlugin` | Built-in `define` option |
-| `HtmlWebpackPlugin` | Custom `htmlTemplatePlugin()` + HTML entry |
-| `CopyWebpackPlugin` | Custom `copyAssetsPlugin()` |
-| `MiniCssExtractPlugin` | Built-in CSS handling |
-| `CleanWebpackPlugin` | Built-in `emptyOutDir: true` |
-| webpack-merge | Vite's mode-based configuration |
-| Source maps | Built-in `sourcemap` option |
+| Webpack Feature        | Vite Implementation                        |
+| ---------------------- | ------------------------------------------ |
+| `BannerPlugin`         | Custom `bannerPlugin()` in vite.config.js  |
+| `DefinePlugin`         | Built-in `define` option                   |
+| `HtmlWebpackPlugin`    | Custom `htmlTemplatePlugin()` + HTML entry |
+| `CopyWebpackPlugin`    | Custom `copyAssetsPlugin()`                |
+| `MiniCssExtractPlugin` | Built-in CSS handling                      |
+| `CleanWebpackPlugin`   | Built-in `emptyOutDir: true`               |
+| webpack-merge          | Vite's mode-based configuration            |
+| Source maps            | Built-in `sourcemap` option                |
 
 ### Build Commands
 
-| Old Command | New Command | Description |
-|-------------|-------------|-------------|
-| `npm run build` | `npm run build` | Production build |
-| `npm run builddev` | `npm run builddev` | Development build |
-| `npm run watch:build` | `npm run dev` | Dev server with HMR |
-| `npm run analyze` | `npm run analyze` | Bundle analysis |
+| Old Command           | New Command        | Description         |
+| --------------------- | ------------------ | ------------------- |
+| `npm run build`       | `npm run build`    | Production build    |
+| `npm run builddev`    | `npm run builddev` | Development build   |
+| `npm run watch:build` | `npm run dev`      | Dev server with HMR |
+| `npm run analyze`     | `npm run analyze`  | Bundle analysis     |
 
 ## Implementation Details
 
@@ -56,15 +56,18 @@ All critical features from the Webpack configuration have been preserved:
 Three custom plugins were created to maintain feature parity:
 
 #### bannerPlugin
+
 - Injects version/date/commit banner into JS and CSS files
 - Executes during the `generateBundle` phase
 
 #### htmlTemplatePlugin
+
 - Processes HTML template variables
 - Injects webssh2Config based on build mode
 - Replaces version placeholders
 
 #### copyAssetsPlugin
+
 - Copies favicon.ico to output
 - Moves and renames HTML output from nested path to client.htm
 - Fixes asset paths in HTML
@@ -80,20 +83,24 @@ Three custom plugins were created to maintain feature parity:
 ### 3. Missing Function Resolution
 
 Two functions were missing from the original codebase:
+
 - `getLocalTerminalSettings` - Added as alias to `getStoredSettings`
 - `applyStoredSettings` - Added as placeholder function
 
 ### 4. Performance Improvements
 
 Development build times:
+
 - Webpack: ~3-5 seconds
 - Vite: ~1.1 seconds
 
 Production build times:
+
 - Webpack: ~5-8 seconds
 - Vite: ~2.5 seconds
 
 Bundle sizes remain comparable:
+
 - webssh2.bundle.js: ~446KB (gzipped: ~122KB)
 - webssh2.css: ~25KB (gzipped: ~6.3KB)
 
@@ -136,11 +143,13 @@ If you need to rollback to Webpack:
 ## Dependencies Changed
 
 ### Added
+
 - `vite: ^5.0.0`
 - `vite-bundle-visualizer: ^1.0.0`
 - `@rollup/plugin-terser: ^0.4.0`
 
 ### To Be Removed
+
 - webpack
 - webpack-cli
 - webpack-merge

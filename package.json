@@ -1,6 +1,6 @@
 {
   "name": "webssh2_client",
-  "version": "0.2.31-alpha.3",
+  "version": "0.2.31-alpha.4",
   "ignore": [
     ".gitignore"
   ],
@@ -25,22 +25,28 @@
     "dev": "cd client/src && vite --mode development",
     "watch": "cd client/src && vite --mode development",
     "analyze": "cd client/src && vite build --mode production && vite-bundle-visualizer",
-    "release": "standard-version -a -s",
+    "typecheck": "tsc -b --pretty --noEmit",
+    "typecheck:client": "tsc -p client/tsconfig.json --pretty --noEmit",
+    "build:server": "tsc -p tsconfig.json",
+    "lint": "eslint . --ext .js,.ts",
+    "lint:fix": "eslint . --ext .js,.ts --fix",
+    "format": "prettier --check \"**/*.{js,ts,json,md}\"",
+    "format:write": "prettier --write \"**/*.{js,ts,json,md}\"",
     "publish:dry-run": "npm publish --dry-run",
     "publish:npm": "npm publish",
-    "release:major": "npm run release -- --release-as major",
-    "release:minor": "npm run release -- --release-as minor",
-    "release:patch": "npm run release -- --release-as patch"
-  },
-  "standard-version": {
-    "scripts": {
-      "postbump": "npm run build",
-      "precommit": "git add client/public/*"
-    }
+    "release:major": "echo 'Use Release Please via GitHub Actions' && exit 1",
+    "release:minor": "echo 'Use Release Please via GitHub Actions' && exit 1",
+    "release:patch": "echo 'Use Release Please via GitHub Actions' && exit 1"
   },
   "author": "",
   "license": "SEE LICENSE IN FILE - LICENSE",
   "devDependencies": {
+    "jsmasker": "^2.0.0",
+    "eslint-plugin-no-unsanitized": "^4.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "@types/node": "^24.3.1",
+    "typescript": "^5.9.2",
     "@rollup/plugin-terser": "^0.4.4",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
@@ -55,7 +61,6 @@
     "prettier": "^3.6.2",
     "purecss": "^3.0.0",
     "socket.io-client": "^4.8.1",
-    "standard-version": "^9.5.0",
     "vite": "^7.1.4",
     "vite-bundle-visualizer": "^1.2.1"
   },
@@ -69,7 +74,5 @@
       "client/public/**/*"
     ]
   },
-  "dependencies": {
-    "jsmasker": "^2.0.0"
-  }
+  "dependencies": {}
 }
