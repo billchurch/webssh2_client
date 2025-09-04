@@ -104,7 +104,7 @@ export function reauth(): void {
     socket.emit('control', 'reauth')
   } else {
     console.warn('reauth: Session reauth not permitted')
-    updateUIVisibility({ error: 'Reauthentication not permitted.' } as unknown as Record<string, boolean>)
+    updateUIVisibility({ error: 'Reauthentication not permitted.' })
   }
 }
 
@@ -221,14 +221,14 @@ function permissions(permissions: Record<string, boolean>): void {
     },
     allowReauth: (value: boolean) => {
       state.allowReauth = value
-      updateUIVisibility({ allowReauth: value } as unknown as Record<string, boolean>)
+      updateUIVisibility({ allowReauth: value })
     },
     allowReconnect: (value: boolean) => {
       state.allowReconnect = value
     },
     allowReplay: (value: boolean) => {
       state.allowReplay = value
-      updateUIVisibility({ allowReplay: value } as unknown as Record<string, boolean>)
+      updateUIVisibility({ allowReplay: value })
     }
   } as const
 
