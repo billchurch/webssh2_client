@@ -28,7 +28,7 @@
           <!-- Private key toggle button -->
           <div class="private-key-toggle">
             <button type="button" id="privateKeyToggle" class="pure-button">
-              <i class="fa fa-key"></i> Add SSH Key
+              <i data-icon="key" class="icon-fw"></i> Add SSH Key
             </button>
           </div>
         
@@ -40,7 +40,7 @@
               <div class="file-upload">
                 <input type="file" id="privateKeyFile" accept=".pem,.key">
                 <label for="privateKeyFile" class="pure-button">
-                  <i class="fa fa-upload"></i> Upload Key File
+                  <i data-icon="upload" class="icon-fw"></i> Upload Key File
                 </label>
               </div>
               <input type="password" id="passphraseInput" name="passphrase" 
@@ -50,7 +50,9 @@
         
           <div class="login-buttons">
             <button type="submit" class="pure-button pure-button-primary">Connect</button>
-            <button type="button" id="loginSettingsBtn" class="pure-button">⚙️</button>
+            <button type="button" id="loginSettingsBtn" class="pure-button" aria-label="Settings" title="Settings">
+              <i data-icon="settings"></i>
+            </button>
           </div>
         </form>
       </div>
@@ -114,15 +116,15 @@
       <div id="terminalContainer" class="terminal"></div>
       <div id="bottomdiv">
         <div class="dropup" id="menu">
-          <i class="fas fa-bars fa-fw"></i> Menu
+          <i data-icon="menu" class="icon-fw"></i> Menu
           <div id="dropupContent">
-            <button id="clearLogBtn" class="menu-button"><i class="fas fa-trash-can fa-fw"></i> Clear Log</button>
-            <button id="stopLogBtn" class="menu-button"><i class="fas fa-cog fa-spin fa-fw"></i> Stop Log</button>
-            <button id="startLogBtn" class="menu-button"><i class="fas fa-clipboard fa-fw"></i> Start Log</button>
-            <button id="downloadLogBtn" class="menu-button"><i class="fas fa-download fa-fw"></i> Download Log</button>
-            <button id="replayCredentialsBtn" class="menu-button"><i class="fas fa-key fa-fw"></i> Credentials</button>
-            <button id="reauthBtn" class="menu-button"><i class="fas fa-key fa-fw"></i> Switch User</button>
-            <button id="terminalSettingsBtn" class="menu-button"><i class="fas fa-cog fa-fw"></i> Settings</button>
+            <button id="clearLogBtn" class="menu-button"><i data-icon="trash-can" class="icon-fw"></i> Clear Log</button>
+            <button id="stopLogBtn" class="menu-button"><i data-icon="settings" class="icon-spin icon-fw"></i> Stop Log</button>
+            <button id="startLogBtn" class="menu-button"><i data-icon="clipboard" class="icon-fw"></i> Start Log</button>
+            <button id="downloadLogBtn" class="menu-button"><i data-icon="download" class="icon-fw"></i> Download Log</button>
+            <button id="replayCredentialsBtn" class="menu-button"><i data-icon="key" class="icon-fw"></i> Credentials</button>
+            <button id="reauthBtn" class="menu-button"><i data-icon="key" class="icon-fw"></i> Switch User</button>
+            <button id="terminalSettingsBtn" class="menu-button"><i data-icon="settings" class="icon-fw"></i> Settings</button>
           </div>
         </div>
         <div id="footer"></div>

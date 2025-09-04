@@ -10,6 +10,7 @@
     "url": "git+https://github.com/billchurch/webssh2_client.git"
   },
   "main": "index.js",
+  "type": "module",
   "files": [
     "index.js",
     "client/index.js",
@@ -40,8 +41,6 @@
   "author": "",
   "license": "SEE LICENSE IN FILE - LICENSE",
   "devDependencies": {
-    "@fortawesome/fontawesome-svg-core": "^7.0.1",
-    "@fortawesome/free-solid-svg-icons": "^7.0.1",
     "@rollup/plugin-terser": "^0.4.4",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
@@ -52,6 +51,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.5.4",
     "jsdom": "^26.1.0",
+    "lucide-static": "^0.452.0",
     "prettier": "^3.6.2",
     "purecss": "^3.0.0",
     "socket.io-client": "^4.8.1",
@@ -70,6 +70,6 @@
     ]
   },
   "dependencies": {
-    "jsmasker": "^1.7.0"
+    "jsmasker": "^2.0.0"
   }
 }

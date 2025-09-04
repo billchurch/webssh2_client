@@ -6,6 +6,7 @@
  */
 
 import createDebug from 'debug'
+import { renderIcon } from './icons.js'
 import {
   sanitizeColor,
   validateNumber,
@@ -870,9 +871,9 @@ function setupPrivateKeyEvents() {
     privateKeySection.classList.toggle('hidden');
     // Update button text based on state
     if (privateKeySection.classList.contains('hidden')) {
-      privateKeyToggle.innerHTML = '<i class="fa fa-key"></i> Add SSH Key';
+      privateKeyToggle.innerHTML = `${renderIcon('key','icon-fw')} Add SSH Key`;
     } else {
-      privateKeyToggle.innerHTML = '<i class="fa fa-key"></i> Hide SSH Key';
+      privateKeyToggle.innerHTML = `${renderIcon('key','icon-fw')} Hide SSH Key`;
     }
   });
 

@@ -179,9 +179,7 @@ export default defineConfig(({ mode }) => {
         'purecss',
         '@xterm/xterm',
         '@xterm/addon-fit',
-        'socket.io-client',
-        '@fortawesome/fontawesome-svg-core',
-        '@fortawesome/free-solid-svg-icons'
+        'socket.io-client'
       ]
     }
   }

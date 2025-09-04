@@ -7,6 +7,7 @@ import '../css/menu.css'
 import '@xterm/xterm/css/xterm.css'
 import '../css/terminal.css'
 import '../css/style.css'
+import '../css/icons.css'
 
 import {
   fillLoginForm,
@@ -55,30 +56,7 @@ import {
 
 export const debug = createDebug('webssh2-client')
 
-import { library, dom } from '@fortawesome/fontawesome-svg-core'
-import {
-  faBars,
-  faClipboard,
-  faCog,
-  faDownload,
-  faKey,
-  faTrashCan,
-  faCircleUp,
-  faUpload
-} from '@fortawesome/free-solid-svg-icons'
-
-library.add(
-  faBars,
-  faClipboard,
-  faDownload,
-  faKey,
-  faCog,
-  faTrashCan,
-  faCircleUp,
-  faUpload
-)
-
-dom.watch()
+import { replaceIconsIn } from './icons.js'
 
 let config
 let elements
@@ -104,6 +82,7 @@ async function initialize() {
 
     config = populateFormFromUrl(config)
     await initializeDom(config) // Pass config here
+    replaceIconsIn(document)
     initializeTerminalAndUI()
     initSocket(
       config,
