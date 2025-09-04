@@ -16,7 +16,7 @@ The devcontainer will automatically set up the development environment with all 
 
 If you're not using the devcontainer, ensure you have the following installed:
 
-- Node.js (version 18 or higher)
+- Node.js (version 22 or higher)
 - npm (comes with Node.js)
 - git
 - An npm account with publishing rights to the package
@@ -26,6 +26,7 @@ Ensure your SSH or GPG key is set up for git commit signing and added to your gi
 ## Build Process
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/billchurch/webssh2_client.git
    cd webssh2_client
@@ -34,57 +35,64 @@ Ensure your SSH or GPG key is set up for git commit signing and added to your gi
 2. If using VSCode with the devcontainer, open the project in VSCode and reopen in the container when prompted.
 
 3. Install dependencies:
+
    ```
    npm install
    ```
 
-4. Build the project:
+4. Build the client bundle:
+
    ```
    npm run build
    ```
 
-   This command runs Webpack in production mode to create optimized assets.
+   This runs Vite in production mode and outputs to `client/public/` (e.g., `webssh2.bundle.js`, `webssh2.css`, `client.htm`).
+
+5. Type-check (recommended):
+
+   ```
+   npm run typecheck
+   npm run typecheck:client
+   ```
+
+6. Lint (recommended):
+
+   ```
+   npm run lint
+   ```
+
+7. Build Node entrypoints (for local testing or publish):
+
+   ```
+   npm run build:server
+   ```
+
+   This compiles `index.ts` and `client/index.ts` (and `csp-config.ts`) to JS in-place so `main: index.js` remains valid.
 
 ## Release Process
 
-1. Make your changes and commit them using conventional commit messages.
+Releases are automated via GitHub Actions with `googleapis/release-please-action@v4`:
 
-2. When ready to release, run one of the following commands depending on the type of release:
-   ```
-   npm run release:patch  # for a patch release
-   npm run release:minor  # for a minor release
-   npm run release:major  # for a major release
-   ```
+- On pushes to `main`, Release Please will open or update a release PR.
+- When that PR is merged, a new release is created.
+- The release workflow builds the client and server entries and publishes to npm using `NPM_TOKEN`.
 
-   This will:
-   - Bump the version number in package.json
-   - Update the CHANGELOG.md file
-   - Create a new commit with these changes
-   - Create a new git tag
+Manual alternative (optional):
 
-3. Push the changes and the new tag to the repository:
+1. Conventional commits throughout development.
+2. Use `standard-version` locally if needed:
    ```
+   npm run release:patch  # or :minor / :major
    git push --follow-tags origin main
    ```
+   CI release will still run on merge/push.
 
 ## Publish Process
 
-1. Ensure you're logged into npm:
-   ```
-   npm login
-   ```
+Publishing is handled by the Release workflow on merges to `main` when a release is created by Release Please. If you need to test locally:
 
-2. Run a dry-run to check what would be published:
-   ```
-   npm run publish:dry-run
-   ```
-
-   Review the output to ensure all expected files are included and no sensitive or unnecessary files are being published.
-
-3. If the dry-run looks good, publish to npm:
-   ```
-   npm run publish:npm
-   ```
+1. `npm run publish:dry-run` to inspect the publish contents.
+2. `npm publish` (requires `npm login`) — normally not required thanks to CI.
 
 ## Additional Notes
 

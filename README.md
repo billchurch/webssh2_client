@@ -1,5 +1,8 @@
 # WebSSH2 Client - Web SSH Client
 
+[![CI](https://github.com/billchurch/webssh2_client/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/billchurch/webssh2_client/actions/workflows/ci.yml)
+[![Release](https://github.com/billchurch/webssh2_client/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/billchurch/webssh2_client/actions/workflows/release.yml)
+
 ![Orthrus Mascot](images/orthrus.png)
 
 WebSSH2 Client is an HTML5 web-based terminal emulator and SSH client component. It uses WebSockets to communicate with a WebSSH2 server, which in turn uses SSH2 to connect to SSH servers.
@@ -7,9 +10,11 @@ WebSSH2 Client is an HTML5 web-based terminal emulator and SSH client component.
 ![WebSSH2 demo](https://user-images.githubusercontent.com/1668075/182425293-acc8741e-cc92-4105-afdc-9538e1685d4b.gif)
 
 # Important Notice
+
 This package contains only the browser-side client component of WebSSH2. It requires a compatible WebSSH2 server to function. The server component is available at [webssh2 server](https://github.com/billchurch/webssh2/tree/bigip-server). This package is intended for advanced users who want to customize or integrate the client component independently.
 
 # Status
+
 This is an experimental refactor of the WebSSH2 v0.2.x client to function as a standalone component. It has been separated from the server-side code to facilitate customization and integration with different frameworks.
 
 ## Requirements
@@ -21,17 +26,20 @@ This is an experimental refactor of the WebSSH2 v0.2.x client to function as a s
 ## Installation
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/billchurch/webssh2_client.git
    cd webssh2_client
    ```
 
 2. Install dependencies:
+
    ```
    npm install
    ```
 
 3. Build the client:
+
    ```
    npm run build
    ```
@@ -65,6 +73,15 @@ For server setup instructions, refer to the [WebSSH2 server documentation](https
 - Multi-factor authentication support (when supported by server)
 - Support for credential replay and reauthentication
 
+## Security and Lint Rules
+
+- No innerHTML: The client never uses `innerHTML` for user content. All text uses `textContent` and safe DOM building helpers.
+- CSP: Strict `script-src 'self'` (no inline scripts). Inline styles allowed for xterm DOM renderer and safe color updates.
+- ESLint guardrails:
+  - `no-unsanitized` plugin blocks unsanitized DOM sinks (`innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`).
+  - Additional bans via `no-restricted-properties` for those sinks, and `no-restricted-syntax` for string-based timers and `new Function`.
+- Xterm integration: Terminal output is rendered with `xterm.write()`; no HTML rendering of remote data.
+
 ## Configuration
 
 The client can be configured through:
@@ -90,12 +107,12 @@ You can configure the client by setting `window.webssh2Config`:
 ```javascript
 window.webssh2Config = {
   socket: {
-    url: null,  // WebSocket URL (auto-detected if null)
-    path: '/ssh/socket.io'  // Socket.IO path
+    url: null, // WebSocket URL (auto-detected if null)
+    path: '/ssh/socket.io' // Socket.IO path
   },
   ssh: {
-    host: null,  // SSH server hostname
-    port: 22,    // SSH server port
+    host: null, // SSH server hostname
+    port: 22, // SSH server port
     username: null,
     sshterm: 'xterm-color'
   },
@@ -104,12 +121,12 @@ window.webssh2Config = {
     background: 'green'
   },
   autoConnect: false
-};
+}
 ```
 
 ## Development
 
-- For development information see [DEVELOPMENT.md](./DEVELOPMENT.md).
+See [DEVELOPMENT.md](./DEVELOPMENT.md).
 
 ## Support
 
@@ -125,4 +142,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 - [Xterm.js](https://xtermjs.org/) for terminal emulation
 - [Socket.IO](https://socket.io/) for WebSocket communication
-- [Webpack](https://webpack.js.org/) for module bundling
+- [Vite](https://vitejs.dev/) for development and bundling
+- [ESLint](https://eslint.org/) + [Prettier](https://prettier.io/) for code quality
+- [lucide-static](https://github.com/lucide-icons/lucide) for SVG icons

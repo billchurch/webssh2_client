@@ -1,4 +1,4 @@
-// client/src/js/icons.js
+// client/src/js/icons.ts
 // Zero-runtime icon helper using lucide-static inline SVGs
 
 import Menu from 'lucide-static/icons/menu.svg?raw'
@@ -9,7 +9,7 @@ import Key from 'lucide-static/icons/key.svg?raw'
 import Trash2 from 'lucide-static/icons/trash-2.svg?raw'
 import Upload from 'lucide-static/icons/upload.svg?raw'
 
-export const ICONS = {
+export const ICONS: Record<string, string> = {
   menu: Menu,
   clipboard: Clipboard,
   settings: Settings,
@@ -20,21 +20,27 @@ export const ICONS = {
   upload: Upload
 }
 
-export function renderIcon(name, extraClasses = '') {
-  const svg = ICONS[name] || ''
-  return `<span class="icon ${extraClasses}">${svg}</span>`
+export function createIconNode(
+  name: string | null,
+  extraClasses: string = ''
+): HTMLElement {
+  const svgRaw = (name && ICONS[name]) || ''
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(svgRaw, 'image/svg+xml')
+  const svgEl = doc.documentElement as unknown as Node
+  const wrapper = document.createElement('span')
+  wrapper.className = `icon ${extraClasses}`.trim()
+  const imported = document.importNode(svgEl, true)
+  wrapper.appendChild(imported)
+  return wrapper
 }
 
-export function replaceIconsIn(root = document) {
+export function replaceIconsIn(root: Document | Element = document): void {
   const candidates = root.querySelectorAll('i[data-icon]')
   candidates.forEach((el) => {
     const name = el.getAttribute('data-icon')
     const extra = el.className
-    const html = renderIcon(name, extra)
-    const wrapper = document.createElement('span')
-    wrapper.innerHTML = html
-    const node = wrapper.firstElementChild || wrapper.firstChild
-    if (node) el.replaceWith(node)
+    const node = createIconNode(name, extra)
+    el.replaceWith(node)
   })
 }
-
