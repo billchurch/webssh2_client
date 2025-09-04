@@ -40,4 +40,3 @@ export function toggleState(key: BooleanKeys): boolean {
   debug('toggleState', { [key]: state[key] })
   return state[key]
 }
-

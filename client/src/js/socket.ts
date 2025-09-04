@@ -1,12 +1,12 @@
 // client
 // client/src/js/socket.ts
 
-import { io, Socket } from 'socket.io-client'
+import type { Socket } from 'socket.io-client'
+import { io } from 'socket.io-client'
 import createDebug from 'debug'
 import maskObject from 'jsmasker'
 
 import {
-  hidePromptDialog,
   resize,
   showErrorDialog,
   showPromptDialog,
@@ -34,14 +34,20 @@ let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null
 let config: WebSSH2Config | null = null
 let writeToTerminal: ((data: string) => void) | null = null
 let onConnectCallback: (() => void) | null = null
-let onDisconnectCallback: ((reason: string, extra?: unknown) => void) | null = null
+let onDisconnectCallback: ((reason: string, extra?: unknown) => void) | null =
+  null
 let onDataCallback: ((chunk: string) => void) | null = null
 let focusTerminalCallback: (() => void) | null = null
 let storedFormData: Partial<ClientAuthenticatePayload> | null = null
 
-export function setFormData(formData: Partial<ClientAuthenticatePayload>): void {
+export function setFormData(
+  formData: Partial<ClientAuthenticatePayload>
+): void {
   storedFormData = formData
-  debug('setFormData: stored formData with port:', (formData as { port?: number })?.port)
+  debug(
+    'setFormData: stored formData with port:',
+    (formData as { port?: number })?.port
+  )
 }
 
 export function closeConnection(): void {
@@ -64,7 +70,10 @@ export function emitResize(dimensions: ClientResizePayload): void {
   }
 }
 
-export function initializeSocketConnection(): Socket<ServerToClientEvents, ClientToServerEvents> {
+export function initializeSocketConnection(): Socket<
+  ServerToClientEvents,
+  ClientToServerEvents
+> {
   debug('initializeSocketConnection')
   closeConnection()
 
@@ -109,7 +118,7 @@ export function reauth(): void {
 }
 
 export function replayCredentials(): void {
-  const allowReplay = state.allowReplay
+  const { allowReplay } = state
   if (allowReplay && socket) {
     debug('replayCredentials')
     socket.emit('control', 'replayCredentials')
@@ -119,9 +128,14 @@ export function replayCredentials(): void {
   }
 }
 
-function authenticate(formData: Partial<ClientAuthenticatePayload> | null = null): void {
+function authenticate(
+  formData: Partial<ClientAuthenticatePayload> | null = null
+): void {
   const terminalDimensions = getTerminalDimensions()
-  const credentials = getCredentials(formData as Record<string, unknown> | null, terminalDimensions)
+  const credentials = getCredentials(
+    formData as Record<string, unknown> | null,
+    terminalDimensions
+  )
 
   const effectiveFormData = formData || storedFormData
   if (effectiveFormData?.privateKey) {
@@ -152,7 +166,9 @@ function getTerminal(): void {
 }
 
 function getSocketIOPath(): string {
-  const socketIOPath = config?.socket?.path ? config.socket.path : '/ssh/socket.io'
+  const socketIOPath = config?.socket?.path
+    ? config.socket.path
+    : '/ssh/socket.io'
   debug('getSocketIOPath', socketIOPath)
   return socketIOPath
 }
@@ -178,8 +194,13 @@ function authResult(result: { success: boolean; message?: string }): void {
     updateElement('status', 'Connected', 'green')
     if (focusTerminalCallback) focusTerminalCallback()
   } else {
-    updateElement('status', `Authentication failed: ${result.message ?? ''}`, 'red')
-    if (onDisconnectCallback) onDisconnectCallback('auth_failed', result.message)
+    updateElement(
+      'status',
+      `Authentication failed: ${result.message ?? ''}`,
+      'red'
+    )
+    if (onDisconnectCallback)
+      onDisconnectCallback('auth_failed', result.message)
   }
 }
 
@@ -238,7 +259,10 @@ function permissions(permissions: Record<string, boolean>): void {
   })
 }
 
-function handleKeyboardInteractive(data: { prompts: Array<{ prompt: string; echo: boolean }>; name?: string }): void {
+function handleKeyboardInteractive(data: {
+  prompts: Array<{ prompt: string; echo: boolean }>
+  name?: string
+}): void {
   debug('handleKeyboardInteractive')
   showPromptDialog(data, (responses: string[]) => {
     debug('handleKeyboardInteractive: response')
@@ -254,7 +278,11 @@ function ssherror(msg: string): void {
   if (onDisconnectCallback) onDisconnectCallback('ssh_error', msg)
 }
 
-function authentication(data: { action: string; success?: boolean; message?: string }): void {
+function authentication(data: {
+  action: string
+  success?: boolean
+  message?: string
+}): void {
   debug('authentication', data)
   switch (data.action) {
     case 'request_auth':
@@ -265,7 +293,12 @@ function authentication(data: { action: string; success?: boolean; message?: str
       authResult({ success: Boolean(data.success), message: data.message })
       break
     case 'keyboard-interactive':
-      handleKeyboardInteractive(data as unknown as { prompts: Array<{ prompt: string; echo: boolean }>; name?: string })
+      handleKeyboardInteractive(
+        data as unknown as {
+          prompts: Array<{ prompt: string; echo: boolean }>
+          name?: string
+        }
+      )
       break
     case 'reauth':
       if (onDisconnectCallback) onDisconnectCallback('reauth_required', socket)
@@ -286,7 +319,10 @@ function updateUI(data: { element?: string; value?: unknown }): void {
     console.warn('updateUI: Received invalid data from updateUI event:', data)
     return
   }
-  updateElement(element, value as unknown as { text: string; background?: string })
+  updateElement(
+    element,
+    value as unknown as { text: string; background?: string }
+  )
 }
 
 function setupSocketListeners(): void {

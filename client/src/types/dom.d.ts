@@ -38,4 +38,3 @@ export interface UpdateElementContentObject {
 }
 
 export type UpdateElementContent = string | UpdateElementContentObject
-

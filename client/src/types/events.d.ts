@@ -1,5 +1,10 @@
 export interface AuthenticationRequest {
-  action: 'request_auth' | 'auth_result' | 'keyboard-interactive' | 'reauth' | 'dimensions'
+  action:
+    | 'request_auth'
+    | 'auth_result'
+    | 'keyboard-interactive'
+    | 'reauth'
+    | 'dimensions'
   success?: boolean
   message?: string
   prompts?: Array<{ prompt: string; echo: boolean }>
@@ -45,7 +50,10 @@ export interface ServerToClientEvents {
   getTerminal: () => void
   data: (chunk: string) => void
   ssherror: (message: string) => void
-  updateUI: (payload: { element: string; value: string | { text: string; background?: string } }) => void
+  updateUI: (payload: {
+    element: string
+    value: string | { text: string; background?: string }
+  }) => void
 }
 
 export interface ClientToServerEvents {
@@ -55,4 +63,3 @@ export interface ClientToServerEvents {
   resize: (payload: ClientResizePayload) => void
   control: (payload: ClientControlPayload) => void
 }
-

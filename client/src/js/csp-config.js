@@ -1,21 +1,21 @@
 /**
  * Content Security Policy Configuration
  * Helps prevent XSS attacks by restricting resource loading
- * 
+ *
  * Note: 'unsafe-inline' is required for:
  * - xterm.js terminal rendering
  * - Dynamic terminal styling
- * 
+ *
  * These CSP headers should be set by the server serving the client
  */
 
 export const CSP_CONFIG = {
   'default-src': ["'self'"],
-  'script-src': ["'self'", "'unsafe-inline'"],  // unsafe-inline needed for xterm.js
-  'style-src': ["'self'", "'unsafe-inline'"],   // unsafe-inline needed for terminal styling  
+  'script-src': ["'self'", "'unsafe-inline'"], // unsafe-inline needed for xterm.js
+  'style-src': ["'self'", "'unsafe-inline'"], // unsafe-inline needed for terminal styling
   'img-src': ["'self'", 'data:'],
   'font-src': ["'self'"],
-  'connect-src': ["'self'", 'ws:', 'wss:'],    // WebSocket connections
+  'connect-src': ["'self'", 'ws:', 'wss:'], // WebSocket connections
   'frame-src': ["'none'"],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],

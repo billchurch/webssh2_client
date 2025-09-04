@@ -39,11 +39,16 @@ export function validateHost(host: unknown): string | null {
 
   if (value.length > MAX_LENGTHS.host) return null
 
-  const hostnameRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+  const hostnameRegex =
+    /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
   const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/
   const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::1|::)$/
 
-  if (hostnameRegex.test(value) || ipv4Regex.test(value) || ipv6Regex.test(value)) {
+  if (
+    hostnameRegex.test(value) ||
+    ipv4Regex.test(value) ||
+    ipv6Regex.test(value)
+  ) {
     return value.toLowerCase()
   }
 
@@ -64,7 +69,7 @@ export function validatePort(port: unknown): number | null {
 /** Validates and sanitizes a username */
 export function validateUsername(username: unknown): string | null {
   if (!username || typeof username !== 'string') return null
-  let value = username.trim()
+  const value = username.trim()
   if (value.length === 0 || value.length > MAX_LENGTHS.username) {
     debug('Invalid username length:', value.length)
     return null
@@ -88,7 +93,10 @@ export function validatePassword(password: unknown): string | null {
 }
 
 /** Validates and sanitizes text content (for headers, footers, etc.) */
-export function validateText(text: unknown, maxLength: number = MAX_LENGTHS.header): string {
+export function validateText(
+  text: unknown,
+  maxLength: number = MAX_LENGTHS.header
+): string {
   if (!text || typeof text !== 'string') return ''
   let value = text
   if (value.length > maxLength) {
@@ -101,12 +109,16 @@ export function validateText(text: unknown, maxLength: number = MAX_LENGTHS.head
 /** Validates a color value */
 export function validateColor(color: unknown): string | null {
   if (!color || typeof color !== 'string') return null
-  let value = color.trim()
+  const value = color.trim()
   if (value.length > MAX_LENGTHS.headerbackground) return null
   const hexRegex = /^#([0-9a-fA-F]{3}){1,2}$/
   const rgbRegex = /^rgba?\(\s*(\d{1,3}\s*,\s*){2,3}\s*\d{1,3}\s*\)$/
   const namedColorRegex = /^[a-zA-Z]+$/
-  if (hexRegex.test(value) || rgbRegex.test(value) || namedColorRegex.test(value)) {
+  if (
+    hexRegex.test(value) ||
+    rgbRegex.test(value) ||
+    namedColorRegex.test(value)
+  ) {
     return value
   }
   debug('Invalid color:', value)
@@ -248,4 +260,3 @@ export default {
   validateFormData,
   MAX_LENGTHS
 }
-

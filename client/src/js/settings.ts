@@ -44,4 +44,3 @@ export function applyStoredSettings(): Record<string, unknown> {
   debug('applyStoredSettings called')
   return getStoredSettings()
 }
-

@@ -15,4 +15,3 @@ export default {
   getPublicPath: (): string => path.join(__dirname, 'public'),
   version: packageJson.version
 }
-

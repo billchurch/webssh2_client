@@ -1,13 +1,20 @@
 // client
 // client/src/js/terminal.ts
 
-import { Terminal, type ITerminalOptions as TerminalOptions } from '@xterm/xterm'
+import {
+  Terminal,
+  type ITerminalOptions as TerminalOptions
+} from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import createDebug from 'debug'
 import { validateNumber, validateBellStyle, defaultSettings } from './utils.js'
 import { emitData } from './socket.js'
 import { getStoredSettings } from './settings.js'
-import { setTerminalInstance, focusTerminal as domFocusTerminal, openTerminal as domOpenTerminal } from './dom.js'
+import {
+  setTerminalInstance,
+  focusTerminal as domFocusTerminal,
+  openTerminal as domOpenTerminal
+} from './dom.js'
 
 import type { WebSSH2Config, TerminalSettings } from '../types/config.d'
 
@@ -48,8 +55,9 @@ export function getTerminalSettings(config: WebSSH2Config): TerminalOptions {
   const terminalConfig = (config?.terminal ?? {}) as Partial<TerminalSettings>
 
   const mergedOptions: TerminalOptions = {
-    cursorBlink:
-      (storedSettings.cursorBlink ?? terminalConfig.cursorBlink ?? defaultSettings.cursorBlink) as boolean,
+    cursorBlink: (storedSettings.cursorBlink ??
+      terminalConfig.cursorBlink ??
+      defaultSettings.cursorBlink) as boolean,
     scrollback: validateNumber(
       (storedSettings.scrollback ?? terminalConfig.scrollback) as number,
       1,
@@ -63,7 +71,11 @@ export function getTerminalSettings(config: WebSSH2Config): TerminalOptions {
       defaultSettings.tabStopWidth
     ),
     bellStyle: validateBellStyle(
-      String(storedSettings.bellStyle ?? terminalConfig.bellStyle ?? defaultSettings.bellStyle),
+      String(
+        storedSettings.bellStyle ??
+          terminalConfig.bellStyle ??
+          defaultSettings.bellStyle
+      ),
       defaultSettings.bellStyle
     ),
     fontSize: validateNumber(
@@ -72,12 +84,17 @@ export function getTerminalSettings(config: WebSSH2Config): TerminalOptions {
       72,
       defaultSettings.fontSize
     ),
-    fontFamily:
-      String(
-        storedSettings.fontFamily ?? terminalConfig.fontFamily ?? defaultSettings.fontFamily
-      ),
-    letterSpacing: (storedSettings.letterSpacing ?? terminalConfig.letterSpacing ?? defaultSettings.letterSpacing) as number,
-    lineHeight: (storedSettings.lineHeight ?? terminalConfig.lineHeight ?? defaultSettings.lineHeight) as number,
+    fontFamily: String(
+      storedSettings.fontFamily ??
+        terminalConfig.fontFamily ??
+        defaultSettings.fontFamily
+    ),
+    letterSpacing: (storedSettings.letterSpacing ??
+      terminalConfig.letterSpacing ??
+      defaultSettings.letterSpacing) as number,
+    lineHeight: (storedSettings.lineHeight ??
+      terminalConfig.lineHeight ??
+      defaultSettings.lineHeight) as number
     // logLevel is not part of ITerminalOptions; it lives in our TerminalSettings only
   }
 
@@ -145,7 +162,9 @@ export function getTerminalDimensions(): { cols?: number; rows?: number } {
 }
 
 /** Updates terminal options */
-export function updateterminalSettings(newOptions: Partial<TerminalOptions>): void {
+export function updateterminalSettings(
+  newOptions: Partial<TerminalOptions>
+): void {
   if (term) {
     Object.assign(term.options, newOptions)
     debug('updateterminalSettings', newOptions)
@@ -158,7 +177,10 @@ interface TerminalWithOnOff {
 }
 
 /** Attaches custom event listeners to the terminal */
-export function attachTerminalEvent(event: string, handler: (...args: unknown[]) => void): void {
+export function attachTerminalEvent(
+  event: string,
+  handler: (...args: unknown[]) => void
+): void {
   if (term) {
     ;(term as unknown as TerminalWithOnOff).on(event, handler)
     debug(`attachTerminalEvent: ${event}`)
@@ -166,7 +188,10 @@ export function attachTerminalEvent(event: string, handler: (...args: unknown[])
 }
 
 /** Detaches custom event listeners from the terminal */
-export function detachTerminalEvent(event: string, handler: (...args: unknown[]) => void): void {
+export function detachTerminalEvent(
+  event: string,
+  handler: (...args: unknown[]) => void
+): void {
   if (term) {
     ;(term as unknown as TerminalWithOnOff).off(event, handler)
     debug(`detachTerminalEvent: ${event}`)
@@ -174,7 +199,9 @@ export function detachTerminalEvent(event: string, handler: (...args: unknown[])
 }
 
 /** Applies options to the terminal instance */
-export function applyTerminalSettings(options: Partial<TerminalOptions> & Partial<TerminalSettings>): void {
+export function applyTerminalSettings(
+  options: Partial<TerminalOptions> & Partial<TerminalSettings>
+): void {
   if (!term) {
     console.error('applyTerminalSettings: Terminal not initialized')
     return
@@ -182,13 +209,33 @@ export function applyTerminalSettings(options: Partial<TerminalOptions> & Partia
   debug('applyTerminalSettings', options)
 
   const terminalSettings: TerminalOptions = {
-    cursorBlink: (options.cursorBlink ?? defaultSettings.cursorBlink) as boolean,
-    scrollback: validateNumber(options.scrollback as number, 1, 200000, defaultSettings.scrollback),
-    tabStopWidth: validateNumber(options.tabStopWidth as number, 1, 100, defaultSettings.tabStopWidth),
-    bellStyle: validateBellStyle(String(options.bellStyle ?? defaultSettings.bellStyle), defaultSettings.bellStyle),
-    fontSize: validateNumber(options.fontSize as number, 1, 72, defaultSettings.fontSize),
+    cursorBlink: (options.cursorBlink ??
+      defaultSettings.cursorBlink) as boolean,
+    scrollback: validateNumber(
+      options.scrollback as number,
+      1,
+      200000,
+      defaultSettings.scrollback
+    ),
+    tabStopWidth: validateNumber(
+      options.tabStopWidth as number,
+      1,
+      100,
+      defaultSettings.tabStopWidth
+    ),
+    bellStyle: validateBellStyle(
+      String(options.bellStyle ?? defaultSettings.bellStyle),
+      defaultSettings.bellStyle
+    ),
+    fontSize: validateNumber(
+      options.fontSize as number,
+      1,
+      72,
+      defaultSettings.fontSize
+    ),
     fontFamily: String(options.fontFamily ?? defaultSettings.fontFamily),
-    letterSpacing: (options.letterSpacing ?? defaultSettings.letterSpacing) as number,
+    letterSpacing: (options.letterSpacing ??
+      defaultSettings.letterSpacing) as number,
     lineHeight: (options.lineHeight ?? defaultSettings.lineHeight) as number
   }
 

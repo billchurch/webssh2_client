@@ -7,12 +7,18 @@
 
 import createDebug from 'debug'
 import { renderIcon } from './icons.js'
-import { sanitizeColor, validateNumber, validateBellStyle, validatePrivateKey } from './utils.js'
+import {
+  sanitizeColor,
+  validateNumber,
+  validateBellStyle,
+  validatePrivateKey
+} from './utils.js'
 import { emitData, emitResize, reauth, replayCredentials } from './socket.js'
 import { downloadLog, clearLog, toggleLog } from './clientlog.js'
-import { getLocalTerminalSettings, initializeSettings, saveTerminalSettings } from './settings.js'
+import { initializeSettings, saveTerminalSettings } from './settings.js'
 import { state } from './state.js'
 import type { ElementId, UpdateElementContent } from '../types/dom.d'
+import type { ClientAuthenticatePayload } from '../types/events.d'
 
 const debug = createDebug('webssh2-client:dom')
 
@@ -24,7 +30,7 @@ type TerminalFunctions = {
   resizeTerminal: () => TerminalDimensions | null
 }
 
-type ConnectToServerFn = (formData: Record<string, unknown>) => void
+type ConnectToServerFn = (formData: Partial<ClientAuthenticatePayload>) => void
 
 // connectToServer will be injected to avoid circular dependency
 let connectToServer: ConnectToServerFn | null = null
@@ -35,10 +41,13 @@ export function setConnectToServerFunction(connectFn: ConnectToServerFn): void {
 
 // Terminal functions will be injected to avoid circular dependency
 let getTerminalSettings: TerminalFunctions['getTerminalSettings'] | null = null
-let applyTerminalSettings: TerminalFunctions['applyTerminalSettings'] | null = null
+let applyTerminalSettings: TerminalFunctions['applyTerminalSettings'] | null =
+  null
 let resizeTerminal: TerminalFunctions['resizeTerminal'] | null = null
 
-export function setTerminalFunctions(terminalFunctions: TerminalFunctions): void {
+export function setTerminalFunctions(
+  terminalFunctions: TerminalFunctions
+): void {
   getTerminalSettings = terminalFunctions.getTerminalSettings
   applyTerminalSettings = terminalFunctions.applyTerminalSettings
   resizeTerminal = terminalFunctions.resizeTerminal
@@ -94,7 +103,11 @@ export function hidePromptDialog(): void {
   promptDialog?.close?.()
 }
 
-export function fillLoginForm(sshConfig: { host?: string; port?: number | string; username?: string }): void {
+export function fillLoginForm(sshConfig: {
+  host?: string
+  port?: number | string
+  username?: string
+}): void {
   const { hostInput, loginForm, portInput, usernameInput } = elements
   const { host, port, username } = sshConfig
   if (loginForm) {
@@ -154,7 +167,12 @@ export function initializeElements(): Partial<Elements> {
     'loginSettingsBtn'
   ]
 
-  const criticalElements: ElementId[] = ['terminalContainer', 'loginForm', 'errorDialog', 'promptDialog']
+  const criticalElements: ElementId[] = [
+    'terminalContainer',
+    'loginForm',
+    'errorDialog',
+    'promptDialog'
+  ]
 
   elements = {}
   elementIds.forEach((id) => {
@@ -162,14 +180,18 @@ export function initializeElements(): Partial<Elements> {
     if (el) {
       ;(elements as Record<string, Element | null>)[id] = el
     } else if (criticalElements.includes(id)) {
-      throw new Error(`initializeElements: Critical element with id '${id}' not found`)
+      throw new Error(
+        `initializeElements: Critical element with id '${id}' not found`
+      )
     } else {
       console.warn(`initializeElements: Element with id '${id}' not found`)
     }
   })
 
   if (elements.errorDialog) {
-    const closeBtn = elements.errorDialog.querySelector('.close-button') as HTMLButtonElement | null
+    const closeBtn = elements.errorDialog.querySelector(
+      '.close-button'
+    ) as HTMLButtonElement | null
     if (closeBtn) {
       closeBtn.onclick = () => hideErrorDialog()
       elements.errorDialog.addEventListener('close', () => {
@@ -179,7 +201,9 @@ export function initializeElements(): Partial<Elements> {
   }
 
   if (elements.promptDialog) {
-    const closeBtn = elements.promptDialog.querySelector('.close-button') as HTMLButtonElement | null
+    const closeBtn = elements.promptDialog.querySelector(
+      '.close-button'
+    ) as HTMLButtonElement | null
     if (closeBtn) closeBtn.onclick = () => hidePromptDialog()
   }
   return elements
@@ -190,7 +214,8 @@ export function setupEventListeners(config: unknown): void {
   const elementHandlers: Record<string, (ev: Event) => void> = {
     clearLogBtn: () => clearLog(),
     closeterminalSettingsBtn: () => hideterminalSettingsDialog(),
-    downloadLogBtn: () => downloadLog(),
+    // Download button should immediately download current session log
+    downloadLogBtn: () => downloadLog(true),
     loginForm: (e) => formSubmit(e),
     loginSettingsBtn: () => showterminalSettingsDialog(config),
     reauthBtn: () => reauth(),
@@ -202,9 +227,15 @@ export function setupEventListeners(config: unknown): void {
   }
 
   Object.entries(elementHandlers).forEach(([elementName, handler]) => {
-    const element = (elements as Record<string, HTMLElement | HTMLFormElement | undefined>)[elementName]
+    const element = (
+      elements as Record<string, HTMLElement | HTMLFormElement | undefined>
+    )[elementName]
     if (element) {
-      const eventType = ['loginForm', 'terminalSettingsForm'].includes(elementName) ? 'submit' : 'click'
+      const eventType = ['loginForm', 'terminalSettingsForm'].includes(
+        elementName
+      )
+        ? 'submit'
+        : 'click'
       element.addEventListener(eventType, handler as EventListener)
     }
   })
@@ -245,7 +276,9 @@ export function showPromptDialog(
   }
   const form = promptDialog.querySelector('form') as HTMLFormElement | null
   if (!form) return
-  const inputContainer = form.querySelector('#promptInputContainer') as HTMLElement | null
+  const inputContainer = form.querySelector(
+    '#promptInputContainer'
+  ) as HTMLElement | null
   if (!inputContainer) return
 
   debug('Prompt dialog shown', data)
@@ -269,7 +302,9 @@ export function showPromptDialog(
     debug('showPromptDialog: form.onsubmit')
     e.preventDefault()
     const responses = data.prompts.map((_, index) => {
-      const el = document.getElementById(`promptInput${index}`) as HTMLInputElement | null
+      const el = document.getElementById(
+        `promptInput${index}`
+      ) as HTMLInputElement | null
       return el?.value ?? ''
     })
     hidePromptDialog()
@@ -283,7 +318,8 @@ export function showPromptDialog(
 
 export function showloginDialog(): void {
   debug('showloginDialog')
-  const { loginDialog, terminalContainer, usernameInput, passwordInput } = elements
+  const { loginDialog, terminalContainer, usernameInput, passwordInput } =
+    elements
   const isReauthRequired = state.reauthRequired
   loginDialog?.show?.()
   if (terminalContainer) toggleVisibility(terminalContainer, true)
@@ -326,14 +362,24 @@ export function getElements(): Partial<Elements> {
   return elements
 }
 
-export function updateElement(elementName: ElementId, content: UpdateElementContent, color?: string): void {
-  const element = (elements as Record<string, HTMLElement | undefined>)[elementName]
+export function updateElement(
+  elementName: ElementId,
+  content: UpdateElementContent,
+  color?: string
+): void {
+  const element = (elements as Record<string, HTMLElement | undefined>)[
+    elementName
+  ]
   if (!element || content == null) {
-    console.warn(`updateElement: ${String(elementName)} element not found or content missing.`)
+    console.warn(
+      `updateElement: ${String(elementName)} element not found or content missing.`
+    )
     return
   }
   const { text, background } =
-    typeof content === 'object' ? { text: content.text, background: content.background } : { text: content, background: color }
+    typeof content === 'object'
+      ? { text: content.text, background: content.background }
+      : { text: content, background: color }
   const sanitizedColor = background ? sanitizeColor(background) : null
   debug('updateElement', { elementName, text, sanitizedColor })
   element.textContent = text
@@ -363,10 +409,16 @@ export function updatestartLogBtnState(isLogging: boolean): void {
   }
 }
 
-export function updateUIVisibility(permissions: { allowReauth?: boolean; allowReplay?: boolean; error?: string }): void {
+export function updateUIVisibility(permissions: {
+  allowReauth?: boolean
+  allowReplay?: boolean
+  error?: string
+}): void {
   debug('updateUIVisibility', permissions)
-  if (permissions.allowReauth !== undefined) updateReauthBtnVisibility(permissions.allowReauth)
-  if (permissions.allowReplay !== undefined) updateReplayCredentialsBtnVisibility(permissions.allowReplay)
+  if (permissions.allowReauth !== undefined)
+    updateReauthBtnVisibility(permissions.allowReauth)
+  if (permissions.allowReplay !== undefined)
+    updateReplayCredentialsBtnVisibility(permissions.allowReplay)
   if (permissions.error) showErrorDialog(permissions.error)
 }
 
@@ -404,10 +456,14 @@ function updateReplayCredentialsBtnVisibility(visible: boolean): void {
 }
 
 export function toggleDownloadLogBtn(visible: boolean): void {
-  if (elements.downloadLogBtn) toggleVisibility(elements.downloadLogBtn, visible)
+  if (elements.downloadLogBtn)
+    toggleVisibility(elements.downloadLogBtn, visible)
 }
 
-function toggleVisibility(element: HTMLElement | null, isVisible: boolean): void {
+function toggleVisibility(
+  element: HTMLElement | null,
+  isVisible: boolean
+): void {
   if (!element) return
   debug(`toggleVisibility: ${element.id}: ${isVisible}`)
   if (isVisible) element.classList.add('visible')
@@ -418,11 +474,15 @@ function formSubmit(e: Event): void {
   e.preventDefault()
   const form = e.target as HTMLFormElement
   const formData = new FormData(form)
-  const entries = Object.fromEntries(formData.entries()) as Record<string, unknown>
+  const entries = Object.fromEntries(
+    formData.entries()
+  ) as Partial<ClientAuthenticatePayload>
   if (entries.port) {
     const portNum = parseInt(String(entries.port), 10)
     if (Number.isNaN(portNum) || portNum < 1 || portNum > 65535) {
-      showErrorDialog(`Invalid port number: ${String(entries.port)}. Port must be between 1 and 65535.`)
+      showErrorDialog(
+        `Invalid port number: ${String(entries.port)}. Port must be between 1 and 65535.`
+      )
       return
     }
     entries.port = portNum
@@ -456,12 +516,18 @@ export function resize(): void {
   }
 }
 
-export function hideButton(button: HTMLElement, removeOnClick: boolean = false): void {
+export function hideButton(
+  button: HTMLElement,
+  removeOnClick: boolean = false
+): void {
   toggleVisibility(button, false)
   if (removeOnClick) (button as HTMLButtonElement).onclick = null
 }
 
-export function showButton(button: HTMLElement, onClick: (() => void) | null = null): void {
+export function showButton(
+  button: HTMLElement,
+  onClick: (() => void) | null = null
+): void {
   toggleVisibility(button, true)
   if (onClick) (button as HTMLButtonElement).onclick = onClick
 }
@@ -480,11 +546,19 @@ function populateterminalSettingsForm(config: unknown): void {
   if (elements.terminalSettingsForm) {
     const form = elements.terminalSettingsForm
     Object.keys(settings).forEach((key) => {
-      const control = form.elements.namedItem(key) as HTMLInputElement | HTMLSelectElement | RadioNodeList | null
+      const control = form.elements.namedItem(key) as
+        | HTMLInputElement
+        | HTMLSelectElement
+        | RadioNodeList
+        | null
       if (!control) return
       if (control instanceof HTMLInputElement) {
-        if (control.type === 'checkbox') control.checked = Boolean((settings as Record<string, unknown>)[key])
-        else control.value = String((settings as Record<string, unknown>)[key] ?? '')
+        if (control.type === 'checkbox')
+          control.checked = Boolean((settings as Record<string, unknown>)[key])
+        else
+          control.value = String(
+            (settings as Record<string, unknown>)[key] ?? ''
+          )
       } else if (control instanceof HTMLSelectElement) {
         control.value = String((settings as Record<string, unknown>)[key] ?? '')
       }
@@ -497,7 +571,10 @@ export function hideterminalSettingsDialog(): void {
   elements.terminalSettingsDialog?.close?.()
 }
 
-export function handleterminalSettingsSubmit(event: Event, config: unknown): void {
+export function handleterminalSettingsSubmit(
+  event: Event,
+  config: unknown
+): void {
   debug('handleterminalSettingsSubmit')
   event.preventDefault()
   const form = event.target as HTMLFormElement
@@ -511,22 +588,44 @@ export function handleterminalSettingsSubmit(event: Event, config: unknown): voi
   for (const [key, value] of formData.entries()) {
     switch (key) {
       case 'fontSize':
-        settings[key] = validateNumber(value as string, 8, 72, (currentSettings as Record<string, number>).fontSize as number)
+        settings[key] = validateNumber(
+          value as string,
+          8,
+          72,
+          (currentSettings as Record<string, number>).fontSize as number
+        )
         break
       case 'scrollback':
-        settings[key] = validateNumber(value as string, 1, 200000, (currentSettings as Record<string, number>).scrollback as number)
+        settings[key] = validateNumber(
+          value as string,
+          1,
+          200000,
+          (currentSettings as Record<string, number>).scrollback as number
+        )
         break
       case 'tabStopWidth':
-        settings[key] = validateNumber(value as string, 1, 100, (currentSettings as Record<string, number>).tabStopWidth as number)
+        settings[key] = validateNumber(
+          value as string,
+          1,
+          100,
+          (currentSettings as Record<string, number>).tabStopWidth as number
+        )
         break
       case 'cursorBlink':
         settings[key] = (value as string) === 'true'
         break
       case 'bellStyle':
-        settings[key] = validateBellStyle(value as string, (currentSettings as Record<string, 'sound' | 'none'>).bellStyle as 'sound' | 'none')
+        settings[key] = validateBellStyle(
+          value as string,
+          (currentSettings as Record<string, 'sound' | 'none'>).bellStyle as
+            | 'sound'
+            | 'none'
+        )
         break
       case 'fontFamily':
-        settings[key] = (value as string) || (currentSettings as Record<string, string>).fontFamily
+        settings[key] =
+          (value as string) ||
+          (currentSettings as Record<string, string>).fontFamily
         break
       default:
         settings[key] = value
@@ -580,15 +679,31 @@ function toggleLoginFields(stateValue: boolean): void {
   const { hostInput, portInput } = elements
   if (hostInput) hostInput.disabled = stateValue
   if (portInput) portInput.disabled = stateValue
-  debug(`toggleLoginFields: ${stateValue ? 'disabled' : 'enabled'} for ${stateValue ? 're-authentication' : 'new connection'}`)
+  debug(
+    `toggleLoginFields: ${stateValue ? 'disabled' : 'enabled'} for ${stateValue ? 're-authentication' : 'new connection'}`
+  )
 }
 
 function setupPrivateKeyEvents(): void {
-  const privateKeyToggle = document.getElementById('privateKeyToggle') as HTMLButtonElement | null
-  const privateKeyFile = document.getElementById('privateKeyFile') as HTMLInputElement | null
-  const privateKeyText = document.getElementById('privateKeyText') as HTMLTextAreaElement | null
-  const privateKeySection = document.getElementById('privateKeySection') as HTMLElement | null
-  if (!privateKeyToggle || !privateKeyFile || !privateKeyText || !privateKeySection) return
+  const privateKeyToggle = document.getElementById(
+    'privateKeyToggle'
+  ) as HTMLButtonElement | null
+  const privateKeyFile = document.getElementById(
+    'privateKeyFile'
+  ) as HTMLInputElement | null
+  const privateKeyText = document.getElementById(
+    'privateKeyText'
+  ) as HTMLTextAreaElement | null
+  const privateKeySection = document.getElementById(
+    'privateKeySection'
+  ) as HTMLElement | null
+  if (
+    !privateKeyToggle ||
+    !privateKeyFile ||
+    !privateKeyText ||
+    !privateKeySection
+  )
+    return
   privateKeyToggle.addEventListener('click', (e) => {
     e.preventDefault()
     privateKeySection.classList.toggle('hidden')
@@ -608,10 +723,9 @@ function setupPrivateKeyEvents(): void {
         } else {
           showErrorDialog('Invalid private key format')
         }
-      } catch (error) {
+      } catch (_error) {
         showErrorDialog('Error reading private key file')
       }
     }
   })
 }
-

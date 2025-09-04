@@ -8,4 +8,3 @@ declare module './client/src/js/csp-config.js' {
     next: () => void
   ): void
 }
-

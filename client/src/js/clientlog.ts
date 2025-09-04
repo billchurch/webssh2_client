@@ -2,7 +2,11 @@
 // client/src/js/clientlog.ts
 
 import createDebug from 'debug'
-import { updatestartLogBtnState, toggleDownloadLogBtn, triggerDownload } from './dom.js'
+import {
+  updatestartLogBtnState,
+  toggleDownloadLogBtn,
+  triggerDownload
+} from './dom.js'
 import { focusTerminal } from './terminal.js'
 import { formatDate } from './utils.js'
 import { state, toggleState } from './state.js'
@@ -26,7 +30,7 @@ export function addToSessionLog(data: string): void {
   window.localStorage.setItem(LOG_KEY, sessionLog)
 }
 
-export function clearLog(autoDownload: boolean = false): void {
+export function clearLog(): void {
   const sessionLog = window.localStorage.getItem(LOG_KEY)
   const deleteLog = window.confirm('Clear the session log?')
   if (sessionLog && deleteLog) {
@@ -50,7 +54,10 @@ export function checkSavedSessionLog(): void {
       const filename = `WebSSH2-Recovered-${formatDate(new Date(savedDate)).replace(/[/:\s@]/g, '')}.log`
       const blob = new Blob([savedLog], { type: 'text/plain' })
       triggerDownload(blob, filename)
-      clearLog()
+      // Clear stored log after successful recovery download (no prompt)
+      window.localStorage.removeItem(LOG_KEY)
+      window.localStorage.removeItem(LOG_DATE_KEY)
+      toggleDownloadLogBtn(false)
     }
   }
 }
@@ -90,12 +97,16 @@ export function toggleLog(forceEnable?: boolean): void {
 
 export function downloadLog(autoDownload: boolean = false): void {
   const sessionLog = window.localStorage.getItem(LOG_KEY)
-  const loggedData = state.loggedData
+  const { loggedData } = state
   if (sessionLog && loggedData) {
     const filename = `WebSSH2-${formatDate(new Date()).replace(/[/:\s@]/g, '')}.log`
     const blob = new Blob([sessionLog], { type: 'text/plain' })
     if (autoDownload) {
+      // Download immediately then clear the stored log
       triggerDownload(blob, filename)
+      window.localStorage.removeItem(LOG_KEY)
+      window.localStorage.removeItem(LOG_DATE_KEY)
+      toggleDownloadLogBtn(false)
     } else {
       try {
         window.localStorage.setItem(LOG_KEY, sessionLog)
@@ -104,8 +115,11 @@ export function downloadLog(autoDownload: boolean = false): void {
       } catch (e) {
         console.error('Failed to save session log to localStorage:', e)
         triggerDownload(blob, filename)
+        // Clear as we already downloaded due to save failure
+        window.localStorage.removeItem(LOG_KEY)
+        window.localStorage.removeItem(LOG_DATE_KEY)
+        toggleDownloadLogBtn(false)
       }
     }
   }
 }
-

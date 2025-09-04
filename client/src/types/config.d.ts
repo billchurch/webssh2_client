@@ -46,4 +46,3 @@ declare global {
     webssh2Config?: Partial<WebSSH2Config>
   }
 }
-

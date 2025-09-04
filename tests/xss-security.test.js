@@ -40,7 +40,8 @@ describe('XSS Security Tests', () => {
 
   beforeEach(async () => {
     // Setup JSDOM environment
-    dom = new JSDOM(`
+    dom = new JSDOM(
+      `
       <!DOCTYPE html>
       <html>
         <body>
@@ -50,11 +51,13 @@ describe('XSS Security Tests', () => {
           <div id="error"></div>
         </body>
       </html>
-    `, {
-      url: 'http://localhost:3000',
-      pretendToBeVisual: true,
-      resources: 'usable'
-    })
+    `,
+      {
+        url: 'http://localhost:3000',
+        pretendToBeVisual: true,
+        resources: 'usable'
+      }
+    )
 
     window = dom.window
     document = window.document
@@ -66,7 +69,7 @@ describe('XSS Security Tests', () => {
       const element = document.getElementById(elementName)
       if (element) {
         const text = typeof content === 'object' ? content.text : content
-        element.textContent = text  // Safe implementation using textContent
+        element.textContent = text // Safe implementation using textContent
       }
     }
   })
@@ -80,18 +83,38 @@ describe('XSS Security Tests', () => {
       it(`should prevent XSS in header with vector ${index + 1}: ${vector.substring(0, 30)}...`, () => {
         const headerElement = document.getElementById('header')
         updateElement('header', vector)
-        
+
         // Check that no script tags were created
-        assert.equal(headerElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
-        
+        assert.equal(
+          headerElement.getElementsByTagName('script').length,
+          0,
+          'Script tags should not be present'
+        )
+
         // Check that the text content is properly escaped and no HTML is interpreted
-        assert.equal(headerElement.textContent, vector, 'Text should be escaped and displayed as plain text')
-        
+        assert.equal(
+          headerElement.textContent,
+          vector,
+          'Text should be escaped and displayed as plain text'
+        )
+
         // Verify that innerHTML contains escaped HTML entities (safe representation)
-        const innerHTML = headerElement.innerHTML
-        assert.equal(innerHTML.includes('<script'), false, 'Script tags should not be present in HTML')
-        assert.equal(innerHTML.includes('<img'), false, 'Image tags should not be present in HTML')
-        assert.equal(innerHTML.includes('<svg'), false, 'SVG tags should not be present in HTML')
+        const { innerHTML } = headerElement
+        assert.equal(
+          innerHTML.includes('<script'),
+          false,
+          'Script tags should not be present in HTML'
+        )
+        assert.equal(
+          innerHTML.includes('<img'),
+          false,
+          'Image tags should not be present in HTML'
+        )
+        assert.equal(
+          innerHTML.includes('<svg'),
+          false,
+          'SVG tags should not be present in HTML'
+        )
       })
     })
 
@@ -99,18 +122,38 @@ describe('XSS Security Tests', () => {
       it(`should prevent XSS in footer with vector ${index + 1}: ${vector.substring(0, 30)}...`, () => {
         const footerElement = document.getElementById('footer')
         updateElement('footer', vector)
-        
+
         // Check that no script tags were created
-        assert.equal(footerElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
-        
+        assert.equal(
+          footerElement.getElementsByTagName('script').length,
+          0,
+          'Script tags should not be present'
+        )
+
         // Check that the text content is properly escaped and no HTML is interpreted
-        assert.equal(footerElement.textContent, vector, 'Text should be escaped and displayed as plain text')
-        
+        assert.equal(
+          footerElement.textContent,
+          vector,
+          'Text should be escaped and displayed as plain text'
+        )
+
         // Verify that innerHTML contains escaped HTML entities (safe representation)
-        const innerHTML = footerElement.innerHTML
-        assert.equal(innerHTML.includes('<script'), false, 'Script tags should not be present in HTML')
-        assert.equal(innerHTML.includes('<img'), false, 'Image tags should not be present in HTML')
-        assert.equal(innerHTML.includes('<svg'), false, 'SVG tags should not be present in HTML')
+        const { innerHTML } = footerElement
+        assert.equal(
+          innerHTML.includes('<script'),
+          false,
+          'Script tags should not be present in HTML'
+        )
+        assert.equal(
+          innerHTML.includes('<img'),
+          false,
+          'Image tags should not be present in HTML'
+        )
+        assert.equal(
+          innerHTML.includes('<svg'),
+          false,
+          'SVG tags should not be present in HTML'
+        )
       })
     })
   })
@@ -120,17 +163,33 @@ describe('XSS Security Tests', () => {
       it(`should prevent XSS in status with vector ${index + 1}: ${vector.substring(0, 30)}...`, () => {
         const statusElement = document.getElementById('status')
         updateElement('status', vector)
-        
+
         // Check that no script tags were created
-        assert.equal(statusElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
-        
+        assert.equal(
+          statusElement.getElementsByTagName('script').length,
+          0,
+          'Script tags should not be present'
+        )
+
         // Check that the text content is properly escaped and no HTML is interpreted
-        assert.equal(statusElement.textContent, vector, 'Text should be escaped and displayed as plain text')
-        
+        assert.equal(
+          statusElement.textContent,
+          vector,
+          'Text should be escaped and displayed as plain text'
+        )
+
         // Verify that innerHTML contains escaped HTML entities (safe representation)
-        const innerHTML = statusElement.innerHTML
-        assert.equal(innerHTML.includes('<script'), false, 'Script tags should not be present in HTML')
-        assert.equal(innerHTML.includes('<img'), false, 'Image tags should not be present in HTML')
+        const { innerHTML } = statusElement
+        assert.equal(
+          innerHTML.includes('<script'),
+          false,
+          'Script tags should not be present in HTML'
+        )
+        assert.equal(
+          innerHTML.includes('<img'),
+          false,
+          'Image tags should not be present in HTML'
+        )
       })
     })
 
@@ -138,17 +197,33 @@ describe('XSS Security Tests', () => {
       it(`should prevent XSS in error messages with vector ${index + 1}: ${vector.substring(0, 30)}...`, () => {
         const errorElement = document.getElementById('error')
         updateElement('error', vector)
-        
+
         // Check that no script tags were created
-        assert.equal(errorElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
-        
+        assert.equal(
+          errorElement.getElementsByTagName('script').length,
+          0,
+          'Script tags should not be present'
+        )
+
         // Check that the text content is properly escaped and no HTML is interpreted
-        assert.equal(errorElement.textContent, vector, 'Text should be escaped and displayed as plain text')
-        
-        // Verify that innerHTML contains escaped HTML entities (safe representation)  
-        const innerHTML = errorElement.innerHTML
-        assert.equal(innerHTML.includes('<script'), false, 'Script tags should not be present in HTML')
-        assert.equal(innerHTML.includes('<img'), false, 'Image tags should not be present in HTML')
+        assert.equal(
+          errorElement.textContent,
+          vector,
+          'Text should be escaped and displayed as plain text'
+        )
+
+        // Verify that innerHTML contains escaped HTML entities (safe representation)
+        const { innerHTML } = errorElement
+        assert.equal(
+          innerHTML.includes('<script'),
+          false,
+          'Script tags should not be present in HTML'
+        )
+        assert.equal(
+          innerHTML.includes('<img'),
+          false,
+          'Image tags should not be present in HTML'
+        )
       })
     })
   })
@@ -157,29 +232,49 @@ describe('XSS Security Tests', () => {
     it('should sanitize header parameter from URL', () => {
       const maliciousHeader = '<script>alert("XSS")</script>'
       const headerElement = document.getElementById('header')
-      
+
       // Simulate URL parameter processing
       updateElement('header', maliciousHeader)
-      
+
       // Verify no script execution
-      assert.equal(headerElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
-      assert.equal(headerElement.textContent, maliciousHeader, 'Malicious content should be displayed as text')
+      assert.equal(
+        headerElement.getElementsByTagName('script').length,
+        0,
+        'Script tags should not be present'
+      )
+      assert.equal(
+        headerElement.textContent,
+        maliciousHeader,
+        'Malicious content should be displayed as text'
+      )
     })
 
     it('should sanitize footer parameter from URL', () => {
       const maliciousFooter = '<img src=x onerror=alert("XSS")>'
       const footerElement = document.getElementById('footer')
-      
+
       // Simulate URL parameter processing
       updateElement('footer', maliciousFooter)
-      
-      // Verify no image tag with onerror  
-      assert.equal(footerElement.getElementsByTagName('img').length, 0, 'Image tags should not be present')
-      assert.equal(footerElement.textContent, maliciousFooter, 'Malicious content should be displayed as text')
-      
+
+      // Verify no image tag with onerror
+      assert.equal(
+        footerElement.getElementsByTagName('img').length,
+        0,
+        'Image tags should not be present'
+      )
+      assert.equal(
+        footerElement.textContent,
+        maliciousFooter,
+        'Malicious content should be displayed as text'
+      )
+
       // Verify that innerHTML contains escaped HTML entities (safe representation)
-      const innerHTML = footerElement.innerHTML
-      assert.equal(innerHTML.includes('<img'), false, 'Image tags should not be present in HTML')
+      const { innerHTML } = footerElement
+      assert.equal(
+        innerHTML.includes('<img'),
+        false,
+        'Image tags should not be present in HTML'
+      )
     })
   })
 
@@ -187,39 +282,63 @@ describe('XSS Security Tests', () => {
     it('should handle nested HTML entities', () => {
       const nestedXSS = '&lt;script&gt;alert("XSS")&lt;/script&gt;'
       const headerElement = document.getElementById('header')
-      
+
       updateElement('header', nestedXSS)
-      
-      assert.equal(headerElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
-      assert.equal(headerElement.textContent, nestedXSS, 'HTML entities should be displayed as text')
+
+      assert.equal(
+        headerElement.getElementsByTagName('script').length,
+        0,
+        'Script tags should not be present'
+      )
+      assert.equal(
+        headerElement.textContent,
+        nestedXSS,
+        'HTML entities should be displayed as text'
+      )
     })
 
     it('should handle Unicode bypass attempts', () => {
       const unicodeXSS = '\\u003cscript\\u003ealert("XSS")\\u003c/script\\u003e'
       const headerElement = document.getElementById('header')
-      
+
       updateElement('header', unicodeXSS)
-      
-      assert.equal(headerElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
+
+      assert.equal(
+        headerElement.getElementsByTagName('script').length,
+        0,
+        'Script tags should not be present'
+      )
     })
 
     it('should handle data URIs', () => {
       const dataURIXSS = 'data:text/html,<script>alert("XSS")</script>'
       const headerElement = document.getElementById('header')
-      
+
       updateElement('header', dataURIXSS)
-      
-      assert.equal(headerElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
-      assert.equal(headerElement.textContent, dataURIXSS, 'Data URI should be displayed as text')
+
+      assert.equal(
+        headerElement.getElementsByTagName('script').length,
+        0,
+        'Script tags should not be present'
+      )
+      assert.equal(
+        headerElement.textContent,
+        dataURIXSS,
+        'Data URI should be displayed as text'
+      )
     })
 
     it('should handle mixed case bypass attempts', () => {
       const mixedCaseXSS = '<ScRiPt>alert("XSS")</sCrIpT>'
       const headerElement = document.getElementById('header')
-      
+
       updateElement('header', mixedCaseXSS)
-      
-      assert.equal(headerElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
+
+      assert.equal(
+        headerElement.getElementsByTagName('script').length,
+        0,
+        'Script tags should not be present'
+      )
     })
   })
 
@@ -229,12 +348,20 @@ describe('XSS Security Tests', () => {
         element: 'header',
         value: '<script>alert("XSS from WebSocket")</script>'
       }
-      
+
       const headerElement = document.getElementById('header')
       updateElement(maliciousMessage.element, maliciousMessage.value)
-      
-      assert.equal(headerElement.getElementsByTagName('script').length, 0, 'Script tags should not be present')
-      assert.equal(headerElement.textContent, maliciousMessage.value, 'Malicious content should be displayed as text')
+
+      assert.equal(
+        headerElement.getElementsByTagName('script').length,
+        0,
+        'Script tags should not be present'
+      )
+      assert.equal(
+        headerElement.textContent,
+        maliciousMessage.value,
+        'Malicious content should be displayed as text'
+      )
     })
 
     it('should handle malformed WebSocket data', () => {
@@ -242,12 +369,20 @@ describe('XSS Security Tests', () => {
         element: 'status',
         value: { text: '<img src=x onerror=alert("XSS")>', background: 'red' }
       }
-      
+
       const statusElement = document.getElementById('status')
       updateElement(malformedData.element, malformedData.value)
-      
-      assert.equal(statusElement.getElementsByTagName('img').length, 0, 'Image tags should not be present')
-      assert.equal(statusElement.textContent, malformedData.value.text, 'Malicious content should be displayed as text')
+
+      assert.equal(
+        statusElement.getElementsByTagName('img').length,
+        0,
+        'Image tags should not be present'
+      )
+      assert.equal(
+        statusElement.textContent,
+        malformedData.value.text,
+        'Malicious content should be displayed as text'
+      )
     })
   })
 
@@ -256,22 +391,24 @@ describe('XSS Security Tests', () => {
       const recommendedCSP = {
         'Content-Security-Policy': [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline'",  // unsafe-inline needed for xterm.js
-          "style-src 'self' 'unsafe-inline'",    // unsafe-inline needed for terminal styling
+          "script-src 'self' 'unsafe-inline'", // unsafe-inline needed for xterm.js
+          "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for terminal styling
           "img-src 'self' data:",
           "font-src 'self'",
-          "connect-src 'self' ws: wss:",         // WebSocket connections
+          "connect-src 'self' ws: wss:", // WebSocket connections
           "frame-src 'none'",
           "object-src 'none'",
           "base-uri 'self'",
           "form-action 'self'",
-          "upgrade-insecure-requests"
+          'upgrade-insecure-requests'
         ].join('; ')
       }
-      
+
       // This is a recommendation, not a test
       console.log('Recommended CSP Headers:', recommendedCSP)
-      assert.ok(recommendedCSP['Content-Security-Policy'].includes("script-src 'self'"))
+      assert.ok(
+        recommendedCSP['Content-Security-Policy'].includes("script-src 'self'")
+      )
     })
   })
 })

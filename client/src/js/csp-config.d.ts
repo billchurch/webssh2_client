@@ -6,4 +6,3 @@ export function securityHeadersMiddleware(
   res: { setHeader: (name: string, value: string) => void },
   next: () => void
 ): void
-

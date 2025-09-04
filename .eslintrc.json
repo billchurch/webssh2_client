@@ -1,4 +1,13 @@
 {
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
   "extends": [
     "airbnb-base",
     "plugin:prettier/recommended",
@@ -30,6 +39,23 @@
       },
       "rules": {
         "no-undef": "off",
+        "import/extensions": "off",
+        "import/no-unresolved": "off",
+        "import/no-extraneous-dependencies": "off",
+        "import/prefer-default-export": "off",
+        "import/no-mutable-exports": "off",
+        "node/no-missing-import": "off",
+        "node/no-unsupported-features/es-syntax": "off",
+        "camelcase": "off",
+        "no-use-before-define": ["error", { "functions": false, "classes": false, "variables": false }],
+        "no-param-reassign": ["error", { "props": false }],
+        "no-alert": "off",
+        "no-plusplus": "off",
+        "prefer-destructuring": "off",
+        "no-restricted-syntax": "off",
+        "no-shadow": "off",
+        "no-underscore-dangle": "off",
+        "node/no-extraneous-import": "off",
         "@typescript-eslint/no-explicit-any": "error",
         "@typescript-eslint/no-unused-vars": [
           "warn",
@@ -37,7 +63,28 @@
         ],
         "@typescript-eslint/consistent-type-imports": ["error", { "prefer": "type-imports" }]
       }
+    },
+    {
+      "files": ["tests/**/*.js"],
+      "env": { "node": true, "browser": false, "es2021": true },
+      "rules": {
+        "no-undef": "off",
+        "no-plusplus": "off",
+        "no-script-url": "off",
+        "import/prefer-default-export": "off"
+      }
+    },
+    {
+      "files": ["client/src/js/csp-config.js"],
+      "env": { "node": true, "browser": false },
+      "rules": { "no-undef": "off" }
     }
   ],
-  "ignorePatterns": ["scripts/*", "client/public/**"]
+  "ignorePatterns": [
+    "scripts/*",
+    "client/public/**",
+    "client/index.js",
+    "index.js",
+    "client/src/vite.config.js"
+  ]
 }

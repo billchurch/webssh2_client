@@ -49,7 +49,10 @@ export function isObject(item: unknown): item is Obj {
   return !!item && typeof item === 'object' && !Array.isArray(item)
 }
 
-export function mergeDeep<T extends Obj, U extends Obj>(target: T, source: U): T & U {
+export function mergeDeep<T extends Obj, U extends Obj>(
+  target: T,
+  source: U
+): T & U {
   const output: Obj = { ...target }
   if (isObject(target) && isObject(source)) {
     Object.keys(source).forEach((key) => {
@@ -59,7 +62,10 @@ export function mergeDeep<T extends Obj, U extends Obj>(target: T, source: U): T
         if (!(key in target)) {
           ;(output as Obj)[key] = sVal
         } else {
-          ;(output as Obj)[key] = mergeDeep(isObject(tVal) ? (tVal as Obj) : {}, sVal as Obj)
+          ;(output as Obj)[key] = mergeDeep(
+            isObject(tVal) ? (tVal as Obj) : {},
+            sVal as Obj
+          )
         }
       } else {
         ;(output as Obj)[key] = sVal
@@ -73,8 +79,13 @@ export function formatDate(date: Date): string {
   return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} @ ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
 }
 
-export function validateBellStyle(value: string, defaultValue: 'sound' | 'none' = 'sound'): 'sound' | 'none' {
-  return ['sound', 'none'].includes(value) ? (value as 'sound' | 'none') : defaultValue
+export function validateBellStyle(
+  value: string,
+  defaultValue: 'sound' | 'none' = 'sound'
+): 'sound' | 'none' {
+  return ['sound', 'none'].includes(value)
+    ? (value as 'sound' | 'none')
+    : defaultValue
 }
 
 export function initializeConfig(): WebSSH2Config {
@@ -99,7 +110,10 @@ export function initializeConfig(): WebSSH2Config {
     logLevel: 'info'
   }
   const userConfig = (window as Window).webssh2Config || {}
-  const config = mergeDeep(defaultConfig, userConfig as Partial<WebSSH2Config>) as WebSSH2Config
+  const config = mergeDeep(
+    defaultConfig,
+    userConfig as Partial<WebSSH2Config>
+  ) as WebSSH2Config
   debug('initializeConfig', config)
   return config
 }
@@ -170,8 +184,14 @@ export function populateFormFromUrl(config: WebSSH2Config): WebSSH2Config {
           validatedValue = value
       }
 
-      if (validatedValue !== null && param !== 'header' && param !== 'headerbackground') {
-        const input = document.getElementById(param + 'Input') as HTMLInputElement | null
+      if (
+        validatedValue !== null &&
+        param !== 'header' &&
+        param !== 'headerbackground'
+      ) {
+        const input = document.getElementById(
+          `${param}Input`
+        ) as HTMLInputElement | null
         if (input) input.value = String(validatedValue)
       }
     }
@@ -210,18 +230,21 @@ export function getCredentials(
       (formData?.host as string | undefined) ||
       urlParams.get('host') ||
       (cfg.ssh?.host as string | undefined) ||
-      (document.getElementById('hostInput') as HTMLInputElement | null)?.value ||
+      (document.getElementById('hostInput') as HTMLInputElement | null)
+        ?.value ||
       '',
     port,
     username:
       (formData?.username as string | undefined) ||
-      (document.getElementById('usernameInput') as HTMLInputElement | null)?.value ||
+      (document.getElementById('usernameInput') as HTMLInputElement | null)
+        ?.value ||
       urlParams.get('username') ||
       (cfg.ssh?.username as string | undefined) ||
       '',
     password:
       (formData?.password as string | undefined) ||
-      (document.getElementById('passwordInput') as HTMLInputElement | null)?.value ||
+      (document.getElementById('passwordInput') as HTMLInputElement | null)
+        ?.value ||
       urlParams.get('password') ||
       (cfg.ssh?.password as string | undefined) ||
       '',
@@ -234,7 +257,8 @@ export function getCredentials(
 
   const privateKey =
     (formData?.privateKey as string | undefined) ||
-    (document.getElementById('privateKeyText') as HTMLTextAreaElement | null)?.value ||
+    (document.getElementById('privateKeyText') as HTMLTextAreaElement | null)
+      ?.value ||
     urlParams.get('privateKey') ||
     (cfg.ssh?.privateKey as string | undefined) ||
     ''
@@ -242,7 +266,8 @@ export function getCredentials(
     mergedConfig.privateKey = privateKey
     const passphrase =
       (formData?.passphrase as string | undefined) ||
-      (document.getElementById('passphraseInput') as HTMLInputElement | null)?.value ||
+      (document.getElementById('passphraseInput') as HTMLInputElement | null)
+        ?.value ||
       urlParams.get('passphrase') ||
       (cfg.ssh?.passphrase as string | undefined) ||
       ''
@@ -273,13 +298,18 @@ export function getBasicAuthCookie(): { host?: string; port?: number } | null {
     const cookie = cookies[i]!.trim()
     if (cookie.startsWith('basicauth=')) {
       try {
-        const parsed = JSON.parse(decodeURIComponent(cookie.substring('basicauth='.length))) as {
+        const parsed = JSON.parse(
+          decodeURIComponent(cookie.substring('basicauth='.length))
+        ) as {
           host?: string
           port?: number
         }
         return parsed
       } catch (e) {
-        console.error('getBasicAuthCookie: Failed to parse basicauth cookie:', e)
+        console.error(
+          'getBasicAuthCookie: Failed to parse basicauth cookie:',
+          e
+        )
         return null
       }
     }
@@ -288,7 +318,9 @@ export function getBasicAuthCookie(): { host?: string; port?: number } | null {
 }
 
 export function validatePrivateKey(key: string): boolean {
-  const standardKeyPattern = /^-----BEGIN (?:RSA )?PRIVATE KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)\r?\n-----END (?:RSA )?PRIVATE KEY-----\r?\n?$/
-  const encryptedKeyPattern = /^-----BEGIN RSA PRIVATE KEY-----\r?\n(?:Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: ([^\r\n]+)\r?\n\r?\n)([A-Za-z0-9+/=\r\n]+)\r?\n-----END RSA PRIVATE KEY-----\r?\n?$/
+  const standardKeyPattern =
+    /^-----BEGIN (?:RSA )?PRIVATE KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)\r?\n-----END (?:RSA )?PRIVATE KEY-----\r?\n?$/
+  const encryptedKeyPattern =
+    /^-----BEGIN RSA PRIVATE KEY-----\r?\n(?:Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: ([^\r\n]+)\r?\n\r?\n)([A-Za-z0-9+/=\r\n]+)\r?\n-----END RSA PRIVATE KEY-----\r?\n?$/
   return standardKeyPattern.test(key) || encryptedKeyPattern.test(key)
 }

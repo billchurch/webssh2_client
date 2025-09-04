@@ -20,7 +20,10 @@ export const ICONS: Record<string, string> = {
   upload: Upload
 }
 
-export function renderIcon(name: string | null, extraClasses: string = ''): string {
+export function renderIcon(
+  name: string | null,
+  extraClasses: string = ''
+): string {
   const svg = (name && ICONS[name]) || ''
   return `<span class="icon ${extraClasses}">${svg}</span>`
 }
@@ -33,8 +36,10 @@ export function replaceIconsIn(root: Document | Element = document): void {
     const html = renderIcon(name, extra)
     const wrapper = document.createElement('span')
     wrapper.innerHTML = html
-    const node = (wrapper.firstElementChild || wrapper.firstChild) as Element | ChildNode | null
+    const node = (wrapper.firstElementChild || wrapper.firstChild) as
+      | Element
+      | ChildNode
+      | null
     if (node) el.replaceWith(node)
   })
 }
-

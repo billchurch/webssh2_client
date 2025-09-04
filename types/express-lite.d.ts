@@ -1,5 +1,5 @@
 declare module 'express' {
-  export interface Request {}
+  export type Request = unknown
   export interface Response {
     setHeader(name: string, value: string): void
     sendFile(path: string): void
@@ -7,7 +7,10 @@ declare module 'express' {
   export type NextFunction = () => void
   export interface ExpressApp {
     use: (...args: unknown[]) => unknown
-    get: (path: string, handler: (req: Request, res: Response) => unknown) => unknown
+    get: (
+      path: string,
+      handler: (req: Request, res: Response) => unknown
+    ) => unknown
     listen: (port: number, cb: () => void) => unknown
   }
   export interface ExpressModule {
@@ -17,4 +20,3 @@ declare module 'express' {
   const express: ExpressModule
   export default express
 }
-

@@ -14,7 +14,9 @@ if (isMainModule) {
   const app = expressModule()
 
   // Security headers middleware
-  const { securityHeadersMiddleware } = await import('./client/src/js/csp-config.js')
+  const { securityHeadersMiddleware } = await import(
+    './client/src/js/csp-config.js'
+  )
 
   const port = 3000
   app.use(securityHeadersMiddleware)
@@ -31,4 +33,3 @@ if (isMainModule) {
 // Always export the client module as default
 const clientModule = await import('./client/index.js')
 export default clientModule.default
-
