@@ -1,5 +1,8 @@
 # WebSSH2 Client - Web SSH Client
 
+[![CI](https://github.com/billchurch/webssh2_client/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/billchurch/webssh2_client/actions/workflows/ci.yml)
+[![Release](https://github.com/billchurch/webssh2_client/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/billchurch/webssh2_client/actions/workflows/release.yml)
+
 ![Orthrus Mascot](images/orthrus.png)
 
 WebSSH2 Client is an HTML5 web-based terminal emulator and SSH client component. It uses WebSockets to communicate with a WebSSH2 server, which in turn uses SSH2 to connect to SSH servers.
@@ -65,6 +68,15 @@ For server setup instructions, refer to the [WebSSH2 server documentation](https
 - Multi-factor authentication support (when supported by server)
 - Support for credential replay and reauthentication
 
+## Security and Lint Rules
+
+- No innerHTML: The client never uses `innerHTML` for user content. All text uses `textContent` and safe DOM building helpers.
+- CSP: Strict `script-src 'self'` (no inline scripts). Inline styles allowed for xterm DOM renderer and safe color updates.
+- ESLint guardrails:
+  - `no-unsanitized` plugin blocks unsanitized DOM sinks (`innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`).
+  - Additional bans via `no-restricted-properties` for those sinks, and `no-restricted-syntax` for string-based timers and `new Function`.
+- Xterm integration: Terminal output is rendered with `xterm.write()`; no HTML rendering of remote data.
+
 ## Configuration
 
 The client can be configured through:
@@ -109,7 +121,7 @@ window.webssh2Config = {
 
 ## Development
 
-- For development information see [DEVELOPMENT.md](./DEVELOPMENT.md).
+See [DEVELOPMENT.md](./DEVELOPMENT.md).
 
 ## Support
 
@@ -125,4 +137,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 - [Xterm.js](https://xtermjs.org/) for terminal emulation
 - [Socket.IO](https://socket.io/) for WebSocket communication
-- [Webpack](https://webpack.js.org/) for module bundling
+- [Vite](https://vitejs.dev/) for development and bundling
+- [ESLint](https://eslint.org/) + [Prettier](https://prettier.io/) for code quality
+- [lucide-static](https://github.com/lucide-icons/lucide) for SVG icons

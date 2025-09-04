@@ -20,12 +20,19 @@ export const ICONS: Record<string, string> = {
   upload: Upload
 }
 
-export function renderIcon(
+export function createIconNode(
   name: string | null,
   extraClasses: string = ''
-): string {
-  const svg = (name && ICONS[name]) || ''
-  return `<span class="icon ${extraClasses}">${svg}</span>`
+): HTMLElement {
+  const svgRaw = (name && ICONS[name]) || ''
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(svgRaw, 'image/svg+xml')
+  const svgEl = doc.documentElement as SVGElement
+  const wrapper = document.createElement('span')
+  wrapper.className = `icon ${extraClasses}`.trim()
+  const imported = document.importNode(svgEl, true)
+  wrapper.appendChild(imported)
+  return wrapper
 }
 
 export function replaceIconsIn(root: Document | Element = document): void {
@@ -33,13 +40,7 @@ export function replaceIconsIn(root: Document | Element = document): void {
   candidates.forEach((el) => {
     const name = el.getAttribute('data-icon')
     const extra = el.className
-    const html = renderIcon(name, extra)
-    const wrapper = document.createElement('span')
-    wrapper.innerHTML = html
-    const node = (wrapper.firstElementChild || wrapper.firstChild) as
-      | Element
-      | ChildNode
-      | null
-    if (node) el.replaceWith(node)
+    const node = createIconNode(name, extra)
+    el.replaceWith(node)
   })
 }

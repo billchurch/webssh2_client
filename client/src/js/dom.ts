@@ -6,7 +6,7 @@
  */
 
 import createDebug from 'debug'
-import { renderIcon } from './icons.js'
+import { createIconNode } from './icons.js'
 import {
   sanitizeColor,
   validateNumber,
@@ -283,7 +283,7 @@ export function showPromptDialog(
 
   debug('Prompt dialog shown', data)
   promptMessage.textContent = data.name || 'Authentication Required'
-  inputContainer.innerHTML = ''
+  inputContainer.textContent = ''
 
   let firstInput: HTMLInputElement | null = null
   data.prompts.forEach((prompt, index) => {
@@ -707,12 +707,15 @@ function setupPrivateKeyEvents(): void {
   privateKeyToggle.addEventListener('click', (e) => {
     e.preventDefault()
     privateKeySection.classList.toggle('hidden')
+    privateKeyToggle.replaceChildren()
+    const iconEl = createIconNode('key', 'icon-fw')
     if (privateKeySection.classList.contains('hidden')) {
-      privateKeyToggle.innerHTML = `${renderIcon('key', 'icon-fw')} Add SSH Key`
+      privateKeyToggle.append(iconEl, document.createTextNode(' Add SSH Key'))
     } else {
-      privateKeyToggle.innerHTML = `${renderIcon('key', 'icon-fw')} Hide SSH Key`
+      privateKeyToggle.append(iconEl, document.createTextNode(' Hide SSH Key'))
     }
   })
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   privateKeyFile.addEventListener('change', async (e) => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (file) {
@@ -723,6 +726,7 @@ function setupPrivateKeyEvents(): void {
         } else {
           showErrorDialog('Invalid private key format')
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_error) {
         showErrorDialog('Error reading private key file')
       }

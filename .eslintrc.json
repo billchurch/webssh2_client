@@ -13,7 +13,7 @@
     "plugin:prettier/recommended",
     "plugin:node/recommended"
   ],
-  "plugins": ["prettier"],
+  "plugins": ["prettier", "no-unsanitized"],
   "rules": {
     "prettier/prettier": "error",
     "no-unused-vars": "warn",
@@ -22,7 +22,17 @@
     "no-process-exit": "off",
     "object-shorthand": "off",
     "class-methods-use-this": "off",
-    "space-before-function-paren": "off"
+    "space-before-function-paren": "off",
+    "no-unsanitized/method": "error",
+    "no-unsanitized/property": "error",
+    "no-restricted-properties": [
+      "error",
+      { "object": "*", "property": "innerHTML", "message": "Use textContent or safe DOM builders instead of innerHTML." },
+      { "object": "*", "property": "outerHTML", "message": "Avoid outerHTML; use DOM APIs to replace nodes safely." },
+      { "object": "*", "property": "insertAdjacentHTML", "message": "Avoid insertAdjacentHTML; use DOM APIs to create and append elements." },
+      { "object": "document", "property": "write", "message": "document.write is disallowed." },
+      { "object": "document", "property": "writeln", "message": "document.writeln is disallowed." }
+    ]
   },
   "overrides": [
     {
@@ -52,7 +62,21 @@
         "no-alert": "off",
         "no-plusplus": "off",
         "prefer-destructuring": "off",
-        "no-restricted-syntax": "off",
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "CallExpression[callee.name='setTimeout'][arguments.0.type='Literal']",
+            "message": "Avoid string-based setTimeout; pass a function instead."
+          },
+          {
+            "selector": "CallExpression[callee.name='setInterval'][arguments.0.type='Literal']",
+            "message": "Avoid string-based setInterval; pass a function instead."
+          },
+          {
+            "selector": "NewExpression[callee.name='Function']",
+            "message": "Do not use the Function constructor."
+          }
+        ],
         "no-shadow": "off",
         "no-underscore-dangle": "off",
         "node/no-extraneous-import": "off",
@@ -73,11 +97,6 @@
         "no-script-url": "off",
         "import/prefer-default-export": "off"
       }
-    },
-    {
-      "files": ["client/src/js/csp-config.js"],
-      "env": { "node": true, "browser": false },
-      "rules": { "no-undef": "off" }
     }
   ],
   "ignorePatterns": [

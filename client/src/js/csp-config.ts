@@ -9,9 +9,10 @@
  * These CSP headers should be set by the server serving the client
  */
 
-export const CSP_CONFIG = {
+export const CSP_CONFIG: Record<string, string[]> = {
   'default-src': ["'self'"],
-  'script-src': ["'self'", "'unsafe-inline'"], // unsafe-inline needed for xterm.js
+  // Only allow same-origin scripts; no inline scripts
+  'script-src': ["'self'"],
   'style-src': ["'self'", "'unsafe-inline'"], // unsafe-inline needed for terminal styling
   'img-src': ["'self'", 'data:'],
   'font-src': ["'self'"],
@@ -25,14 +26,11 @@ export const CSP_CONFIG = {
 
 /**
  * Generates CSP header string from config
- * @returns {string} The complete CSP header value
  */
-export function generateCSPHeader() {
+export function generateCSPHeader(): string {
   return Object.entries(CSP_CONFIG)
     .map(([directive, values]) => {
-      if (values.length === 0) {
-        return directive
-      }
+      if (values.length === 0) return directive
       return `${directive} ${values.join(' ')}`
     })
     .join('; ')
@@ -42,7 +40,7 @@ export function generateCSPHeader() {
  * Security headers configuration
  * Additional security headers to prevent various attacks
  */
-export const SECURITY_HEADERS = {
+export const SECURITY_HEADERS: Record<string, string> = {
   'Content-Security-Policy': generateCSPHeader(),
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
@@ -52,24 +50,15 @@ export const SECURITY_HEADERS = {
 }
 
 /**
- * Express middleware to add security headers
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @param {Function} next - Express next middleware function
+ * Express-style middleware to add security headers
  */
-export function securityHeadersMiddleware(req, res, next) {
+export function securityHeadersMiddleware(
+  _req: unknown,
+  res: { setHeader: (name: string, value: string) => void },
+  next: () => void
+): void {
   Object.entries(SECURITY_HEADERS).forEach(([header, value]) => {
     res.setHeader(header, value)
   })
   next()
-}
-
-// For CommonJS compatibility
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    CSP_CONFIG,
-    generateCSPHeader,
-    SECURITY_HEADERS,
-    securityHeadersMiddleware
-  }
 }

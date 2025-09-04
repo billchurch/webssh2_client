@@ -11,7 +11,8 @@
   },
   "include": [
     "**/*.ts",
-    "types/**/*.d.ts"
+    "types/**/*.d.ts",
+    "client/src/js/csp-config.ts"
   ],
   "exclude": [
     "client/public",
