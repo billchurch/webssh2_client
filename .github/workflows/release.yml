@@ -12,8 +12,8 @@ jobs:
         id: release
         uses: googleapis/release-please-action@v4
         with:
-          release-type: node
-          package-name: webssh2_client
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
       - name: Checkout
         if: steps.release.outputs.release_created == 'true'
@@ -44,4 +44,3 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish
-
