@@ -73,8 +73,8 @@ export function formatDate(date: Date): string {
   return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} @ ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
 }
 
-export function validateBellStyle(value: string): 'sound' | 'none' {
-  return ['sound', 'none'].includes(value) ? (value as 'sound' | 'none') : 'sound'
+export function validateBellStyle(value: string, defaultValue: 'sound' | 'none' = 'sound'): 'sound' | 'none' {
+  return ['sound', 'none'].includes(value) ? (value as 'sound' | 'none') : defaultValue
 }
 
 export function initializeConfig(): WebSSH2Config {
@@ -292,4 +292,3 @@ export function validatePrivateKey(key: string): boolean {
   const encryptedKeyPattern = /^-----BEGIN RSA PRIVATE KEY-----\r?\n(?:Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: ([^\r\n]+)\r?\n\r?\n)([A-Za-z0-9+/=\r\n]+)\r?\n-----END RSA PRIVATE KEY-----\r?\n?$/
   return standardKeyPattern.test(key) || encryptedKeyPattern.test(key)
 }
-
