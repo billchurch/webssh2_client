@@ -6,8 +6,7 @@
 /* App components migrated from style.css and visibility helpers */
 @layer components {
   :root { --bar-h: 24px; }
-  /* visibility helpers for JS toggles */
-  .visible { display: block; }
+  /* visibility handled via Tailwind `hidden` on elements */
 
   /* Body and base layout */
   html, body {
@@ -16,9 +15,7 @@
     color: rgb(240, 240, 240);
   }
 
-  /* Header visibility toggle (JS uses .visible) */
-  #header { display: none; }
-  #header.visible { display: block; }
+  /* Header visibility handled via Tailwind classes in markup */
 
   .box { @apply block h-full; }
 
@@ -28,9 +25,7 @@
   .backdrop {
     @apply fixed inset-0 z-[1000];
     background: rgba(0, 0, 0, 0.7);
-    display: none;
   }
-  .backdrop.visible { display: block; }
   /* Use dialog's native ::backdrop for modal dimming */
   dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
   .modal { @apply m-0 p-0 border-0 bg-transparent overflow-visible; }
@@ -65,8 +60,7 @@
   }
 
   /* Reconnect button show/hide (styles moved to HTML classes) */
-  #reconnectButton { display: none; }
-  #reconnectButton.visible { display: block; }
+  /* button visibility handled via Tailwind `hidden` */
 
   /* Password field + caps lock */
   #passwordInput { position: relative; padding-right: 30px; }
@@ -88,8 +82,6 @@
 
   /* Private key section */
   .private-key-toggle { @apply my-[10px] text-left; }
-  .private-key-toggle button { @apply text-[0.9em] text-[#666]; }
-  .private-key-toggle button:hover { @apply text-[#333]; }
 
   .private-key-input {
     @apply mt-[10px] p-[10px] rounded;

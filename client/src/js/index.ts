@@ -4,7 +4,6 @@
 import createDebug from 'debug'
 import '../css/tailwind.css'
 import '@xterm/xterm/css/xterm.css'
-import '../css/terminal.css'
 import '../css/icons.css'
 
 import {

@@ -389,7 +389,8 @@ export function updateElement(
   if (sanitizedColor) element.style.backgroundColor = sanitizedColor
   if (elementName === 'header') {
     const { terminalContainer } = elements
-    toggleVisibility(element, true)
+    // show header (Tailwind-driven)
+    element.classList.remove('hidden')
     // Tailwind-based height adjust
     if (terminalContainer) {
       terminalContainer.classList.remove('h-[calc(100%-var(--bar-h))]')
@@ -479,13 +480,8 @@ function toggleVisibility(
 ): void {
   if (!element) return
   debug(`toggleVisibility: ${element.id}: ${isVisible}`)
-  if (isVisible) {
-    element.classList.remove('hidden')
-    element.classList.add('visible')
-  } else {
-    element.classList.add('hidden')
-    element.classList.remove('visible')
-  }
+  if (isVisible) element.classList.remove('hidden')
+  else element.classList.add('hidden')
 }
 
 function formSubmit(e: Event): void {
