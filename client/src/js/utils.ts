@@ -1,0 +1,295 @@
+// client
+// client/src/js/utils.ts
+import createDebug from 'debug'
+import maskObject from 'jsmasker'
+import {
+  validateHost,
+  validatePort,
+  validateUsername,
+  validatePassword,
+  validateText,
+  validateColor,
+  validateTerminalType,
+  validateLogLevel
+} from './input-validator.js'
+
+import type { TerminalSettings, WebSSH2Config } from '../types/config.d'
+import type { ClientAuthenticatePayload } from '../types/events.d'
+
+const debug = createDebug('webssh2-client:utils')
+
+export const defaultSettings: TerminalSettings = {
+  cursorBlink: true,
+  scrollback: 10000,
+  tabStopWidth: 8,
+  bellStyle: 'sound',
+  fontSize: 14,
+  fontFamily: 'courier-new, courier, monospace',
+  letterSpacing: 0,
+  lineHeight: 1,
+  logLevel: 'info'
+}
+
+export function validateNumber(
+  value: number | string,
+  min: number,
+  max: number,
+  defaultValue: number
+): number {
+  const num = typeof value === 'number' ? value : Number(value)
+  if (Number.isNaN(num) || num < min || num > max) {
+    return defaultValue
+  }
+  return num
+}
+
+type Obj = Record<string, unknown>
+
+export function isObject(item: unknown): item is Obj {
+  return !!item && typeof item === 'object' && !Array.isArray(item)
+}
+
+export function mergeDeep<T extends Obj, U extends Obj>(target: T, source: U): T & U {
+  const output: Obj = { ...target }
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach((key) => {
+      const sVal = (source as Obj)[key]
+      const tVal = (target as Obj)[key]
+      if (isObject(sVal)) {
+        if (!(key in target)) {
+          ;(output as Obj)[key] = sVal
+        } else {
+          ;(output as Obj)[key] = mergeDeep(isObject(tVal) ? (tVal as Obj) : {}, sVal as Obj)
+        }
+      } else {
+        ;(output as Obj)[key] = sVal
+      }
+    })
+  }
+  return output as T & U
+}
+
+export function formatDate(date: Date): string {
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} @ ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
+}
+
+export function validateBellStyle(value: string): 'sound' | 'none' {
+  return ['sound', 'none'].includes(value) ? (value as 'sound' | 'none') : 'sound'
+}
+
+export function initializeConfig(): WebSSH2Config {
+  const defaultConfig: WebSSH2Config = {
+    socket: {
+      url: null,
+      path: '/ssh/socket.io'
+    },
+    ssh: {
+      host: null,
+      port: 22,
+      username: null,
+      password: null,
+      sshterm: 'xterm-color'
+    },
+    terminal: { ...defaultSettings },
+    header: {
+      text: null,
+      background: 'green'
+    },
+    autoConnect: false,
+    logLevel: 'info'
+  }
+  const userConfig = (window as Window).webssh2Config || {}
+  const config = mergeDeep(defaultConfig, userConfig as Partial<WebSSH2Config>) as WebSSH2Config
+  debug('initializeConfig', config)
+  return config
+}
+
+export function populateFormFromUrl(config: WebSSH2Config): WebSSH2Config {
+  const searchParams = getUrlParams()
+  const params: Obj = {
+    ssh: {},
+    header: {},
+    terminal: {}
+  }
+
+  const parameterList = [
+    'host',
+    'port',
+    'header',
+    'headerbackground',
+    'sshterm',
+    'username',
+    'password',
+    'logLevel'
+  ] as const
+
+  parameterList.forEach((param) => {
+    let value = searchParams.get(param)
+
+    if (param === 'port' && (value === null || value === '')) {
+      value = '22'
+    }
+
+    if (value !== null) {
+      let validatedValue: unknown = null
+
+      switch (param) {
+        case 'host':
+          validatedValue = validateHost(value)
+          break
+        case 'port':
+          validatedValue = validatePort(value)
+          break
+        case 'username':
+          validatedValue = validateUsername(value)
+          break
+        case 'password':
+          validatedValue = validatePassword(value)
+          break
+        case 'header': {
+          const text = validateText(value)
+          if (text !== null) {
+            ;(params as Obj).header = { ...(params as Obj).header, text }
+          }
+          break
+        }
+        case 'headerbackground': {
+          const background = validateColor(value)
+          if (background !== null) {
+            ;(params as Obj).header = { ...(params as Obj).header, background }
+          }
+          break
+        }
+        case 'sshterm':
+          validatedValue = validateTerminalType(value)
+          break
+        case 'logLevel':
+          validatedValue = validateLogLevel(value)
+          break
+        default:
+          validatedValue = value
+      }
+
+      if (validatedValue !== null && param !== 'header' && param !== 'headerbackground') {
+        const input = document.getElementById(param + 'Input') as HTMLInputElement | null
+        if (input) input.value = String(validatedValue)
+      }
+    }
+  })
+  const result = mergeDeep(config, params as Obj) as WebSSH2Config
+  debug('populateFormFromUrl', result)
+  return result
+}
+
+function getUrlParams(): URLSearchParams {
+  return new URLSearchParams(window.location.search)
+}
+
+export function getCredentials(
+  formData: Record<string, unknown> | null = null,
+  terminalDimensions: { cols?: number; rows?: number } = {}
+): ClientAuthenticatePayload {
+  const cfg = (window as Window).webssh2Config || {}
+  const urlParams = getUrlParams()
+
+  const portValue =
+    (formData?.port as number | string | undefined) ||
+    urlParams.get('port') ||
+    (cfg.ssh?.port as number | undefined) ||
+    (document.getElementById('portInput') as HTMLInputElement | null)?.value ||
+    '22'
+
+  let port = parseInt(String(portValue), 10)
+  if (Number.isNaN(port) || port < 1 || port > 65535) {
+    console.warn(`Invalid port value: ${String(portValue)}, defaulting to 22`)
+    port = 22
+  }
+
+  const mergedConfig: ClientAuthenticatePayload = {
+    host:
+      (formData?.host as string | undefined) ||
+      urlParams.get('host') ||
+      (cfg.ssh?.host as string | undefined) ||
+      (document.getElementById('hostInput') as HTMLInputElement | null)?.value ||
+      '',
+    port,
+    username:
+      (formData?.username as string | undefined) ||
+      (document.getElementById('usernameInput') as HTMLInputElement | null)?.value ||
+      urlParams.get('username') ||
+      (cfg.ssh?.username as string | undefined) ||
+      '',
+    password:
+      (formData?.password as string | undefined) ||
+      (document.getElementById('passwordInput') as HTMLInputElement | null)?.value ||
+      urlParams.get('password') ||
+      (cfg.ssh?.password as string | undefined) ||
+      '',
+    term:
+      (formData?.term as string | undefined) ||
+      urlParams.get('sshterm') ||
+      (cfg.ssh?.sshterm as string | undefined) ||
+      'xterm-color'
+  }
+
+  const privateKey =
+    (formData?.privateKey as string | undefined) ||
+    (document.getElementById('privateKeyText') as HTMLTextAreaElement | null)?.value ||
+    urlParams.get('privateKey') ||
+    (cfg.ssh?.privateKey as string | undefined) ||
+    ''
+  if (privateKey) {
+    mergedConfig.privateKey = privateKey
+    const passphrase =
+      (formData?.passphrase as string | undefined) ||
+      (document.getElementById('passphraseInput') as HTMLInputElement | null)?.value ||
+      urlParams.get('passphrase') ||
+      (cfg.ssh?.passphrase as string | undefined) ||
+      ''
+    if (passphrase) mergedConfig.passphrase = passphrase
+  }
+
+  if (terminalDimensions.cols) mergedConfig.cols = terminalDimensions.cols
+  if (terminalDimensions.rows) mergedConfig.rows = terminalDimensions.rows
+
+  const maskedContent = maskObject(mergedConfig)
+  debug('getCredentials: mergedConfig:', maskedContent)
+  return mergedConfig
+}
+
+export function sanitizeColor(color: string): string | null {
+  const colorRegex =
+    /^(#([0-9a-fA-F]{3}){1,2}|rgba?\(\s*(\d{1,3}\s*,\s*){2,3}\s*\d{1,3}\s*\)|[a-zA-Z]+)$/
+  return colorRegex.test(color) ? color : null
+}
+
+export function clearBasicAuthCookie(): void {
+  document.cookie = 'basicauth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/'
+}
+
+export function getBasicAuthCookie(): { host?: string; port?: number } | null {
+  const cookies = document.cookie.split(';')
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i]!.trim()
+    if (cookie.startsWith('basicauth=')) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(cookie.substring('basicauth='.length))) as {
+          host?: string
+          port?: number
+        }
+        return parsed
+      } catch (e) {
+        console.error('getBasicAuthCookie: Failed to parse basicauth cookie:', e)
+        return null
+      }
+    }
+  }
+  return null
+}
+
+export function validatePrivateKey(key: string): boolean {
+  const standardKeyPattern = /^-----BEGIN (?:RSA )?PRIVATE KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)\r?\n-----END (?:RSA )?PRIVATE KEY-----\r?\n?$/
+  const encryptedKeyPattern = /^-----BEGIN RSA PRIVATE KEY-----\r?\n(?:Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: ([^\r\n]+)\r?\n\r?\n)([A-Za-z0-9+/=\r\n]+)\r?\n-----END RSA PRIVATE KEY-----\r?\n?$/
+  return standardKeyPattern.test(key) || encryptedKeyPattern.test(key)
+}
+
