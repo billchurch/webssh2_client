@@ -16,38 +16,13 @@
     color: rgb(240, 240, 240);
   }
 
-  /* Header bar */
-  #header {
-    @apply hidden w-full text-center z-[99] flex-[0_1_auto];
-    height: var(--bar-h);
-    line-height: var(--bar-h);
-    background-color: rgb(0, 128, 0);
-    border-color: white;
-    border-style: none none solid none;
-    border-width: 1px;
-    color: rgb(240, 240, 240);
-  }
+  /* Header visibility toggle (JS uses .visible) */
+  #header { display: none; }
   #header.visible { display: block; }
 
   .box { @apply block h-full; }
 
-  /* Bottom status bar */
-  #bottomdiv {
-    @apply fixed left-0 w-full z-[99] flex items-center border-t border-neutral-200 box-border;
-    height: var(--bar-h);
-    bottom: 0;
-    background-color: rgb(50, 50, 50);
-  }
-  #footer {
-    @apply inline-block text-left px-[10px] border-l border-neutral-200 box-border;
-    background-color: rgb(50, 50, 50);
-    color: rgb(240, 240, 240);
-  }
-  #status {
-    @apply inline-block text-left px-[10px] z-[100] border-x border-neutral-200 box-border;
-    background-color: rgb(50, 50, 50);
-    color: rgb(240, 240, 240);
-  }
+  /* Footer/status styles now set via Tailwind classes in HTML */
 
   /* Manual backdrop for login (non-modal dialog) */
   .backdrop {
@@ -61,16 +36,7 @@
   .modal { @apply m-0 p-0 border-0 bg-transparent overflow-visible; }
   /* Robust centering across browsers */
   .modal[open] { @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] m-0 overflow-visible; }
-  .modal-content {
-    @apply mx-auto p-5 w-[300px] overflow-visible;
-    background-color: #fefefe;
-    border: 1px solid #888;
-    color: #333;
-  }
-  .modal-content h2 {
-    @apply mt-0;
-    color: #333;
-  }
+  /* Modal content styles moved to HTML classes */
 
   /* Login form spacing */
   #loginForm input { @apply w-full mb-[10px]; }
@@ -98,17 +64,9 @@
     background: none; border: none; color: #aaa; height: auto; line-height: 1; width: auto;
   }
 
-  /* Reconnect button */
-  #reconnectButton {
-    @apply fixed left-1/2 top-1/2 text-white rounded z-[1001] text-[16px] px-5 py-[10px];
-    background-color: #007bff;
-    border: none;
-    transform: translate(-50%, -50%);
-    transition: background-color 0.3s;
-    display: none;
-  }
+  /* Reconnect button show/hide (styles moved to HTML classes) */
+  #reconnectButton { display: none; }
   #reconnectButton.visible { display: block; }
-  #reconnectButton:hover { background-color: #0056b3; }
 
   /* Password field + caps lock */
   #passwordInput { position: relative; padding-right: 30px; }

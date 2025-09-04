@@ -1,4 +1,4 @@
-<!-- Version Version 1.0.0-alpha.0 - 2025-09-04T17:54:08.783Z - 16796a5 -->
+<!-- Version Version 1.0.0-alpha.0 - 2025-09-04T18:16:41.968Z - 11f08b2 -->
 <!-- webssh2-client -->
 <!-- /client/src/client.htm -->
 <!DOCTYPE html>
@@ -11,7 +11,7 @@
   </head>
   <body>
     <dialog id="loginDialog" class="modal">
-      <div class="modal-content"> 
+      <div class="modal-content bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-5 w-80 sm:w-96"> 
         <h2>WebSSH2 Login</h2>
         <form id="loginForm" class="space-y-3">
           <input type="text" id="hostInput" name="host" placeholder="Host" required>
@@ -57,24 +57,24 @@
       </div>
     </dialog>
     <dialog id="errorDialog" class="modal" >
-      <div class="modal-content error-modal">
+      <div class="modal-content error-modal bg-red-50 border border-red-400 rounded-md shadow-md p-5 w-80 sm:w-96">
         <button autofocus class="close-button">&times;</button>
         <h2>Error</h2>
         <p id="errorMessage"></p>
       </div>
     </dialog>
 <dialog id="promptDialog" class="modal">
-  <div class="modal-content prompt-modal">
+  <div class="modal-content prompt-modal bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-5 w-80 sm:w-96">
     <button autofocus class="close-button">&times;</button>
     <h2 id="promptMessage"></h2>
     <form>
       <div id="promptInputContainer"></div>
-      <button type="submit" class="pure-button pure-button-primary">Submit</button>
+      <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Submit</button>
     </form>
   </div>
 </dialog>
     <dialog id="terminalSettingsDialog" class="modal">
-      <div class="modal-content">
+      <div class="modal-content bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-5 w-80 sm:w-96">
         <h2>Terminal Settings</h2>
         <form id="terminalSettingsForm" class="space-y-3">
           <fieldset>
@@ -109,11 +109,11 @@
       </div>
     </dialog>
     <div id="backdrop" class="backdrop"></div>
-    <button id="reconnectButton">Reconnect</button>
+    <button id="reconnectButton" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Reconnect</button>
     <div class="box">
-      <div id="header"></div>
+      <div id="header" class="hidden w-full text-center z-[99] h-6 leading-6 bg-green-600 text-white border-b border-neutral-200"></div>
       <div id="terminalContainer" class="terminal"></div>
-      <div id="bottomdiv">
+      <div id="bottomdiv" class="fixed inset-x-0 bottom-0 z-[99] h-6 flex items-center bg-neutral-800 text-neutral-100 border-t border-neutral-200">
         <div class="dropup" id="menu">
           <i data-icon="menu" class="icon-fw"></i> Menu
           <div id="dropupContent">
@@ -126,8 +126,8 @@
             <button id="terminalSettingsBtn" class="menu-button"><i data-icon="settings" class="icon-fw"></i> Settings</button>
           </div>
         </div>
-        <div id="footer"></div>
-        <div id="status"></div>
+        <div id="footer" class="inline-block text-left px-[10px] border-l border-neutral-200"></div>
+        <div id="status" class="inline-block text-left px-[10px] z-[100] border-x border-neutral-200"></div>
       </div>
     </div>
   </body>
