@@ -1,6 +1,6 @@
 {
   "name": "webssh2_client",
-  "version": "0.2.31-alpha.3",
+  "version": "0.2.31-alpha.4",
   "ignore": [
     ".gitignore"
   ],
@@ -25,6 +25,7 @@
     "dev": "cd client/src && vite --mode development",
     "watch": "cd client/src && vite --mode development",
     "analyze": "cd client/src && vite build --mode production && vite-bundle-visualizer",
+    "typecheck": "tsc -b --pretty --noEmit",
     "release": "standard-version -a -s",
     "publish:dry-run": "npm publish --dry-run",
     "publish:npm": "npm publish",

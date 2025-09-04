@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023"],
+    "outDir": "./dist-node",
+    "rootDir": "."
+  },
+  "include": [
+    "**/*.ts",
+    "client/src/types/**/*.d.ts"
+  ],
+  "exclude": [
+    "client/public",
+    "node_modules",
+    "client/src/**"
+  ]
+}
+
