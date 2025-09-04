@@ -1,6 +1,6 @@
 {
   "name": "webssh2_client",
-  "version": "0.2.31-alpha.2",
+  "version": "0.2.31-alpha.3",
   "ignore": [
     ".gitignore"
   ],
@@ -51,7 +51,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.5.4",
     "jsdom": "^26.1.0",
-    "lucide-static": "^0.452.0",
+    "lucide-static": "^0.542.0",
     "prettier": "^3.6.2",
     "purecss": "^3.0.0",
     "socket.io-client": "^4.8.1",
