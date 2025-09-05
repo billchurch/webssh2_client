@@ -53,4 +53,9 @@
   /* Login buttons layout via markup */
 
   /* Private key section via markup */
+
+  /* Make inline SVG icons a bit bolder for visibility */
+  .icon svg {
+    stroke-width: 2.25;
+  }
 }

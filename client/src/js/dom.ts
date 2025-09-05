@@ -11,7 +11,8 @@ import {
   sanitizeColor,
   validateNumber,
   validateBellStyle,
-  validatePrivateKey
+  validatePrivateKey,
+  validatePrivateKeyDeep
 } from './utils.js'
 import { emitData, emitResize, reauth, replayCredentials } from './socket.js'
 import { downloadLog, clearLog, toggleLog } from './clientlog.js'
@@ -764,11 +765,16 @@ function setupPrivateKeyEvents(): void {
     if (file) {
       try {
         const content = await file.text()
-        if (validatePrivateKey(content)) {
-          privateKeyText.value = content
-        } else {
+        if (!validatePrivateKey(content)) {
           showErrorDialog('Invalid private key format')
+          return
         }
+        const deep = validatePrivateKeyDeep(content)
+        if (!deep) {
+          showErrorDialog('Private key appears malformed or unsupported')
+          return
+        }
+        privateKeyText.value = content
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_error) {
         showErrorDialog('Error reading private key file')

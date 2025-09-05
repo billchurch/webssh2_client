@@ -27,7 +27,7 @@ export function createIconNode(
   const svgRaw = (name && ICONS[name]) || ''
   const parser = new DOMParser()
   const doc = parser.parseFromString(svgRaw, 'image/svg+xml')
-  const svgEl = doc.documentElement as SVGElement
+  const svgEl = doc.querySelector('svg')
 
   // Split classes: apply sizing/animation to SVG, container/layout to wrapper
   const tokens = (extraClasses || '').split(/\s+/).filter(Boolean)
@@ -49,10 +49,12 @@ export function createIconNode(
   const wrapper = document.createElement('span')
   wrapper.className = wrapperClass.join(' ').trim()
 
-  const imported = document.importNode(svgEl, true) as SVGElement
-  const existing = imported.getAttribute('class') || ''
-  imported.setAttribute('class', `${existing} ${svgClass.join(' ')}`.trim())
-  wrapper.appendChild(imported)
+  if (svgEl && svgEl.namespaceURI === 'http://www.w3.org/2000/svg') {
+    const imported = document.importNode(svgEl, true) as SVGElement
+    const existing = imported.getAttribute('class') || ''
+    imported.setAttribute('class', `${existing} ${svgClass.join(' ')}`.trim())
+    wrapper.appendChild(imported)
+  }
   return wrapper
 }
 

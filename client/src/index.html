@@ -28,11 +28,18 @@
             <span id="capsLockIcon" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">⇪</span>
           </div>
 
-          <!-- Private key toggle button -->
-          <div class="private-key-toggle">
-            <button type="button" id="privateKeyToggle" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
-              <i data-icon="key" class="icon-fw"></i> Add SSH Key
-            </button>
+          <!-- Options row: Add SSH Key + Options -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="private-key-toggle">
+              <button type="button" id="privateKeyToggle" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
+                <i data-icon="key" class="icon-fw"></i> Add SSH Key
+              </button>
+            </div>
+            <div>
+              <button type="button" id="loginSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm" aria-label="Options" title="Options">
+                <i data-icon="settings" class="icon-fw"></i> Options
+              </button>
+            </div>
           </div>
 
           <!-- Private key section (initially hidden) -->
@@ -42,7 +49,7 @@
               <textarea id="privateKeyText" name="privateKey" autocomplete="off" autocapitalize="off" spellcheck="false"
                 placeholder="Paste your private key here" rows="3" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
               <div class="file-upload">
-                <input type="file" id="privateKeyFile" accept=".pem,.key" autocomplete="off" class="sr-only">
+                <input type="file" id="privateKeyFile" class="sr-only">
                 <label for="privateKeyFile" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
                   <i data-icon="upload" class="icon-fw"></i> Upload Key File
                 </label>
@@ -53,25 +60,22 @@
             </div>
           </div>
 
-          <div class="login-buttons flex items-center justify-between gap-2 mt-2">
-            <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none grow mr-2">Connect</button>
-            <button type="button" id="loginSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none" aria-label="Settings" title="Settings">
-              <i data-icon="settings"></i>
-            </button>
+          <div class="login-buttons mt-2">
+            <button type="submit" class="inline-flex w-full items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Connect</button>
           </div>
         </form>
       </div>
     </dialog>
     <dialog id="errorDialog" class="modal">
       <div class="modal-content relative error-modal bg-red-50 border border-red-400 rounded-md shadow-md p-5 w-80 sm:w-96">
-        <button type="button" autofocus class="absolute top-2 right-2 text-neutral-400 hover:text-neutral-600 text-xl leading-none p-0 bg-transparent border-0">&times;</button>
+        <button type="button" autofocus class="close-button absolute top-2 right-2 text-neutral-400 hover:text-neutral-600 text-xl leading-none p-0 bg-transparent border-0">&times;</button>
         <h2 class="text-red-700">Error</h2>
         <p id="errorMessage"></p>
       </div>
     </dialog>
 <dialog id="promptDialog" class="modal">
   <div class="modal-content relative prompt-modal bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-5 w-80 sm:w-96">
-    <button type="button" autofocus class="absolute top-2 right-2 text-neutral-400 hover:text-neutral-600 text-xl leading-none p-0 bg-transparent border-0">&times;</button>
+    <button type="button" autofocus class="close-button absolute top-2 right-2 text-neutral-400 hover:text-neutral-600 text-xl leading-none p-0 bg-transparent border-0">&times;</button>
     <h2 id="promptMessage">Authentication Required</h2>
     <form>
       <div id="promptInputContainer" class="mb-4 space-y-2"></div>

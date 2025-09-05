@@ -31,7 +31,6 @@
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "eslint . --ext .js,.ts --fix",
     "lint:html": "html-validate \"client/src/**/*.html\"",
-    "lint:html:fix": "html-validate \"client/src/**/*.html\" --fix",
     "lint:css": "stylelint \"client/src/**/*.css\"",
     "lint:css:fix": "stylelint \"client/src/**/*.css\" --fix",
     "a11y:axe": "npx --no-install axe http://localhost:3000",
@@ -39,9 +38,8 @@
     "format:write": "prettier --write \"**/*.{js,ts,json,md}\"",
     "publish:dry-run": "npm publish --dry-run",
     "publish:npm": "npm publish",
-    "release:major": "echo 'Use Release Please via GitHub Actions' && exit 1",
-    "release:minor": "echo 'Use Release Please via GitHub Actions' && exit 1",
-    "release:patch": "echo 'Use Release Please via GitHub Actions' && exit 1"
+    "test": "node --test",
+    "check:all": "npm run lint:fix && npm run lint:css:fix && npm run format:write && npm run lint:html && npm run typecheck && npm run typecheck:client && node --test"
   },
   "author": "",
   "license": "SEE LICENSE IN FILE - LICENSE",
