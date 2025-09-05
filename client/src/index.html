@@ -14,16 +14,16 @@
         <h2 class="text-lg font-semibold text-slate-900 mb-2">WebSSH2 Login</h2>
         <form id="loginForm" class="space-y-3">
           <label for="hostInput" class="sr-only">Host</label>
-          <input type="text" id="hostInput" name="host" placeholder="Host" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <input type="text" id="hostInput" name="host" placeholder="Host" required autocomplete="off" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <label for="portInput" class="sr-only">Port</label>
-          <input type="text" id="portInput" name="port" placeholder="Port" value="22" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <input type="text" id="portInput" name="port" placeholder="Port" value="22" autocomplete="off" inputmode="numeric" pattern="[0-9]*" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <label for="usernameInput" class="sr-only">Username</label>
-          <input type="text" id="usernameInput" name="username" placeholder="Username" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <input type="text" id="usernameInput" name="username" placeholder="Username" required autocomplete="username" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
           <!-- Password section - always visible -->
           <div class="password-wrapper relative w-full">
             <label for="passwordInput" class="sr-only">Password</label>
-            <input type="password" id="passwordInput" name="password" placeholder="Password" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <input type="password" id="passwordInput" name="password" placeholder="Password" autocomplete="current-password" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <span id="capsLockIcon" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">⇪</span>
           </div>
 
@@ -38,16 +38,16 @@
           <div id="privateKeySection" class="hidden">
             <div class="private-key-input mt-2 p-3 rounded border border-neutral-300 bg-neutral-50 text-neutral-800">
               <label for="privateKeyText" class="sr-only">Private Key</label>
-              <textarea id="privateKeyText" name="privateKey"
+              <textarea id="privateKeyText" name="privateKey" autocomplete="off" autocapitalize="off" spellcheck="false"
                 placeholder="Paste your private key here" rows="3" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
               <div class="file-upload">
-                <input type="file" id="privateKeyFile" accept=".pem,.key" class="sr-only">
+                <input type="file" id="privateKeyFile" accept=".pem,.key" autocomplete="off" class="sr-only">
                 <label for="privateKeyFile" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
                   <i data-icon="upload" class="icon-fw"></i> Upload Key File
                 </label>
               </div>
               <label for="passphraseInput" class="sr-only">Key Passphrase</label>
-              <input type="password" id="passphraseInput" name="passphrase"
+              <input type="password" id="passphraseInput" name="passphrase" autocomplete="off" spellcheck="false"
                 placeholder="Key password (if encrypted)" class="optional block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
           </div>

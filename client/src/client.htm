@@ -18,7 +18,7 @@
           <label for="hostInput" class="sr-only">Host</label>
           <input type="text" id="hostInput" name="host" placeholder="Host" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <label for="portInput" class="sr-only">Port</label>
-          <input type="text" id="portInput" name="port" placeholder="Port" value="22" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <input type="text" id="portInput" name="port" placeholder="Port" value="22" autocomplete="off" inputmode="numeric" pattern="[0-9]*" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <label for="usernameInput" class="sr-only">Username</label>
           <input type="text" id="usernameInput" name="username" placeholder="Username" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
@@ -40,7 +40,7 @@
           <div id="privateKeySection" class="hidden">
             <div class="private-key-input">
               <label for="privateKeyText" class="sr-only">Private Key</label>
-              <textarea id="privateKeyText" name="privateKey"
+              <textarea id="privateKeyText" name="privateKey" autocomplete="off" autocapitalize="off" spellcheck="false"
                 placeholder="Paste your private key here" rows="3" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
               <div class="file-upload">
                 <input type="file" id="privateKeyFile" accept=".pem,.key">
@@ -49,7 +49,7 @@
                 </label>
               </div>
               <label for="passphraseInput" class="sr-only">Key Passphrase</label>
-              <input type="password" id="passphraseInput" name="passphrase"
+              <input type="password" id="passphraseInput" name="passphrase" autocomplete="off" spellcheck="false"
                 placeholder="Key password (if encrypted)" class="optional block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
           </div>
