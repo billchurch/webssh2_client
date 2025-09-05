@@ -78,34 +78,35 @@
       <div class="modal-content relative bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-6 w-80 sm:w-[36rem]">
         <h2 class="text-lg font-semibold text-slate-900 mb-2">Terminal Settings</h2>
         <form id="terminalSettingsForm" class="space-y-2">
-          <fieldset class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label for="fontSize" class="text-sm font-medium text-slate-700">Font Size</label>
+          <fieldset class="grid grid-cols-1 sm:grid-cols-[auto,1fr] gap-x-4 gap-y-3 items-center">
+            <label for="fontSize" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Font Size</label>
             <input type="number" id="fontSize" name="fontSize" min="8" max="72" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
     
-            <label for="fontFamily" class="text-sm font-medium text-slate-700">Font Family</label>
+            <label for="fontFamily" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Font Family</label>
             <input type="text" id="fontFamily" name="fontFamily" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
     
-            <label for="cursorBlink" class="text-sm font-medium text-slate-700">Cursor Blink</label>
+            <label for="cursorBlink" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Cursor Blink</label>
             <select id="cursorBlink" name="cursorBlink" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="true">On</option>
               <option value="false">Off</option>
             </select>
     
-            <label for="scrollback" class="text-sm font-medium text-slate-700">Scrollback</label>
+            <label for="scrollback" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Scrollback</label>
             <input type="number" id="scrollback" name="scrollback" min="1" max="200000" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
     
-            <label for="tabStopWidth" class="text-sm font-medium text-slate-700">Tab Stop Width</label>
+            <label for="tabStopWidth" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Tab Stop Width</label>
             <input type="number" id="tabStopWidth" name="tabStopWidth" min="1" max="100" required class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
     
-            <label for="bellStyle" class="text-sm font-medium text-slate-700">Bell Style</label>
+            <label for="bellStyle" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Bell Style</label>
             <select id="bellStyle" name="bellStyle" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="sound">Sound</option>
               <option value="none">None</option>
             </select>
-                
+          </fieldset>
+          <div class="flex gap-2 pt-4 justify-end">
             <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Save</button>
             <button type="button" id="closeterminalSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none">Cancel</button>
-          </fieldset>
+          </div>
         </form>
       </div>
     </dialog>
