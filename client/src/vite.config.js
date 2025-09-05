@@ -175,12 +175,7 @@ export default defineConfig(({ mode }) => {
     },
 
     optimizeDeps: {
-      include: [
-        'debug',
-        '@xterm/xterm',
-        '@xterm/addon-fit',
-        'socket.io-client'
-      ]
+      include: ['debug', '@xterm/xterm', '@xterm/addon-fit', 'socket.io-client']
     }
   }
 })

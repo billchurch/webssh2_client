@@ -10,48 +10,48 @@ Scope
 
 Core Checks (static and semantic)
 
-1) Landmarks and Semantics
+1. Landmarks and Semantics
    - Use semantic regions: `header`, `main`, `footer`; ensure one `<h1>` per document and logical heading order.
    - Avoid click handlers on non-interactive elements; prefer `<button>` and native controls.
    - Do not emulate lists/tables with generic `div`s for structured data.
    - Provide a skip link to jump to the terminal region (or main content).
 
-2) Roles and ARIA
+2. Roles and ARIA
    - Prefer native semantics; add ARIA only when necessary and valid for the element.
    - Ensure `aria-label`, `aria-labelledby`, `aria-describedby` correctly reference IDs.
    - Do not place `aria-hidden="true"` on focusable or interactive elements.
    - Expose a status region for connection state/errors: add `role="status"` or `aria-live="polite"` to `#status`.
 
-3) Forms (Login and Prompts)
+3. Forms (Login and Prompts)
    - Each input has a programmatic label (`<label for>` or `aria-labelledby`). Avoid placeholder-only labeling.
    - Mark required fields and expose required/invalid state programmatically.
    - Use appropriate `autocomplete` tokens (e.g., `username`, `current-password`, `organization`, `url` for host if applicable).
    - Announce errors using `role="alert"` or an `aria-live` region; move focus to the error dialog message.
 
-4) Keyboard and Focus
+4. Keyboard and Focus
    - All controls are reachable/operable by keyboard. No positive `tabindex`.
    - Visible focus styling; never remove outlines. Prefer `:focus-visible` for clarity.
    - `<dialog>` usage: trap focus while open, label with a heading, return focus to the invoker on close.
    - Provide a keyboard shortcut summary where terminal shortcuts exist (and ensure they don’t conflict with screen readers or system keys).
 
-5) Page Load and Dynamic Updates
+5. Page Load and Dynamic Updates
    - Set `document.title` appropriately (already wired to terminal title events) and on major state changes.
    - On load or major UI transitions, move focus to the main heading or the most relevant container (e.g., login form first field).
    - Announce connection, reconnection, and error states via the status live region.
 
-6) Media and Icons
+6. Media and Icons
    - `<img>` elements require meaningful `alt` or empty `alt` when decorative.
    - Inline icons (CSS/`<i data-icon>` or SVG) should be hidden from AT when decorative (`aria-hidden="true"`) or labeled when meaningful.
 
-7) Data Tables (none used currently)
+7. Data Tables (none used currently)
    - Use `<th>` with `scope`; include `<caption>` for context. Complex tables map headers with `headers`/`id`.
 
-8) Color and Motion
+8. Color and Motion
    - Contrast: 4.5:1 for text; 3:1 for large text and UI components.
    - Do not use color alone for meaning.
    - Respect `prefers-reduced-motion`; minimize flashing effects. For the terminal, consider disabling cursor blink when reduced motion is requested.
 
-9) Language and Direction
+9. Language and Direction
    - Set `html[lang]` (e.g., `en`) and `dir` for RTL when needed.
 
 Terminal-Specific Guidance (xterm.js)
@@ -88,9 +88,15 @@ import * as jestAxe from 'jest-axe'
 describe('Accessibility - terminal UI', () => {
   let dom, document
   before(async () => {
-    dom = new JSDOM(await import('fs').then(fs => fs.readFileSync('client/src/index.html', 'utf8')), {
-      url: 'http://localhost:3000', pretendToBeVisual: true
-    })
+    dom = new JSDOM(
+      await import('fs').then((fs) =>
+        fs.readFileSync('client/src/index.html', 'utf8')
+      ),
+      {
+        url: 'http://localhost:3000',
+        pretendToBeVisual: true
+      }
+    )
     document = dom.window.document
   })
 
@@ -103,21 +109,25 @@ describe('Accessibility - terminal UI', () => {
     }
     const { axe } = jestAxe
     const results = await axe(document.body)
-    const critical = results.violations.filter(v => v.impact === 'critical')
-    assert.equal(critical.length, 0, `Critical a11y issues: ${critical.map(v => v.id).join(', ')}`)
+    const critical = results.violations.filter((v) => v.impact === 'critical')
+    assert.equal(
+      critical.length,
+      0,
+      `Critical a11y issues: ${critical.map((v) => v.id).join(', ')}`
+    )
   })
 })
 ```
 
 Deliverables
 
-1) Summary
+1. Summary
    - Pass, warn, fail counts; top 5 risky patterns observed.
-2) Findings Table (sorted by severity)
+2. Findings Table (sorted by severity)
    - Columns: file, line, rule, finding, suggested fix, snippet.
-3) Auto-fixable Diffs
+3. Auto-fixable Diffs
    - Provide unified diffs for safe, mechanical changes (labels, roles, attributes).
-4) PR Plan
+4. PR Plan
    - Batch small, scoped commits with test steps and affected areas.
 
 Output Format

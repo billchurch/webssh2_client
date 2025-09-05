@@ -4,19 +4,17 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [1.0.0-alpha.0](https://github.com/billchurch/webssh2_client/compare/v0.2.30...v1.0.0-alpha.0) (2025-09-04)
 
-
 ### Features
 
-* **client:** move to lucide inline icons and ESM-safe masking; refresh Vite build ([dd77df5](https://github.com/billchurch/webssh2_client/commit/dd77df5920d776e5d98e3b4986bf29b3abe22362))
-* migrate build system from Webpack to Vite ([8c0c264](https://github.com/billchurch/webssh2_client/commit/8c0c264fa6b9b8b54d43f848c27ff5c75cd8cca7))
-* upgrade dependencies and webpack configuration ([5454989](https://github.com/billchurch/webssh2_client/commit/5454989ba735ea99c0787d9202d10c5576526ab4))
-
+- **client:** move to lucide inline icons and ESM-safe masking; refresh Vite build ([dd77df5](https://github.com/billchurch/webssh2_client/commit/dd77df5920d776e5d98e3b4986bf29b3abe22362))
+- migrate build system from Webpack to Vite ([8c0c264](https://github.com/billchurch/webssh2_client/commit/8c0c264fa6b9b8b54d43f848c27ff5c75cd8cca7))
+- upgrade dependencies and webpack configuration ([5454989](https://github.com/billchurch/webssh2_client/commit/5454989ba735ea99c0787d9202d10c5576526ab4))
 
 ### Bug Fixes
 
-* convert module exports to ES module syntax ([d102c3d](https://github.com/billchurch/webssh2_client/commit/d102c3d5dbbdc5a21deb9c9f82b2adef685daaa3))
-* resolve terminal dimensions issue ([#350](https://github.com/billchurch/webssh2_client/issues/350)) and circular dependencies ([3744174](https://github.com/billchurch/webssh2_client/commit/37441748ae6c123743f8b8672eba5e6acd74ebce))
-* **security:** resolve XSS vulnerability in DOM manipulation ([#389](https://github.com/billchurch/webssh2_client/issues/389)) ([995f909](https://github.com/billchurch/webssh2_client/commit/995f909af7e0fb4accfdf04c5d4915066c6c7466))
+- convert module exports to ES module syntax ([d102c3d](https://github.com/billchurch/webssh2_client/commit/d102c3d5dbbdc5a21deb9c9f82b2adef685daaa3))
+- resolve terminal dimensions issue ([#350](https://github.com/billchurch/webssh2_client/issues/350)) and circular dependencies ([3744174](https://github.com/billchurch/webssh2_client/commit/37441748ae6c123743f8b8672eba5e6acd74ebce))
+- **security:** resolve XSS vulnerability in DOM manipulation ([#389](https://github.com/billchurch/webssh2_client/issues/389)) ([995f909](https://github.com/billchurch/webssh2_client/commit/995f909af7e0fb4accfdf04c5d4915066c6c7466))
 
 ### [0.2.30](https://github.com/billchurch/webssh2_client/compare/v0.2.29...v0.2.30) (2025-07-22)
 

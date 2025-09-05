@@ -206,7 +206,7 @@ Checklist
 
 Quick Runbook
 
-1) Start dev server: `npm run dev`
-2) Lint: `npm run lint:html && npm run lint:css`
-3) Node test: `node --test tests/a11y-terminal.test.js`
-4) Axe scan: `npm run a11y:axe`
+1. Start dev server: `npm run dev`
+2. Lint: `npm run lint:html && npm run lint:css`
+3. Node test: `node --test tests/a11y-terminal.test.js`
+4. Axe scan: `npm run a11y:axe`

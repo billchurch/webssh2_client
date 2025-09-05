@@ -105,4 +105,3 @@ Goal: Provide an optional, compact keypad for modifier/special keys.
 - MDN: Progressive Web Apps, Web App Manifest, Service Workers.
 - Virtual Keyboard API (Chrome/Android): overlaysContent.
 - xterm.js: screenReaderMode and key handling.
-
