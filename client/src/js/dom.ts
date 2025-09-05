@@ -11,7 +11,8 @@ import {
   sanitizeColor,
   validateNumber,
   validateBellStyle,
-  validatePrivateKey
+  validatePrivateKey,
+  validatePrivateKeyDeep
 } from './utils.js'
 import { emitData, emitResize, reauth, replayCredentials } from './socket.js'
 import { downloadLog, clearLog, toggleLog } from './clientlog.js'
@@ -25,6 +26,7 @@ const debug = createDebug('webssh2-client:dom')
 type TerminalDimensions = { cols: number; rows: number }
 
 import type { ITerminalOptions as TerminalOptions } from '@xterm/xterm'
+import { getTerminalInstance } from './terminal.js'
 import type { WebSSH2Config } from '../types/config.d'
 
 type TerminalFunctions = {
@@ -62,6 +64,8 @@ interface Elements {
   closeterminalSettingsBtn: HTMLButtonElement
   downloadLogBtn: HTMLButtonElement
   dropupContent: HTMLElement
+  menu: HTMLElement
+  menuToggle: HTMLButtonElement
   errorDialog: HTMLDialogElement
   errorMessage: HTMLElement
   footer: HTMLElement
@@ -141,6 +145,8 @@ export function initializeElements(): Partial<Elements> {
     'closeterminalSettingsBtn',
     'downloadLogBtn',
     'dropupContent',
+    'menu',
+    'menuToggle',
     'errorDialog',
     'errorMessage',
     'footer',
@@ -245,6 +251,9 @@ export function setupEventListeners(config: unknown): void {
 
   setupPrivateKeyEvents()
 
+  setupMenuToggle()
+  setupTerminalResizeObserver()
+
   window.addEventListener('resize', () => resize())
   document.addEventListener('keydown', keydown)
   window.addEventListener('beforeunload', (event) => {
@@ -287,15 +296,23 @@ export function showPromptDialog(
   debug('Prompt dialog shown', data)
   promptMessage.textContent = data.name || 'Authentication Required'
   inputContainer.textContent = ''
+  inputContainer.classList.add('mb-4', 'space-y-2')
 
   let firstInput: HTMLInputElement | null = null
   data.prompts.forEach((prompt, index) => {
     const label = document.createElement('label')
     label.textContent = prompt.prompt
+    label.className = 'block text-sm font-medium'
     const input = document.createElement('input')
     input.type = prompt.echo ? 'text' : 'password'
     input.required = true
     input.id = `promptInput${index}`
+    // Accessibility and mobile typing ergonomics
+    input.autocomplete = 'off'
+    ;(input as unknown as { autocapitalize?: string }).autocapitalize = 'off'
+    input.spellcheck = false
+    input.className =
+      'mt-1 block w-full rounded-md border border-slate-600 bg-slate-800 text-slate-100 placeholder-slate-400 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
     if (index === 0) firstInput = input
     inputContainer.appendChild(label)
     inputContainer.appendChild(input)
@@ -324,7 +341,7 @@ export function showloginDialog(): void {
   const { loginDialog, terminalContainer, usernameInput, passwordInput } =
     elements
   const isReauthRequired = state.reauthRequired
-  loginDialog?.show?.()
+  loginDialog?.showModal?.()
   if (terminalContainer) toggleVisibility(terminalContainer, true)
   if (passwordInput) passwordInput.value = ''
   if (isReauthRequired && usernameInput) {
@@ -388,9 +405,8 @@ export function updateElement(
   element.textContent = text
   if (sanitizedColor) element.style.backgroundColor = sanitizedColor
   if (elementName === 'header') {
-    const { terminalContainer } = elements
-    toggleVisibility(element, true)
-    terminalContainer?.classList.add('with-header')
+    // Show header; flex layout handles sizing
+    element.classList.remove('hidden')
   }
 }
 
@@ -463,14 +479,18 @@ export function toggleDownloadLogBtn(visible: boolean): void {
     toggleVisibility(elements.downloadLogBtn, visible)
 }
 
+export function toggleClearLogBtn(visible: boolean): void {
+  if (elements.clearLogBtn) toggleVisibility(elements.clearLogBtn, visible)
+}
+
 function toggleVisibility(
   element: HTMLElement | null,
   isVisible: boolean
 ): void {
   if (!element) return
   debug(`toggleVisibility: ${element.id}: ${isVisible}`)
-  if (isVisible) element.classList.add('visible')
-  else element.classList.remove('visible')
+  if (isVisible) element.classList.remove('hidden')
+  else element.classList.add('hidden')
 }
 
 function formSubmit(e: Event): void {
@@ -502,13 +522,24 @@ function keydown(event: KeyboardEvent): void {
     event.preventDefault()
     emitData('\x1E')
   }
+  if (event.key === 'Escape') {
+    hideMenu()
+  }
 }
 
 function detectCapsLock(event: KeyboardEvent): void {
   const input = elements.passwordInput
+  const icon = elements.loginForm?.querySelector(
+    '#capsLockIcon'
+  ) as HTMLElement | null
   if (!input) return
-  if (event.getModifierState('CapsLock')) input.classList.add('capslock-active')
-  else input.classList.remove('capslock-active')
+  if (event.getModifierState('CapsLock')) {
+    input.classList.add('capslock-active')
+    icon?.classList.remove('hidden')
+  } else {
+    input.classList.remove('capslock-active')
+    icon?.classList.add('hidden')
+  }
 }
 
 export function resize(): void {
@@ -644,6 +675,8 @@ export function handleterminalSettingsSubmit(
   }
   saveTerminalSettings(settings)
   if (applyTerminalSettings) applyTerminalSettings(settings)
+  // Changing font-size/lineHeight/letterSpacing affects geometry; trigger resize
+  resize()
   hideterminalSettingsDialog()
 }
 
@@ -719,7 +752,7 @@ function setupPrivateKeyEvents(): void {
     e.preventDefault()
     privateKeySection.classList.toggle('hidden')
     privateKeyToggle.replaceChildren()
-    const iconEl = createIconNode('key', 'icon-fw')
+    const iconEl = createIconNode('key', 'w-5 h-5 inline-block')
     if (privateKeySection.classList.contains('hidden')) {
       privateKeyToggle.append(iconEl, document.createTextNode(' Add SSH Key'))
     } else {
@@ -732,15 +765,78 @@ function setupPrivateKeyEvents(): void {
     if (file) {
       try {
         const content = await file.text()
-        if (validatePrivateKey(content)) {
-          privateKeyText.value = content
-        } else {
+        if (!validatePrivateKey(content)) {
           showErrorDialog('Invalid private key format')
+          return
         }
+        const deep = validatePrivateKeyDeep(content)
+        if (!deep) {
+          showErrorDialog('Private key appears malformed or unsupported')
+          return
+        }
+        privateKeyText.value = content
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_error) {
         showErrorDialog('Error reading private key file')
       }
     }
   })
+}
+
+function setupMenuToggle(): void {
+  const { menu, menuToggle, dropupContent } = elements
+  if (!menu || !menuToggle || !dropupContent) return
+  const toggle = () => {
+    const isHidden = dropupContent.classList.contains('hidden')
+    if (isHidden) showMenu()
+    else hideMenu()
+  }
+  menuToggle.addEventListener('click', (e) => {
+    e.stopPropagation()
+    toggle()
+  })
+  // Close when clicking outside
+  document.addEventListener('pointerdown', (e) => {
+    if (!menu.contains(e.target as Node)) hideMenu()
+  })
+}
+
+function showMenu(): void {
+  const { dropupContent, menuToggle } = elements
+  if (!dropupContent || !menuToggle) return
+  dropupContent.classList.remove('hidden')
+  menuToggle.setAttribute('aria-expanded', 'true')
+}
+
+function hideMenu(): void {
+  const { dropupContent, menuToggle } = elements
+  if (!dropupContent || !menuToggle) return
+  dropupContent.classList.add('hidden')
+  menuToggle.setAttribute('aria-expanded', 'false')
+}
+
+function tryScrollTerminalToBottomIfFocused(): void {
+  const { terminalContainer } = elements
+  if (!terminalContainer) return
+  const active = document.activeElement
+  if (active && terminalContainer.contains(active)) {
+    const term = getTerminalInstance() as { scrollToBottom?: () => void } | null
+    term?.scrollToBottom?.()
+  }
+}
+
+let terminalResizeObserver: ResizeObserver | null = null
+function setupTerminalResizeObserver(): void {
+  const { terminalContainer } = elements
+  if (!terminalContainer || typeof ResizeObserver === 'undefined') return
+  if (terminalResizeObserver) terminalResizeObserver.disconnect()
+  let raf = 0
+  terminalResizeObserver = new ResizeObserver(() => {
+    if (raf) cancelAnimationFrame(raf)
+    raf = requestAnimationFrame(() => {
+      resize()
+      tryScrollTerminalToBottomIfFocused()
+    })
+  })
+  terminalResizeObserver.observe(terminalContainer)
 }

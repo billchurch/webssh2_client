@@ -57,6 +57,22 @@
   },
   "overrides": [
     {
+      "files": [
+        "**/tailwind.config.js",
+        "**/postcss.config.js",
+        "**/vite.config.js"
+      ],
+      "env": { "node": true },
+      "rules": {
+        "import/no-extraneous-dependencies": [
+          "error",
+          { "devDependencies": true }
+        ],
+        "node/no-unpublished-import": "off",
+        "node/no-unpublished-require": "off"
+      }
+    },
+    {
       "files": ["**/*.ts"],
       "parser": "@typescript-eslint/parser",
       "plugins": ["@typescript-eslint", "prettier"],

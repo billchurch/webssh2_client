@@ -1,0 +1,16 @@
+{
+  "$schema": "https://html-validate.org/schemas/8.0.0/htmlvalidate.schema.json",
+  "extends": ["html-validate:recommended", "html-validate:a11y"],
+  "elements": ["html5"],
+  "rules": {
+    "doctype-html": "error",
+    "void-style": "error",
+    "attribute-allowed-values": "error",
+    "wcag/h37": "error",
+    "wcag/h32": "error",
+    "no-dup-id": "error",
+    "input-missing-label": "error",
+    "prefer-native-element": "error"
+  },
+  "root": true
+}

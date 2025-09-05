@@ -334,9 +334,109 @@ export function getBasicAuthCookie(): { host?: string; port?: number } | null {
 }
 
 export function validatePrivateKey(key: string): boolean {
-  const standardKeyPattern =
-    /^-----BEGIN (?:RSA )?PRIVATE KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)\r?\n-----END (?:RSA )?PRIVATE KEY-----\r?\n?$/
-  const encryptedKeyPattern =
-    /^-----BEGIN RSA PRIVATE KEY-----\r?\n(?:Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: ([^\r\n]+)\r?\n\r?\n)([A-Za-z0-9+/=\r\n]+)\r?\n-----END RSA PRIVATE KEY-----\r?\n?$/
-  return standardKeyPattern.test(key) || encryptedKeyPattern.test(key)
+  // Be inclusive of common key formats used by OpenSSH and PKCS#1/PKCS#8
+  // Accepts: OPENSSH PRIVATE KEY, RSA/EC/DSA PRIVATE KEY, and generic PRIVATE KEY
+  const text = String(key || '').trim()
+  if (!text.startsWith('-----BEGIN') || !text.includes('PRIVATE KEY-----'))
+    return false
+
+  const patterns: RegExp[] = [
+    // OpenSSH format
+    /^-----BEGIN OPENSSH PRIVATE KEY-----[\s\S]+-----END OPENSSH PRIVATE KEY-----\s*$/m,
+    // PKCS#8 generic
+    /^-----BEGIN PRIVATE KEY-----[\s\S]+-----END PRIVATE KEY-----\s*$/m,
+    // PKCS#1 RSA
+    /^-----BEGIN RSA PRIVATE KEY-----[\s\S]+-----END RSA PRIVATE KEY-----\s*$/m,
+    // EC and DSA
+    /^-----BEGIN EC PRIVATE KEY-----[\s\S]+-----END EC PRIVATE KEY-----\s*$/m,
+    /^-----BEGIN DSA PRIVATE KEY-----[\s\S]+-----END DSA PRIVATE KEY-----\s*$/m
+  ]
+  return patterns.some((re) => re.test(text))
+}
+
+/**
+ * Deep validation of private keys.
+ * Phase 1: header/footer regex (handled by validatePrivateKey).
+ * Phase 2: parse the block payload to ensure it is structurally valid.
+ * - OPENSSH: base64 decodes to content starting with "openssh-key-v1\0"
+ * - PKCS#1/8/EC/DSA: base64 decodes to DER starting with 0x30 (SEQUENCE)
+ */
+export function validatePrivateKeyDeep(
+  key: string
+): { format: 'OPENSSH' | 'PKCS8' | 'PKCS1-RSA' | 'EC' | 'DSA' } | null {
+  const text = String(key || '').trim()
+  // Identify block type and extract base64 body
+  const blocks: Array<{ type: string; body: string }> = []
+  const patterns: Array<{ type: string; re: RegExp }> = [
+    {
+      type: 'OPENSSH',
+      re: /-----BEGIN OPENSSH PRIVATE KEY-----(?<body>[\s\S]+?)-----END OPENSSH PRIVATE KEY-----/m
+    },
+    {
+      type: 'PKCS8',
+      re: /-----BEGIN PRIVATE KEY-----(?<body>[\s\S]+?)-----END PRIVATE KEY-----/m
+    },
+    {
+      type: 'PKCS1-RSA',
+      re: /-----BEGIN RSA PRIVATE KEY-----(?<body>[\s\S]+?)-----END RSA PRIVATE KEY-----/m
+    },
+    {
+      type: 'EC',
+      re: /-----BEGIN EC PRIVATE KEY-----(?<body>[\s\S]+?)-----END EC PRIVATE KEY-----/m
+    },
+    {
+      type: 'DSA',
+      re: /-----BEGIN DSA PRIVATE KEY-----(?<body>[\s\S]+?)-----END DSA PRIVATE KEY-----/m
+    }
+  ]
+  for (const { type, re } of patterns) {
+    const m = text.match(re)
+    if (m && m.groups && m.groups['body']) {
+      blocks.push({ type, body: m.groups['body'] })
+      break
+    }
+  }
+  if (blocks.length === 0) return null
+
+  const { type, body } = blocks[0]!
+  const b64 = body.replace(/\s+/g, '')
+  let bytes: Uint8Array
+  try {
+    if (typeof atob === 'function') {
+      const bin = atob(b64)
+      bytes = new Uint8Array(bin.length)
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    } else if (
+      typeof globalThis !== 'undefined' &&
+      (globalThis as Record<string, unknown>)['Buffer']
+    ) {
+      const B = (
+        globalThis as unknown as {
+          Buffer: { from: (s: string, enc: string) => Uint8Array }
+        }
+      )['Buffer']
+      const buf = B.from(b64, 'base64')
+      bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf)
+    } else {
+      return null
+    }
+  } catch {
+    return null
+  }
+
+  if (type === 'OPENSSH') {
+    // OpenSSH keys start with magic: "openssh-key-v1\0"
+    const magic = 'openssh-key-v1\0'
+    const prefix = new TextDecoder().decode(bytes.slice(0, magic.length))
+    if (prefix === magic) return { format: 'OPENSSH' }
+    return null
+  }
+
+  // DER should start with SEQUENCE (0x30)
+  if (bytes.length >= 2 && bytes[0] === 0x30) {
+    // Optional: check the length field is plausible
+    // This is a light check to avoid full ASN.1 parsing
+    return { format: type as 'PKCS8' | 'PKCS1-RSA' | 'EC' | 'DSA' }
+  }
+  return null
 }

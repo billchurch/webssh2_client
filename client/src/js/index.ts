@@ -2,11 +2,8 @@
 // client/src/js/index.ts
 
 import createDebug from 'debug'
-import 'purecss/build/pure.css'
-import '../css/menu.css'
+import '../css/tailwind.css'
 import '@xterm/xterm/css/xterm.css'
-import '../css/terminal.css'
-import '../css/style.css'
 import '../css/icons.css'
 
 import {

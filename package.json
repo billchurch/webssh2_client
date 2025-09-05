@@ -30,19 +30,29 @@
     "build:server": "tsc -p tsconfig.json",
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "eslint . --ext .js,.ts --fix",
+    "lint:html": "html-validate \"client/src/**/*.html\"",
+    "lint:css": "stylelint \"client/src/**/*.css\"",
+    "lint:css:fix": "stylelint \"client/src/**/*.css\" --fix",
+    "a11y:axe": "npx --no-install axe http://localhost:3000",
     "format": "prettier --check \"**/*.{js,ts,json,md}\"",
     "format:write": "prettier --write \"**/*.{js,ts,json,md}\"",
     "publish:dry-run": "npm publish --dry-run",
     "publish:npm": "npm publish",
-    "release:major": "echo 'Use Release Please via GitHub Actions' && exit 1",
-    "release:minor": "echo 'Use Release Please via GitHub Actions' && exit 1",
-    "release:patch": "echo 'Use Release Please via GitHub Actions' && exit 1"
+    "test": "node --test",
+    "check:all": "npm run lint:fix && npm run lint:css:fix && npm run format:write && npm run lint:html && npm run typecheck && npm run typecheck:client && node --test"
   },
   "author": "",
   "license": "SEE LICENSE IN FILE - LICENSE",
   "devDependencies": {
+    "jest-axe": "^10.0.0",
+    "@axe-core/cli": "^4.10.2",
+    "html-validate": "^10.0.0",
+    "stylelint": "^16.23.1",
+    "stylelint-config-standard": "^39.0.0",
+    "autoprefixer": "^10.4.21",
+    "@tailwindcss/forms": "^0.5.10",
     "jsmasker": "^2.0.0",
-    "eslint-plugin-no-unsanitized": "^4.0.2",
+    "eslint-plugin-no-unsanitized": "^4.1.2",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
     "@types/node": "^24.3.1",
@@ -59,10 +69,11 @@
     "jsdom": "^26.1.0",
     "lucide-static": "^0.542.0",
     "prettier": "^3.6.2",
-    "purecss": "^3.0.0",
     "socket.io-client": "^4.8.1",
     "vite": "^7.1.4",
-    "vite-bundle-visualizer": "^1.2.1"
+    "vite-bundle-visualizer": "^1.2.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.13"
   },
   "config": {
     "commitizen": {
@@ -75,4 +86,8 @@
     ]
   },
   "dependencies": {}
+  ,
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.24.0"
+  }
 }

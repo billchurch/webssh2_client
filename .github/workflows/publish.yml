@@ -36,24 +36,16 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
           npm whoami
 
+      - name: Clean npm cache
+        run: npm cache clean --force
+
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts=false
 
-      - name: Download built assets from release
-        if: ${{ github.event_name == 'release' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release download "${{ github.event.release.tag_name }}" --pattern "client-public.zip" --dir downloads || echo "no release asset"
-          if [ -f downloads/client-public.zip ]; then
-            rm -rf client/public/*
-            unzip -o downloads/client-public.zip -d client/public
-          else
-            echo "No prebuilt assets found; falling back to local build"
-            npm run build
-          fi
+      - name: Build client
+        run: npm run build
 
-      - name: Ensure server entries are built
+      - name: Build server entries
         run: npm run build:server
 
       - name: Publish to npm
