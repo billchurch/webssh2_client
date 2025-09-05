@@ -2,3 +2,5 @@ node_modules
 .DS_Store
 proxy-test/.env
 test-results/
+
+client/public
