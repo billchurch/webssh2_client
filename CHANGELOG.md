@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-alpha.1](https://github.com/billchurch/webssh2_client/compare/v1.0.0-alpha.0...v1.0.0-alpha.1) (2025-09-05)
+
+
+### Features
+
+* **a11y:** label controls, add live status, set html lang ([2c30e21](https://github.com/billchurch/webssh2_client/commit/2c30e21b0b9978752e26d8e6dc25610a97c030d3))
+* **html:** support better auto-complete behavior ([8e055da](https://github.com/billchurch/webssh2_client/commit/8e055da9c4159a9db2eb57c2d4d0aafa5fc2dd8c))
+* **layout,terminal:** flex layout, correct FitAddon sizing, resize after settings ([ca76575](https://github.com/billchurch/webssh2_client/commit/ca765757551e81cfb2d21eaad9878ec89aa19c85))
+* **mobile:** tap menu + responsive terminal fit; better mobile input UX ([7c063ad](https://github.com/billchurch/webssh2_client/commit/7c063ad5abdae0d2fbf26162c3dd239693b4ea4b))
+* **tailwind+mobile+a11y:** integrate Tailwind CSS; mobile menu; responsive terminal fit; accessibility/tooling upgrades ([459b733](https://github.com/billchurch/webssh2_client/commit/459b7335b49ed097e0da1efea15fd250ca8900b9))
+* **ui:** adopt Tailwind CSS 3.4 and remove PureCSS in client\n\n- Add Tailwind + PostCSS config (tailwind.config.js, postcss.config.js)\n- Replace PureCSS import with Tailwind entry and remove purecss dep\n- Migrate dialogs (login/error/prompt/settings) to Tailwind utilities\n- Use native dialog::backdrop and robust modal centering\n- Standardize footer/header in markup with Tailwind borders and colors\n- Improve accessibility: focus rings, consistent button styles\n- Lighten secondary buttons; adjust bar height via CSS var\n- Keep xterm CSS; no inline styles added (CSP-safe)\n- Update Vite optimizeDeps to drop purecss; cleanup CSS files\n\nrefactor(dom): show login dialog with showModal() to match native backdrop\nfix(ui): prevent modal scrollbars with password managers (overflow-visible)\nfix(ui): consistent bottom bar border with border-neutral-200\n\nBREAKING CHANGE: PureCSS classes removed from templates; Tailwind now provides all styling. ([7e50951](https://github.com/billchurch/webssh2_client/commit/7e50951491880eb225719d799f5a897e842bff9e))
+
+
+### Bug Fixes
+
+* **html:** fix privatekey validation, privatekey file selection ([a9fad1a](https://github.com/billchurch/webssh2_client/commit/a9fad1ad057b017bf93aa9e879c8e9646351b272))
+* **layout:** terminal fills space between header and bottom bar ([4a0c911](https://github.com/billchurch/webssh2_client/commit/4a0c911b907b9359102dc6f1cf7d951aee0a6579))
+* **menu:** correct visibility for Clear/Download Log via localStorage state\n\n- Start Clear/Download hidden by default; show on first log write\n- Hide both when log is cleared or recovered\n- Keep Stop/Start toggling through updatestartLogBtnState\n\nfix(icons): center gear spin and size icons via Tailwind classes\n- Route animate/w-*/h-* classes to SVG in createIconNode\n- Use origin-center for balanced rotation\n\nchore(ui): widen menu and prevent wrapping (min-w-56, whitespace-nowrap)\n\nrefactor(ui): terminal container sizing via Tailwind arbitrary values ([286bcff](https://github.com/billchurch/webssh2_client/commit/286bcffb146cf2dd70917ceaa84440585e365cd9))
+
+
+### Miscellaneous Chores
+
+* **release:** force version to 1.0.0-alpha.1 ([f007bd1](https://github.com/billchurch/webssh2_client/commit/f007bd16d4f2d251ecec0bace06444c8e34d9694))
+
 ## [1.0.0-alpha.0](https://github.com/billchurch/webssh2_client/compare/v0.2.30...v1.0.0-alpha.0) (2025-09-04)
 
 ### Features
