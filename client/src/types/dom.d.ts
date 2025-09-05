@@ -4,6 +4,8 @@ export type ElementId =
   | 'closeterminalSettingsBtn'
   | 'downloadLogBtn'
   | 'dropupContent'
+  | 'menu'
+  | 'menuToggle'
   | 'errorDialog'
   | 'errorMessage'
   | 'footer'

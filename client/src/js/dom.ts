@@ -25,6 +25,7 @@ const debug = createDebug('webssh2-client:dom')
 type TerminalDimensions = { cols: number; rows: number }
 
 import type { ITerminalOptions as TerminalOptions } from '@xterm/xterm'
+import { getTerminalInstance } from './terminal.js'
 import type { WebSSH2Config } from '../types/config.d'
 
 type TerminalFunctions = {
@@ -62,6 +63,8 @@ interface Elements {
   closeterminalSettingsBtn: HTMLButtonElement
   downloadLogBtn: HTMLButtonElement
   dropupContent: HTMLElement
+  menu: HTMLElement
+  menuToggle: HTMLButtonElement
   errorDialog: HTMLDialogElement
   errorMessage: HTMLElement
   footer: HTMLElement
@@ -141,6 +144,8 @@ export function initializeElements(): Partial<Elements> {
     'closeterminalSettingsBtn',
     'downloadLogBtn',
     'dropupContent',
+    'menu',
+    'menuToggle',
     'errorDialog',
     'errorMessage',
     'footer',
@@ -245,6 +250,9 @@ export function setupEventListeners(config: unknown): void {
 
   setupPrivateKeyEvents()
 
+  setupMenuToggle()
+  setupTerminalResizeObserver()
+
   window.addEventListener('resize', () => resize())
   document.addEventListener('keydown', keydown)
   window.addEventListener('beforeunload', (event) => {
@@ -298,6 +306,10 @@ export function showPromptDialog(
     input.type = prompt.echo ? 'text' : 'password'
     input.required = true
     input.id = `promptInput${index}`
+    // Accessibility and mobile typing ergonomics
+    input.autocomplete = 'off'
+    ;(input as unknown as { autocapitalize?: string }).autocapitalize = 'off'
+    input.spellcheck = false
     input.className =
       'mt-1 block w-full rounded-md border border-slate-600 bg-slate-800 text-slate-100 placeholder-slate-400 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
     if (index === 0) firstInput = input
@@ -508,6 +520,9 @@ function keydown(event: KeyboardEvent): void {
   if (event.ctrlKey && event.shiftKey && event.code === 'Digit6') {
     event.preventDefault()
     emitData('\x1E')
+  }
+  if (event.key === 'Escape') {
+    hideMenu()
   }
 }
 
@@ -760,4 +775,62 @@ function setupPrivateKeyEvents(): void {
       }
     }
   })
+}
+
+function setupMenuToggle(): void {
+  const { menu, menuToggle, dropupContent } = elements
+  if (!menu || !menuToggle || !dropupContent) return
+  const toggle = () => {
+    const isHidden = dropupContent.classList.contains('hidden')
+    if (isHidden) showMenu()
+    else hideMenu()
+  }
+  menuToggle.addEventListener('click', (e) => {
+    e.stopPropagation()
+    toggle()
+  })
+  // Close when clicking outside
+  document.addEventListener('pointerdown', (e) => {
+    if (!menu.contains(e.target as Node)) hideMenu()
+  })
+}
+
+function showMenu(): void {
+  const { dropupContent, menuToggle } = elements
+  if (!dropupContent || !menuToggle) return
+  dropupContent.classList.remove('hidden')
+  menuToggle.setAttribute('aria-expanded', 'true')
+}
+
+function hideMenu(): void {
+  const { dropupContent, menuToggle } = elements
+  if (!dropupContent || !menuToggle) return
+  dropupContent.classList.add('hidden')
+  menuToggle.setAttribute('aria-expanded', 'false')
+}
+
+function tryScrollTerminalToBottomIfFocused(): void {
+  const { terminalContainer } = elements
+  if (!terminalContainer) return
+  const active = document.activeElement
+  if (active && terminalContainer.contains(active)) {
+    const term = getTerminalInstance() as { scrollToBottom?: () => void } | null
+    term?.scrollToBottom?.()
+  }
+}
+
+let terminalResizeObserver: ResizeObserver | null = null
+function setupTerminalResizeObserver(): void {
+  const { terminalContainer } = elements
+  if (!terminalContainer || typeof ResizeObserver === 'undefined') return
+  if (terminalResizeObserver) terminalResizeObserver.disconnect()
+  let raf = 0
+  terminalResizeObserver = new ResizeObserver(() => {
+    if (raf) cancelAnimationFrame(raf)
+    raf = requestAnimationFrame(() => {
+      resize()
+      tryScrollTerminalToBottomIfFocused()
+    })
+  })
+  terminalResizeObserver.observe(terminalContainer)
 }
