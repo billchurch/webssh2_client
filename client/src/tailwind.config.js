@@ -6,10 +6,10 @@ export default {
     './index.html',
     './client.htm',
     './js/**/*.{js,ts}',
-    './css/**/*.css',
+    './css/**/*.css'
   ],
   theme: {
-    extend: {},
+    extend: {}
   },
-  plugins: [forms()],
+  plugins: [forms()]
 }

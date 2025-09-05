@@ -6,6 +6,7 @@
 /* App components migrated from style.css and visibility helpers */
 @layer components {
   :root { --bar-h: 24px; }
+
   /* visibility handled via Tailwind `hidden` on elements */
 
   /* Body/base now set via markup classes */
@@ -20,13 +21,17 @@
   /* Manual backdrop for login (non-modal dialog) */
   .backdrop {
     @apply fixed inset-0 z-[1000];
-    background: rgba(0, 0, 0, 0.7);
+
+    background: rgb(0 0 0 / 70%);
   }
+
   /* Use dialog's native ::backdrop for modal dimming */
-  dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+  dialog::backdrop { background: rgb(0 0 0 / 70%); }
   .modal { @apply m-0 p-0 border-0 bg-transparent overflow-visible; }
+
   /* Robust centering across browsers */
   .modal[open] { @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] m-0 overflow-visible; }
+
   /* Modal content styles moved to HTML classes */
 
   /* Login form spacing handled by Tailwind Forms + markup */
@@ -38,6 +43,7 @@
   /* Close button now styled via markup */
 
   /* Reconnect button show/hide (styles moved to HTML classes) */
+
   /* button visibility handled via Tailwind `hidden` */
 
   /* Password field + caps lock handled via markup/JS */

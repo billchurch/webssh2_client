@@ -163,3 +163,50 @@ npm run lint              # ESLint with security rules
 ```
 
 Security-focused ESLint rules (see SECURITY.md) prevent unsanitized DOM sinks like `innerHTML` and inline script-like patterns.
+
+## Manual Accessibility Checklist
+
+Run these quick checks before merging UI changes. See ACCESSIBILITY.md for deeper guidance.
+
+Tools
+
+- HTML lint: `npm run lint:html`
+- CSS lint: `npm run lint:css`
+- Node a11y smoke: `node --test tests/a11y-terminal.test.js`
+- Axe CLI (dev server must be running):
+  - `npm run dev` in one terminal
+  - `npm run a11y:axe` (or `npm run a11y:axe:bin`)
+  - If permission denied: `chmod +x node_modules/.bin/axe`
+  - If ChromeDriver missing: `npm i -g browser-driver-manager && npx browser-driver-manager install chrome`
+
+Checklist
+
+- Page structure
+  - `<html lang>` set (e.g., `en`).
+  - Landmarks present and logical headings (one `<h1>`).
+  - Provide a skip link to main/terminal (nice to have).
+- Forms (login, prompts)
+  - Every input/textarea has a programmatic label (`<label for>` or `aria-labelledby`).
+  - Required fields indicated; errors surface in the error dialog and are announced.
+  - Useful `autocomplete` (e.g., `username`, `current-password`).
+- Dialogs (error, prompt, settings)
+  - Each has a clear heading; close buttons have `type="button"`.
+  - Focus moves into dialog when opened; returns to invoker on close (verify manually).
+- Keyboard and focus
+  - All controls operable with keyboard; tab order is logical.
+  - No positive `tabindex`; focus is visibly styled (use `:focus-visible`).
+- Live region and updates
+  - `#status` has `role="status"` and announces connect/disconnect/errors.
+- Color and motion
+  - Contrast: text 4.5:1; large text/UI 3:1.
+  - Respect reduced motion; avoid excessive animation (cursor blink off is ideal with reduced motion).
+- Terminal specifics
+  - Terminal container is focusable and named (e.g., `aria-label="Terminal"`).
+  - Do not stream terminal output into live regions; only announce discrete events.
+
+Quick Runbook
+
+1) Start dev server: `npm run dev`
+2) Lint: `npm run lint:html && npm run lint:css`
+3) Node test: `node --test tests/a11y-terminal.test.js`
+4) Axe scan: `npm run a11y:axe`

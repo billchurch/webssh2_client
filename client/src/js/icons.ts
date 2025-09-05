@@ -34,7 +34,12 @@ export function createIconNode(
   const svgClass: string[] = []
   const wrapperClass: string[] = ['icon']
   tokens.forEach((t) => {
-    if (t.startsWith('w-') || t.startsWith('h-') || t.startsWith('animate-') || t.startsWith('origin-')) {
+    if (
+      t.startsWith('w-') ||
+      t.startsWith('h-') ||
+      t.startsWith('animate-') ||
+      t.startsWith('origin-')
+    ) {
       svgClass.push(t)
     } else {
       wrapperClass.push(t)
