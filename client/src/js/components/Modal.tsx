@@ -91,7 +91,7 @@ export const Modal: Component<ModalProps> = (props) => {
       <Show when={props.isOpen}>
         <dialog
           ref={dialogRef}
-          class={`modal ${props.class || ''}`}
+          class={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 ${props.class || ''}`}
           onClick={handleDialogClick}
         >
           <div onClick={(e) => e.stopPropagation()}>

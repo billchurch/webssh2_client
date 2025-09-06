@@ -1,9 +1,9 @@
 // SolidJS TypeScript Logging Service
-import { createMemo } from 'solid-js'
+import { createMemo, createRoot } from 'solid-js'
 import createDebug from 'debug'
-import { state, setState } from '../state-solid.js'
+import { state, setState } from '../stores/terminal.js'
 import { triggerDownload } from '../utils/browser.js'
-import { formatDate } from '../utils.js'
+import { formatDate } from '../utils/index.js'
 
 const debug = createDebug('webssh2-client:logging-service')
 
@@ -30,11 +30,13 @@ interface LoggingService {
 
 class LoggingServiceImpl implements LoggingService {
   // Reactive computations
-  hasLogData = createMemo(() => {
-    // Return state.loggedData which tracks whether we have log data
-    // This will be reactive to state changes
-    return state.loggedData
-  })
+  hasLogData = createRoot(() =>
+    createMemo(() => {
+      // Return state.loggedData which tracks whether we have log data
+      // This will be reactive to state changes
+      return state.loggedData
+    })
+  )
 
   isLogging = () => state.sessionLogEnable
 

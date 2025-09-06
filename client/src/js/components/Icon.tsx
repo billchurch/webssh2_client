@@ -1,6 +1,6 @@
 import type { Component } from 'solid-js'
 import { splitProps } from 'solid-js'
-import { ICONS } from '../icons.js'
+import { ICONS } from '../../utils/icons.js'
 
 interface IconProps {
   name: string

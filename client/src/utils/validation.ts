@@ -1,7 +1,7 @@
 // Form validation utilities for SolidJS components
 import type { Accessor } from 'solid-js'
 import { createSignal } from 'solid-js'
-import { validatePrivateKey, validatePrivateKeyDeep } from '../utils.js'
+import { validatePrivateKey, validatePrivateKeyDeep } from './index.js'
 
 // Validation rule types
 export interface ValidationRule<T = unknown> {

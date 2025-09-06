@@ -1,11 +1,8 @@
 // UI Service for WebSSH2 Client - Replaces imperative DOM updates with reactive signals
-import { setHeaderContent, setSessionFooter } from '../state-solid.js'
-import {
-  setConnectionStatus,
-  setConnectionStatusColor
-} from './socket-service.js'
-import { sanitizeColor } from '../utils.js'
-import type { ElementId } from '../../types/dom.d'
+import { setHeaderContent, setSessionFooter } from '../stores/terminal.js'
+import { setConnectionStatus, setConnectionStatusColor } from './socket.js'
+import { sanitizeColor } from '../utils/index.js'
+import type { ElementId } from '../types/dom.d'
 import createDebug from 'debug'
 
 const debug = createDebug('webssh2-client:ui-service')

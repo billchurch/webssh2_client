@@ -253,11 +253,7 @@ export function XTerm(props: XTermProps) {
     <div
       ref={setContainerRef}
       class={props.class || 'size-full'}
-      style={{
-        width: '100%',
-        height: '100%',
-        ...props.style
-      }}
+      style={props.style}
     />
   )
 }

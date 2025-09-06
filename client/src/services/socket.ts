@@ -13,12 +13,13 @@ import {
   // setIsLoginDialogOpen,
   setIsErrorDialogOpen,
   setSessionFooter,
+  headerContent,
   setHeaderContent,
   setPromptData
-} from '../state-solid.js'
+} from '../stores/terminal.js'
 
 // Import utilities
-import { credentials } from '../stores/config.js'
+import { credentials } from '../js/stores/config.js'
 
 // Import types
 import type {
@@ -27,8 +28,8 @@ import type {
   ClientToServerEvents,
   ServerToClientEvents,
   PermissionsPayload
-} from '../../types/events.d'
-import type { WebSSH2Config } from '../../types/config.d'
+} from '../types/events.d'
+import type { WebSSH2Config } from '../types/config.d'
 // import type { ElementId } from '../../types/dom.d'
 
 const debug = createDebug('webssh2-client:socket-service')
@@ -124,12 +125,20 @@ export class SocketService {
     const socketPath = this.getSocketIOPath()
     debug('Socket connection details', { url: socketUrl, path: socketPath })
 
+    // Pass URL parameters as query to server
+    const urlParams = new URLSearchParams(window.location.search)
+    const query: Record<string, string> = {}
+    for (const [key, value] of urlParams.entries()) {
+      query[key] = value
+    }
+
     const newSocket = io(socketUrl, {
       path: socketPath,
       withCredentials: true,
       reconnection: false,
       timeout: 20000,
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      query
     }) as Socket<ServerToClientEvents, ClientToServerEvents>
 
     setSocket(newSocket)
@@ -241,8 +250,8 @@ export class SocketService {
     setState('term', authCredentials.term ?? null)
     const maskedContent = maskObject(authCredentials)
     debug('Authenticating', maskedContent)
-    debug('Auth credentials check', { 
-      host: authCredentials.host, 
+    debug('Auth credentials check', {
+      host: authCredentials.host,
       username: authCredentials.username,
       hasSocket: !!socket(),
       effectiveFormData,
@@ -428,6 +437,69 @@ export class SocketService {
             })
           }
           break
+        case 'headerBackground': {
+          // Handle background color updates separately (backward compatibility)
+          const currentHeader = headerContent()
+          const bgValue = String(value)
+
+          // Check if it's a Tailwind class (starts with 'bg-' or contains gradient patterns)
+          const isTailwindClass =
+            bgValue.startsWith('bg-') ||
+            bgValue.includes('gradient') ||
+            bgValue.includes('from-') ||
+            bgValue.includes('to-')
+
+          if (currentHeader) {
+            setHeaderContent({
+              ...currentHeader,
+              background: bgValue,
+              backgroundIsTailwind: isTailwindClass
+            })
+          } else {
+            // If no header exists yet, create one with just the background
+            setHeaderContent({
+              text: '',
+              background: bgValue,
+              backgroundIsTailwind: isTailwindClass
+            })
+          }
+          break
+        }
+        case 'headerStyle': {
+          // Handle full header styling (new enhanced approach)
+          const currentHeader = headerContent()
+          const styleValue = String(value)
+
+          // Detect if this contains Tailwind classes
+          const isTailwindStyle =
+            styleValue.includes('bg-') ||
+            styleValue.includes('text-') ||
+            styleValue.includes('font-') ||
+            styleValue.includes('border-') ||
+            styleValue.includes('shadow-') ||
+            styleValue.includes('animate-') ||
+            styleValue.includes('gradient') ||
+            styleValue.includes('from-') ||
+            styleValue.includes('to-') ||
+            styleValue.includes('via-')
+
+          if (currentHeader) {
+            setHeaderContent({
+              ...currentHeader,
+              fullStyle: styleValue,
+              styleIsTailwind: isTailwindStyle
+            })
+          } else {
+            // If no header exists yet, create one with the full style
+            // Note: Server should send header text separately via 'header' event
+            setHeaderContent({
+              text: '',
+              fullStyle: styleValue,
+              styleIsTailwind: isTailwindStyle
+            })
+          }
+          break
+        }
         default:
           // Unknown elements - log for debugging
           debug(`Unknown element update: ${element}`, value)

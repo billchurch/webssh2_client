@@ -4,27 +4,39 @@ import { FitAddon } from '@xterm/addon-fit'
 import createDebug from 'debug'
 
 // Import the custom solid-xterm wrapper
-import { XTerm } from '../xterm-solid/components/XTerm'
-import type { TerminalRef, XTermProps } from '../xterm-solid/types'
+import { XTerm } from '../../lib/xterm-solid/components/XTerm'
+import type { TerminalRef, XTermProps } from '../../lib/xterm-solid/types'
 import type { Terminal, ITerminalOptions } from '@xterm/xterm'
 
 // Import existing functionality
-import { validateNumber, defaultSettings } from '../utils.js'
-import { emitData, emitResize } from '../services/socket-service.js'
-import { getStoredSettings } from '../settings.js'
+import { validateNumber, defaultSettings } from '../../utils/index.js'
+import { emitData, emitResize } from '../../services/socket.js'
+import { getStoredSettings } from '../../utils/settings.js'
 import type { WebSSH2Config, TerminalSettings } from '../../types/config.d'
 
 const debug = createDebug('webssh2-client:terminal-component')
 
+// Reactive terminal actions interface
+export interface TerminalActions {
+  write: (data: string) => void
+  reset: () => void
+  resize: () => { cols: number; rows: number } | null
+  focus: () => void
+  getDimensions: () => { cols: number; rows: number }
+  applySettings: (options: Partial<ITerminalOptions>) => void
+  getTerminal: () => Terminal | null
+}
+
 interface TerminalComponentProps {
   config: WebSSH2Config
   onTerminalReady?: (terminalRef: TerminalRef) => void
+  onTerminalMounted?: (terminalActions: TerminalActions) => void
   class?: string
 }
 
 export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
-  const [_terminalRef, setTerminalRef] = createSignal<TerminalRef>()
-  let fitAddonInstance: FitAddon | null = null
+  const [terminalRef, setTerminalRef] = createSignal<TerminalRef>()
+  const [fitAddon, setFitAddon] = createSignal<FitAddon>()
 
   // Get terminal settings based on config
   const getTerminalOptions = (): Partial<ITerminalOptions> => {
@@ -88,7 +100,8 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
     setTerminalRef(ref)
 
     // Create and load FitAddon directly for reliable access
-    fitAddonInstance = new FitAddon()
+    const fitAddonInstance = new FitAddon()
+    setFitAddon(fitAddonInstance)
     terminal.loadAddon(fitAddonInstance)
 
     // Fit terminal after mount with multiple attempts for proper sizing
@@ -107,6 +120,79 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
 
     // Also update the terminal manager with the FitAddon
     terminalManager.setTerminalRef(ref, fitAddonInstance)
+
+    // Create reactive terminal actions
+    const terminalActions: TerminalActions = {
+      write: (data: string) => ref.write(data),
+      reset: () => ref.reset(),
+      resize: () => {
+        const currentFit = fitAddon()
+        const currentRef = terminalRef()
+        if (currentFit && currentRef?.terminal) {
+          currentFit.fit()
+          const dims = {
+            cols: currentRef.terminal.cols,
+            rows: currentRef.terminal.rows
+          }
+          emitResize(dims)
+          return dims
+        }
+        return null
+      },
+      focus: () => ref.focus(),
+      getDimensions: () => {
+        const currentRef = terminalRef()
+        if (currentRef?.terminal) {
+          return {
+            cols: currentRef.terminal.cols,
+            rows: currentRef.terminal.rows
+          }
+        }
+        return { cols: 0, rows: 0 }
+      },
+      applySettings: (options: Partial<ITerminalOptions>) => {
+        const currentRef = terminalRef()
+        if (!currentRef?.terminal) return
+
+        // Apply validated settings
+        const validatedSettings = {
+          cursorBlink: (options.cursorBlink ??
+            defaultSettings.cursorBlink) as boolean,
+          scrollback: validateNumber(
+            options.scrollback as number,
+            1,
+            200000,
+            defaultSettings.scrollback
+          ),
+          tabStopWidth: validateNumber(
+            options.tabStopWidth as number,
+            1,
+            100,
+            defaultSettings.tabStopWidth
+          ),
+          fontSize: validateNumber(
+            options.fontSize as number,
+            1,
+            72,
+            defaultSettings.fontSize
+          ),
+          fontFamily: String(options.fontFamily ?? defaultSettings.fontFamily),
+          letterSpacing: (options.letterSpacing ??
+            defaultSettings.letterSpacing) as number,
+          lineHeight: (options.lineHeight ??
+            defaultSettings.lineHeight) as number
+        }
+
+        Object.assign(currentRef.terminal.options, validatedSettings)
+        terminalActions.resize()
+      },
+      getTerminal: () => terminalRef()?.terminal || null
+    }
+
+    // Notify parent with reactive actions
+    if (props.onTerminalMounted) {
+      props.onTerminalMounted(terminalActions)
+    }
 
     // Initial fit - single call to avoid race conditions
     fitTerminal()
@@ -177,6 +263,11 @@ export class SolidTerminalManager {
     }
   }
 
+  // Helper method to ensure terminal is ready
+  private ensureTerminal(): boolean {
+    return !!(this.terminalRef && this.terminalRef.terminal)
+  }
+
   writeToTerminal(data: string): void {
     if (this.terminalRef) {
       this.terminalRef.write(data)
@@ -191,11 +282,12 @@ export class SolidTerminalManager {
   }
 
   resizeTerminal(): { cols: number; rows: number } | null {
-    if (this.terminalRef && this.terminalRef.terminal && this.fitAddon) {
+    if (this.ensureTerminal() && this.fitAddon) {
       this.fitAddon.fit()
+      const terminal = this.terminalRef!.terminal!
       const dimensions = {
-        cols: this.terminalRef.terminal.cols,
-        rows: this.terminalRef.terminal.rows
+        cols: terminal.cols,
+        rows: terminal.rows
       }
       debug('resizeTerminal', dimensions)
 
@@ -214,8 +306,8 @@ export class SolidTerminalManager {
   }
 
   getTerminalDimensions(): { cols: number; rows: number } {
-    if (this.terminalRef && this.terminalRef.terminal) {
-      const { cols, rows } = this.terminalRef.terminal
+    if (this.ensureTerminal()) {
+      const { cols, rows } = this.terminalRef!.terminal!
       debug('getTerminalDimensions', { cols, rows })
       return { cols, rows }
     }
@@ -223,16 +315,9 @@ export class SolidTerminalManager {
     return { cols: 0, rows: 0 }
   }
 
-  updateTerminalSettings(newOptions: Partial<ITerminalOptions>): void {
-    if (this.terminalRef && this.terminalRef.terminal) {
-      Object.assign(this.terminalRef.terminal.options, newOptions)
-      this.terminalRef.fit()
-      debug('updateTerminalSettings', newOptions)
-    }
-  }
-
+  // Consolidated settings method - validates and applies settings with resize
   applyTerminalSettings(options: Partial<ITerminalOptions>): void {
-    if (!this.terminalRef || !this.terminalRef.terminal) {
+    if (!this.ensureTerminal()) {
       console.error('applyTerminalSettings: Terminal not initialized')
       return
     }
@@ -265,8 +350,10 @@ export class SolidTerminalManager {
       lineHeight: (options.lineHeight ?? defaultSettings.lineHeight) as number
     }
 
-    Object.assign(this.terminalRef.terminal.options, terminalSettings)
-    this.terminalRef.fit()
+    Object.assign(this.terminalRef!.terminal!.options, terminalSettings)
+
+    // Call resize to ensure proper dimensions and notify socket service
+    this.resizeTerminal()
   }
 
   getTerminalInstance(): Terminal | null {

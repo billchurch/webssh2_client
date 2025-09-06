@@ -47,6 +47,9 @@ export const [showReconnectButton, setShowReconnectButton] = createSignal(false)
 export const [headerContent, setHeaderContent] = createSignal<{
   text: string
   background?: string
+  backgroundIsTailwind?: boolean
+  fullStyle?: string
+  styleIsTailwind?: boolean
 } | null>(null)
 
 // Prompt dialog state

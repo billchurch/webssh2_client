@@ -4,7 +4,7 @@ import createDebug from 'debug'
 import { Modal } from './Modal'
 import { Icon } from './Icon'
 import { usePrivateKeyValidation } from '../hooks/usePrivateKeyValidation'
-import { createFieldValidator, ValidationRules } from '../utils/validation'
+import { createFieldValidator, ValidationRules } from '../../utils/validation'
 import type { ClientAuthenticatePayload } from '../../types/events.d'
 
 const debug = createDebug('webssh2-client:login-modal')

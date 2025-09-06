@@ -2,8 +2,11 @@ import type { Component } from 'solid-js'
 import { createSignal, createEffect } from 'solid-js'
 import { Modal } from './Modal'
 import type { ITerminalOptions } from '@xterm/xterm'
-import { getStoredSettings, saveTerminalSettings } from '../settings.js'
-import { defaultSettings } from '../utils.js'
+import {
+  getStoredSettings,
+  saveTerminalSettings
+} from '../../utils/settings.js'
+import { defaultSettings } from '../../utils/index.js'
 import type { TerminalSettings } from '../../types/config.d'
 
 interface TerminalSettingsModalProps {

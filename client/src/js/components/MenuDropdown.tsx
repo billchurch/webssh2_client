@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js'
 import { createSignal, Show, onMount, onCleanup } from 'solid-js'
-import { state } from '../state-solid.js'
-import { hasLogData } from '../services/logging-service.js'
+import { state } from '../../stores/terminal.js'
+import { hasLogData } from '../../services/logging.js'
 import { Icon } from './Icon'
 
 interface MenuDropdownProps {

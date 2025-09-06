@@ -1,7 +1,7 @@
 // client/src/js/stores/config.ts
-import { createSignal, createMemo } from 'solid-js'
+import { createSignal, createMemo, createRoot } from 'solid-js'
 import createDebug from 'debug'
-import { mergeDeep } from '../utils.js'
+import { mergeDeep } from '../../utils/index.js'
 import type { WebSSH2Config } from '../../types/config.d'
 
 const debug = createDebug('webssh2-client:config-store')
@@ -62,51 +62,53 @@ export function initializeUrlParams() {
 }
 
 // Computed config with URL parameter overrides
-export const configWithUrlOverrides = createMemo(() => {
-  const baseConfig = config()
-  const params = urlParams()
+export const configWithUrlOverrides = createRoot(() =>
+  createMemo(() => {
+    const baseConfig = config()
+    const params = urlParams()
 
-  const urlOverrides: Partial<WebSSH2Config> = {}
+    const urlOverrides: Partial<WebSSH2Config> = {}
 
-  // SSH parameters from URL
-  const host = params.get('host')
-  const port = params.get('port')
-  const username = params.get('username')
-  const password = params.get('password')
-  const privateKey = params.get('privateKey')
-  const passphrase = params.get('passphrase')
-  const sshterm = params.get('sshterm')
+    // SSH parameters from URL
+    const host = params.get('host')
+    const port = params.get('port')
+    const username = params.get('username')
+    const password = params.get('password')
+    const privateKey = params.get('privateKey')
+    const passphrase = params.get('passphrase')
+    const sshterm = params.get('sshterm')
 
-  if (
-    host ||
-    port ||
-    username ||
-    password ||
-    privateKey ||
-    passphrase ||
-    sshterm
-  ) {
-    urlOverrides.ssh = {
-      host: host || null,
-      port: port ? parseInt(port, 10) : 22,
-      username: username || null,
-      password: password || null,
-      sshterm: sshterm || 'xterm-color',
-      ...(privateKey && { privateKey }),
-      ...(passphrase && { passphrase })
+    if (
+      host ||
+      port ||
+      username ||
+      password ||
+      privateKey ||
+      passphrase ||
+      sshterm
+    ) {
+      urlOverrides.ssh = {
+        host: host || null,
+        port: port ? parseInt(port, 10) : 22,
+        username: username || null,
+        password: password || null,
+        sshterm: sshterm || 'xterm-color',
+        ...(privateKey && { privateKey }),
+        ...(passphrase && { passphrase })
+      }
     }
-  }
 
-  // Auto-connect if host is provided in URL
-  if (host) {
-    urlOverrides.autoConnect = true
-    debug('Auto-connect enabled due to URL host parameter')
-  }
+    // Auto-connect if host is provided in URL
+    if (host) {
+      urlOverrides.autoConnect = true
+      debug('Auto-connect enabled due to URL host parameter')
+    }
 
-  const mergedConfig = mergeDeep(baseConfig, urlOverrides) as WebSSH2Config
-  debug('Config with URL overrides:', mergedConfig)
-  return mergedConfig
-})
+    const mergedConfig = mergeDeep(baseConfig, urlOverrides) as WebSSH2Config
+    debug('Config with URL overrides:', mergedConfig)
+    return mergedConfig
+  })
+)
 
 // Initialize configuration from window object and URL
 export function initializeConfig() {
@@ -124,25 +126,29 @@ export function initializeConfig() {
 }
 
 // Reactive credentials getter
-export const credentials = createMemo(() => {
-  const cfg = configWithUrlOverrides()
-  const _params = urlParams()
+export const credentials = createRoot(() =>
+  createMemo(() => {
+    const cfg = configWithUrlOverrides()
+    const _params = urlParams()
 
-  const portValue = cfg.ssh?.port || 22
-  let port =
-    typeof portValue === 'number' ? portValue : parseInt(String(portValue), 10)
-  if (Number.isNaN(port) || port < 1 || port > 65535) {
-    debug(`Invalid port value: ${portValue}, defaulting to 22`)
-    port = 22
-  }
+    const portValue = cfg.ssh?.port || 22
+    let port =
+      typeof portValue === 'number'
+        ? portValue
+        : parseInt(String(portValue), 10)
+    if (Number.isNaN(port) || port < 1 || port > 65535) {
+      debug(`Invalid port value: ${portValue}, defaulting to 22`)
+      port = 22
+    }
 
-  return {
-    host: cfg.ssh?.host || '',
-    port,
-    username: cfg.ssh?.username || '',
-    password: cfg.ssh?.password || '',
-    privateKey: cfg.ssh?.privateKey || '',
-    passphrase: cfg.ssh?.passphrase || '',
-    term: cfg.ssh?.sshterm || 'xterm-color'
-  }
-})
+    return {
+      host: cfg.ssh?.host || '',
+      port,
+      username: cfg.ssh?.username || '',
+      password: cfg.ssh?.password || '',
+      privateKey: cfg.ssh?.privateKey || '',
+      passphrase: cfg.ssh?.passphrase || '',
+      term: cfg.ssh?.sshterm || 'xterm-color'
+    }
+  })
+)

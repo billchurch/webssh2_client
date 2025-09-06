@@ -3,12 +3,12 @@ import { createSignal, onMount, onCleanup, Show, createEffect } from 'solid-js'
 import createDebug from 'debug'
 
 // Import existing utilities and types
-import type { WebSSH2Config } from '../types/config.d'
+import type { WebSSH2Config } from './types/config.d'
 import {
   initializeConfig,
   initializeUrlParams,
   configWithUrlOverrides
-} from './stores/config.js'
+} from './js/stores/config.js'
 import { getBasicAuthCookie } from './utils/cookies.js'
 import {
   checkSavedLog,
@@ -18,7 +18,7 @@ import {
   downloadLog,
   addToLog,
   clearLog
-} from './services/logging-service.js'
+} from './services/logging.js'
 
 // Import state management
 import {
@@ -37,17 +37,20 @@ import {
   showReconnectButton,
   setShowReconnectButton,
   headerContent,
-  setHeaderContent,
   promptData,
   setPromptData
-} from './state-solid.js'
+} from './stores/terminal.js'
 
 // Import components
-import { TerminalComponent, terminalManager } from './components/Terminal'
-import { LoginModal } from './components/LoginModal'
-import { ErrorModal, PromptModal } from './components/Modal'
-import { TerminalSettingsModal } from './components/TerminalSettingsModal'
-import { MenuDropdown } from './components/MenuDropdown'
+import {
+  TerminalComponent,
+  terminalManager,
+  type TerminalActions
+} from './js/components/Terminal'
+import { LoginModal } from './js/components/LoginModal'
+import { ErrorModal, PromptModal } from './js/components/Modal'
+import { TerminalSettingsModal } from './js/components/TerminalSettingsModal'
+import { MenuDropdown } from './js/components/MenuDropdown'
 
 // Import socket service
 import {
@@ -56,22 +59,24 @@ import {
   submitPromptResponses,
   connectionStatus,
   connectionStatusColor
-} from './services/socket-service.js'
+} from './services/socket.js'
 
 // Import types
-import type { ClientAuthenticatePayload } from '../types/events.d'
-import type { TerminalRef } from './xterm-solid/types'
+import type { ClientAuthenticatePayload } from './types/events.d'
+import type { TerminalRef } from './lib/xterm-solid/types'
+import type { ITerminalOptions } from '@xterm/xterm'
 
 // Import CSS
-import '../css/tailwind.css'
+import './app.css'
 import '@xterm/xterm/css/xterm.css'
-import '../css/icons.css'
+import './css/icons.css'
 
 const debug = createDebug('webssh2-client:app')
 
 const App: Component = () => {
   const [config, setConfig] = createSignal<WebSSH2Config>()
   const [_isTerminalVisible, setIsTerminalVisible] = createSignal(false)
+  const [terminalActions, setTerminalActions] = createSignal<TerminalActions>()
 
   let terminalRef: TerminalRef | undefined
 
@@ -82,7 +87,8 @@ const App: Component = () => {
 
   onMount(async () => {
     try {
-      debug(
+      // This console.log is intentional and should not be changed to debug
+      console.log(
         `Initializing WebSSH2 client - ${(globalThis as Record<string, unknown>)['BANNER_STRING'] ?? 'undefined'}`
       )
 
@@ -155,7 +161,7 @@ const App: Component = () => {
   const handleTerminalReady = (ref: TerminalRef) => {
     debug('Terminal ready')
     terminalRef = ref
-    terminalManager.setTerminalRef(ref)
+    // Note: terminalManager.setTerminalRef is called by the TerminalComponent itself
 
     // Set initial dimensions
     if (ref.terminal) {
@@ -223,11 +229,23 @@ const App: Component = () => {
   }
 
   const writeToTerminal = (data: string) => {
-    terminalManager.writeToTerminal(data)
+    const actions = terminalActions()
+    if (actions) {
+      actions.write(data)
+    } else {
+      // Fallback to manager if reactive actions not available yet
+      terminalManager.writeToTerminal(data)
+    }
   }
 
   const focusTerminal = () => {
-    terminalManager.focusTerminal()
+    const actions = terminalActions()
+    if (actions) {
+      actions.focus()
+    } else {
+      // Fallback to manager if reactive actions not available yet
+      terminalManager.focusTerminal()
+    }
   }
 
   // UI event handlers
@@ -237,13 +255,25 @@ const App: Component = () => {
   }
 
   const handleTerminalSettings = (settings: Record<string, unknown>) => {
-    terminalManager.applyTerminalSettings(settings)
+    const actions = terminalActions()
+    if (actions) {
+      actions.applySettings(settings as Partial<ITerminalOptions>)
+    } else {
+      // Fallback to manager if reactive actions not available yet
+      terminalManager.applyTerminalSettings(settings)
+    }
   }
 
   const handleReconnect = () => {
     setShowReconnectButton(false)
     setIsErrorDialogOpen(false)
-    terminalManager.resetTerminal()
+    const actions = terminalActions()
+    if (actions) {
+      actions.reset()
+    } else {
+      // Fallback to manager if reactive actions not available yet
+      terminalManager.resetTerminal()
+    }
     connectToServer()
   }
 
@@ -288,21 +318,21 @@ const App: Component = () => {
 
     if (state.reauthRequired) {
       setState('reauthRequired', false)
-      terminalManager.resetTerminal()
+      const actions = terminalActions()
+      if (actions) {
+        actions.reset()
+      } else {
+        // Fallback to manager if reactive actions not available yet
+        terminalManager.resetTerminal()
+      }
     }
 
     setState('isConnecting', true)
     if (formData) socketService.setFormData(formData)
     socketService.initializeSocketConnection()
 
-    // Show terminal and set header/footer
+    // Show terminal - header will be set by server via updateUI events
     if (terminalRef) {
-      if (currentConfig?.header?.text && currentConfig?.header?.background) {
-        setHeaderContent({
-          text: currentConfig.header.text,
-          background: currentConfig.header.background
-        })
-      }
       setIsTerminalVisible(true)
     }
   }
@@ -351,10 +381,7 @@ const App: Component = () => {
   }
 
   return (
-    <div
-      class="flex flex-col overflow-hidden bg-black text-neutral-100"
-      style="height: 100%; width: 100%;"
-    >
+    <div class="flex size-full flex-col overflow-hidden bg-black text-neutral-100">
       {/* Modals */}
       <LoginModal
         isOpen={isLoginDialogOpen()}
@@ -417,8 +444,53 @@ const App: Component = () => {
         {/* Header */}
         <Show when={headerContent()}>
           <div
-            class="z-[99] h-6 w-full shrink-0 border-b border-neutral-200 text-center leading-6 text-white"
-            style={{ 'background-color': headerContent()?.background }}
+            class={(() => {
+              const header = headerContent()!
+
+              // New headerStyle approach (full styling)
+              if (header.fullStyle && header.styleIsTailwind) {
+                return `z-[99] w-full shrink-0 border-b border-neutral-200 text-center text-white ${header.fullStyle}`
+              }
+
+              // Backward compatibility: headerBackground approach
+              if (header.backgroundIsTailwind && header.background) {
+                return `z-[99] h-6 w-full shrink-0 border-b border-neutral-200 text-center leading-6 text-white ${header.background}`
+              }
+
+              // Default fallback
+              return 'z-[99] h-6 w-full shrink-0 border-b border-neutral-200 bg-black text-center leading-6 text-white'
+            })()}
+            style={(() => {
+              const header = headerContent()!
+
+              // New headerStyle with Tailwind classes - no inline styles needed
+              if (header.fullStyle && header.styleIsTailwind) {
+                return {}
+              }
+
+              // New headerStyle approach with CSS fallback
+              if (header.fullStyle && !header.styleIsTailwind) {
+                // Parse CSS properties from fullStyle (basic implementation)
+                const styles: Record<string, string> = {}
+                if (header.fullStyle.includes('background')) {
+                  // Simple regex to extract background-color or background
+                  const bgMatch = header.fullStyle.match(
+                    /background(?:-color)?:\s*([^;]+)/i
+                  )
+                  if (bgMatch && bgMatch[1]) {
+                    styles['background-color'] = bgMatch[1].trim()
+                  }
+                }
+                return styles
+              }
+
+              // Backward compatibility: headerBackground CSS approach
+              if (!header.backgroundIsTailwind && header.background) {
+                return { 'background-color': header.background || '#000' }
+              }
+
+              return {}
+            })()}
           >
             {headerContent()?.text}
           </div>
@@ -437,6 +509,7 @@ const App: Component = () => {
             <TerminalComponent
               config={config()!}
               onTerminalReady={handleTerminalReady}
+              onTerminalMounted={setTerminalActions}
               class="size-full"
             />
           </div>
