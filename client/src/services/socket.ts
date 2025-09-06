@@ -19,7 +19,7 @@ import {
 } from '../stores/terminal.js'
 
 // Import utilities
-import { credentials } from '../js/stores/config.js'
+import { credentials } from '../stores/config.js'
 
 // Import types
 import type {

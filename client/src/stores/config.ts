@@ -1,8 +1,8 @@
 // client/src/js/stores/config.ts
 import { createSignal, createMemo, createRoot } from 'solid-js'
 import createDebug from 'debug'
-import { mergeDeep } from '../../utils/index.js'
-import type { WebSSH2Config } from '../../types/config.d'
+import { mergeDeep } from '../utils/index.js'
+import type { WebSSH2Config } from '../types/config.d'
 
 const debug = createDebug('webssh2-client:config-store')
 

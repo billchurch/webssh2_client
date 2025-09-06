@@ -4,15 +4,15 @@ import { FitAddon } from '@xterm/addon-fit'
 import createDebug from 'debug'
 
 // Import the custom solid-xterm wrapper
-import { XTerm } from '../../lib/xterm-solid/components/XTerm'
-import type { TerminalRef, XTermProps } from '../../lib/xterm-solid/types'
+import { XTerm } from '../lib/xterm-solid/components/XTerm'
+import type { TerminalRef, XTermProps } from '../lib/xterm-solid/types'
 import type { Terminal, ITerminalOptions } from '@xterm/xterm'
 
 // Import existing functionality
-import { validateNumber, defaultSettings } from '../../utils/index.js'
-import { emitData, emitResize } from '../../services/socket.js'
-import { getStoredSettings } from '../../utils/settings.js'
-import type { WebSSH2Config, TerminalSettings } from '../../types/config.d'
+import { validateNumber, defaultSettings } from '../utils/index.js'
+import { emitData, emitResize } from '../services/socket.js'
+import { getStoredSettings } from '../utils/settings.js'
+import type { WebSSH2Config, TerminalSettings } from '../types/config.d'
 
 const debug = createDebug('webssh2-client:terminal-component')
 

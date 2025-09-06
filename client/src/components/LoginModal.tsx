@@ -2,10 +2,10 @@ import type { Component } from 'solid-js'
 import { createSignal, createEffect } from 'solid-js'
 import createDebug from 'debug'
 import { Modal } from './Modal'
-import { Icon } from './Icon'
+import { Key, Settings, Upload } from 'lucide-solid'
 import { usePrivateKeyValidation } from '../hooks/usePrivateKeyValidation'
-import { createFieldValidator, ValidationRules } from '../../utils/validation'
-import type { ClientAuthenticatePayload } from '../../types/events.d'
+import { createFieldValidator, ValidationRules } from '../utils/validation'
+import type { ClientAuthenticatePayload } from '../types/events.d'
 
 const debug = createDebug('webssh2-client:login-modal')
 
@@ -229,7 +229,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                   setShowPrivateKeySection(!showPrivateKeySection())
                 }
               >
-                <Icon name="key" class="icon-fw" />{' '}
+                <Key class="mr-2 inline-block size-4" />
                 {showPrivateKeySection() ? 'Hide SSH Key' : 'Add SSH Key'}
               </button>
             </div>
@@ -241,7 +241,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                 aria-label="Options"
                 title="Options"
               >
-                <Icon name="settings" class="icon-fw" /> Options
+                <Settings class="mr-2 inline-block size-4" /> Options
               </button>
             </div>
           </div>
@@ -334,7 +334,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                   for="privateKeyFile"
                   class="inline-flex cursor-pointer items-center justify-center rounded-md border border-transparent bg-slate-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                 >
-                  <Icon name="upload" class="icon-fw" /> Upload Key File
+                  <Upload class="mr-2 inline-block size-4" /> Upload Key File
                 </label>
               </div>
 

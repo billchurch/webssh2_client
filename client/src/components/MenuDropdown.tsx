@@ -1,8 +1,8 @@
 import type { Component } from 'solid-js'
 import { createSignal, Show, onMount, onCleanup } from 'solid-js'
-import { state } from '../../stores/terminal.js'
-import { hasLogData } from '../../services/logging.js'
-import { Icon } from './Icon'
+import { state } from '../stores/terminal.js'
+import { hasLogData } from '../services/logging.js'
+import { Menu, Trash2, Settings, Clipboard, Download, Key } from 'lucide-solid'
 
 interface MenuDropdownProps {
   onClearLog?: () => void
@@ -79,7 +79,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
         onClick={toggleMenu}
         onMouseEnter={openMenu}
       >
-        <Icon name="menu" class="inline-block size-5" /> Menu
+        <Menu class="inline-block size-5" /> Menu
       </button>
 
       <Show when={isOpen()}>
@@ -97,7 +97,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
               onClick={handleMenuItemClick(props.onClearLog || (() => {}))}
               role="menuitem"
             >
-              <Icon name="trash-can" class="inline-block size-5" /> Clear Log
+              <Trash2 class="inline-block size-5" /> Clear Log
             </button>
           </Show>
 
@@ -109,10 +109,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
               onClick={handleMenuItemClick(props.onStopLog || (() => {}))}
               role="menuitem"
             >
-              <Icon
-                name="settings"
-                class="inline-block size-5 origin-center animate-spin"
-              />{' '}
+              <Settings class="inline-block size-5 origin-center animate-spin" />
               Stop Log
             </button>
           </Show>
@@ -125,7 +122,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
               onClick={handleMenuItemClick(props.onStartLog || (() => {}))}
               role="menuitem"
             >
-              <Icon name="clipboard" class="inline-block size-5" /> Start Log
+              <Clipboard class="inline-block size-5" /> Start Log
             </button>
           </Show>
 
@@ -137,7 +134,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
               onClick={handleMenuItemClick(props.onDownloadLog || (() => {}))}
               role="menuitem"
             >
-              <Icon name="download" class="inline-block size-5" /> Download Log
+              <Download class="inline-block size-5" /> Download Log
             </button>
           </Show>
 
@@ -151,7 +148,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
               )}
               role="menuitem"
             >
-              <Icon name="key" class="inline-block size-5" /> Credentials
+              <Key class="inline-block size-5" /> Credentials
             </button>
           </Show>
 
@@ -163,7 +160,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
               onClick={handleMenuItemClick(props.onReauth || (() => {}))}
               role="menuitem"
             >
-              <Icon name="key" class="inline-block size-5" /> Switch User
+              <Key class="inline-block size-5" /> Switch User
             </button>
           </Show>
 
@@ -176,7 +173,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
             )}
             role="menuitem"
           >
-            <Icon name="settings" class="inline-block size-5" /> Settings
+            <Settings class="inline-block size-5" /> Settings
           </button>
         </div>
       </Show>

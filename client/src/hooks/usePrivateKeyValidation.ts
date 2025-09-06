@@ -1,9 +1,6 @@
 import type { Accessor } from 'solid-js'
 import { createSignal, createMemo } from 'solid-js'
-import {
-  validatePrivateKey,
-  validatePrivateKeyDeep
-} from '../../utils/index.js'
+import { validatePrivateKey, validatePrivateKeyDeep } from '../utils/index.js'
 
 export interface PrivateKeyValidationState {
   isValid: boolean

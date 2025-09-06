@@ -8,7 +8,7 @@ import {
   initializeConfig,
   initializeUrlParams,
   configWithUrlOverrides
-} from './js/stores/config.js'
+} from './stores/config.js'
 import { getBasicAuthCookie } from './utils/cookies.js'
 import {
   checkSavedLog,
@@ -46,11 +46,11 @@ import {
   TerminalComponent,
   terminalManager,
   type TerminalActions
-} from './js/components/Terminal'
-import { LoginModal } from './js/components/LoginModal'
-import { ErrorModal, PromptModal } from './js/components/Modal'
-import { TerminalSettingsModal } from './js/components/TerminalSettingsModal'
-import { MenuDropdown } from './js/components/MenuDropdown'
+} from './components/Terminal'
+import { LoginModal } from './components/LoginModal'
+import { ErrorModal, PromptModal } from './components/Modal'
+import { TerminalSettingsModal } from './components/TerminalSettingsModal'
+import { MenuDropdown } from './components/MenuDropdown'
 
 // Import socket service
 import {
@@ -69,7 +69,6 @@ import type { ITerminalOptions } from '@xterm/xterm'
 // Import CSS
 import './app.css'
 import '@xterm/xterm/css/xterm.css'
-import './css/icons.css'
 
 const debug = createDebug('webssh2-client:app')
 
@@ -88,9 +87,7 @@ const App: Component = () => {
   onMount(async () => {
     try {
       // This console.log is intentional and should not be changed to debug
-      console.log(
-        `Initializing WebSSH2 client - ${BANNER_STRING}`
-      )
+      console.log(`Initializing WebSSH2 client - ${BANNER_STRING}`)
 
       // Initialize reactive config and URL params
       initializeConfig()
