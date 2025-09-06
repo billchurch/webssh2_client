@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { copyFileSync } from 'fs'
+import solid from 'vite-plugin-solid'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -101,7 +102,12 @@ export default defineConfig(({ mode }) => {
       BANNER_STRING: JSON.stringify(bannerString)
     },
 
-    plugins: [bannerPlugin(), htmlTemplatePlugin(), copyAssetsPlugin()],
+    plugins: [
+      solid(),
+      bannerPlugin(),
+      htmlTemplatePlugin(),
+      copyAssetsPlugin()
+    ],
 
     build: {
       outDir: '../public',
