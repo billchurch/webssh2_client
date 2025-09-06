@@ -89,7 +89,7 @@ const App: Component = () => {
     try {
       // This console.log is intentional and should not be changed to debug
       console.log(
-        `Initializing WebSSH2 client - ${(globalThis as Record<string, unknown>)['BANNER_STRING'] ?? 'undefined'}`
+        `Initializing WebSSH2 client - ${BANNER_STRING}`
       )
 
       // Initialize reactive config and URL params
