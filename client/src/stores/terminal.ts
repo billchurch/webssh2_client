@@ -58,6 +58,19 @@ export const [promptData, setPromptData] = createSignal<{
   prompts: Array<{ prompt: string; echo: boolean }>
 } | null>(null)
 
+// Search state
+export const [isSearchVisible, setIsSearchVisible] = createSignal(false)
+export const [searchTerm, setSearchTerm] = createSignal('')
+export const [searchOptions, setSearchOptions] = createSignal({
+  caseSensitive: false,
+  wholeWord: false,
+  regex: false
+})
+export const [searchResults, setSearchResults] = createSignal({
+  currentIndex: 0,
+  totalMatches: 0
+})
+
 // Utility functions for state management
 export const toggleBooleanState = <K extends keyof AppState>(
   key: K extends keyof AppState

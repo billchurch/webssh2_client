@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js'
 import { createSignal, onCleanup } from 'solid-js'
 import { FitAddon } from '@xterm/addon-fit'
+import { SearchAddon } from '@xterm/addon-search'
 import createDebug from 'debug'
 
 // Import the custom solid-xterm wrapper
@@ -25,6 +26,29 @@ export interface TerminalActions {
   getDimensions: () => { cols: number; rows: number }
   applySettings: (options: Partial<ITerminalOptions>) => void
   getTerminal: () => Terminal | null
+  search: {
+    findNext: (
+      term: string,
+      options?: {
+        caseSensitive?: boolean
+        wholeWord?: boolean
+        regex?: boolean
+      }
+    ) => boolean
+    findPrevious: (
+      term: string,
+      options?: {
+        caseSensitive?: boolean
+        wholeWord?: boolean
+        regex?: boolean
+      }
+    ) => boolean
+    clearSelection: () => void
+    clearDecorations: () => void
+    onSearchResults: (
+      callback: (results: { resultIndex: number; resultCount: number }) => void
+    ) => (() => void) | undefined
+  }
 }
 
 interface TerminalComponentProps {
@@ -37,6 +61,7 @@ interface TerminalComponentProps {
 export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
   const [terminalRef, setTerminalRef] = createSignal<TerminalRef>()
   const [fitAddon, setFitAddon] = createSignal<FitAddon>()
+  const [searchAddon, setSearchAddon] = createSignal<SearchAddon>()
 
   // Get terminal settings based on config
   const getTerminalOptions = (): Partial<ITerminalOptions> => {
@@ -77,7 +102,8 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
         defaultSettings.letterSpacing) as number,
       lineHeight: (storedSettings.lineHeight ??
         terminalConfig.lineHeight ??
-        defaultSettings.lineHeight) as number
+        defaultSettings.lineHeight) as number,
+      allowProposedApi: true // Required for SearchAddon decorations
     }
 
     debug('getTerminalOptions', mergedOptions)
@@ -103,6 +129,11 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
     const fitAddonInstance = new FitAddon()
     setFitAddon(fitAddonInstance)
     terminal.loadAddon(fitAddonInstance)
+
+    // Create and load SearchAddon
+    const searchAddonInstance = new SearchAddon()
+    setSearchAddon(searchAddonInstance)
+    terminal.loadAddon(searchAddonInstance)
 
     // Fit terminal after mount with multiple attempts for proper sizing
     const fitTerminal = () => {
@@ -186,7 +217,77 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
         Object.assign(currentRef.terminal.options, validatedSettings)
         terminalActions.resize()
       },
-      getTerminal: () => terminalRef()?.terminal || null
+      getTerminal: () => terminalRef()?.terminal || null,
+      search: {
+        findNext: (term: string, options = {}) => {
+          const addon = searchAddon()
+          if (addon && term.trim()) {
+            // Enable decorations to trigger onDidChangeResults event
+            // Using border-only highlighting for better accessibility
+            const searchOptions = {
+              ...options,
+              decorations: {
+                // Border-only approach - no backgrounds to avoid color parsing issues
+                matchBorder: '#FFD700', // Gold border for regular matches
+                activeMatchBorder: '#FF4500', // Orange-red border for active match
+                matchOverviewRuler: '#FFD700', // Gold in scrollbar
+                activeMatchColorOverviewRuler: '#FF4500' // Orange-red in scrollbar
+              }
+            }
+            return addon.findNext(term, searchOptions)
+          }
+          return false
+        },
+        findPrevious: (term: string, options = {}) => {
+          const addon = searchAddon()
+          if (addon && term.trim()) {
+            // Enable decorations to trigger onDidChangeResults event
+            // Using border-only highlighting for better accessibility
+            const searchOptions = {
+              ...options,
+              decorations: {
+                // Border-only approach - no backgrounds to avoid color parsing issues
+                matchBorder: '#FFD700', // Gold border for regular matches
+                activeMatchBorder: '#FF4500', // Orange-red border for active match
+                matchOverviewRuler: '#FFD700', // Gold in scrollbar
+                activeMatchColorOverviewRuler: '#FF4500' // Orange-red in scrollbar
+              }
+            }
+            return addon.findPrevious(term, searchOptions)
+          }
+          return false
+        },
+        clearSelection: () => {
+          const currentRef = terminalRef()
+          if (currentRef?.terminal) {
+            currentRef.terminal.clearSelection()
+          }
+        },
+        clearDecorations: () => {
+          const addon = searchAddon()
+          if (addon) {
+            addon.clearDecorations()
+          }
+        },
+        onSearchResults: (
+          callback: (results: {
+            resultIndex: number
+            resultCount: number
+          }) => void
+        ) => {
+          const addon = searchAddon()
+          if (addon && addon.onDidChangeResults) {
+            try {
+              // The onDidChangeResults is an IEvent interface that returns a disposable
+              const disposable = addon.onDidChangeResults(callback)
+              return () => disposable?.dispose?.()
+            } catch (error) {
+              console.warn('Could not set up search results listener:', error)
+            }
+          }
+          return undefined
+        }
+      }
     }
 
     // Notify parent with reactive actions

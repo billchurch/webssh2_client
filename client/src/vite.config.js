@@ -114,15 +114,22 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: true,
 
       rollupOptions: {
-        input: 'index.html',
+        input: {
+          main: 'index.html'
+        },
         output: {
-          entryFileNames: 'webssh2.bundle.js',
+          entryFileNames: (chunkInfo) => {
+            return chunkInfo.name === 'main' ? 'webssh2.bundle.js' : '[name].bundle.js'
+          },
           chunkFileNames: '[name]-[hash].js',
           assetFileNames: (assetInfo) => {
             if (
               assetInfo.name === 'style.css' ||
               assetInfo.name === 'index.css'
             ) {
+              return 'webssh2.css'
+            }
+            if (assetInfo.name && assetInfo.name.startsWith('main') && assetInfo.name.endsWith('.css')) {
               return 'webssh2.css'
             }
             return '[name][extname]'

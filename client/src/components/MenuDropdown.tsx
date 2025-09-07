@@ -2,7 +2,16 @@ import type { Component } from 'solid-js'
 import { createSignal, Show, onMount, onCleanup } from 'solid-js'
 import { state } from '../stores/terminal.js'
 import { hasLogData } from '../services/logging.js'
-import { Menu, Trash2, Settings, Clipboard, Download, Key } from 'lucide-solid'
+import { getSearchShortcut } from '../utils/os-detection'
+import {
+  Menu,
+  Trash2,
+  Settings,
+  Clipboard,
+  Download,
+  Key,
+  Search
+} from 'lucide-solid'
 
 interface MenuDropdownProps {
   onClearLog?: () => void
@@ -12,6 +21,7 @@ interface MenuDropdownProps {
   onReplayCredentials?: () => void
   onReauth?: () => void
   onTerminalSettings?: () => void
+  onSearch?: () => void
 }
 
 export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
@@ -89,6 +99,18 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
           role="menu"
           aria-orientation="vertical"
         >
+          {/* Search Button */}
+          <button
+            type="button"
+            class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+            onClick={handleMenuItemClick(props.onSearch || (() => {}))}
+            role="menuitem"
+            title={`Search terminal (${getSearchShortcut().displayText})`}
+          >
+            <Search class="inline-block size-5" /> Search (
+            {getSearchShortcut().displayText})
+          </button>
+
           {/* Clear Log Button */}
           <Show when={hasLogData()}>
             <button
