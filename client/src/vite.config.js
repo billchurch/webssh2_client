@@ -119,7 +119,9 @@ export default defineConfig(({ mode }) => {
         },
         output: {
           entryFileNames: (chunkInfo) => {
-            return chunkInfo.name === 'main' ? 'webssh2.bundle.js' : '[name].bundle.js'
+            return chunkInfo.name === 'main'
+              ? 'webssh2.bundle.js'
+              : '[name].bundle.js'
           },
           chunkFileNames: '[name]-[hash].js',
           assetFileNames: (assetInfo) => {
@@ -129,7 +131,11 @@ export default defineConfig(({ mode }) => {
             ) {
               return 'webssh2.css'
             }
-            if (assetInfo.name && assetInfo.name.startsWith('main') && assetInfo.name.endsWith('.css')) {
+            if (
+              assetInfo.name &&
+              assetInfo.name.startsWith('main') &&
+              assetInfo.name.endsWith('.css')
+            ) {
               return 'webssh2.css'
             }
             return '[name][extname]'

@@ -1,1 +1,1 @@
-{"root":["./index.ts","./client/index.ts","./types/express-lite.d.ts"],"version":"5.9.2"}
+{"root":["./csp-config.ts","./index.ts","./client/index.ts","./types/express-lite.d.ts"],"version":"5.9.2"}

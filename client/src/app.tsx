@@ -175,7 +175,7 @@ const App: Component = () => {
           if (actions) {
             // Clear search decorations/highlights
             actions.search.clearDecorations()
-            
+
             // Use requestAnimationFrame to ensure DOM cleanup before focusing
             requestAnimationFrame(() => {
               actions.focus()
