@@ -2,11 +2,7 @@ import forms from '@tailwindcss/forms'
 
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    './**/*.{js,ts,jsx,tsx}',
-    './**/*.html',
-    '../public/*.html'
-  ],
+  content: ['./**/*.{js,ts,jsx,tsx}', './**/*.html', '../public/*.html'],
   safelist: [
     // Status colors (existing)
     'bg-green-500',

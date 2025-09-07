@@ -103,7 +103,9 @@ export const configWithUrlOverrides = createRoot(() =>
       urlOverrides.autoConnect = true
       debug('Auto-connect enabled: host and credentials provided via URL')
     } else if (host && !password && !privateKey) {
-      debug('Auto-connect disabled: host provided but missing credentials (password or privateKey)')
+      debug(
+        'Auto-connect disabled: host provided but missing credentials (password or privateKey)'
+      )
     }
 
     const mergedConfig = mergeDeep(baseConfig, urlOverrides) as WebSSH2Config

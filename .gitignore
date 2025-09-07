@@ -107,3 +107,4 @@ credentials.json
 client/public
 
 .playwright-mcp/
+client/public

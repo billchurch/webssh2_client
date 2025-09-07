@@ -73,7 +73,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
       // Small delay to ensure DOM is ready
       setTimeout(() => {
         const data = formData()
-        
+
         // Priority order: host → port → username → password
         if (!data.host || data.host.trim() === '') {
           hostInputRef?.focus()
