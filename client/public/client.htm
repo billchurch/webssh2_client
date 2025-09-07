@@ -1,12 +1,19 @@
-<!-- Version Version 2.0.0-alpha.0 - 2025-09-07T00:42:37.594Z - 41f0086 -->
+<!-- Version Version 2.0.0-alpha.0 - 2025-09-07T01:35:23.837Z - c67c208 -->
 <!-- webssh2-client -->
 <!-- /client/src/client.htm -->
 <!DOCTYPE html>
-<html lang="en" class="h-dvh">
+<html lang="en" class="h-dvh bg-black">
   <head>
     <title>WebSSH2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <style>
+      /* Prevent white flash during initial load */
+      html, body, #app {
+        background-color: #000 !important;
+        color: #f5f5f5 !important;
+      }
+    </style>
     <script type="module" crossorigin src="./webssh2.bundle.js"></script>
     <link rel="stylesheet" crossorigin href="./webssh2.css">
   </head>
