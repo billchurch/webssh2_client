@@ -20,14 +20,14 @@ App.tsx
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
-| `client/src/components/TerminalSearch.tsx` | Search UI component with Tailwind styling |
-| `client/src/components/Terminal.tsx` | Terminal component with SearchAddon integration |
-| `client/src/components/MenuDropdown.tsx` | Menu integration with search option |
-| `client/src/utils/os-detection.ts` | Cross-platform OS detection and keyboard shortcuts |
-| `client/src/stores/terminal.ts` | Reactive state management for search |
-| `client/src/app.tsx` | Global keyboard handler and component coordination |
+| File                                       | Purpose                                            |
+| ------------------------------------------ | -------------------------------------------------- |
+| `client/src/components/TerminalSearch.tsx` | Search UI component with Tailwind styling          |
+| `client/src/components/Terminal.tsx`       | Terminal component with SearchAddon integration    |
+| `client/src/components/MenuDropdown.tsx`   | Menu integration with search option                |
+| `client/src/utils/os-detection.ts`         | Cross-platform OS detection and keyboard shortcuts |
+| `client/src/stores/terminal.ts`            | Reactive state management for search               |
+| `client/src/app.tsx`                       | Global keyboard handler and component coordination |
 
 ## Technical Implementation
 
@@ -75,7 +75,9 @@ interface TerminalActions {
     findPrevious: (term: string, options?: SearchOptions) => boolean
     clearSelection: () => void
     clearDecorations: () => void
-    onSearchResults: (callback: (results: SearchResultsEvent) => void) => (() => void) | undefined
+    onSearchResults: (
+      callback: (results: SearchResultsEvent) => void
+    ) => (() => void) | undefined
   }
 }
 ```
@@ -113,7 +115,7 @@ Cross-platform keyboard shortcuts are implemented with OS detection:
 // utils/os-detection.ts
 const getSearchShortcut = (): KeyboardShortcut => {
   const os = getOS()
-  
+
   switch (os) {
     case 'macOS':
       return {
@@ -140,6 +142,7 @@ const getSearchShortcut = (): KeyboardShortcut => {
 The main search UI component (`client/src/components/TerminalSearch.tsx`) features:
 
 #### Key Features
+
 - **Reactive UI**: Auto-focuses input when opened
 - **Live Search**: Updates results as user types
 - **Match Navigation**: Next/previous buttons and keyboard shortcuts
@@ -283,7 +286,10 @@ const getOS = (): OSType => {
 
   const { userAgent, platform } = window.navigator
 
-  if (/Mac|iPhone|iPod|iPad/i.test(platform) || /Mac|iPhone|iPod|iPad/i.test(userAgent)) {
+  if (
+    /Mac|iPhone|iPod|iPad/i.test(platform) ||
+    /Mac|iPhone|iPod|iPad/i.test(userAgent)
+  ) {
     return 'macOS'
   }
   // ... other platform checks
@@ -316,11 +322,11 @@ The app.tsx manages global keyboard shortcuts:
 ```typescript
 const handleKeydown = (event: KeyboardEvent) => {
   const searchShortcut = getSearchShortcut()
-  
+
   if (matchesShortcut(event, searchShortcut)) {
     event.preventDefault()
     event.stopPropagation()
-    
+
     const wasVisible = isSearchVisible()
     setIsSearchVisible(!wasVisible)
 
@@ -371,7 +377,7 @@ The xterm.js SearchAddon is optimized for terminal content searching and handles
 ### Platform Testing
 
 - [ ] Windows: Ctrl+F shortcut
-- [ ] macOS: ⌘F shortcut  
+- [ ] macOS: ⌘F shortcut
 - [ ] Linux: Ctrl+F shortcut
 - [ ] Mobile: Menu access
 
@@ -420,7 +426,7 @@ const searchOptions = {
   ...options,
   decorations: {
     matchBackground: '#ffff00',
-    activeMatchBackground: '#ff4500', 
+    activeMatchBackground: '#ff4500',
     matchBorder: '#000000',
     activeMatchBorder: '#000000',
     matchOverviewRuler: '#ffff00',
@@ -444,7 +450,7 @@ This enables visual highlighting of matches while also making the result counter
 The original documentation suggested using CSS rules to target text spans by their background color:
 
 ```css
-.xterm-rows span[style*="background-color: rgb(255, 255, 0)"] {
+.xterm-rows span[style*='background-color: rgb(255, 255, 0)'] {
   color: #000000 !important;
 }
 ```
@@ -454,7 +460,7 @@ The original documentation suggested using CSS rules to target text spans by the
 **Attempt 2: Lighter Background Colors**
 Changed decoration colors from high-contrast dark colors to lighter, more subtle colors:
 
-- Original: `#ffff00` (yellow) and `#ff4500` (orange-red)  
+- Original: `#ffff00` (yellow) and `#ff4500` (orange-red)
 - Updated: `#4da6ff` (light blue) and `#ff6b9d` (light pink)
 
 ```typescript
@@ -475,6 +481,7 @@ decorations: {
 The border-only approach was successfully implemented to solve all text visibility issues:
 
 **Implementation Details:**
+
 ```typescript
 // In Terminal.tsx
 decorations: {
@@ -490,6 +497,7 @@ decorations: {
 **Important Note**: The background properties (`matchBackground` and `activeMatchBackground`) must be omitted entirely, not set to `'transparent'` or any other invalid value. Setting them to `'transparent'` causes xterm.js to throw "css.toColor: Unsupported css format" errors.
 
 **CSS Enhancement:**
+
 ```css
 /* Optional glow effects for better visibility */
 .xterm-decoration.xterm-find-result-decoration {
@@ -502,6 +510,7 @@ decorations: {
 ```
 
 **Benefits of Border-Only Approach:**
+
 1. **Perfect Accessibility**: No text contrast issues with any terminal theme
 2. **Clear Visual Distinction**: Gold borders for matches, orange-red for active match
 3. **Universal Compatibility**: Works with both dark and light terminal themes
@@ -521,7 +530,7 @@ The search functionality (counter, navigation, highlighting) now works perfectly
 const actions = props.terminalActions
 if (actions) {
   actions.search.clearDecorations()
-  
+
   requestAnimationFrame(() => {
     actions.focus()
   })

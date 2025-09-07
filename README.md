@@ -249,7 +249,7 @@ via-yellow-500, via-pink-500, via-purple-500, via-blue-500
 
 ```
 # Sizes: text-xs, text-sm, text-base, text-lg, text-xl, text-2xl, text-3xl, text-4xl
-# Weights: font-normal, font-medium, font-semibold, font-bold, font-black  
+# Weights: font-normal, font-medium, font-semibold, font-bold, font-black
 # Colors: text-white, text-black, text-yellow-100, text-blue-100, text-red-100, text-green-100, text-gray-100
 # Alignment: text-center, text-left
 
@@ -265,7 +265,7 @@ text-4xl font-black text-yellow-100
 # Available: h-4, h-5, h-6, h-7, h-8, h-10, h-12, h-14, h-16
 # Default was h-6 (24px), now customizable
 
-h-5     # Very compact header  
+h-5     # Very compact header
 h-8     # Compact header
 h-12    # Standard header
 h-16    # Prominent header

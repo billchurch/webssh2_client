@@ -15,15 +15,15 @@ const searchOptions = {
   wholeWord: false,
   regex: false,
   decorations: {
-    matchBackground: '#ffff00',         // Background for all matches (yellow)
-    activeMatchBackground: '#ff4500',   // Background for the current match (orange-red)
-    matchBorder: '#000000',             // (Optional) border around matches (black)
-    activeMatchBorder: '#000000',       // (Optional) border around the active match
-    matchOverviewRuler: '#ffff00',      // (Optional) marker color in scroll bar for matches
+    matchBackground: '#ffff00', // Background for all matches (yellow)
+    activeMatchBackground: '#ff4500', // Background for the current match (orange-red)
+    matchBorder: '#000000', // (Optional) border around matches (black)
+    activeMatchBorder: '#000000', // (Optional) border around the active match
+    matchOverviewRuler: '#ffff00', // (Optional) marker color in scroll bar for matches
     activeMatchColorOverviewRuler: '#ff4500' // (Optional) marker color for active match
   }
-};
-searchAddon.findNext(term, searchOptions);
+}
+searchAddon.findNext(term, searchOptions)
 ```
 
 In the snippet above, we define distinct colors for normal vs. active match highlights. The matchBackground and activeMatchBackground ensure that all matches are highlighted (yellow) and the currently selected match is highlighted in a different color (orange-red), making it clearly distinguishable. We also included matchBorder and activeMatchBorder as black – this draws a thin outline around highlight blocks to further improve visibility (this is optional, but can help the highlight stand out, especially if the terminal background is similar to the highlight color). The overviewRuler colors are for the mini-map scrollbar indicator (also optional).
@@ -40,12 +40,12 @@ Solution: Add global CSS rules that target the highlighted spans and override th
 
 ```css
 /* Force black text for spans highlighted with yellow background */
-.xterm-rows span[style*="background-color: #ffff00"] {
+.xterm-rows span[style*='background-color: #ffff00'] {
   color: #000000 !important;
 }
 
 /* Force white text for spans highlighted with orange-red background */
-.xterm-rows span[style*="background-color: #ff4500"] {
+.xterm-rows span[style*='background-color: #ff4500'] {
   color: #ffffff !important;
 }
 ```
@@ -59,15 +59,15 @@ Targeting Both Active and Inactive Matches: We included two separate CSS rules �
 ## Integrating the Fix with Tailwind CSS and SolidJS
 
 In a Tailwind + SolidJS project, you typically have a global CSS (or Tailwind’s base layer) where you can put these custom styles. Since Tailwind is a utility-first framework, there isn’t a built-in utility for “highlighted text in xterm,” but we can still integrate our fix easily:
- • Option 1: Add to Global CSS – Simply put the CSS override rules in a global stylesheet (e.g. app.css or wherever you include global styles in your SolidJS app). This file can be processed by Tailwind (you might already @import "tailwind.css"; in it). The example above shows adding it to an app.css file. You can write the CSS as shown; Tailwind will pass it through since it’s plain CSS. Ensure this file is included in your build so the styles apply to the .xterm-rows elements.
- • Option 2: Use Tailwind’s @apply (if desired) – If you prefer to stay within Tailwind’s utility system, you could incorporate the same rules using Tailwind classes. For instance, in your Tailwind CSS file, you can use the @layer base or @layer utilities to append custom CSS:
+• Option 1: Add to Global CSS – Simply put the CSS override rules in a global stylesheet (e.g. app.css or wherever you include global styles in your SolidJS app). This file can be processed by Tailwind (you might already @import "tailwind.css"; in it). The example above shows adding it to an app.css file. You can write the CSS as shown; Tailwind will pass it through since it’s plain CSS. Ensure this file is included in your build so the styles apply to the .xterm-rows elements.
+• Option 2: Use Tailwind’s @apply (if desired) – If you prefer to stay within Tailwind’s utility system, you could incorporate the same rules using Tailwind classes. For instance, in your Tailwind CSS file, you can use the @layer base or @layer utilities to append custom CSS:
 
 ```css
 @layer base {
-  .xterm-rows span[style*="background-color: #ffff00"] {
+  .xterm-rows span[style*='background-color: #ffff00'] {
     @apply text-black !important;
   }
-  .xterm-rows span[style*="background-color: #ff4500"] {
+  .xterm-rows span[style*='background-color: #ff4500'] {
     @apply text-white !important;
   }
 }
@@ -85,9 +85,11 @@ To use this, you would configure your Terminal instance like:
 
 ```js
 const term = new Terminal({
-  theme: { /*...your theme...*/ },
-  minimumContrastRatio: 7  // for example, enforce very high contrast (AAA standard)
-});
+  theme: {
+    /*...your theme...*/
+  },
+  minimumContrastRatio: 7 // for example, enforce very high contrast (AAA standard)
+})
 ```
 
 This is a more global solution – it will affect all text rendering in the terminal, not just search highlights. It can be useful for accessibility as it ensures no combination of text/background falls below the given contrast ratio. However, be cautious: it might alter colors in other scenarios (for example, dim text on certain backgrounds might get boosted). If your only issue is the search highlight contrast, you might prefer the targeted CSS fix above. But it’s good to know this setting exists as a complementary approach to improve text visibility.
