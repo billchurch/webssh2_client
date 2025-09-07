@@ -496,7 +496,7 @@ const App: Component = () => {
         <Show
           when={config()}
           fallback={
-            <div class="flex flex-1 items-center justify-center">
+            <div class="flex flex-1 items-center justify-center bg-black">
               <div class="text-neutral-400">Initializing...</div>
             </div>
           }

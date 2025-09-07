@@ -38,6 +38,12 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   const [showPrivateKeySection, setShowPrivateKeySection] = createSignal(false)
   const [capsLockActive, setCapsLockActive] = createSignal(false)
 
+  // Refs for input elements
+  let hostInputRef: HTMLInputElement | undefined
+  let portInputRef: HTMLInputElement | undefined
+  let usernameInputRef: HTMLInputElement | undefined
+  let passwordInputRef: HTMLInputElement | undefined
+
   // Reactive private key validation
   const privateKeyValidation = usePrivateKeyValidation(
     () => formData().privateKey || ''
@@ -58,6 +64,33 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   createEffect(() => {
     if (props.initialValues) {
       setFormData((prev) => ({ ...prev, ...props.initialValues }))
+    }
+  })
+
+  // Auto-focus on the first empty field when modal opens
+  createEffect(() => {
+    if (props.isOpen) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        const data = formData()
+        
+        // Priority order: host → port → username → password
+        if (!data.host || data.host.trim() === '') {
+          hostInputRef?.focus()
+          debug('Auto-focused host field')
+        } else if (!data.port || data.port === 0) {
+          // Port is unlikely to be empty since default is 22, but check if it's actually empty/0
+          portInputRef?.focus()
+          debug('Auto-focused port field')
+        } else if (!data.username || data.username.trim() === '') {
+          usernameInputRef?.focus()
+          debug('Auto-focused username field')
+        } else {
+          // Default to password field if host and username are filled
+          passwordInputRef?.focus()
+          debug('Auto-focused password field')
+        }
+      }, 100)
     }
   })
 
@@ -129,6 +162,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
               Host
             </label>
             <input
+              ref={hostInputRef}
               type="text"
               id="hostInput"
               name="host"
@@ -150,6 +184,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
               Port
             </label>
             <input
+              ref={portInputRef}
               type="text"
               id="portInput"
               name="port"
@@ -177,6 +212,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
               Username
             </label>
             <input
+              ref={usernameInputRef}
               type="text"
               id="usernameInput"
               name="username"
@@ -198,6 +234,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
               Password
             </label>
             <input
+              ref={passwordInputRef}
               type="password"
               id="passwordInput"
               name="password"

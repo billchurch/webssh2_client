@@ -98,10 +98,12 @@ export const configWithUrlOverrides = createRoot(() =>
       }
     }
 
-    // Auto-connect if host is provided in URL
-    if (host) {
+    // Auto-connect only if host and credentials are provided in URL
+    if (host && (password || privateKey)) {
       urlOverrides.autoConnect = true
-      debug('Auto-connect enabled due to URL host parameter')
+      debug('Auto-connect enabled: host and credentials provided via URL')
+    } else if (host && !password && !privateKey) {
+      debug('Auto-connect disabled: host provided but missing credentials (password or privateKey)')
     }
 
     const mergedConfig = mergeDeep(baseConfig, urlOverrides) as WebSSH2Config
