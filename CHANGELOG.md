@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-alpha.4](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.1...v2.0.0-alpha.4) (2025-09-07)
+
+
+### chore
+
+* release 2.0.0-alpha.4 ([02b1c69](https://github.com/billchurch/webssh2_client/commit/02b1c6961fa352501919581a42db24e9eeb24107))
+
+
+### Features
+
+* implement terminal search with xterm.js SearchAddon ([6542091](https://github.com/billchurch/webssh2_client/commit/6542091233090bb78b7681ad55c9ff7871d21a28))
+* implement terminal search with xterm.js SearchAddon ([42b6f7d](https://github.com/billchurch/webssh2_client/commit/42b6f7d67532518c272c2155754907084dc94324))
+
 ## [2.0.0-alpha.1](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.1...v2.0.0-alpha.1) (2025-09-07)
 
 
