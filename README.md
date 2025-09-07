@@ -60,6 +60,14 @@ For server setup instructions, refer to the [WebSSH2 server documentation](https
 ## Client Features
 
 - Web-based SSH client with xterm.js terminal emulation
+- **Terminal Search Functionality:**
+  - Real-time search with live match highlighting
+  - Case-sensitive and regex search options
+  - Whole word matching
+  - Match counter (current/total)
+  - OS-aware keyboard shortcuts (Ctrl+F on Windows/Linux, ⌘F on macOS)
+  - Navigation with Enter/Shift+Enter or arrow buttons
+  - F3/Shift+F3 for quick match navigation
 - Customizable terminal settings:
   - Font size and family
   - Color schemes
@@ -221,21 +229,29 @@ For backward compatibility, the original `headerBackground` parameter is still s
 
 ```
 # Solid Colors
-bg-red-600, bg-blue-500, bg-green-500, bg-yellow-500, bg-purple-500
-bg-slate-700, bg-gray-800
+bg-red-500, bg-red-600, bg-blue-500, bg-blue-600, bg-green-500, bg-yellow-500
+bg-purple-500, bg-pink-500, bg-indigo-500, bg-cyan-500, bg-emerald-500, bg-slate-700
 
-# Gradients (Direction + Colors)
-bg-gradient-to-r from-red-600 to-red-700
-bg-gradient-to-br from-purple-500 via-pink-500 to-yellow-400
-bg-gradient-to-tl from-blue-400 to-cyan-500
+# Gradients (All 8 Directions Available)
+bg-gradient-to-r, bg-gradient-to-l, bg-gradient-to-t, bg-gradient-to-b
+bg-gradient-to-tr, bg-gradient-to-tl, bg-gradient-to-br, bg-gradient-to-bl
+
+# Color Ranges (from/to/via)
+from-red-500 to from-red-700, from-blue-500 to from-blue-700
+from-green-500 to from-green-700, from-yellow-400 to from-yellow-500
+from-orange-400 to from-orange-500, from-purple-500 to from-purple-600
+from-indigo-500 to from-indigo-600, from-pink-500 to from-pink-600
+from-cyan-400 to from-cyan-500, from-emerald-500, from-teal-500, from-slate-700
+via-yellow-500, via-pink-500, via-purple-500, via-blue-500
 ```
 
 **📝 Text Styling**
 
 ```
 # Sizes: text-xs, text-sm, text-base, text-lg, text-xl, text-2xl, text-3xl, text-4xl
-# Weights: font-normal, font-medium, font-semibold, font-bold, font-black
-# Colors: text-white, text-black, text-yellow-100, text-red-100, text-blue-100
+# Weights: font-normal, font-medium, font-semibold, font-bold, font-black  
+# Colors: text-white, text-black, text-yellow-100, text-blue-100, text-red-100, text-green-100, text-gray-100
+# Alignment: text-center, text-left
 
 # Examples
 text-2xl font-bold text-white
@@ -249,6 +265,7 @@ text-4xl font-black text-yellow-100
 # Available: h-4, h-5, h-6, h-7, h-8, h-10, h-12, h-14, h-16
 # Default was h-6 (24px), now customizable
 
+h-5     # Very compact header  
 h-8     # Compact header
 h-12    # Standard header
 h-16    # Prominent header
@@ -262,22 +279,26 @@ animate-pulse    # Pulsing effect for alerts
 animate-bounce   # Bouncing for urgent notifications
 
 # Shadows
-shadow-md, shadow-lg, shadow-xl
+shadow, shadow-md, shadow-lg, shadow-xl
 
 # Borders
-border-2 border-white border-dashed
-rounded-lg, rounded-xl
+border, border-2, border-4
+border-red-500, border-blue-500, border-white
+border-dashed, border-solid
+
+# Border Radius
+rounded, rounded-lg, rounded-xl
 ```
 
 **📍 Layout & Positioning**
 
 ```
 # Text Alignment
-text-left, text-center, text-right
+text-left, text-center
 
-# Spacing
-px-4, px-6 (horizontal padding)
-py-2, py-3 (vertical padding)
+# Spacing (Padding)
+px-2, px-4, px-6 (horizontal padding)
+py-1, py-2, py-3 (vertical padding)
 
 # Flexbox (for complex layouts)
 flex items-center justify-center
@@ -317,10 +338,10 @@ bg-purple-600 rounded-lg h-10 font-semibold
 
 **⚡ Quick Reference:**
 
-- **Colors**: red, blue, green, yellow, purple, pink, cyan, emerald, slate, gray
-- **Shades**: 400 (lighter), 500 (medium), 600 (darker), 700 (darkest common)
+- **Solid Colors**: red-500/600, blue-500/600, green-500, yellow-500, purple-500, pink-500, indigo-500, cyan-500, emerald-500, slate-700
+- **Gradient Colors**: Full range 400-700 for red/blue/green, 400-500 for yellow/orange, 500-600 for purple/indigo/pink, etc.
 - **Text sizes**: xs, sm, base, lg, xl, 2xl, 3xl, 4xl
-- **Heights**: 4-16 (h-4 = 16px, h-16 = 64px)
+- **Heights**: 4, 5, 6, 7, 8, 10, 12, 14, 16 (h-4 = 16px, h-16 = 64px)
 - **Combine freely**: `bg-blue-500 h-12 text-xl font-bold animate-pulse shadow-lg`
 
 ##### Styling System Features
@@ -338,7 +359,7 @@ The system automatically detects whether you're using:
 - **Layout:** Heights, padding, margins, flexbox
 - **Borders:** Styles, colors, radius
 - **Effects:** Shadows, animations
-- **Bundle Optimized:** Curated safelist keeps CSS file size reasonable (~38KB)
+- **Bundle Optimized:** Curated safelist keeps CSS file size reasonable (~33KB)
 
 **Backward Compatibility:**
 
