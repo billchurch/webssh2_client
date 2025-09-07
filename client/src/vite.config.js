@@ -43,7 +43,7 @@ function copyAssetsPlugin() {
     name: 'copy-assets',
     writeBundle() {
       // Copy favicon
-      const faviconSource = path.resolve(__dirname, 'favicon.ico')
+      const faviconSource = path.resolve(__dirname, './favicon.ico')
       const faviconDest = path.resolve(__dirname, '../public/favicon.ico')
 
       if (fs.existsSync(faviconSource)) {
@@ -176,7 +176,7 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src')
+        '@': path.resolve(__dirname, './')
       }
     },
 

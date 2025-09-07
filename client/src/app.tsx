@@ -68,7 +68,6 @@ import type { ITerminalOptions } from '@xterm/xterm'
 
 // Import CSS
 import './app.css'
-import '@xterm/xterm/css/xterm.css'
 
 const debug = createDebug('webssh2-client:app')
 
