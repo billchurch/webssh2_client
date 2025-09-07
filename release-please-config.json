@@ -6,7 +6,8 @@
       "monorepo-tags": false,
       "include-component-in-tag": false,
       "prerelease": true,
-      "prerelease-type": "alpha"
+      "prerelease-type": "alpha",
+      "last-release-sha": "2b8b4a3bf30b4bd6b5d25e65b1166fbe5fdba17b"
     }
   }
 }
