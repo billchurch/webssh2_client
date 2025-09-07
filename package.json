@@ -1,6 +1,6 @@
 {
   "name": "webssh2_client",
-  "version": "1.0.0-alpha.1",
+  "version": "2.0.0-alpha.0",
   "ignore": [
     ".gitignore"
   ],
@@ -22,20 +22,23 @@
   "scripts": {
     "build": "cd client/src && vite build --mode production",
     "builddev": "cd client/src && vite build --mode development",
+    "build:link": "npm run build && npm link",
+    "check-version": "grep -o 'Version.*alpha.*[0-9]' client/public/webssh2.bundle.js || echo 'Version not found in bundle'",
     "dev": "cd client/src && vite --mode development",
     "watch": "cd client/src && vite --mode development",
     "analyze": "cd client/src && vite build --mode production && vite-bundle-visualizer",
     "typecheck": "tsc -b --pretty --noEmit",
-    "typecheck:client": "tsc -p client/tsconfig.json --pretty --noEmit",
+    "typecheck:client": "tsc -p client --noEmit",
     "build:server": "tsc -p tsconfig.json",
-    "lint": "eslint . --ext .js,.ts",
-    "lint:fix": "eslint . --ext .js,.ts --fix",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.ts,.tsx --fix",
+    "lint:tailwind": "eslint client/src/js/components --ext .tsx --no-eslintrc --parser @typescript-eslint/parser --plugin tailwindcss --rule 'tailwindcss/classnames-order: warn' --rule 'tailwindcss/no-contradicting-classname: error' --rule 'tailwindcss/no-custom-classname: warn' --rule 'tailwindcss/migration-from-tailwind-2: warn'",
     "lint:html": "html-validate \"client/src/**/*.html\"",
     "lint:css": "stylelint \"client/src/**/*.css\"",
     "lint:css:fix": "stylelint \"client/src/**/*.css\" --fix",
     "a11y:axe": "npx --no-install axe http://localhost:3000",
-    "format": "prettier --check \"**/*.{js,ts,json,md}\"",
-    "format:write": "prettier --write \"**/*.{js,ts,json,md}\"",
+    "format": "prettier --check \"**/*.{js,ts,tsx,json,md}\"",
+    "format:write": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
     "publish:dry-run": "npm publish --dry-run",
     "publish:npm": "npm publish",
     "test": "node --test",
@@ -44,36 +47,37 @@
   "author": "",
   "license": "SEE LICENSE IN FILE - LICENSE",
   "devDependencies": {
-    "jest-axe": "^10.0.0",
     "@axe-core/cli": "^4.10.2",
-    "html-validate": "^10.0.0",
-    "stylelint": "^16.23.1",
-    "stylelint-config-standard": "^39.0.0",
-    "autoprefixer": "^10.4.21",
+    "@rollup/plugin-terser": "^0.4.4",
     "@tailwindcss/forms": "^0.5.10",
-    "jsmasker": "^2.0.0",
-    "eslint-plugin-no-unsanitized": "^4.1.2",
+    "@types/node": "^24.3.1",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
-    "@types/node": "^24.3.1",
-    "typescript": "^5.9.2",
-    "@rollup/plugin-terser": "^0.4.4",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
+    "autoprefixer": "^10.4.21",
     "conventional-changelog-cli": "^5.0.0",
     "debug": "^4.4.1",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-no-unsanitized": "^4.1.4",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-tailwindcss": "^3.18.2",
+    "html-validate": "^10.0.0",
+    "jest-axe": "^10.0.0",
     "jsdom": "^26.1.0",
-    "lucide-static": "^0.542.0",
-    "prettier": "^3.6.2",
-    "socket.io-client": "^4.8.1",
-    "vite": "^7.1.4",
-    "vite-bundle-visualizer": "^1.2.1",
+    "jsmasker": "^2.0.0",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.13"
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "socket.io-client": "^4.8.1",
+    "stylelint": "^16.23.1",
+    "stylelint-config-standard": "^39.0.0",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.4",
+    "vite-bundle-visualizer": "^1.2.1"
   },
   "config": {
     "commitizen": {
@@ -85,8 +89,12 @@
       "client/public/**/*"
     ]
   },
-  "dependencies": {},
+  "dependencies": {
+    "lucide-solid": "^0.542.0",
+    "solid-js": "^1.9.9",
+    "vite-plugin-solid": "^2.11.8"
+  },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.24.0"
+    "@rollup/rollup-linux-x64-gnu": "^4.5.0"
   }
 }

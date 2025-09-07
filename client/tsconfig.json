@@ -7,8 +7,10 @@
     "moduleResolution": "bundler",
     "types": ["vite/client"],
     "rootDir": "./src",
-    "outDir": "./.tsbuild"
+    "outDir": "./.tsbuild",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js"
   },
-  "include": ["src/**/*.ts", "src/types/**/*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/types/**/*.d.ts"],
   "exclude": ["public", "../node_modules"]
 }

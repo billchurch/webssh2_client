@@ -9,9 +9,7 @@ if (isMainModule) {
   const expressModule = (await import('express')).default
   const app = expressModule()
   // Security headers middleware
-  const { securityHeadersMiddleware } = await import(
-    './client/src/js/csp-config.js'
-  )
+  const { securityHeadersMiddleware } = await import('./csp-config.js')
   const port = 3000
   app.use(securityHeadersMiddleware)
   app.use(expressModule.static(path.join(__dirname, 'client/public')))

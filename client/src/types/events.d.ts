@@ -19,10 +19,10 @@ export interface PermissionsPayload {
 
 // Client → Server
 export interface ClientAuthenticatePayload {
-  username: string
-  password: string
-  host: string
-  port: number
+  username?: string
+  password?: string
+  host?: string
+  port?: number
   term?: string
   cols?: number
   rows?: number

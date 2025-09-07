@@ -2,147 +2,23 @@
 <!-- webssh2-client -->
 <!-- /client/src/client.htm -->
 <!DOCTYPE html>
-<html lang="en" class="h-dvh">
+<html lang="en" class="h-dvh bg-black">
   <head>
     <title>WebSSH2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <script type="module" src="./js/index.ts"></script>
+    <style>
+      /* Prevent white flash during initial load */
+      html, body, #app {
+        background-color: #000 !important;
+        color: #f5f5f5 !important;
+      }
+    </style>
+    <script type="module" src="./index.tsx"></script>
   </head>
   <body class="h-dvh overflow-hidden bg-black text-neutral-100">
-    <dialog id="loginDialog" class="modal">
-      <div class="modal-content relative bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-6 w-80 sm:w-[28rem]">
-        <h2 class="text-lg font-semibold text-slate-900 mb-2">WebSSH2 Login</h2>
-        <form id="loginForm" class="space-y-3">
-          <label for="hostInput" class="sr-only">Host</label>
-          <input type="text" id="hostInput" name="host" placeholder="Host" required autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-          <label for="portInput" class="sr-only">Port</label>
-          <input type="text" id="portInput" name="port" placeholder="Port" value="22" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" inputmode="numeric" pattern="[0-9]*" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-          <label for="usernameInput" class="sr-only">Username</label>
-          <input type="text" id="usernameInput" name="username" placeholder="Username" required autocomplete="username" autocapitalize="off" spellcheck="false" enterkeyhint="next" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-          <!-- Password section - always visible -->
-          <div class="password-wrapper relative w-full">
-            <label for="passwordInput" class="sr-only">Password</label>
-            <input type="password" id="passwordInput" name="password" placeholder="Password" autocomplete="current-password" autocapitalize="off" spellcheck="false" enterkeyhint="go" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            <span id="capsLockIcon" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">⇪</span>
-          </div>
-
-          <!-- Options row: Add SSH Key + Options -->
-          <div class="flex items-center justify-between gap-2">
-            <div class="private-key-toggle">
-              <button type="button" id="privateKeyToggle" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
-                <i data-icon="key" class="icon-fw"></i> Add SSH Key
-              </button>
-            </div>
-            <div>
-              <button type="button" id="loginSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm" aria-label="Options" title="Options">
-                <i data-icon="settings" class="icon-fw"></i> Options
-              </button>
-            </div>
-          </div>
-
-          <!-- Private key section (initially hidden) -->
-          <div id="privateKeySection" class="hidden">
-            <div class="private-key-input mt-2 p-3 rounded border border-neutral-300 bg-neutral-50 text-neutral-800">
-              <label for="privateKeyText" class="sr-only">Private Key</label>
-              <textarea id="privateKeyText" name="privateKey" autocomplete="off" autocapitalize="off" spellcheck="false"
-                placeholder="Paste your private key here" rows="3" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
-              <div class="file-upload">
-                <input type="file" id="privateKeyFile" class="sr-only">
-                <label for="privateKeyFile" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
-                  <i data-icon="upload" class="icon-fw"></i> Upload Key File
-                </label>
-              </div>
-              <label for="passphraseInput" class="sr-only">Key Passphrase</label>
-              <input type="password" id="passphraseInput" name="passphrase" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go"
-                placeholder="Key password (if encrypted)" class="optional block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-          </div>
-
-          <div class="login-buttons mt-2">
-            <button type="submit" class="inline-flex w-full items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Connect</button>
-          </div>
-        </form>
-      </div>
-    </dialog>
-    <dialog id="errorDialog" class="modal">
-      <div class="modal-content relative error-modal bg-red-50 border border-red-400 rounded-md shadow-md p-5 w-80 sm:w-96">
-        <button type="button" autofocus class="close-button absolute top-2 right-2 text-neutral-400 hover:text-neutral-600 text-xl leading-none p-0 bg-transparent border-0">&times;</button>
-        <h2 class="text-red-700">Error</h2>
-        <p id="errorMessage"></p>
-      </div>
-    </dialog>
-<dialog id="promptDialog" class="modal">
-  <div class="modal-content relative prompt-modal bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-5 w-80 sm:w-96">
-    <button type="button" autofocus class="close-button absolute top-2 right-2 text-neutral-400 hover:text-neutral-600 text-xl leading-none p-0 bg-transparent border-0">&times;</button>
-    <h2 id="promptMessage">Authentication Required</h2>
-    <form>
-      <div id="promptInputContainer" class="mb-4 space-y-2"></div>
-      <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Submit</button>
-    </form>
-  </div>
-</dialog>
-    <dialog id="terminalSettingsDialog" class="modal">
-      <div class="modal-content relative bg-white text-slate-800 border border-neutral-300 rounded-md shadow-md p-6 w-80 sm:w-[36rem]">
-        <h2 class="text-lg font-semibold text-slate-900 mb-2">Terminal Settings</h2>
-        <form id="terminalSettingsForm" class="space-y-2">
-          <fieldset class="grid grid-cols-1 sm:grid-cols-[auto,1fr] gap-x-4 gap-y-3 items-center">
-            <legend class="sr-only">Terminal Options</legend>
-            <label for="fontSize" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Font Size</label>
-            <input type="number" id="fontSize" name="fontSize" min="8" max="72" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-            <label for="fontFamily" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Font Family</label>
-            <input type="text" id="fontFamily" name="fontFamily" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-            <label for="cursorBlink" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Cursor Blink</label>
-            <select id="cursorBlink" name="cursorBlink" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="true">On</option>
-              <option value="false">Off</option>
-            </select>
-
-            <label for="scrollback" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Scrollback</label>
-            <input type="number" id="scrollback" name="scrollback" min="1" max="200000" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-            <label for="tabStopWidth" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Tab Stop Width</label>
-            <input type="number" id="tabStopWidth" name="tabStopWidth" min="1" max="100" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-            <label for="bellStyle" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Bell Style</label>
-            <select id="bellStyle" name="bellStyle" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="sound">Sound</option>
-              <option value="none">None</option>
-            </select>
-          </fieldset>
-          <div class="flex gap-2 pt-4 justify-end">
-            <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Save</button>
-            <button type="button" id="closeterminalSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </dialog>
-    <div id="backdrop" class="backdrop hidden"></div>
-    <button type="button" id="reconnectButton" class="hidden fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Reconnect</button>
-    <div class="box">
-      <div id="header" class="hidden w-full text-center z-[99] h-6 leading-6 bg-green-600 text-white border-b border-neutral-200 shrink-0"></div>
-      <div id="terminalContainer" class="terminal hidden flex-1 min-h-0 w-[calc(100%-1px)] max-w-[100vw] mx-auto p-[2px] pb-[env(safe-area-inset-bottom)] overscroll-contain touch-pan-y overflow-hidden"></div>
-      <div id="bottomdiv" class="z-[99] h-6 flex items-center bg-neutral-800 text-neutral-100 border-t border-neutral-200 shrink-0">
-        <div id="menu" class="relative group px-2">
-          <button id="menuToggle" type="button" aria-controls="dropupContent" aria-expanded="false" class="inline-flex items-center gap-1 select-none">
-            <i data-icon="menu" class="w-5 h-5 inline-block"></i> Menu
-          </button>
-          <div id="dropupContent" class="hidden group-hover:block absolute bottom-full left-0 min-w-56 bg-neutral-50 text-neutral-700 text-base shadow-md border border-neutral-200 z-[101]">
-            <button type="button" id="clearLogBtn" class="hidden w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="trash-can" class="w-5 h-5 inline-block"></i> Clear Log</button>
-            <button type="button" id="stopLogBtn" class="hidden w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="settings" class="animate-spin origin-center w-5 h-5 inline-block"></i> Stop Log</button>
-            <button type="button" id="startLogBtn" class="w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="clipboard" class="w-5 h-5 inline-block"></i> Start Log</button>
-            <button type="button" id="downloadLogBtn" class="hidden w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="download" class="w-5 h-5 inline-block"></i> Download Log</button>
-            <button type="button" id="replayCredentialsBtn" class="w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="key" class="w-5 h-5 inline-block"></i> Credentials</button>
-            <button type="button" id="reauthBtn" class="w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="key" class="w-5 h-5 inline-block"></i> Switch User</button>
-            <button type="button" id="terminalSettingsBtn" class="w-full text-left px-4 py-3 hover:bg-neutral-200 whitespace-nowrap inline-flex items-center gap-3"><i data-icon="settings" class="w-5 h-5 inline-block"></i> Settings</button>
-          </div>
-        </div>
-        <div id="footer" class="inline-block text-left px-[10px] border-l border-neutral-200"></div>
-        <div id="status" role="status" aria-live="polite" aria-atomic="true" class="inline-block text-left px-[10px] z-[100] border-x border-neutral-200"></div>
-      </div>
-    </div>
+    <!-- SolidJS app will mount here -->
+    <!-- Static status element for testing (will be replaced by SolidJS app) -->
+    <div id="status" role="status" aria-live="polite" aria-atomic="true" class="hidden">Initializing...</div>
   </body>
 </html>

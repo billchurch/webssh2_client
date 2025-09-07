@@ -11,9 +11,10 @@
   "extends": [
     "airbnb-base",
     "plugin:prettier/recommended",
-    "plugin:node/recommended"
+    "plugin:node/recommended",
+    "plugin:tailwindcss/recommended"
   ],
-  "plugins": ["prettier", "no-unsanitized"],
+  "plugins": ["prettier", "no-unsanitized", "tailwindcss"],
   "rules": {
     "prettier/prettier": "warn",
     "dot-notation": "off",
@@ -26,6 +27,10 @@
     "space-before-function-paren": "off",
     "no-unsanitized/method": "error",
     "no-unsanitized/property": "error",
+    "tailwindcss/classnames-order": "warn",
+    "tailwindcss/no-contradicting-classname": "error",
+    "tailwindcss/no-custom-classname": "warn",
+    "tailwindcss/no-unnecessary-arbitrary-value": "warn",
     "no-restricted-properties": [
       "error",
       {
@@ -73,9 +78,9 @@
       }
     },
     {
-      "files": ["**/*.ts"],
+      "files": ["**/*.ts", "**/*.tsx"],
       "parser": "@typescript-eslint/parser",
-      "plugins": ["@typescript-eslint", "prettier"],
+      "plugins": ["@typescript-eslint", "prettier", "tailwindcss"],
       "extends": [
         "plugin:@typescript-eslint/recommended",
         "plugin:prettier/recommended"
@@ -132,7 +137,10 @@
         "@typescript-eslint/consistent-type-imports": [
           "error",
           { "prefer": "type-imports" }
-        ]
+        ],
+        "tailwindcss/classnames-order": "warn",
+        "tailwindcss/no-contradicting-classname": "error",
+        "tailwindcss/no-custom-classname": "warn"
       }
     },
     {
@@ -152,5 +160,11 @@
     "client/index.js",
     "index.js",
     "client/src/vite.config.js"
-  ]
+  ],
+  "settings": {
+    "tailwindcss": {
+      "config": "client/src/tailwind.config.js",
+      "cssFiles": ["client/src/css/**/*.css", "!**/node_modules"]
+    }
+  }
 }

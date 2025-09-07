@@ -9,6 +9,10 @@ on:
         description: 'Git tag to publish (e.g., v1.0.0-alpha.0)'
         required: true
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest

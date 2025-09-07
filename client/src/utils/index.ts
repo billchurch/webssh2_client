@@ -147,20 +147,20 @@ export function populateFormFromUrl(config: WebSSH2Config): WebSSH2Config {
     }
 
     if (value !== null) {
-      let validatedValue: unknown = null
+      let __validatedValue: unknown = null
 
       switch (param) {
         case 'host':
-          validatedValue = validateHost(value)
+          __validatedValue = validateHost(value)
           break
         case 'port':
-          validatedValue = validatePort(value)
+          __validatedValue = validatePort(value)
           break
         case 'username':
-          validatedValue = validateUsername(value)
+          __validatedValue = validateUsername(value)
           break
         case 'password':
-          validatedValue = validatePassword(value)
+          __validatedValue = validatePassword(value)
           break
         case 'header': {
           const text = validateText(value)
@@ -189,28 +189,28 @@ export function populateFormFromUrl(config: WebSSH2Config): WebSSH2Config {
           break
         }
         case 'sshterm':
-          validatedValue = validateTerminalType(value)
+          __validatedValue = validateTerminalType(value)
           break
         case 'logLevel':
-          validatedValue = validateLogLevel(value)
+          __validatedValue = validateLogLevel(value)
           break
         default:
-          validatedValue = value
+          __validatedValue = value
       }
 
-      if (
-        validatedValue !== null &&
-        param !== 'header' &&
-        param !== 'headerbackground'
-      ) {
-        const input = document.getElementById(
-          `${param}Input`
-        ) as HTMLInputElement | null
-        if (input) input.value = String(validatedValue)
-      }
+      // Form values are now handled by SolidJS controlled components
+      // No need to set DOM input values directly
     }
   })
   const result = mergeDeep(config, params as Obj) as WebSSH2Config
+
+  // Enable autoConnect if host is provided in URL
+  const urlHost = searchParams.get('host')
+  if (urlHost && result.ssh) {
+    result.autoConnect = true
+    debug('populateFormFromUrl: autoConnect enabled due to URL host parameter')
+  }
+
   debug('populateFormFromUrl', result)
   return result
 }
@@ -232,7 +232,6 @@ export function getCredentials(
     (fd?.['port'] as number | string | undefined) ||
     urlParams.get('port') ||
     (cfg.ssh?.port as number | undefined) ||
-    (document.getElementById('portInput') as HTMLInputElement | null)?.value ||
     '22'
 
   let port = parseInt(String(portValue), 10)
@@ -246,21 +245,15 @@ export function getCredentials(
       (fd?.['host'] as string | undefined) ||
       urlParams.get('host') ||
       (cfg.ssh?.host as string | undefined) ||
-      (document.getElementById('hostInput') as HTMLInputElement | null)
-        ?.value ||
       '',
     port,
     username:
       (fd?.['username'] as string | undefined) ||
-      (document.getElementById('usernameInput') as HTMLInputElement | null)
-        ?.value ||
       urlParams.get('username') ||
       (cfg.ssh?.username as string | undefined) ||
       '',
     password:
       (fd?.['password'] as string | undefined) ||
-      (document.getElementById('passwordInput') as HTMLInputElement | null)
-        ?.value ||
       urlParams.get('password') ||
       (cfg.ssh?.password as string | undefined) ||
       '',
@@ -273,8 +266,6 @@ export function getCredentials(
 
   const privateKey =
     (fd?.['privateKey'] as string | undefined) ||
-    (document.getElementById('privateKeyText') as HTMLTextAreaElement | null)
-      ?.value ||
     urlParams.get('privateKey') ||
     (cfg.ssh?.privateKey as string | undefined) ||
     ''
@@ -282,8 +273,6 @@ export function getCredentials(
     mergedConfig.privateKey = privateKey
     const passphrase =
       (fd?.['passphrase'] as string | undefined) ||
-      (document.getElementById('passphraseInput') as HTMLInputElement | null)
-        ?.value ||
       urlParams.get('passphrase') ||
       (cfg.ssh?.passphrase as string | undefined) ||
       ''

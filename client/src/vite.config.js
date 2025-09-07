@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { copyFileSync } from 'fs'
+import solid from 'vite-plugin-solid'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -42,7 +43,7 @@ function copyAssetsPlugin() {
     name: 'copy-assets',
     writeBundle() {
       // Copy favicon
-      const faviconSource = path.resolve(__dirname, 'favicon.ico')
+      const faviconSource = path.resolve(__dirname, './favicon.ico')
       const faviconDest = path.resolve(__dirname, '../public/favicon.ico')
 
       if (fs.existsSync(faviconSource)) {
@@ -101,7 +102,12 @@ export default defineConfig(({ mode }) => {
       BANNER_STRING: JSON.stringify(bannerString)
     },
 
-    plugins: [bannerPlugin(), htmlTemplatePlugin(), copyAssetsPlugin()],
+    plugins: [
+      solid(),
+      bannerPlugin(),
+      htmlTemplatePlugin(),
+      copyAssetsPlugin()
+    ],
 
     build: {
       outDir: '../public',
@@ -170,7 +176,7 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './client/src')
+        '@': path.resolve(__dirname, './')
       }
     },
 

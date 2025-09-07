@@ -105,3 +105,6 @@ profiles.json
 credentials.json
 
 client/public
+
+.playwright-mcp/
+tsconfig.tsbuildinfo
