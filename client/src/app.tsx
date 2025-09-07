@@ -38,7 +38,9 @@ import {
   setShowReconnectButton,
   headerContent,
   promptData,
-  setPromptData
+  setPromptData,
+  isSearchVisible,
+  setIsSearchVisible
 } from './stores/terminal.js'
 
 // Import components
@@ -51,6 +53,7 @@ import { LoginModal } from './components/LoginModal'
 import { ErrorModal, PromptModal } from './components/Modal'
 import { TerminalSettingsModal } from './components/TerminalSettingsModal'
 import { MenuDropdown } from './components/MenuDropdown'
+import { TerminalSearch } from './components/TerminalSearch'
 
 // Import socket service
 import {
@@ -65,6 +68,9 @@ import {
 import type { ClientAuthenticatePayload } from './types/events.d'
 import type { TerminalRef } from './lib/xterm-solid/types'
 import type { ITerminalOptions } from '@xterm/xterm'
+
+// Import utilities
+import { getSearchShortcut, matchesShortcut } from './utils/os-detection'
 
 // Import CSS
 import './app.css'
@@ -146,6 +152,46 @@ const App: Component = () => {
       console.error('Initialization error:', error)
       handleError('Initialization error:', error)
     }
+  })
+
+  // Set up global keyboard shortcuts
+  onMount(() => {
+    const handleKeydown = (event: KeyboardEvent) => {
+      const searchShortcut = getSearchShortcut()
+
+      // Check if this matches our search shortcut
+      if (matchesShortcut(event, searchShortcut)) {
+        // Prevent browser search
+        event.preventDefault()
+        event.stopPropagation()
+
+        // Toggle search visibility
+        const wasVisible = isSearchVisible()
+        setIsSearchVisible(!wasVisible)
+
+        // Focus terminal if closing search, don't focus if opening (search component will handle that)
+        if (wasVisible) {
+          const actions = terminalActions()
+          if (actions) {
+            // Clear search decorations/highlights
+            actions.search.clearDecorations()
+            
+            // Use requestAnimationFrame to ensure DOM cleanup before focusing
+            requestAnimationFrame(() => {
+              actions.focus()
+            })
+          }
+        }
+      }
+    }
+
+    // Add global event listener
+    document.addEventListener('keydown', handleKeydown)
+
+    // Cleanup on unmount
+    onCleanup(() => {
+      document.removeEventListener('keydown', handleKeydown)
+    })
   })
 
   onCleanup(() => {
@@ -302,6 +348,10 @@ const App: Component = () => {
 
   const handleReauth = () => {
     socketService.reauth()
+  }
+
+  const handleSearch = () => {
+    setIsSearchVisible(!isSearchVisible())
   }
 
   // Utility functions
@@ -501,13 +551,14 @@ const App: Component = () => {
             </div>
           }
         >
-          <div class="min-h-0 w-full flex-1 overflow-hidden">
+          <div class="relative min-h-0 w-full flex-1 overflow-hidden">
             <TerminalComponent
               config={config()!}
               onTerminalReady={handleTerminalReady}
               onTerminalMounted={setTerminalActions}
               class="size-full"
             />
+            <TerminalSearch terminalActions={terminalActions()} />
           </div>
         </Show>
 
@@ -522,6 +573,7 @@ const App: Component = () => {
             onReplayCredentials={handleReplayCredentials}
             onReauth={handleReauth}
             onTerminalSettings={() => setIsTerminalSettingsOpen(true)}
+            onSearch={handleSearch}
           />
 
           {/* Footer and Status */}

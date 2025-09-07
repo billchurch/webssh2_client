@@ -2,3 +2,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Search highlighting styles - Border-only approach for better accessibility */
+/* Optional: Add subtle glow effects to make borders more prominent */
+.xterm-decoration.xterm-find-result-decoration {
+  box-shadow: 0 0 3px rgba(255, 215, 0, 0.8); /* Subtle gold glow */
+}
+
+.xterm-decoration.xterm-find-result-decoration.xterm-find-active-result-decoration {
+  box-shadow: 0 0 5px rgba(255, 69, 0, 1); /* Stronger orange-red glow for active match */
+}
