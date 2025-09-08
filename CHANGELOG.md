@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0-alpha.5](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.5...v2.1.0-alpha.5) (2025-09-08)
+
+
+### Features
+
+* add NPM supply chain security policy ([#52](https://github.com/billchurch/webssh2_client/issues/52)) ([50f9dbe](https://github.com/billchurch/webssh2_client/commit/50f9dbe83ec89fd232a12ed067e427cef3a73315)), closes [#51](https://github.com/billchurch/webssh2_client/issues/51)
+
 ## [2.0.0-alpha.5](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.4...v2.0.0-alpha.5) (2025-09-07)
 
 
