@@ -19,6 +19,9 @@ interface TerminalSettingsForm {
   scrollback: number
   tabStopWidth: number
   bellStyle: 'sound' | 'none'
+  clipboardAutoSelectToCopy: boolean
+  clipboardEnableMiddleClickPaste: boolean
+  clipboardEnableKeyboardShortcuts: boolean
 }
 
 export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
@@ -30,7 +33,10 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
     cursorBlink: defaultSettings.cursorBlink,
     scrollback: defaultSettings.scrollback,
     tabStopWidth: defaultSettings.tabStopWidth,
-    bellStyle: 'none'
+    bellStyle: 'none',
+    clipboardAutoSelectToCopy: defaultSettings.clipboardAutoSelectToCopy,
+    clipboardEnableMiddleClickPaste: defaultSettings.clipboardEnableMiddleClickPaste,
+    clipboardEnableKeyboardShortcuts: defaultSettings.clipboardEnableKeyboardShortcuts
   })
 
   // Load current settings when modal opens
@@ -43,7 +49,10 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
         cursorBlink: stored.cursorBlink ?? defaultSettings.cursorBlink,
         scrollback: stored.scrollback || defaultSettings.scrollback,
         tabStopWidth: stored.tabStopWidth || defaultSettings.tabStopWidth,
-        bellStyle: (stored.bellStyle as 'sound' | 'none') || 'none'
+        bellStyle: (stored.bellStyle as 'sound' | 'none') || 'none',
+        clipboardAutoSelectToCopy: stored.clipboardAutoSelectToCopy ?? defaultSettings.clipboardAutoSelectToCopy,
+        clipboardEnableMiddleClickPaste: stored.clipboardEnableMiddleClickPaste ?? defaultSettings.clipboardEnableMiddleClickPaste,
+        clipboardEnableKeyboardShortcuts: stored.clipboardEnableKeyboardShortcuts ?? defaultSettings.clipboardEnableKeyboardShortcuts
       })
     }
   })
@@ -71,8 +80,13 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
     // Save settings
     saveTerminalSettings(currentSettings as unknown as Record<string, unknown>)
 
-    // Apply to terminal
-    props.onSave(terminalOptions)
+    // Apply to terminal - pass ALL settings including clipboard settings
+    props.onSave({
+      ...terminalOptions,
+      clipboardAutoSelectToCopy: currentSettings.clipboardAutoSelectToCopy,
+      clipboardEnableMiddleClickPaste: currentSettings.clipboardEnableMiddleClickPaste,
+      clipboardEnableKeyboardShortcuts: currentSettings.clipboardEnableKeyboardShortcuts
+    })
     props.onClose()
   }
 
@@ -230,6 +244,72 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
             >
               <option value="sound">Sound</option>
               <option value="none">None</option>
+            </select>
+
+            {/* Clipboard Settings Section Header */}
+            <div class="col-span-full mt-4 mb-2 border-t pt-2">
+              <h3 class="text-sm font-semibold text-slate-900">Clipboard Settings</h3>
+            </div>
+
+            {/* Auto-copy Selection */}
+            <label
+              for="clipboardAutoSelectToCopy"
+              class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+            >
+              Auto-copy Selection
+            </label>
+            <select
+              id="clipboardAutoSelectToCopy"
+              name="clipboardAutoSelectToCopy"
+              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={settings().clipboardAutoSelectToCopy ? 'true' : 'false'}
+              onChange={(e) =>
+                updateSetting('clipboardAutoSelectToCopy', e.currentTarget.value === 'true')
+              }
+            >
+              <option value="true">Enabled (selection to clipboard)</option>
+              <option value="false">Disabled</option>
+            </select>
+
+            {/* Middle-click Paste */}
+            <label
+              for="clipboardEnableMiddleClickPaste"
+              class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+            >
+              Middle-click Paste
+            </label>
+            <select
+              id="clipboardEnableMiddleClickPaste"
+              name="clipboardEnableMiddleClickPaste"
+              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={settings().clipboardEnableMiddleClickPaste ? 'true' : 'false'}
+              onChange={(e) =>
+                updateSetting('clipboardEnableMiddleClickPaste', e.currentTarget.value === 'true')
+              }
+            >
+              <option value="true">Enabled</option>
+              <option value="false">Disabled</option>
+            </select>
+
+            {/* Keyboard Shortcuts */}
+            <label
+              for="clipboardEnableKeyboardShortcuts"
+              class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+            >
+              Keyboard Shortcuts
+            </label>
+            <select
+              id="clipboardEnableKeyboardShortcuts"
+              name="clipboardEnableKeyboardShortcuts"
+              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={settings().clipboardEnableKeyboardShortcuts ? 'true' : 'false'}
+              onChange={(e) =>
+                updateSetting('clipboardEnableKeyboardShortcuts', e.currentTarget.value === 'true')
+              }
+              title="Ctrl+Shift+C/V (or Cmd+Shift+C/V on Mac)"
+            >
+              <option value="true">Enabled (Ctrl+Shift+C/V)</option>
+              <option value="false">Disabled</option>
             </select>
           </fieldset>
 

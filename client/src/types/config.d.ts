@@ -10,6 +10,9 @@ export interface TerminalSettings {
   letterSpacing: number
   lineHeight: number
   logLevel: LogLevel
+  clipboardAutoSelectToCopy: boolean
+  clipboardEnableMiddleClickPaste: boolean
+  clipboardEnableKeyboardShortcuts: boolean
 }
 
 export interface WebSocketConfig {

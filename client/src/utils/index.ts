@@ -27,7 +27,10 @@ export const defaultSettings: TerminalSettings = {
   fontFamily: 'courier-new, courier, monospace',
   letterSpacing: 0,
   lineHeight: 1,
-  logLevel: 'info'
+  logLevel: 'info',
+  clipboardAutoSelectToCopy: true,
+  clipboardEnableMiddleClickPaste: true,
+  clipboardEnableKeyboardShortcuts: true
 }
 
 export function validateNumber(
