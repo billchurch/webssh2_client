@@ -35,6 +35,10 @@ export class TerminalClipboardIntegration {
     debug('TerminalClipboardIntegration initialized with settings:', settings)
   }
 
+  getClipboardManager(): ClipboardManager {
+    return this.clipboardManager
+  }
+
   attach(terminal: Terminal): void {
     if (this.terminal) {
       this.detach()
@@ -90,7 +94,7 @@ export class TerminalClipboardIntegration {
 
   private removeEventHandlers(): void {
     debug('Removing event handlers')
-    
+
     if (this.mouseUpHandler) {
       const element = this.terminal?.element
       if (element) {
@@ -136,7 +140,10 @@ export class TerminalClipboardIntegration {
         const selection = this.terminal?.getSelection()
         if (selection && selection !== lastSelection) {
           lastSelection = selection
-          debug('Auto-copying selection to clipboard:', selection.substring(0, 50) + (selection.length > 50 ? '...' : ''))
+          debug(
+            'Auto-copying selection to clipboard:',
+            selection.substring(0, 50) + (selection.length > 50 ? '...' : '')
+          )
           const success = await this.clipboardManager.writeText(selection)
           if (success) {
             debug('Auto-copy successful')
@@ -171,11 +178,14 @@ export class TerminalClipboardIntegration {
         debug('Middle-click paste triggered')
         const text = await this.clipboardManager.readText()
         if (text && this.terminal) {
-          const preview = text.substring(0, 50) + (text.length > 50 ? '...' : '')
+          const preview =
+            text.substring(0, 50) + (text.length > 50 ? '...' : '')
           debug('Pasting from clipboard:', preview)
           this.terminal.paste(text)
         } else {
-          debug('Middle-click paste: no text in clipboard or terminal unavailable')
+          debug(
+            'Middle-click paste: no text in clipboard or terminal unavailable'
+          )
         }
       }
     }
@@ -209,7 +219,10 @@ export class TerminalClipboardIntegration {
 
     const selection = this.terminal.getSelection()
     if (selection) {
-      debug('Keyboard shortcut copy triggered, selection:', selection.substring(0, 50) + (selection.length > 50 ? '...' : ''))
+      debug(
+        'Keyboard shortcut copy triggered, selection:',
+        selection.substring(0, 50) + (selection.length > 50 ? '...' : '')
+      )
       const success = await this.clipboardManager.writeText(selection)
       if (success) {
         debug('Keyboard copy successful')
@@ -238,6 +251,18 @@ export class TerminalClipboardIntegration {
     }
   }
 
+  private getToastBackgroundColor(
+    type: 'success' | 'error' | 'warning'
+  ): string {
+    if (type === 'success') {
+      return '#4caf50'
+    }
+    if (type === 'error') {
+      return '#f44336'
+    }
+    return '#ff9800'
+  }
+
   private showToast(
     message: string,
     type: 'success' | 'error' | 'warning' = 'success'
@@ -254,7 +279,7 @@ export class TerminalClipboardIntegration {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#ff9800'};
+      background: ${this.getToastBackgroundColor(type)};
       color: white;
       padding: 12px 24px;
       border-radius: 4px;

@@ -303,27 +303,44 @@ const App: Component = () => {
     if (actions) {
       // Apply terminal display settings
       actions.applySettings(settings as Partial<ITerminalOptions>)
-      
+
       // Apply clipboard settings if they exist
       const clipboardSettings: Partial<ClipboardSettings> = {}
       if ('clipboardAutoSelectToCopy' in settings) {
-        clipboardSettings.autoSelectToClipboard = settings.clipboardAutoSelectToCopy as boolean
-        debug('Setting autoSelectToClipboard to:', settings.clipboardAutoSelectToCopy)
+        clipboardSettings.autoSelectToClipboard = settings[
+          'clipboardAutoSelectToCopy'
+        ] as boolean
+        debug(
+          'Setting autoSelectToClipboard to:',
+          settings['clipboardAutoSelectToCopy']
+        )
       }
       if ('clipboardEnableMiddleClickPaste' in settings) {
-        clipboardSettings.enableMiddleClickPaste = settings.clipboardEnableMiddleClickPaste as boolean
-        debug('Setting enableMiddleClickPaste to:', settings.clipboardEnableMiddleClickPaste)
+        clipboardSettings.enableMiddleClickPaste = settings[
+          'clipboardEnableMiddleClickPaste'
+        ] as boolean
+        debug(
+          'Setting enableMiddleClickPaste to:',
+          settings['clipboardEnableMiddleClickPaste']
+        )
       }
       if ('clipboardEnableKeyboardShortcuts' in settings) {
-        clipboardSettings.enableKeyboardShortcuts = settings.clipboardEnableKeyboardShortcuts as boolean
-        debug('Setting enableKeyboardShortcuts to:', settings.clipboardEnableKeyboardShortcuts)
+        clipboardSettings.enableKeyboardShortcuts = settings[
+          'clipboardEnableKeyboardShortcuts'
+        ] as boolean
+        debug(
+          'Setting enableKeyboardShortcuts to:',
+          settings['clipboardEnableKeyboardShortcuts']
+        )
       }
-      
+
       if (Object.keys(clipboardSettings).length > 0 && actions.clipboard) {
         debug('Updating clipboard settings:', clipboardSettings)
         actions.clipboard.updateSettings(clipboardSettings)
       } else {
-        debug('No clipboard settings to update or clipboard actions not available')
+        debug(
+          'No clipboard settings to update or clipboard actions not available'
+        )
       }
     } else {
       // Fallback to manager if reactive actions not available yet

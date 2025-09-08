@@ -2,8 +2,8 @@ export class ClipboardCompatibility {
   static isSupported(): boolean {
     return !!(
       navigator.clipboard &&
-      navigator.clipboard.readText &&
-      navigator.clipboard.writeText
+      typeof navigator.clipboard.readText === 'function' &&
+      typeof navigator.clipboard.writeText === 'function'
     )
   }
 

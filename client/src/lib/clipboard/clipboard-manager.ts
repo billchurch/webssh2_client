@@ -6,11 +6,15 @@ export interface ClipboardPermissionStatus {
 }
 
 export class ClipboardManager {
+  // eslint-disable-next-line no-use-before-define
   private static instance: ClipboardManager | null = null
 
   private permissionCache: ClipboardPermissionStatus | null = null
 
-  private constructor() {}
+  private constructor() {
+    // Private constructor for singleton pattern
+    this.permissionCache = null
+  }
 
   static getInstance(): ClipboardManager {
     if (!ClipboardManager.instance) {
@@ -22,8 +26,8 @@ export class ClipboardManager {
   isSupported(): boolean {
     return !!(
       navigator.clipboard &&
-      navigator.clipboard.readText &&
-      navigator.clipboard.writeText
+      typeof navigator.clipboard.readText === 'function' &&
+      typeof navigator.clipboard.writeText === 'function'
     )
   }
 

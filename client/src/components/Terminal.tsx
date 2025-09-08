@@ -161,11 +161,14 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
     const storedSettings = getStoredSettings() as Partial<TerminalSettings>
     const clipboardSettings: ClipboardSettings = {
       autoSelectToClipboard:
-        storedSettings?.clipboardAutoSelectToCopy ?? defaultSettings.clipboardAutoSelectToCopy,
+        storedSettings?.clipboardAutoSelectToCopy ??
+        defaultSettings.clipboardAutoSelectToCopy,
       enableMiddleClickPaste:
-        storedSettings?.clipboardEnableMiddleClickPaste ?? defaultSettings.clipboardEnableMiddleClickPaste,
+        storedSettings?.clipboardEnableMiddleClickPaste ??
+        defaultSettings.clipboardEnableMiddleClickPaste,
       enableKeyboardShortcuts:
-        storedSettings?.clipboardEnableKeyboardShortcuts ?? defaultSettings.clipboardEnableKeyboardShortcuts
+        storedSettings?.clipboardEnableKeyboardShortcuts ??
+        defaultSettings.clipboardEnableKeyboardShortcuts
     }
 
     const clipboardInstance = new TerminalClipboardIntegration(
@@ -227,8 +230,8 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
           if (clipboard && term) {
             const selection = term.getSelection()
             if (selection) {
-              const manager = (clipboard as any).clipboardManager
-              return await manager.writeText(selection)
+              const manager = clipboard.getClipboardManager()
+              return manager.writeText(selection)
             }
           }
           return false
@@ -237,7 +240,7 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
           const clipboard = clipboardIntegration()
           const term = terminalRef()?.terminal
           if (clipboard && term) {
-            const manager = (clipboard as any).clipboardManager
+            const manager = clipboard.getClipboardManager()
             const text = await manager.readText()
             if (text) {
               term.paste(text)
@@ -544,5 +547,6 @@ export const terminalManager = new SolidTerminalManager()
 
 // Expose terminal manager globally for testing
 if (typeof window !== 'undefined') {
-  ;(window as any).terminalManager = terminalManager
+  ;(window as { terminalManager?: SolidTerminalManager }).terminalManager =
+    terminalManager
 }

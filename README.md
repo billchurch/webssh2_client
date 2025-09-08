@@ -396,6 +396,7 @@ Clipboard settings are stored in localStorage under `webssh2.settings.global` an
 #### Browser Compatibility
 
 The clipboard integration includes:
+
 - Automatic detection of browser clipboard API support
 - Fallback mechanisms for older browsers
 - Security context validation (HTTPS/localhost required)
@@ -408,15 +409,17 @@ You can also configure clipboard settings programmatically:
 
 ```javascript
 // Read current settings
-const settings = JSON.parse(localStorage.getItem('webssh2.settings.global') || '{}');
+const settings = JSON.parse(
+  localStorage.getItem('webssh2.settings.global') || '{}'
+)
 
 // Update clipboard settings
-settings.clipboardAutoSelectToCopy = false;  // Disable auto-copy
-settings.clipboardEnableMiddleClickPaste = true;  // Enable middle-click
-settings.clipboardEnableKeyboardShortcuts = true;  // Enable shortcuts
+settings.clipboardAutoSelectToCopy = false // Disable auto-copy
+settings.clipboardEnableMiddleClickPaste = true // Enable middle-click
+settings.clipboardEnableKeyboardShortcuts = true // Enable shortcuts
 
 // Save settings
-localStorage.setItem('webssh2.settings.global', JSON.stringify(settings));
+localStorage.setItem('webssh2.settings.global', JSON.stringify(settings))
 ```
 
 ### Configuration Object

@@ -39,7 +39,7 @@ const handleTerminalMount = (terminal: Terminal, ref: TerminalRef) => {
     enableKeyboardShortcuts:
       storedSettings?.clipboardEnableKeyboardShortcuts ?? defaultSettings.clipboardEnableKeyboardShortcuts
   }
-  
+
   const clipboardInstance = new TerminalClipboardIntegration(clipboardSettings)
   clipboardInstance.attach(terminal)
   setClipboardIntegration(clipboardInstance)
@@ -86,7 +86,7 @@ const handleTerminalMount = (terminal: Terminal, ref: TerminalRef) => {
 const handleSubmit = (e: Event) => {
   e.preventDefault()
   const currentSettings = settings()
-  
+
   // Convert to ITerminalOptions format
   const terminalOptions: Partial<ITerminalOptions> = {
     fontSize: currentSettings.fontSize,
@@ -95,16 +95,18 @@ const handleSubmit = (e: Event) => {
     scrollback: currentSettings.scrollback,
     tabStopWidth: currentSettings.tabStopWidth
   }
-  
+
   // Save settings
   saveTerminalSettings(currentSettings as unknown as Record<string, unknown>)
-  
+
   // Apply to terminal - pass ALL settings including clipboard settings
   props.onSave({
     ...terminalOptions,
     clipboardAutoSelectToCopy: currentSettings.clipboardAutoSelectToCopy,
-    clipboardEnableMiddleClickPaste: currentSettings.clipboardEnableMiddleClickPaste,
-    clipboardEnableKeyboardShortcuts: currentSettings.clipboardEnableKeyboardShortcuts
+    clipboardEnableMiddleClickPaste:
+      currentSettings.clipboardEnableMiddleClickPaste,
+    clipboardEnableKeyboardShortcuts:
+      currentSettings.clipboardEnableKeyboardShortcuts
   })
   props.onClose()
 }
@@ -115,19 +117,22 @@ const handleTerminalSettings = (settings: Record<string, unknown>) => {
   if (actions) {
     // Apply terminal display settings
     actions.applySettings(settings as Partial<ITerminalOptions>)
-    
+
     // Apply clipboard settings if they exist
     const clipboardSettings: Partial<ClipboardSettings> = {}
     if ('clipboardAutoSelectToCopy' in settings) {
-      clipboardSettings.autoSelectToClipboard = settings.clipboardAutoSelectToCopy as boolean
+      clipboardSettings.autoSelectToClipboard =
+        settings.clipboardAutoSelectToCopy as boolean
     }
     if ('clipboardEnableMiddleClickPaste' in settings) {
-      clipboardSettings.enableMiddleClickPaste = settings.clipboardEnableMiddleClickPaste as boolean
+      clipboardSettings.enableMiddleClickPaste =
+        settings.clipboardEnableMiddleClickPaste as boolean
     }
     if ('clipboardEnableKeyboardShortcuts' in settings) {
-      clipboardSettings.enableKeyboardShortcuts = settings.clipboardEnableKeyboardShortcuts as boolean
+      clipboardSettings.enableKeyboardShortcuts =
+        settings.clipboardEnableKeyboardShortcuts as boolean
     }
-    
+
     if (Object.keys(clipboardSettings).length > 0 && actions.clipboard) {
       actions.clipboard.updateSettings(clipboardSettings)
     }
@@ -143,7 +148,7 @@ export class TerminalClipboardIntegration {
   private terminal: Terminal | null = null
   private clipboardManager: ClipboardManager
   private settings: ClipboardSettings
-  
+
   // Event handler references for proper cleanup
   private mouseUpHandler: ((e: MouseEvent) => void) | null = null
   private auxClickHandler: ((e: MouseEvent) => void) | null = null
@@ -166,7 +171,7 @@ export class TerminalClipboardIntegration {
       }
       this.mouseUpHandler = null
     }
-    
+
     if (this.auxClickHandler) {
       const element = this.terminal?.element
       if (element) {
@@ -174,7 +179,7 @@ export class TerminalClipboardIntegration {
       }
       this.auxClickHandler = null
     }
-    
+
     if (this.keyDownHandler) {
       document.removeEventListener('keydown', this.keyDownHandler)
       this.keyDownHandler = null
@@ -285,7 +290,8 @@ Clipboard settings are stored in localStorage under `webssh2.settings.global` an
 3. **Browser Compatibility**: Automatic detection of browser clipboard API support with fallback mechanisms
 4. **Visual Feedback**: Toast notifications for clipboard operations
 5. **Security Context Validation**: HTTPS/localhost required for clipboard API
-```
+
+````
 
 ### Browser Compatibility Helper
 
@@ -293,8 +299,8 @@ Clipboard settings are stored in localStorage under `webssh2.settings.global` an
 // clipboard-compatibility.ts
 export class ClipboardCompatibility {
   static isSupported(): boolean {
-    return !!(navigator.clipboard && 
-              navigator.clipboard.readText && 
+    return !!(navigator.clipboard &&
+              navigator.clipboard.readText &&
               navigator.clipboard.writeText);
   }
 
@@ -304,26 +310,26 @@ export class ClipboardCompatibility {
 
   static getWarnings(): string[] {
     const warnings: string[] = [];
-    
+
     if (!this.isSecureContext()) {
       warnings.push('Clipboard API requires HTTPS or localhost');
     }
-    
+
     if (!this.isSupported()) {
       warnings.push('Browser does not fully support Clipboard API');
     }
-    
+
     // Check for specific browser issues
     const userAgent = navigator.userAgent.toLowerCase();
-    
+
     if (userAgent.includes('firefox')) {
       warnings.push('Firefox may require clipboard permissions in about:config');
     }
-    
+
     if (userAgent.includes('safari') && !userAgent.includes('chrome')) {
       warnings.push('Safari may have limited clipboard support');
     }
-    
+
     return warnings;
   }
 
@@ -338,7 +344,7 @@ export class ClipboardCompatibility {
     }
   }
 }
-```
+````
 
 ### Programmatic Configuration
 
@@ -346,12 +352,14 @@ You can configure clipboard settings programmatically:
 
 ```javascript
 // Read current settings
-const settings = JSON.parse(localStorage.getItem('webssh2.settings.global') || '{}')
+const settings = JSON.parse(
+  localStorage.getItem('webssh2.settings.global') || '{}'
+)
 
 // Update clipboard settings
-settings.clipboardAutoSelectToCopy = false  // Disable auto-copy
-settings.clipboardEnableMiddleClickPaste = true  // Enable middle-click
-settings.clipboardEnableKeyboardShortcuts = true  // Enable shortcuts
+settings.clipboardAutoSelectToCopy = false // Disable auto-copy
+settings.clipboardEnableMiddleClickPaste = true // Enable middle-click
+settings.clipboardEnableKeyboardShortcuts = true // Enable shortcuts
 
 // Save settings
 localStorage.setItem('webssh2.settings.global', JSON.stringify(settings))
@@ -382,14 +390,14 @@ localStorage.setItem('webssh2.settings.global', JSON.stringify(settings))
 
 ### Browser Compatibility Notes
 
-| Feature | Chrome | Firefox | Safari | Edge |
-|---------|--------|---------|--------|------|
-| Auto-copy | ✅ | ✅* | ⚠️ | ✅ |
-| Middle-click | ✅ | ✅ | ❌** | ✅ |
-| Keyboard shortcuts | ✅ | ✅ | ✅ | ✅ |
+| Feature            | Chrome | Firefox | Safari | Edge |
+| ------------------ | ------ | ------- | ------ | ---- |
+| Auto-copy          | ✅     | ✅\*    | ⚠️     | ✅   |
+| Middle-click       | ✅     | ✅      | ❌\*\* | ✅   |
+| Keyboard shortcuts | ✅     | ✅      | ✅     | ✅   |
 
 \* Firefox may require `dom.events.asyncClipboard` enabled in about:config
-\** Safari doesn't support middle-click; use Cmd+V instead
+\*\* Safari doesn't support middle-click; use Cmd+V instead
 
 ## Troubleshooting
 
