@@ -68,11 +68,19 @@ For server setup instructions, refer to the [WebSSH2 server documentation](https
   - OS-aware keyboard shortcuts (Ctrl+F on Windows/Linux, ⌘F on macOS)
   - Navigation with Enter/Shift+Enter or arrow buttons
   - F3/Shift+F3 for quick match navigation
+- **Advanced Clipboard Integration:**
+  - Auto-copy on selection (similar to terminals like tmux or PuTTY, configurable)
+  - Middle-click paste support (configurable)
+  - Keyboard shortcuts: Ctrl+Shift+C/V (Windows/Linux) or Cmd+Shift+C/V (macOS)
+  - Browser compatibility detection with fallback mechanisms
+  - Visual feedback with toast notifications
+  - All features can be toggled in Terminal Settings
 - Customizable terminal settings:
   - Font size and family
   - Color schemes
   - Cursor behavior
   - Scrollback buffer size
+  - Clipboard behavior controls
 - Session logging with download capability
 - Copy and paste functionality
 - Terminal mouse support
@@ -366,6 +374,53 @@ The system automatically detects whether you're using:
 - Existing `headerBackground` URLs continue to work
 - Mixed usage supported (header + headerBackground or headerStyle)
 - Graceful fallback to CSS for non-Tailwind values
+
+### Clipboard Settings
+
+The WebSSH2 client includes comprehensive clipboard integration. All clipboard features can be configured through the Terminal Settings modal (accessible from the menu) or via localStorage:
+
+#### Features
+
+1. **Auto-copy on Selection**: Automatically copies selected text to the system clipboard when you select text with your mouse (similar to tmux or PuTTY)
+2. **Middle-click Paste**: Paste clipboard contents by middle-clicking in the terminal
+3. **Keyboard Shortcuts**: Use Ctrl+Shift+C to copy and Ctrl+Shift+V to paste (Cmd+Shift+C/V on macOS)
+
+#### Configuration
+
+Clipboard settings are stored in localStorage under `webssh2.settings.global` and can be toggled via the Terminal Settings modal:
+
+- `clipboardAutoSelectToCopy` (default: `true`) - Enable/disable auto-copy on selection
+- `clipboardEnableMiddleClickPaste` (default: `true`) - Enable/disable middle-click paste
+- `clipboardEnableKeyboardShortcuts` (default: `true`) - Enable/disable keyboard shortcuts
+
+#### Browser Compatibility
+
+The clipboard integration includes:
+
+- Automatic detection of browser clipboard API support
+- Fallback mechanisms for older browsers
+- Security context validation (HTTPS/localhost required)
+- Browser-specific warnings and guidance
+- Visual feedback via toast notifications for clipboard operations
+
+#### Programmatic Configuration
+
+You can also configure clipboard settings programmatically:
+
+```javascript
+// Read current settings
+const settings = JSON.parse(
+  localStorage.getItem('webssh2.settings.global') || '{}'
+)
+
+// Update clipboard settings
+settings.clipboardAutoSelectToCopy = false // Disable auto-copy
+settings.clipboardEnableMiddleClickPaste = true // Enable middle-click
+settings.clipboardEnableKeyboardShortcuts = true // Enable shortcuts
+
+// Save settings
+localStorage.setItem('webssh2.settings.global', JSON.stringify(settings))
+```
 
 ### Configuration Object
 

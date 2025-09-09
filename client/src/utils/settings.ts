@@ -31,8 +31,11 @@ export function getStoredSettings(): Record<string, unknown> {
 
 export function saveTerminalSettings(settings: Record<string, unknown>): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
-    debug('saveTerminalSettings', settings)
+    // Merge with existing settings to preserve other values
+    const existing = getStoredSettings()
+    const merged = { ...existing, ...settings }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+    debug('saveTerminalSettings', merged)
   } catch (error) {
     console.error('saveTerminalSettings', error)
   }

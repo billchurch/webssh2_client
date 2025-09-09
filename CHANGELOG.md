@@ -4,15 +4,13 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [2.0.0-alpha.5](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.4...v2.0.0-alpha.5) (2025-09-07)
 
-
 ### chore
 
-* release 2.0.0-alpha.5 ([12bf329](https://github.com/billchurch/webssh2_client/commit/12bf3295428f424f904a2ed168fbcdcb039f70e2))
-
+- release 2.0.0-alpha.5 ([12bf329](https://github.com/billchurch/webssh2_client/commit/12bf3295428f424f904a2ed168fbcdcb039f70e2))
 
 ### Bug Fixes
 
-* restore SSO functionality with basic auth credentials ([6892057](https://github.com/billchurch/webssh2_client/commit/6892057c6eed5b233dc0546d5c73f85caabd5e91))
+- restore SSO functionality with basic auth credentials ([6892057](https://github.com/billchurch/webssh2_client/commit/6892057c6eed5b233dc0546d5c73f85caabd5e91))
 
 ## [2.0.0-alpha.4](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.1...v2.0.0-alpha.4) (2025-09-07)
 
