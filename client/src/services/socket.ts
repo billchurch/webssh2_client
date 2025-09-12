@@ -277,9 +277,8 @@ export class SocketService {
 
   private getTerminal(): void {
     const dims = terminalDimensions()
-    const term = state.term ?? 'xterm-color'
-    const terminal = { cols: dims.cols ?? 0, rows: dims.rows ?? 0, term }
-    debug('Getting terminal', terminal)
+    const terminal = { cols: dims.cols ?? 0, rows: dims.rows ?? 0 }
+    debug('Getting terminal (dimensions only)', terminal)
     const currentSocket = socket()
     if (currentSocket) currentSocket.emit('terminal', terminal)
   }

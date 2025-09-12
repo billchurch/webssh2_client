@@ -31,7 +31,6 @@ export interface ClientAuthenticatePayload {
 }
 
 export interface ClientTerminalPayload {
-  term: string
   cols: number
   rows: number
 }
