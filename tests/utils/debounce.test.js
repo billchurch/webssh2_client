@@ -6,9 +6,9 @@ import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 // Since the source is TypeScript, we need to import the transpiled version
 // For now, we'll create a simple mock implementation for testing
-const createDebouncer = function(fn, delay) {
+const createDebouncer = function (fn, delay) {
   let timeoutId = null
-  return function(...args) {
+  return function (...args) {
     if (timeoutId !== null) clearTimeout(timeoutId)
     timeoutId = setTimeout(() => {
       fn(...args)
@@ -17,9 +17,9 @@ const createDebouncer = function(fn, delay) {
   }
 }
 
-const createCancellableDebouncer = function(fn, delay) {
+const createCancellableDebouncer = function (fn, delay) {
   let timeoutId = null
-  const debounced = function(...args) {
+  const debounced = function (...args) {
     if (timeoutId !== null) clearTimeout(timeoutId)
     timeoutId = setTimeout(() => {
       fn(...args)
@@ -50,7 +50,13 @@ describe('Debounce Utilities', () => {
 
     global.setTimeout = (callback, delay) => {
       const id = timerCallbacks.length
-      timerCallbacks.push({ callback, delay, time: currentTime + delay, id, cancelled: false })
+      timerCallbacks.push({
+        callback,
+        delay,
+        time: currentTime + delay,
+        id,
+        cancelled: false
+      })
       return id
     }
 
@@ -70,10 +76,11 @@ describe('Debounce Utilities', () => {
     const targetTime = currentTime + ms
     currentTime = targetTime
     // Process timers that should fire
-    timerCallbacks.forEach(timer => {
+    timerCallbacks.forEach((timer, index) => {
       if (timer && !timer.cancelled && timer.time <= currentTime) {
         timer.callback()
-        timer.cancelled = true
+        // Mark timer as cancelled without modifying the parameter
+        timerCallbacks[index] = { ...timer, cancelled: true }
       }
     })
   }
@@ -102,7 +109,7 @@ describe('Debounce Utilities', () => {
       debounced() // Timer set to fire at time 100
       advanceTime(50) // Now at time 50
       assert.equal(callCount, 0, 'Should not be called after 50ms')
-      
+
       debounced() // Timer cancelled and reset to fire at time 150 (50 + 100)
       advanceTime(50) // Now at time 100
       assert.equal(callCount, 0, 'Should not be called at time 100')
@@ -113,7 +120,9 @@ describe('Debounce Utilities', () => {
 
     it('should pass arguments to debounced function', () => {
       let receivedArgs = []
-      const fn = (...args) => { receivedArgs = args }
+      const fn = (...args) => {
+        receivedArgs = args
+      }
       const debounced = createDebouncer(fn, 100)
 
       debounced(1, 'test', { key: 'value' })
@@ -127,7 +136,9 @@ describe('Debounce Utilities', () => {
 
     it('should use the latest arguments when called multiple times', () => {
       let receivedArg = null
-      const fn = (arg) => { receivedArg = arg }
+      const fn = (arg) => {
+        receivedArg = arg
+      }
       const debounced = createDebouncer(fn, 100)
 
       debounced('first')
@@ -158,7 +169,7 @@ describe('Debounce Utilities', () => {
       debounced() // Timer set to fire at time 100
       advanceTime(50) // Now at time 50
       assert.equal(callCount, 0, 'Should not be called yet')
-      
+
       cancel() // Timer cancelled
       advanceTime(60) // Now at time 110
       assert.equal(callCount, 0, 'Function should not be called after cancel')
@@ -174,7 +185,11 @@ describe('Debounce Utilities', () => {
       debounced() // New timer set to fire at time 100
       advanceTime(100) // Now at time 100
 
-      assert.equal(callCount, 1, 'Function should be called after cancel and new call')
+      assert.equal(
+        callCount,
+        1,
+        'Function should be called after cancel and new call'
+      )
     })
 
     it('should handle multiple cancels safely', () => {

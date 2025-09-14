@@ -11,13 +11,23 @@ const TERMINAL_MIN_ROWS = 1
 const TERMINAL_MAX_ROWS = 9999
 
 const validateDimensions = (dims) => {
-  return dims.cols > 0 && dims.rows > 0 && 
-         Number.isFinite(dims.cols) && Number.isFinite(dims.rows)
+  return (
+    dims.cols > 0 &&
+    dims.rows > 0 &&
+    Number.isFinite(dims.cols) &&
+    Number.isFinite(dims.rows)
+  )
 }
 
 const normalizeDimensions = (dims) => ({
-  cols: Math.min(Math.max(TERMINAL_MIN_COLS, Math.floor(dims.cols)), TERMINAL_MAX_COLS),
-  rows: Math.min(Math.max(TERMINAL_MIN_ROWS, Math.floor(dims.rows)), TERMINAL_MAX_ROWS)
+  cols: Math.min(
+    Math.max(TERMINAL_MIN_COLS, Math.floor(dims.cols)),
+    TERMINAL_MAX_COLS
+  ),
+  rows: Math.min(
+    Math.max(TERMINAL_MIN_ROWS, Math.floor(dims.rows)),
+    TERMINAL_MAX_ROWS
+  )
 })
 
 const dimensionsChanged = (prev, current) => {
@@ -38,12 +48,12 @@ const createDebouncedResizeEmitter = (emitFn, delay) => {
 const createSmartResizeHandler = (emitFn, delay) => {
   let lastDimensions = null
   let timeoutId = null
-  
+
   return (dims) => {
     if (!validateDimensions(dims)) return
-    
+
     const normalized = normalizeDimensions(dims)
-    
+
     if (!lastDimensions || dimensionsChanged(lastDimensions, normalized)) {
       lastDimensions = normalized
       if (timeoutId) clearTimeout(timeoutId)
@@ -143,31 +153,41 @@ describe('Terminal Resize Utilities', () => {
 
     it('should emit valid dimensions', async () => {
       const emitter = createDebouncedResizeEmitter(mockEmitFn, 0)
-      
+
       emitter({ cols: 80, rows: 24 })
       // With 0 delay, should emit immediately in next tick
-      await new Promise(resolve => setTimeout(resolve, 1))
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
       assert.equal(emittedDimensions.length, 1)
       assert.deepEqual(emittedDimensions[0], { cols: 80, rows: 24 })
     })
 
     it('should not emit invalid dimensions', async () => {
       const emitter = createDebouncedResizeEmitter(mockEmitFn, 0)
-      
+
       emitter({ cols: 0, rows: 24 })
       emitter({ cols: -1, rows: -1 })
       emitter({ cols: NaN, rows: 24 })
-      
-      await new Promise(resolve => setTimeout(resolve, 1))
-      assert.equal(emittedDimensions.length, 0, 'Should not emit invalid dimensions')
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
+      assert.equal(
+        emittedDimensions.length,
+        0,
+        'Should not emit invalid dimensions'
+      )
     })
 
     it('should normalize dimensions before emitting', async () => {
       const emitter = createDebouncedResizeEmitter(mockEmitFn, 0)
-      
+
       emitter({ cols: 80.7, rows: 24.3 })
-      
-      await new Promise(resolve => setTimeout(resolve, 1))
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
       assert.equal(emittedDimensions.length, 1)
       assert.deepEqual(emittedDimensions[0], { cols: 80, rows: 24 })
     })
@@ -184,36 +204,50 @@ describe('Terminal Resize Utilities', () => {
 
     it('should emit on first call', async () => {
       const handler = createSmartResizeHandler(mockEmitFn, 0)
-      
+
       handler({ cols: 80, rows: 24 })
-      
-      await new Promise(resolve => setTimeout(resolve, 1))
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
       assert.equal(emittedDimensions.length, 1)
       assert.deepEqual(emittedDimensions[0], { cols: 80, rows: 24 })
     })
 
     it('should not emit duplicate dimensions', async () => {
       const handler = createSmartResizeHandler(mockEmitFn, 0)
-      
+
       handler({ cols: 80, rows: 24 })
-      await new Promise(resolve => setTimeout(resolve, 1))
-      
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
+
       handler({ cols: 80, rows: 24 })
       handler({ cols: 80, rows: 24 })
-      
-      await new Promise(resolve => setTimeout(resolve, 1))
-      assert.equal(emittedDimensions.length, 1, 'Should only emit once for same dimensions')
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
+      assert.equal(
+        emittedDimensions.length,
+        1,
+        'Should only emit once for same dimensions'
+      )
     })
 
     it('should emit when dimensions change', async () => {
       const handler = createSmartResizeHandler(mockEmitFn, 0)
-      
+
       handler({ cols: 80, rows: 24 })
-      await new Promise(resolve => setTimeout(resolve, 1))
-      
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
+
       handler({ cols: 100, rows: 30 })
-      await new Promise(resolve => setTimeout(resolve, 1))
-      
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
+
       assert.equal(emittedDimensions.length, 2)
       assert.deepEqual(emittedDimensions[0], { cols: 80, rows: 24 })
       assert.deepEqual(emittedDimensions[1], { cols: 100, rows: 30 })
@@ -221,18 +255,24 @@ describe('Terminal Resize Utilities', () => {
 
     it('should track last dimensions correctly', async () => {
       const handler = createSmartResizeHandler(mockEmitFn, 0)
-      
+
       handler({ cols: 80, rows: 24 })
-      await new Promise(resolve => setTimeout(resolve, 1))
-      
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
+
       handler({ cols: 80, rows: 24 }) // No emit
       handler({ cols: 81, rows: 24 }) // Should emit
-      await new Promise(resolve => setTimeout(resolve, 1))
-      
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
+
       handler({ cols: 81, rows: 24 }) // No emit
       handler({ cols: 81, rows: 25 }) // Should emit
-      await new Promise(resolve => setTimeout(resolve, 1))
-      
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1)
+      })
+
       assert.equal(emittedDimensions.length, 3)
       assert.deepEqual(emittedDimensions[0], { cols: 80, rows: 24 })
       assert.deepEqual(emittedDimensions[1], { cols: 81, rows: 24 })
