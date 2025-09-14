@@ -7,7 +7,8 @@
     "lib": ["ES2023"],
     "outDir": ".",
     "rootDir": ".",
-    "declaration": false
+    "declaration": true,
+    "declarationMap": true
   },
   "include": ["**/*.ts", "types/**/*.d.ts", "client/src/js/csp-config.ts"],
   "exclude": ["client/public", "node_modules", "client/src/**"]
