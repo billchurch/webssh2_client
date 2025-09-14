@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-alpha.10](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.9...v2.0.0-alpha.10) (2025-09-14)
+
+
+### chore
+
+* release 2.0.0-alpha.10 ([6b81462](https://github.com/billchurch/webssh2_client/commit/6b81462b44309faeaf2bd3007bea6625413c44d1))
+
+
+### Features
+
+* add TypeScript type declarations for proper module inference ([b73bc38](https://github.com/billchurch/webssh2_client/commit/b73bc387f31421484f2c6b706bf13024f5c8bfa7))
+
 ## [2.0.0-alpha.9](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.5...v2.0.0-alpha.9) (2025-09-14)
 
 
