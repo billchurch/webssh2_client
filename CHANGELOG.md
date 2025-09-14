@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-alpha.9](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.5...v2.0.0-alpha.9) (2025-09-14)
+
+
+### chore
+
+* release 2.0.0-alpha.9 ([114716d](https://github.com/billchurch/webssh2_client/commit/114716dae8f7bea9968775ec626cb960565a5811))
+
+
+### Features
+
+* add advanced clipboard integration with dynamic settings ([1142fcd](https://github.com/billchurch/webssh2_client/commit/1142fcdec1b0da9733471fda19d68a8fca6cacd1))
+* add NPM supply chain security policy ([#52](https://github.com/billchurch/webssh2_client/issues/52)) ([50f9dbe](https://github.com/billchurch/webssh2_client/commit/50f9dbe83ec89fd232a12ed067e427cef3a73315)), closes [#51](https://github.com/billchurch/webssh2_client/issues/51)
+* **client:** implement debounced terminal resize with unit tests ([874402e](https://github.com/billchurch/webssh2_client/commit/874402e9f21756c63a7efc998ee45fa1c552f8fa))
+
 ## [2.0.0-alpha.5](https://github.com/billchurch/webssh2_client/compare/v2.0.0-alpha.4...v2.0.0-alpha.5) (2025-09-07)
 
 ### chore
