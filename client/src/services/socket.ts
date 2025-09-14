@@ -20,6 +20,12 @@ import {
 
 // Import utilities
 import { credentials } from '../stores/config.js'
+import { createDebouncedResizeEmitter } from '../utils/terminalResize.js'
+import {
+  RESIZE_DEBOUNCE_DELAY,
+  DEFAULT_TERMINAL_COLS,
+  DEFAULT_TERMINAL_ROWS
+} from '../constants.js'
 
 // Import types
 import type {
@@ -59,13 +65,29 @@ let storedFormData: Partial<ClientAuthenticatePayload> | null = null
 export const [terminalDimensions, setTerminalDimensions] = createSignal<{
   cols: number
   rows: number
-}>({ cols: 80, rows: 24 })
+}>({ cols: DEFAULT_TERMINAL_COLS, rows: DEFAULT_TERMINAL_ROWS })
 
 // Socket Service Class
 export class SocketService {
   private cleanupFunctions: Array<() => void> = []
 
+  // Create a single debounced resize emitter for all resize events
+  // This ensures consistent debouncing regardless of where resize is triggered from
+  private debouncedEmitResize = createDebouncedResizeEmitter(
+    (dimensions: ClientResizePayload) => {
+      const currentSocket = socket()
+      if (currentSocket) {
+        currentSocket.emit('resize', dimensions)
+        debug('Resize emitted', dimensions)
+      }
+    },
+    RESIZE_DEBOUNCE_DELAY
+  )
+
   // Reactive effects will be set up when the service is initialized within a component
+
+  // Track last dimensions to prevent redundant emissions from reactive effect
+  private lastEmittedDimensions: { cols: number; rows: number } | null = null
 
   // This should be called from within a SolidJS component
   setupReactiveEffects() {
@@ -74,7 +96,16 @@ export class SocketService {
       const dims = terminalDimensions()
       const currentSocket = socket()
       if (currentSocket && isConnected() && dims.cols > 0 && dims.rows > 0) {
-        this.emitResize(dims)
+        // Check if dimensions actually changed
+        if (
+          !this.lastEmittedDimensions ||
+          dims.cols !== this.lastEmittedDimensions.cols ||
+          dims.rows !== this.lastEmittedDimensions.rows
+        ) {
+          debug('[RESIZE-REACTIVE] Reactive effect triggered:', dims)
+          this.lastEmittedDimensions = { ...dims }
+          this.debouncedEmitResize(dims)
+        }
       }
     })
 
@@ -165,13 +196,11 @@ export class SocketService {
     }
   }
 
-  // Emit resize event
+  // Emit resize event (now debounced internally)
   emitResize(dimensions: ClientResizePayload): void {
-    const currentSocket = socket()
-    if (currentSocket) {
-      currentSocket.emit('resize', dimensions)
-      debug('Resize emitted', dimensions)
-    }
+    debug('[RESIZE-DIRECT] Direct emitResize called:', dimensions)
+    // Use the debounced emitter to prevent flooding
+    this.debouncedEmitResize(dimensions)
   }
 
   // Reauthenticate
@@ -325,6 +354,7 @@ export class SocketService {
             onDisconnectCallback('reauth_required', socketInstance)
           break
         case 'dimensions':
+          debug('[RESIZE-SERVER] Server requested dimensions')
           this.emitResize(terminalDimensions())
           break
         default:
@@ -546,8 +576,6 @@ export const setFormData = (formData: Partial<ClientAuthenticatePayload>) =>
   socketService.setFormData(formData)
 export const closeConnection = () => socketService.closeConnection()
 export const emitData = (data: string) => socketService.emitData(data)
-export const emitResize = (dimensions: ClientResizePayload) =>
-  socketService.emitResize(dimensions)
 export const initializeSocketConnection = () =>
   socketService.initializeSocketConnection()
 export const initSocket = (

@@ -213,18 +213,6 @@ const App: Component = () => {
       debug('Terminal dimensions set:', dims)
     }
 
-    // Set up resize listener
-    if (ref.terminal) {
-      ref.terminal.onResize((dimensions) => {
-        const dims = { cols: dimensions.cols, rows: dimensions.rows }
-        setTerminalDimensions(dims)
-        debug('Terminal resized:', dims)
-
-        // Manually trigger resize to socket
-        socketService.emitResize(dims)
-      })
-    }
-
     setIsTerminalVisible(true)
   }
 

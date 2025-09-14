@@ -11,7 +11,11 @@ import type { Terminal, ITerminalOptions } from '@xterm/xterm'
 
 // Import existing functionality
 import { validateNumber, defaultSettings } from '../utils/index.js'
-import { emitData, emitResize } from '../services/socket.js'
+import {
+  emitData,
+  setTerminalDimensions,
+  terminalDimensions
+} from '../services/socket.js'
 import { getStoredSettings } from '../utils/settings.js'
 import type { WebSSH2Config, TerminalSettings } from '../types/config.d'
 
@@ -207,7 +211,17 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
             cols: currentRef.terminal.cols,
             rows: currentRef.terminal.rows
           }
-          emitResize(dims)
+
+          // Only update if dimensions actually changed
+          const currentDims = terminalDimensions()
+          if (
+            dims.cols !== currentDims.cols ||
+            dims.rows !== currentDims.rows
+          ) {
+            debug('[RESIZE-COMPONENT] Terminal component resize:', dims)
+            // Update the terminal dimensions signal - reactive effect will handle emitting
+            setTerminalDimensions(dims)
+          }
           return dims
         }
         return null
@@ -470,10 +484,17 @@ export class SolidTerminalManager {
         cols: terminal.cols,
         rows: terminal.rows
       }
-      debug('resizeTerminal', dimensions)
 
-      // Emit resize to socket service
-      emitResize(dimensions)
+      // Only update if dimensions actually changed
+      const currentDims = terminalDimensions()
+      if (
+        dimensions.cols !== currentDims.cols ||
+        dimensions.rows !== currentDims.rows
+      ) {
+        debug('[RESIZE-MANAGER] TerminalManager resizeTerminal:', dimensions)
+        // Update the terminal dimensions signal - reactive effect will handle emitting
+        setTerminalDimensions(dimensions)
+      }
 
       return dimensions
     }
