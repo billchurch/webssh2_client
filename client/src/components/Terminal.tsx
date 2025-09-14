@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js'
-import { createSignal, onCleanup } from 'solid-js'
+import { createSignal, onCleanup, onMount } from 'solid-js'
 import { FitAddon } from '@xterm/addon-fit'
 import { SearchAddon } from '@xterm/addon-search'
 import createDebug from 'debug'
@@ -11,9 +11,20 @@ import type { Terminal, ITerminalOptions } from '@xterm/xterm'
 
 // Import existing functionality
 import { validateNumber, defaultSettings } from '../utils/index.js'
-import { emitData, emitResize } from '../services/socket.js'
+import {
+  emitData,
+  setTerminalDimensions,
+  terminalDimensions
+} from '../services/socket.js'
 import { getStoredSettings } from '../utils/settings.js'
 import type { WebSSH2Config, TerminalSettings } from '../types/config.d'
+
+// Import clipboard functionality
+import {
+  TerminalClipboardIntegration,
+  type ClipboardSettings
+} from '../lib/clipboard/terminal-clipboard-integration'
+import { ClipboardCompatibility } from '../utils/clipboard-compatibility'
 
 const debug = createDebug('webssh2-client:terminal-component')
 
@@ -26,6 +37,11 @@ export interface TerminalActions {
   getDimensions: () => { cols: number; rows: number }
   applySettings: (options: Partial<ITerminalOptions>) => void
   getTerminal: () => Terminal | null
+  clipboard: {
+    copy: () => Promise<boolean>
+    paste: () => Promise<void>
+    updateSettings: (settings: Partial<ClipboardSettings>) => void
+  }
   search: {
     findNext: (
       term: string,
@@ -62,6 +78,16 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
   const [terminalRef, setTerminalRef] = createSignal<TerminalRef>()
   const [fitAddon, setFitAddon] = createSignal<FitAddon>()
   const [searchAddon, setSearchAddon] = createSignal<SearchAddon>()
+  const [clipboardIntegration, setClipboardIntegration] =
+    createSignal<TerminalClipboardIntegration>()
+
+  // Check clipboard compatibility on mount
+  onMount(async () => {
+    const warnings = ClipboardCompatibility.getWarnings()
+    if (warnings.length > 0) {
+      console.warn('Clipboard warnings:', warnings)
+    }
+  })
 
   // Get terminal settings based on config
   const getTerminalOptions = (): Partial<ITerminalOptions> => {
@@ -135,6 +161,26 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
     setSearchAddon(searchAddonInstance)
     terminal.loadAddon(searchAddonInstance)
 
+    // Initialize clipboard integration
+    const storedSettings = getStoredSettings() as Partial<TerminalSettings>
+    const clipboardSettings: ClipboardSettings = {
+      autoSelectToClipboard:
+        storedSettings?.clipboardAutoSelectToCopy ??
+        defaultSettings.clipboardAutoSelectToCopy,
+      enableMiddleClickPaste:
+        storedSettings?.clipboardEnableMiddleClickPaste ??
+        defaultSettings.clipboardEnableMiddleClickPaste,
+      enableKeyboardShortcuts:
+        storedSettings?.clipboardEnableKeyboardShortcuts ??
+        defaultSettings.clipboardEnableKeyboardShortcuts
+    }
+
+    const clipboardInstance = new TerminalClipboardIntegration(
+      clipboardSettings
+    )
+    clipboardInstance.attach(terminal)
+    setClipboardIntegration(clipboardInstance)
+
     // Fit terminal after mount with multiple attempts for proper sizing
     const fitTerminal = () => {
       if (fitAddonInstance && ref.terminal) {
@@ -165,7 +211,17 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
             cols: currentRef.terminal.cols,
             rows: currentRef.terminal.rows
           }
-          emitResize(dims)
+
+          // Only update if dimensions actually changed
+          const currentDims = terminalDimensions()
+          if (
+            dims.cols !== currentDims.cols ||
+            dims.rows !== currentDims.rows
+          ) {
+            debug('[RESIZE-COMPONENT] Terminal component resize:', dims)
+            // Update the terminal dimensions signal - reactive effect will handle emitting
+            setTerminalDimensions(dims)
+          }
           return dims
         }
         return null
@@ -180,6 +236,37 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
           }
         }
         return { cols: 0, rows: 0 }
+      },
+      clipboard: {
+        copy: async () => {
+          const clipboard = clipboardIntegration()
+          const term = terminalRef()?.terminal
+          if (clipboard && term) {
+            const selection = term.getSelection()
+            if (selection) {
+              const manager = clipboard.getClipboardManager()
+              return manager.writeText(selection)
+            }
+          }
+          return false
+        },
+        paste: async () => {
+          const clipboard = clipboardIntegration()
+          const term = terminalRef()?.terminal
+          if (clipboard && term) {
+            const manager = clipboard.getClipboardManager()
+            const text = await manager.readText()
+            if (text) {
+              term.paste(text)
+            }
+          }
+        },
+        updateSettings: (settings: Partial<ClipboardSettings>) => {
+          const clipboard = clipboardIntegration()
+          if (clipboard) {
+            clipboard.updateSettings(settings)
+          }
+        }
       },
       applySettings: (options: Partial<ITerminalOptions>) => {
         const currentRef = terminalRef()
@@ -322,7 +409,14 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
         resizeObserver.disconnect()
       }
       window.removeEventListener('resize', handleWindowResize)
-      debug('Terminal resize handlers cleaned up')
+
+      // Clean up clipboard integration
+      const clipboard = clipboardIntegration()
+      if (clipboard) {
+        clipboard.detach()
+      }
+
+      debug('Terminal resize handlers and clipboard cleaned up')
     })
 
     // Initial notification
@@ -390,10 +484,17 @@ export class SolidTerminalManager {
         cols: terminal.cols,
         rows: terminal.rows
       }
-      debug('resizeTerminal', dimensions)
 
-      // Emit resize to socket service
-      emitResize(dimensions)
+      // Only update if dimensions actually changed
+      const currentDims = terminalDimensions()
+      if (
+        dimensions.cols !== currentDims.cols ||
+        dimensions.rows !== currentDims.rows
+      ) {
+        debug('[RESIZE-MANAGER] TerminalManager resizeTerminal:', dimensions)
+        // Update the terminal dimensions signal - reactive effect will handle emitting
+        setTerminalDimensions(dimensions)
+      }
 
       return dimensions
     }
@@ -464,3 +565,9 @@ export class SolidTerminalManager {
 
 // Export singleton instance for compatibility
 export const terminalManager = new SolidTerminalManager()
+
+// Expose terminal manager globally for testing
+if (typeof window !== 'undefined') {
+  ;(window as { terminalManager?: SolidTerminalManager }).terminalManager =
+    terminalManager
+}
