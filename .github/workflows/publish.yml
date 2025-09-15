@@ -52,7 +52,23 @@ jobs:
       - name: Build server entries
         run: npm run build:server
 
+      - name: Determine npm tag
+        id: npm-tag
+        run: |
+          # Extract version from package.json
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Version: $VERSION"
+          
+          # Check if it's a prerelease version (contains alpha, beta, rc, etc.)
+          if [[ "$VERSION" =~ (alpha|beta|rc|pre) ]]; then
+            echo "NPM_TAG=alpha" >> $GITHUB_OUTPUT
+            echo "Publishing as alpha tag"
+          else
+            echo "NPM_TAG=latest" >> $GITHUB_OUTPUT
+            echo "Publishing as latest tag"
+          fi
+
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --tag alpha
+        run: npm publish --tag ${{ steps.npm-tag.outputs.NPM_TAG }}
