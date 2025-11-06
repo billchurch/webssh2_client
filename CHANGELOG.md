@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/billchurch/webssh2_client/compare/v2.0.0...v2.1.0) (2025-11-06)
+
+
+### Features
+
+* Implement SSH authentication method gating and sanitization ([#60](https://github.com/billchurch/webssh2_client/issues/60)) ([8d1174b](https://github.com/billchurch/webssh2_client/commit/8d1174b7b1670bf575889c34ae4532f199599470))
+
 ## [2.0.0](https://github.com/billchurch/webssh2_client/compare/v2.0.0...v2.0.0) (2025-09-14)
 
 
