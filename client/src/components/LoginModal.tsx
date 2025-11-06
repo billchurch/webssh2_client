@@ -418,7 +418,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
   const renderKeyboardInteractiveNotice = () => (
     <div class="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-      Additional prompts will appear after connecting. Follow the on-screen
+      Additional prompts may appear after connecting. Follow the on-screen
       instructions to complete keyboard interactive authentication.
     </div>
   )
