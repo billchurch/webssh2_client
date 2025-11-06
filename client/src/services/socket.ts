@@ -38,6 +38,12 @@ import type {
 import type { WebSSH2Config } from '../types/config.d'
 // import type { ElementId } from '../../types/dom.d'
 
+declare global {
+  interface Window {
+    webssh2Socket?: Socket<ServerToClientEvents, ClientToServerEvents>
+  }
+}
+
 const debug = createDebug('webssh2-client:socket-service')
 
 // Socket instance and reactive state
@@ -173,6 +179,12 @@ export class SocketService {
     }) as Socket<ServerToClientEvents, ClientToServerEvents>
 
     setSocket(newSocket)
+
+    // Expose socket to window for E2E testing
+    if (typeof window !== 'undefined') {
+      window.webssh2Socket = newSocket
+    }
+
     this.setupSocketListeners(newSocket)
     return newSocket
   }
