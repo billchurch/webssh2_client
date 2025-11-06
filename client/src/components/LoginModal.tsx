@@ -1,11 +1,13 @@
 import type { Component } from 'solid-js'
-import { createSignal, createEffect } from 'solid-js'
+import { createSignal, createEffect, createMemo, For } from 'solid-js'
 import createDebug from 'debug'
 import { Modal } from './Modal'
-import { Key, Settings, Upload } from 'lucide-solid'
+import { Key, Settings, Upload, Info } from 'lucide-solid'
 import { usePrivateKeyValidation } from '../hooks/usePrivateKeyValidation'
 import { createFieldValidator, ValidationRules } from '../utils/validation'
 import type { ClientAuthenticatePayload } from '../types/events.d'
+import type { SSHAuthMethod } from '../types/config.d'
+import { DEFAULT_AUTH_METHODS } from '../constants.js'
 
 const debug = createDebug('webssh2-client:login-modal')
 
@@ -15,6 +17,8 @@ interface LoginModalProps {
   onSubmit: (formData: Partial<ClientAuthenticatePayload>) => void
   onOptionsClick?: () => void
   initialValues?: Partial<ClientAuthenticatePayload> | undefined
+  allowedAuthMethods: SSHAuthMethod[]
+  authMethodLoadFailed?: boolean
 }
 
 export const LoginModal: Component<LoginModalProps> = (props) => {
@@ -85,7 +89,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
         } else if (!data.username || data.username.trim() === '') {
           usernameInputRef?.focus()
           debug('Auto-focused username field')
-        } else {
+        } else if (supportsPassword()) {
           // Default to password field if host and username are filled
           passwordInputRef?.focus()
           debug('Auto-focused password field')
@@ -110,7 +114,59 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     setFormData((prev) => ({ ...prev, [key]: value }))
   }
 
+  const allowedMethods = createMemo(() =>
+    props.allowedAuthMethods && props.allowedAuthMethods.length > 0
+      ? props.allowedAuthMethods
+      : DEFAULT_AUTH_METHODS
+  )
+
+  const supportsPassword = createMemo(() =>
+    allowedMethods().includes('password')
+  )
+  const supportsPublicKey = createMemo(() =>
+    allowedMethods().includes('publickey')
+  )
+  const enforcePrivateKeyOnly = createMemo(
+    () => supportsPublicKey() && !supportsPassword()
+  )
+  const shouldShowPrivateKey = createMemo(
+    () =>
+      supportsPublicKey() &&
+      (enforcePrivateKeyOnly() || showPrivateKeySection())
+  )
+  const methodRestrictionActive = createMemo(() =>
+    DEFAULT_AUTH_METHODS.some((method) => !allowedMethods().includes(method))
+  )
+  const authLoadFailed = createMemo(() => Boolean(props.authMethodLoadFailed))
+
+  createEffect(() => {
+    if (!supportsPublicKey()) {
+      setShowPrivateKeySection(false)
+      setFormData((prev) => ({
+        ...prev,
+        privateKey: '',
+        passphrase: ''
+      }))
+    }
+  })
+
+  createEffect(() => {
+    if (!supportsPassword()) {
+      setFormData((prev) => ({
+        ...prev,
+        password: ''
+      }))
+    }
+  })
+
+  createEffect(() => {
+    if (enforcePrivateKeyOnly()) {
+      setShowPrivateKeySection(true)
+    }
+  })
+
   const handleFileUpload = async (e: Event) => {
+    if (!supportsPublicKey()) return
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
     if (file) {
@@ -127,14 +183,245 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
   // Form validation
   const isFormValid = () => {
-    const hasCredentials = formData().password || formData().privateKey
+    const data = formData()
+    const passwordValue = typeof data.password === 'string' ? data.password : ''
+    const privateKeyValue =
+      typeof data.privateKey === 'string' ? data.privateKey : ''
+
+    const hasPassword = supportsPassword() && passwordValue.trim().length > 0
+    const hasPrivateKey =
+      supportsPublicKey() && privateKeyValue.trim().length > 0
+
+    let credentialsValid = true
+    if (supportsPassword() && supportsPublicKey()) {
+      credentialsValid =
+        hasPassword || (hasPrivateKey && privateKeyValidation.isValid())
+    } else if (supportsPassword()) {
+      credentialsValid = hasPassword
+    } else if (supportsPublicKey()) {
+      credentialsValid = hasPrivateKey && privateKeyValidation.isValid()
+    }
+
     return (
       hostValidator.validate() &&
       usernameValidator.validate() &&
-      hasCredentials &&
-      (formData().privateKey ? privateKeyValidation.isValid() : true)
+      credentialsValid
     )
   }
+
+  const togglePrivateKeyVisibility = () => {
+    const next = !showPrivateKeySection()
+    setShowPrivateKeySection(next)
+
+    if (!next) {
+      setFormData((prev) => ({
+        ...prev,
+        privateKey: '',
+        passphrase: ''
+      }))
+    }
+  }
+
+  const buildSubmitPayload = (): Partial<ClientAuthenticatePayload> => {
+    const data = formData()
+    const payload: Partial<ClientAuthenticatePayload> = {}
+
+    if (typeof data.host === 'string' && data.host.trim().length > 0) {
+      payload.host = data.host.trim()
+    }
+
+    if (typeof data.port === 'number') {
+      payload.port = data.port
+    }
+
+    if (typeof data.username === 'string' && data.username.trim().length > 0) {
+      payload.username = data.username.trim()
+    }
+
+    if (
+      supportsPassword() &&
+      typeof data.password === 'string' &&
+      data.password.trim().length > 0
+    ) {
+      payload.password = data.password
+    }
+
+    if (
+      supportsPublicKey() &&
+      typeof data.privateKey === 'string' &&
+      data.privateKey.trim().length > 0 &&
+      privateKeyValidation.isValid()
+    ) {
+      payload.privateKey = data.privateKey
+      if (
+        typeof data.passphrase === 'string' &&
+        data.passphrase.trim().length > 0
+      ) {
+        payload.passphrase = data.passphrase
+      }
+    }
+
+    return payload
+  }
+
+  const renderOptionsRow = (includeKeyToggle: boolean) => (
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-2">
+        {includeKeyToggle && (
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            onClick={togglePrivateKeyVisibility}
+          >
+            <Key class="mr-2 inline-block size-4" />
+            {shouldShowPrivateKey() ? 'Hide SSH Key' : 'Add SSH Key'}
+          </button>
+        )}
+        {methodRestrictionActive() && (
+          <span
+            class="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600"
+            title="Some methods are disabled by the administrator"
+          >
+            <Info class="mr-1 inline-block size-4" aria-hidden="true" />
+            Admin limited
+            <span class="sr-only">
+              Some methods are disabled by the administrator
+            </span>
+          </span>
+        )}
+        {authLoadFailed() && (
+          <span
+            class="text-xs text-amber-600"
+            role="status"
+            title="Server config unavailable; showing default methods"
+          >
+            Using defaults; server config unavailable
+          </span>
+        )}
+      </div>
+      <button
+        type="button"
+        class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        onClick={() => props.onOptionsClick?.()}
+        aria-label="Options"
+        title="Options"
+      >
+        <Settings class="mr-2 inline-block size-4" /> Options
+      </button>
+    </div>
+  )
+
+  const renderPrivateKeySection = () => (
+    <div class={shouldShowPrivateKey() ? '' : 'hidden'}>
+      <div class="mt-2 rounded border border-neutral-300 bg-neutral-50 p-3 text-neutral-800">
+        <label for="privateKeyText" class="sr-only">
+          Private Key
+        </label>
+        <div class="relative">
+          <textarea
+            id="privateKeyText"
+            name="privateKey"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck={false}
+            placeholder="Paste your private key here"
+            rows={3}
+            class="mb-2 block w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            classList={{
+              'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400':
+                !formData().privateKey,
+              'border-red-500 bg-red-50 text-slate-900 placeholder:text-slate-400':
+                Boolean(
+                  formData().privateKey && !privateKeyValidation.isValid()
+                ),
+              'border-green-500 bg-green-50 text-slate-900 placeholder:text-slate-400':
+                Boolean(formData().privateKey && privateKeyValidation.isValid())
+            }}
+            value={formData().privateKey || ''}
+            onInput={(e) => updateFormData('privateKey', e.currentTarget.value)}
+          ></textarea>
+
+          {/* Validation status indicator */}
+          {formData().privateKey && (
+            <div class="absolute right-2 top-2">
+              {privateKeyValidation.isValid() ? (
+                <span
+                  class="text-green-500"
+                  title={`Valid ${privateKeyValidation.format()} key`}
+                >
+                  ✓
+                </span>
+              ) : (
+                <span class="text-red-500" title={privateKeyValidation.error()}>
+                  ✗
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Validation error message */}
+        {formData().privateKey && !privateKeyValidation.isValid() && (
+          <div class="mb-2 text-sm">
+            <p class="text-red-600">{privateKeyValidation.error()}</p>
+            {privateKeyValidation.suggestion() && (
+              <p class="mt-1 text-gray-600">
+                {privateKeyValidation.suggestion()}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Key format badge */}
+        {formData().privateKey && privateKeyValidation.isValid() && (
+          <div class="mb-2">
+            <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+              {privateKeyValidation.format()} format detected
+            </span>
+          </div>
+        )}
+
+        <div class="mb-2">
+          <input
+            type="file"
+            id="privateKeyFile"
+            class="sr-only"
+            onChange={handleFileUpload}
+          />
+          <label
+            for="privateKeyFile"
+            class="inline-flex cursor-pointer items-center justify-center rounded-md border border-transparent bg-slate-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+          >
+            <Upload class="mr-2 inline-block size-4" /> Upload Key File
+          </label>
+        </div>
+
+        <label for="passphraseInput" class="sr-only">
+          Key Passphrase
+        </label>
+        <input
+          type="password"
+          id="passphraseInput"
+          name="passphrase"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck={false}
+          enterkeyhint="go"
+          placeholder="Key password (if encrypted)"
+          class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={formData().passphrase || ''}
+          onInput={(e) => updateFormData('passphrase', e.currentTarget.value)}
+        />
+      </div>
+    </div>
+  )
+
+  const renderKeyboardInteractiveNotice = () => (
+    <div class="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+      Additional prompts will appear after connecting. Follow the on-screen
+      instructions to complete keyboard interactive authentication.
+    </div>
+  )
 
   const handleSubmit = (e: Event) => {
     e.preventDefault()
@@ -142,7 +429,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
       debug('Form validation failed')
       return
     }
-    props.onSubmit(formData())
+    props.onSubmit(buildSubmitPayload())
     props.onClose()
   }
 
@@ -228,173 +515,56 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
             />
           </div>
 
-          {/* Password */}
-          <div class="relative w-full">
-            <label for="passwordInput" class="sr-only">
-              Password
-            </label>
-            <input
-              ref={passwordInputRef}
-              type="password"
-              id="passwordInput"
-              name="password"
-              placeholder="Password"
-              autocomplete="current-password"
-              autocapitalize="off"
-              spellcheck={false}
-              enterkeyhint="go"
-              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData().password || ''}
-              onInput={(e) => updateFormData('password', e.currentTarget.value)}
-              onKeyDown={handleKeyDown}
-              onKeyUp={handleKeyUp}
-            />
-            <span
-              class={`${capsLockActive() ? '' : 'hidden'} pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-red-500`}
-            >
-              ⇪
-            </span>
-          </div>
-
-          {/* Options row */}
-          <div class="flex items-center justify-between gap-2">
-            <div>
-              <button
-                type="button"
-                class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-                onClick={() =>
-                  setShowPrivateKeySection(!showPrivateKeySection())
-                }
-              >
-                <Key class="mr-2 inline-block size-4" />
-                {showPrivateKeySection() ? 'Hide SSH Key' : 'Add SSH Key'}
-              </button>
-            </div>
-            <div>
-              <button
-                type="button"
-                class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-                onClick={() => props.onOptionsClick?.()}
-                aria-label="Options"
-                title="Options"
-              >
-                <Settings class="mr-2 inline-block size-4" /> Options
-              </button>
-            </div>
-          </div>
-
-          {/* Private key section */}
-          <div class={showPrivateKeySection() ? '' : 'hidden'}>
-            <div class="mt-2 rounded border border-neutral-300 bg-neutral-50 p-3 text-neutral-800">
-              <label for="privateKeyText" class="sr-only">
-                Private Key
-              </label>
-              <div class="relative">
-                <textarea
-                  id="privateKeyText"
-                  name="privateKey"
-                  autocomplete="off"
-                  autocapitalize="off"
-                  spellcheck={false}
-                  placeholder="Paste your private key here"
-                  rows={3}
-                  class="mb-2 block w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  classList={{
-                    'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400':
-                      !formData().privateKey,
-                    'border-red-500 bg-red-50 text-slate-900 placeholder:text-slate-400':
-                      Boolean(
-                        formData().privateKey && !privateKeyValidation.isValid()
-                      ),
-                    'border-green-500 bg-green-50 text-slate-900 placeholder:text-slate-400':
-                      Boolean(
-                        formData().privateKey && privateKeyValidation.isValid()
-                      )
-                  }}
-                  value={formData().privateKey || ''}
-                  onInput={(e) =>
-                    updateFormData('privateKey', e.currentTarget.value)
-                  }
-                ></textarea>
-
-                {/* Validation status indicator */}
-                {formData().privateKey && (
-                  <div class="absolute right-2 top-2">
-                    {privateKeyValidation.isValid() ? (
-                      <span
-                        class="text-green-500"
-                        title={`Valid ${privateKeyValidation.format()} key`}
-                      >
-                        ✓
-                      </span>
-                    ) : (
-                      <span
-                        class="text-red-500"
-                        title={privateKeyValidation.error()}
-                      >
-                        ✗
-                      </span>
-                    )}
+          <For each={allowedMethods()}>
+            {(method) => {
+              if (method === 'password') {
+                return (
+                  <div class="relative w-full">
+                    <label for="passwordInput" class="sr-only">
+                      Password
+                    </label>
+                    <input
+                      ref={passwordInputRef}
+                      type="password"
+                      id="passwordInput"
+                      name="password"
+                      placeholder="Password"
+                      autocomplete="current-password"
+                      autocapitalize="off"
+                      spellcheck={false}
+                      enterkeyhint="go"
+                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={formData().password || ''}
+                      onInput={(e) =>
+                        updateFormData('password', e.currentTarget.value)
+                      }
+                      onKeyDown={handleKeyDown}
+                      onKeyUp={handleKeyUp}
+                    />
+                    <span
+                      class={`${capsLockActive() ? '' : 'hidden'} pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-red-500`}
+                    >
+                      ⇪
+                    </span>
                   </div>
-                )}
-              </div>
+                )
+              }
+              if (method === 'publickey') {
+                return (
+                  <>
+                    {renderOptionsRow(!enforcePrivateKeyOnly())}
+                    {renderPrivateKeySection()}
+                  </>
+                )
+              }
+              if (method === 'keyboard-interactive') {
+                return renderKeyboardInteractiveNotice()
+              }
+              return null
+            }}
+          </For>
 
-              {/* Validation error message */}
-              {formData().privateKey && !privateKeyValidation.isValid() && (
-                <div class="mb-2 text-sm">
-                  <p class="text-red-600">{privateKeyValidation.error()}</p>
-                  {privateKeyValidation.suggestion() && (
-                    <p class="mt-1 text-gray-600">
-                      {privateKeyValidation.suggestion()}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Key format badge */}
-              {formData().privateKey && privateKeyValidation.isValid() && (
-                <div class="mb-2">
-                  <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                    {privateKeyValidation.format()} format detected
-                  </span>
-                </div>
-              )}
-
-              <div class="mb-2">
-                <input
-                  type="file"
-                  id="privateKeyFile"
-                  class="sr-only"
-                  onChange={handleFileUpload}
-                />
-                <label
-                  for="privateKeyFile"
-                  class="inline-flex cursor-pointer items-center justify-center rounded-md border border-transparent bg-slate-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-                >
-                  <Upload class="mr-2 inline-block size-4" /> Upload Key File
-                </label>
-              </div>
-
-              <label for="passphraseInput" class="sr-only">
-                Key Passphrase
-              </label>
-              <input
-                type="password"
-                id="passphraseInput"
-                name="passphrase"
-                autocomplete="off"
-                autocapitalize="off"
-                spellcheck={false}
-                enterkeyhint="go"
-                placeholder="Key password (if encrypted)"
-                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData().passphrase || ''}
-                onInput={(e) =>
-                  updateFormData('passphrase', e.currentTarget.value)
-                }
-              />
-            </div>
-          </div>
+          {!supportsPublicKey() && renderOptionsRow(false)}
 
           {/* Submit button */}
           <div class="mt-4">

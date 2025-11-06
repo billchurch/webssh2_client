@@ -97,6 +97,8 @@ The login dialog supports OpenSSH-style private key authentication:
 - Toggle the “Add SSH Key” section to paste a PEM key, or upload a `.pem/.key` file.
 - An optional passphrase can be provided for encrypted keys.
 - The key is validated for standard and encrypted RSA formats before use.
+- The available authentication controls are filtered by the server’s `allowedAuthMethods` list when `/ssh/config` is accessible; disallowed options are hidden and their form fields are ignored.
+- If the server endpoint is unreachable, the client falls back to the legacy “all methods available” behaviour so users are not locked out unexpectedly.
 
 No private key material is persisted by the client; it is used only for the active session.
 

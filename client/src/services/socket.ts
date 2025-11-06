@@ -19,7 +19,7 @@ import {
 } from '../stores/terminal.js'
 
 // Import utilities
-import { credentials } from '../stores/config.js'
+import { credentials, sanitizeClientAuthPayload } from '../stores/config.js'
 import { createDebouncedResizeEmitter } from '../utils/terminalResize.js'
 import {
   RESIZE_DEBOUNCE_DELAY,
@@ -146,8 +146,8 @@ export class SocketService {
 
   // Set form data for authentication
   setFormData(formData: Partial<ClientAuthenticatePayload>): void {
-    storedFormData = formData
-    debug('Form data stored', { port: formData.port })
+    storedFormData = sanitizeClientAuthPayload(formData)
+    debug('Form data stored', { port: storedFormData.port })
   }
 
   // Initialize socket connection
@@ -280,13 +280,15 @@ export class SocketService {
 
     // Start with reactive credentials as base
     const baseCredentials = credentials()
-    const authCredentials = {
+    const mergedCredentials = {
       ...baseCredentials,
       ...(dims.cols && { cols: dims.cols }),
       ...(dims.rows && { rows: dims.rows }),
       // Merge all form data if available
       ...(effectiveFormData && effectiveFormData)
     }
+
+    const authCredentials = sanitizeClientAuthPayload(mergedCredentials)
 
     setState('term', authCredentials.term ?? null)
     const maskedContent = maskObject(authCredentials)
@@ -295,8 +297,10 @@ export class SocketService {
       host: authCredentials.host,
       username: authCredentials.username,
       hasSocket: !!socket(),
-      effectiveFormData,
-      baseCredentials
+      effectiveFormData: effectiveFormData
+        ? sanitizeClientAuthPayload(effectiveFormData)
+        : null,
+      baseCredentials: sanitizeClientAuthPayload(baseCredentials)
     })
 
     const currentSocket = socket()
