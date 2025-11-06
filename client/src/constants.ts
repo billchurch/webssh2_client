@@ -1,6 +1,7 @@
 /**
  * Application-wide constants and configuration values
  */
+import type { SSHAuthMethod } from './types/config.d'
 
 // Debounce delays (in milliseconds)
 export const RESIZE_DEBOUNCE_DELAY = 150 // Delay for terminal resize events
@@ -26,3 +27,10 @@ export const NOTIFICATION_DISPLAY_DURATION = 3000
 // Logging
 export const MAX_LOG_SIZE = 1024 * 1024 * 10 // 10MB max log size
 export const LOG_ROTATION_THRESHOLD = 1024 * 1024 * 8 // Rotate at 8MB
+
+// Authentication
+export const DEFAULT_AUTH_METHODS: SSHAuthMethod[] = [
+  'password',
+  'keyboard-interactive',
+  'publickey'
+]

@@ -7,7 +7,9 @@ import type { WebSSH2Config } from './types/config.d'
 import {
   initializeConfig,
   initializeUrlParams,
-  configWithUrlOverrides
+  configWithUrlOverrides,
+  allowedAuthMethods,
+  sanitizeClientAuthPayload
 } from './stores/config.js'
 import { getBasicAuthCookie } from './utils/cookies.js'
 import {
@@ -64,6 +66,7 @@ import {
   connectionStatus,
   connectionStatusColor
 } from './services/socket.js'
+import { loadServerAuthMethods } from './services/config.js'
 
 // Import types
 import type { ClientAuthenticatePayload } from './types/events.d'
@@ -82,6 +85,7 @@ const App: Component = () => {
   const [config, setConfig] = createSignal<WebSSH2Config>()
   const [_isTerminalVisible, setIsTerminalVisible] = createSignal(false)
   const [terminalActions, setTerminalActions] = createSignal<TerminalActions>()
+  const [authMethodLoadFailed, setAuthMethodLoadFailed] = createSignal(false)
 
   let terminalRef: TerminalRef | undefined
 
@@ -98,6 +102,11 @@ const App: Component = () => {
       // Initialize reactive config and URL params
       initializeConfig()
       const cleanupUrlListener = initializeUrlParams()
+      const serverConfigResult = await loadServerAuthMethods()
+      if (!serverConfigResult.ok) {
+        debug('Server config load failed, using fallback auth methods')
+        setAuthMethodLoadFailed(true)
+      }
 
       // Handle cleanup on component unmount
       onCleanup(() => cleanupUrlListener())
@@ -405,7 +414,10 @@ const App: Component = () => {
     }
 
     setState('isConnecting', true)
-    if (formData) socketService.setFormData(formData)
+    const sanitizedFormData = formData
+      ? sanitizeClientAuthPayload(formData)
+      : undefined
+    if (sanitizedFormData) socketService.setFormData(sanitizedFormData)
     socketService.initializeSocketConnection()
 
     // Show terminal - header will be set by server via updateUI events
@@ -481,6 +493,8 @@ const App: Component = () => {
               ) as Partial<ClientAuthenticatePayload>)
             : undefined
         }
+        allowedAuthMethods={allowedAuthMethods()}
+        authMethodLoadFailed={authMethodLoadFailed()}
       />
 
       <ErrorModal

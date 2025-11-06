@@ -2,7 +2,9 @@
 import { createSignal, createMemo, createRoot } from 'solid-js'
 import createDebug from 'debug'
 import { mergeDeep } from '../utils/index.js'
-import type { WebSSH2Config } from '../types/config.d'
+import { DEFAULT_AUTH_METHODS } from '../constants.js'
+import type { SSHAuthMethod, WebSSH2Config } from '../types/config.d'
+import type { ClientAuthenticatePayload } from '../types/events.d'
 
 const debug = createDebug('webssh2-client:config-store')
 
@@ -39,12 +41,75 @@ const defaultConfig: WebSSH2Config = {
     text: null,
     background: '#000'
   },
+  allowedAuthMethods: [...DEFAULT_AUTH_METHODS],
   autoConnect: false,
   logLevel: 'info'
 }
 
 // Reactive config store
 export const [config, setConfig] = createSignal<WebSSH2Config>(defaultConfig)
+const knownAuthMethodSet = new Set(DEFAULT_AUTH_METHODS)
+
+export const coerceAuthMethods = (methods: unknown): SSHAuthMethod[] => {
+  if (!Array.isArray(methods)) {
+    return [...DEFAULT_AUTH_METHODS]
+  }
+
+  const normalized: SSHAuthMethod[] = []
+  for (const value of methods) {
+    if (
+      typeof value === 'string' &&
+      knownAuthMethodSet.has(value as SSHAuthMethod) &&
+      !normalized.includes(value as SSHAuthMethod)
+    ) {
+      normalized.push(value as SSHAuthMethod)
+    }
+  }
+
+  return normalized.length > 0 ? normalized : [...DEFAULT_AUTH_METHODS]
+}
+
+export const allowedAuthMethods = () =>
+  coerceAuthMethods(config().allowedAuthMethods)
+
+export const sanitizeClientAuthPayload = <
+  T extends Partial<ClientAuthenticatePayload>
+>(
+  payload: T
+): Partial<ClientAuthenticatePayload> => {
+  const methods = allowedAuthMethods()
+  const sanitized = { ...payload } as Partial<ClientAuthenticatePayload>
+
+  if (!methods.includes('password')) {
+    delete sanitized.password
+  } else if (
+    typeof sanitized.password === 'string' &&
+    sanitized.password.trim().length === 0
+  ) {
+    delete sanitized.password
+  }
+
+  if (!methods.includes('publickey')) {
+    delete sanitized.privateKey
+    delete sanitized.passphrase
+  } else {
+    const privateKeyValue =
+      typeof sanitized.privateKey === 'string'
+        ? sanitized.privateKey.trim()
+        : ''
+    if (!privateKeyValue) {
+      delete sanitized.privateKey
+      delete sanitized.passphrase
+    } else if (
+      typeof sanitized.passphrase === 'string' &&
+      sanitized.passphrase.trim().length === 0
+    ) {
+      delete sanitized.passphrase
+    }
+  }
+
+  return sanitized
+}
 
 // URL parameters signal
 export const [urlParams, setUrlParams] = createSignal<URLSearchParams>(
@@ -65,57 +130,129 @@ export function initializeUrlParams() {
 }
 
 // Computed config with URL parameter overrides
-export const configWithUrlOverrides = createRoot(() =>
-  createMemo(() => {
-    const baseConfig = config()
-    const params = urlParams()
+export const configWithUrlOverrides = () => {
+  const baseConfig = config()
+  const params = urlParams()
 
-    const urlOverrides: Partial<WebSSH2Config> = {}
+  const urlOverrides: Partial<WebSSH2Config> = {}
+  const allowedForOverrides = coerceAuthMethods(baseConfig.allowedAuthMethods)
+  const passwordAllowed = allowedForOverrides.includes('password')
+  const publicKeyAllowed = allowedForOverrides.includes('publickey')
 
-    // SSH parameters from URL
-    const host = params.get('host')
-    const port = params.get('port')
-    const username = params.get('username')
-    const password = params.get('password')
-    const privateKey = params.get('privateKey')
-    const passphrase = params.get('passphrase')
-    const sshterm = params.get('sshterm')
+  // SSH parameters from URL
+  const host = params.get('host')
+  const port = params.get('port')
+  const username = params.get('username')
+  const password = params.get('password')
+  const privateKey = params.get('privateKey')
+  const passphrase = params.get('passphrase')
+  const sshterm = params.get('sshterm')
 
-    if (
-      host ||
-      port ||
-      username ||
-      password ||
-      privateKey ||
-      passphrase ||
-      sshterm
-    ) {
-      urlOverrides.ssh = {
-        host: host || null,
-        port: port ? parseInt(port, 10) : 22,
-        username: username || null,
-        password: password || null,
-        sshterm: sshterm || 'xterm-color',
-        ...(privateKey && { privateKey }),
-        ...(passphrase && { passphrase })
+  const parsedPort = port ? parseInt(port, 10) : NaN
+  const sanitizedPort = Number.isNaN(parsedPort) ? 22 : parsedPort
+
+  const passwordTrimmed = typeof password === 'string' ? password.trim() : ''
+  const privateKeyTrimmed =
+    typeof privateKey === 'string' ? privateKey.trim() : ''
+
+  if (
+    host ||
+    port ||
+    username ||
+    (passwordAllowed && passwordTrimmed) ||
+    (publicKeyAllowed && privateKeyTrimmed) ||
+    (publicKeyAllowed && passphrase) ||
+    sshterm
+  ) {
+    const sshOverrides: WebSSH2Config['ssh'] = {
+      host: host || null,
+      port: sanitizedPort,
+      username: username || null,
+      password: passwordAllowed && passwordTrimmed ? passwordTrimmed : null,
+      sshterm: sshterm || 'xterm-color'
+    }
+
+    if (!passwordAllowed && passwordTrimmed) {
+      debug('Ignoring password from URL: method disabled by server policy')
+    }
+
+    if (publicKeyAllowed && privateKeyTrimmed) {
+      sshOverrides.privateKey = privateKeyTrimmed
+      if (passphrase) {
+        sshOverrides.passphrase = passphrase
       }
+    } else if (privateKeyTrimmed) {
+      debug('Ignoring private key from URL: method disabled by server policy')
     }
 
-    // Auto-connect only if host and credentials are provided in URL
-    if (host && (password || privateKey)) {
-      urlOverrides.autoConnect = true
-      debug('Auto-connect enabled: host and credentials provided via URL')
-    } else if (host && !password && !privateKey) {
-      debug(
-        'Auto-connect disabled: host provided but missing credentials (password or privateKey)'
-      )
-    }
+    urlOverrides.ssh = sshOverrides
+  }
 
-    const mergedConfig = mergeDeep(baseConfig, urlOverrides) as WebSSH2Config
-    debug('Config with URL overrides:', mergedConfig)
-    return mergedConfig
-  })
-)
+  const hasAllowedPassword = passwordAllowed && passwordTrimmed.length > 0
+  const hasAllowedPrivateKey = publicKeyAllowed && privateKeyTrimmed.length > 0
+
+  if (host && (hasAllowedPassword || hasAllowedPrivateKey)) {
+    urlOverrides.autoConnect = true
+    debug('Auto-connect enabled: host and allowed credentials provided via URL')
+  } else if (host && !password && !privateKey) {
+    debug(
+      'Auto-connect disabled: host provided but missing credentials (password or privateKey)'
+    )
+  } else if (host && (password || privateKey)) {
+    debug(
+      'Auto-connect disabled: credentials provided but blocked by server policy',
+      {
+        passwordProvided: !!password,
+        privateKeyProvided: !!privateKey
+      }
+    )
+  }
+
+  const mergedConfig = mergeDeep(baseConfig, urlOverrides) as WebSSH2Config
+  const baseAuthPayload: Partial<ClientAuthenticatePayload> = {}
+
+  if (mergedConfig.ssh.host) {
+    baseAuthPayload.host = mergedConfig.ssh.host
+  }
+  if (typeof mergedConfig.ssh.port === 'number') {
+    baseAuthPayload.port = mergedConfig.ssh.port
+  }
+  if (mergedConfig.ssh.username) {
+    baseAuthPayload.username = mergedConfig.ssh.username
+  }
+  if (mergedConfig.ssh.password) {
+    baseAuthPayload.password = mergedConfig.ssh.password
+  }
+  if (mergedConfig.ssh.privateKey) {
+    baseAuthPayload.privateKey = mergedConfig.ssh.privateKey
+  }
+  if (mergedConfig.ssh.passphrase) {
+    baseAuthPayload.passphrase = mergedConfig.ssh.passphrase
+  }
+
+  const sanitizedMergedAuth = sanitizeClientAuthPayload(baseAuthPayload)
+
+  mergedConfig.ssh = {
+    ...mergedConfig.ssh,
+    password: sanitizedMergedAuth.password ?? null,
+    privateKey: sanitizedMergedAuth.privateKey ?? '',
+    passphrase: sanitizedMergedAuth.passphrase ?? ''
+  }
+
+  if (
+    urlOverrides.autoConnect &&
+    !sanitizedMergedAuth.password &&
+    !sanitizedMergedAuth.privateKey
+  ) {
+    debug(
+      'Auto-connect disabled: sanitized credentials removed disallowed values'
+    )
+    mergedConfig.autoConnect = false
+  }
+
+  debug('Config with URL overrides:', mergedConfig)
+  return mergedConfig
+}
 
 // Initialize configuration from window object and URL
 export function initializeConfig() {
@@ -126,8 +263,13 @@ export function initializeConfig() {
     windowConfig as Record<string, unknown>
   ) as WebSSH2Config
 
-  setConfig(initialConfig)
-  debug('Config initialized:', initialConfig)
+  const sanitizedConfig = {
+    ...initialConfig,
+    allowedAuthMethods: coerceAuthMethods(initialConfig.allowedAuthMethods)
+  }
+
+  setConfig(sanitizedConfig)
+  debug('Config initialized:', sanitizedConfig)
 
   return configWithUrlOverrides()
 }
