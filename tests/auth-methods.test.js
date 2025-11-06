@@ -4,16 +4,23 @@
 
 import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { loadServerAuthMethods } from '../client/src/services/config.ts'
-import {
+import { register } from 'node:module'
+import { pathToFileURL } from 'node:url'
+
+await register('./tests/ts-loader.mjs', pathToFileURL('./'))
+
+const { loadServerAuthMethods } = await import(
+  '../client/src/services/config.ts'
+)
+const {
   allowedAuthMethods,
   sanitizeClientAuthPayload,
   config,
   setConfig,
   configWithUrlOverrides,
   setUrlParams
-} from '../client/src/stores/config.ts'
-import { DEFAULT_AUTH_METHODS } from '../client/src/constants.ts'
+} = await import('../client/src/stores/config.ts')
+const { DEFAULT_AUTH_METHODS } = await import('../client/src/constants.ts')
 
 const cloneConfig = () =>
   typeof structuredClone === 'function'
