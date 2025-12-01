@@ -21,6 +21,10 @@ import {
   setSearchResults
 } from '../stores/terminal'
 import type { TerminalActions } from './Terminal'
+import { shouldCaptureKey } from '../utils/keyboard-capture'
+import { getStoredSettings } from '../utils/settings'
+import { defaultSettings } from '../utils/index'
+import type { TerminalSettings } from '../types/config.d'
 
 interface TerminalSearchProps {
   terminalActions: TerminalActions | undefined
@@ -108,6 +112,16 @@ export const TerminalSearch: Component<TerminalSearchProps> = (props) => {
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
+      // Check if Escape should be captured by the terminal
+      const storedSettings = getStoredSettings() as Partial<TerminalSettings>
+      const keyboardCaptureSettings =
+        storedSettings.keyboardCapture || defaultSettings.keyboardCapture
+
+      if (shouldCaptureKey(event, keyboardCaptureSettings)) {
+        // Escape should be captured by terminal, don't close search
+        return
+      }
+
       handleCloseSearch()
       return
     }

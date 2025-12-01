@@ -9,6 +9,10 @@ import {
 } from 'solid-js'
 import { Portal } from 'solid-js/web'
 import createDebug from 'debug'
+import { shouldCaptureKey } from '../utils/keyboard-capture'
+import { getStoredSettings } from '../utils/settings'
+import { defaultSettings } from '../utils/index'
+import type { TerminalSettings } from '../types/config.d'
 
 const debug = createDebug('webssh2-client:modal')
 
@@ -59,6 +63,16 @@ export const Modal: Component<ModalProps> = (props) => {
   // Handle keyboard events
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && props.isOpen) {
+      // Check if Escape should be captured by the terminal
+      const storedSettings = getStoredSettings() as Partial<TerminalSettings>
+      const keyboardCaptureSettings =
+        storedSettings.keyboardCapture || defaultSettings.keyboardCapture
+
+      if (shouldCaptureKey(e, keyboardCaptureSettings)) {
+        // Escape should be captured by terminal, don't close modal
+        return
+      }
+
       props.onClose()
     }
   }

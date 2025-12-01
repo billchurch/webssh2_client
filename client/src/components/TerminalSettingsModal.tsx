@@ -1,10 +1,14 @@
 import type { Component } from 'solid-js'
-import { createSignal, createEffect } from 'solid-js'
+import { createSignal, createEffect, Show } from 'solid-js'
 import { Modal } from './Modal'
+import { ChevronDown, ChevronUp } from 'lucide-solid'
 import type { ITerminalOptions } from '@xterm/xterm'
 import { getStoredSettings, saveTerminalSettings } from '../utils/settings.js'
 import { defaultSettings } from '../utils/index.js'
-import type { TerminalSettings } from '../types/config.d'
+import type {
+  TerminalSettings,
+  KeyboardCaptureSettings
+} from '../types/config.d'
 
 interface TerminalSettingsModalProps {
   isOpen: boolean
@@ -24,6 +28,7 @@ interface TerminalSettingsForm {
   clipboardAutoSelectToCopy: boolean
   clipboardEnableMiddleClickPaste: boolean
   clipboardEnableKeyboardShortcuts: boolean
+  keyboardCapture: KeyboardCaptureSettings
 }
 
 export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
@@ -40,8 +45,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
     clipboardEnableMiddleClickPaste:
       defaultSettings.clipboardEnableMiddleClickPaste,
     clipboardEnableKeyboardShortcuts:
-      defaultSettings.clipboardEnableKeyboardShortcuts
+      defaultSettings.clipboardEnableKeyboardShortcuts,
+    keyboardCapture: defaultSettings.keyboardCapture
   })
+
+  const [clipboardExpanded, setClipboardExpanded] = createSignal(false)
+  const [keyboardExpanded, setKeyboardExpanded] = createSignal(false)
 
   // Load current settings when modal opens
   createEffect(() => {
@@ -62,7 +71,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
           defaultSettings.clipboardEnableMiddleClickPaste,
         clipboardEnableKeyboardShortcuts:
           stored.clipboardEnableKeyboardShortcuts ??
-          defaultSettings.clipboardEnableKeyboardShortcuts
+          defaultSettings.clipboardEnableKeyboardShortcuts,
+        keyboardCapture:
+          stored.keyboardCapture || defaultSettings.keyboardCapture
       })
     }
   })
@@ -90,14 +101,15 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
     // Save settings
     saveTerminalSettings(currentSettings as unknown as Record<string, unknown>)
 
-    // Apply to terminal - pass ALL settings including clipboard settings
+    // Apply to terminal - pass ALL settings including clipboard and keyboard capture settings
     props.onSave({
       ...terminalOptions,
       clipboardAutoSelectToCopy: currentSettings.clipboardAutoSelectToCopy,
       clipboardEnableMiddleClickPaste:
         currentSettings.clipboardEnableMiddleClickPaste,
       clipboardEnableKeyboardShortcuts:
-        currentSettings.clipboardEnableKeyboardShortcuts
+        currentSettings.clipboardEnableKeyboardShortcuts,
+      keyboardCapture: currentSettings.keyboardCapture
     } as Partial<ITerminalOptions> & Partial<TerminalSettings>)
     props.onClose()
   }
@@ -260,84 +272,199 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
             {/* Clipboard Settings Section Header */}
             <div class="col-span-full mb-2 mt-4 border-t pt-2">
-              <h3 class="text-sm font-semibold text-slate-900">
-                Clipboard Settings
-              </h3>
+              <button
+                type="button"
+                class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => setClipboardExpanded(!clipboardExpanded())}
+                aria-expanded={clipboardExpanded()}
+              >
+                <span>Clipboard Settings</span>
+                {clipboardExpanded() ? (
+                  <ChevronUp class="size-4" />
+                ) : (
+                  <ChevronDown class="size-4" />
+                )}
+              </button>
             </div>
 
-            {/* Auto-copy Selection */}
-            <label
-              for="clipboardAutoSelectToCopy"
-              class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
-            >
-              Auto-copy Selection
-            </label>
-            <select
-              id="clipboardAutoSelectToCopy"
-              name="clipboardAutoSelectToCopy"
-              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={settings().clipboardAutoSelectToCopy ? 'true' : 'false'}
-              onChange={(e) =>
-                updateSetting(
-                  'clipboardAutoSelectToCopy',
-                  e.currentTarget.value === 'true'
-                )
-              }
-            >
-              <option value="true">Enabled (selection to clipboard)</option>
-              <option value="false">Disabled</option>
-            </select>
+            <Show when={clipboardExpanded()}>
+              {/* Auto-copy Selection */}
+              <label
+                for="clipboardAutoSelectToCopy"
+                class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+              >
+                Auto-copy Selection
+              </label>
+              <select
+                id="clipboardAutoSelectToCopy"
+                name="clipboardAutoSelectToCopy"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={settings().clipboardAutoSelectToCopy ? 'true' : 'false'}
+                onChange={(e) =>
+                  updateSetting(
+                    'clipboardAutoSelectToCopy',
+                    e.currentTarget.value === 'true'
+                  )
+                }
+              >
+                <option value="true">Enabled (selection to clipboard)</option>
+                <option value="false">Disabled</option>
+              </select>
 
-            {/* Middle-click Paste */}
-            <label
-              for="clipboardEnableMiddleClickPaste"
-              class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
-            >
-              Middle-click Paste
-            </label>
-            <select
-              id="clipboardEnableMiddleClickPaste"
-              name="clipboardEnableMiddleClickPaste"
-              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={
-                settings().clipboardEnableMiddleClickPaste ? 'true' : 'false'
-              }
-              onChange={(e) =>
-                updateSetting(
-                  'clipboardEnableMiddleClickPaste',
-                  e.currentTarget.value === 'true'
-                )
-              }
-            >
-              <option value="true">Enabled</option>
-              <option value="false">Disabled</option>
-            </select>
+              {/* Middle-click Paste */}
+              <label
+                for="clipboardEnableMiddleClickPaste"
+                class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+              >
+                Middle-click Paste
+              </label>
+              <select
+                id="clipboardEnableMiddleClickPaste"
+                name="clipboardEnableMiddleClickPaste"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={
+                  settings().clipboardEnableMiddleClickPaste ? 'true' : 'false'
+                }
+                onChange={(e) =>
+                  updateSetting(
+                    'clipboardEnableMiddleClickPaste',
+                    e.currentTarget.value === 'true'
+                  )
+                }
+              >
+                <option value="true">Enabled</option>
+                <option value="false">Disabled</option>
+              </select>
 
-            {/* Keyboard Shortcuts */}
-            <label
-              for="clipboardEnableKeyboardShortcuts"
-              class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
-            >
-              Keyboard Shortcuts
-            </label>
-            <select
-              id="clipboardEnableKeyboardShortcuts"
-              name="clipboardEnableKeyboardShortcuts"
-              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={
-                settings().clipboardEnableKeyboardShortcuts ? 'true' : 'false'
-              }
-              onChange={(e) =>
-                updateSetting(
-                  'clipboardEnableKeyboardShortcuts',
-                  e.currentTarget.value === 'true'
-                )
-              }
-              title="Ctrl+Shift+C/V (or Cmd+Shift+C/V on Mac)"
-            >
-              <option value="true">Enabled (Ctrl+Shift+C/V)</option>
-              <option value="false">Disabled</option>
-            </select>
+              {/* Keyboard Shortcuts */}
+              <label
+                for="clipboardEnableKeyboardShortcuts"
+                class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+              >
+                Keyboard Shortcuts
+              </label>
+              <select
+                id="clipboardEnableKeyboardShortcuts"
+                name="clipboardEnableKeyboardShortcuts"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={
+                  settings().clipboardEnableKeyboardShortcuts ? 'true' : 'false'
+                }
+                onChange={(e) =>
+                  updateSetting(
+                    'clipboardEnableKeyboardShortcuts',
+                    e.currentTarget.value === 'true'
+                  )
+                }
+                title="Ctrl+Shift+C/V (or Cmd+Shift+C/V on Mac)"
+              >
+                <option value="true">Enabled (Ctrl+Shift+C/V)</option>
+                <option value="false">Disabled</option>
+              </select>
+            </Show>
+
+            {/* Keyboard Capture Settings Section Header */}
+            <div class="col-span-full mb-2 mt-4 border-t pt-2">
+              <button
+                type="button"
+                class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => setKeyboardExpanded(!keyboardExpanded())}
+                aria-expanded={keyboardExpanded()}
+              >
+                <span>Keyboard Capture Settings</span>
+                {keyboardExpanded() ? (
+                  <ChevronUp class="size-4" />
+                ) : (
+                  <ChevronDown class="size-4" />
+                )}
+              </button>
+              <Show when={keyboardExpanded()}>
+                <p class="mt-1 text-xs text-slate-600">
+                  Control which keys are sent to the terminal instead of being
+                  handled by the UI
+                </p>
+              </Show>
+            </div>
+
+            <Show when={keyboardExpanded()}>
+              {/* Capture Escape */}
+              <label
+                for="keyboardCaptureEscape"
+                class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+              >
+                Capture Escape
+              </label>
+              <select
+                id="keyboardCaptureEscape"
+                name="keyboardCaptureEscape"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={
+                  settings().keyboardCapture.captureEscape ? 'true' : 'false'
+                }
+                onChange={(e) =>
+                  updateSetting('keyboardCapture', {
+                    ...settings().keyboardCapture,
+                    captureEscape: e.currentTarget.value === 'true'
+                  })
+                }
+                title="Prevent Escape from closing modals/search, send to terminal instead"
+              >
+                <option value="true">Enabled (fixes Termux Escape issue)</option>
+                <option value="false">Disabled (default)</option>
+              </select>
+
+              {/* Capture Ctrl+B */}
+              <label
+                for="keyboardCaptureCtrlB"
+                class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+              >
+                Capture Ctrl+B
+              </label>
+              <select
+                id="keyboardCaptureCtrlB"
+                name="keyboardCaptureCtrlB"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={settings().keyboardCapture.captureCtrlB ? 'true' : 'false'}
+                onChange={(e) =>
+                  updateSetting('keyboardCapture', {
+                    ...settings().keyboardCapture,
+                    captureCtrlB: e.currentTarget.value === 'true'
+                  })
+                }
+                title="Prevent Ctrl+B from opening browser bookmarks, send to terminal instead"
+              >
+                <option value="true">Enabled (for Termux/tmux)</option>
+                <option value="false">Disabled (default)</option>
+              </select>
+
+              {/* Custom Capture Keys */}
+              <label
+                for="keyboardCaptureCustomKeys"
+                class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+              >
+                Custom Keys
+              </label>
+              <input
+                type="text"
+                id="keyboardCaptureCustomKeys"
+                name="keyboardCaptureCustomKeys"
+                placeholder="e.g., F11, Ctrl+T, Alt+D"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={settings().keyboardCapture.customCaptureKeys.join(', ')}
+                onInput={(e) => {
+                  const value = e.currentTarget.value
+                  const keys = value
+                    .split(',')
+                    .map((k) => k.trim())
+                    .filter((k) => k.length > 0)
+                  updateSetting('keyboardCapture', {
+                    ...settings().keyboardCapture,
+                    customCaptureKeys: keys
+                  })
+                }}
+                title="Comma-separated list of keys to capture (e.g., F11, Ctrl+T, Alt+D)"
+              />
+            </Show>
           </fieldset>
 
           {/* Buttons */}

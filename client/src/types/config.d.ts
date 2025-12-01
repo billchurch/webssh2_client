@@ -2,6 +2,12 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 export type SSHAuthMethod = 'password' | 'keyboard-interactive' | 'publickey'
 
+export interface KeyboardCaptureSettings {
+  captureEscape: boolean
+  captureCtrlB: boolean
+  customCaptureKeys: string[]
+}
+
 export interface TerminalSettings {
   cursorBlink: boolean
   scrollback: number
@@ -15,6 +21,7 @@ export interface TerminalSettings {
   clipboardAutoSelectToCopy: boolean
   clipboardEnableMiddleClickPaste: boolean
   clipboardEnableKeyboardShortcuts: boolean
+  keyboardCapture: KeyboardCaptureSettings
 }
 
 export interface WebSocketConfig {

@@ -35,7 +35,12 @@ const defaultConfig: WebSSH2Config = {
     logLevel: 'info',
     clipboardAutoSelectToCopy: true,
     clipboardEnableMiddleClickPaste: true,
-    clipboardEnableKeyboardShortcuts: true
+    clipboardEnableKeyboardShortcuts: true,
+    keyboardCapture: {
+      captureEscape: false,
+      captureCtrlB: false,
+      customCaptureKeys: []
+    }
   },
   header: {
     text: null,
