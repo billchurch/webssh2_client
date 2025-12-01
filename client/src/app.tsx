@@ -3,7 +3,7 @@ import { createSignal, onMount, onCleanup, Show, createEffect } from 'solid-js'
 import createDebug from 'debug'
 
 // Import existing utilities and types
-import type { WebSSH2Config } from './types/config.d'
+import type { WebSSH2Config, TerminalSettings } from './types/config.d'
 import {
   initializeConfig,
   initializeUrlParams,
@@ -75,6 +75,9 @@ import type { ITerminalOptions } from '@xterm/xterm'
 
 // Import utilities
 import { getSearchShortcut, matchesShortcut } from './utils/os-detection'
+import { shouldCaptureKey } from './utils/keyboard-capture'
+import { getStoredSettings } from './utils/settings'
+import { defaultSettings } from './utils/index'
 
 // Import CSS
 import './app.css'
@@ -167,6 +170,16 @@ const App: Component = () => {
   // Set up global keyboard shortcuts
   onMount(() => {
     const handleKeydown = (event: KeyboardEvent) => {
+      // Check if this key should be captured by the terminal
+      const storedSettings = getStoredSettings() as Partial<TerminalSettings>
+      const keyboardCaptureSettings =
+        storedSettings.keyboardCapture || defaultSettings.keyboardCapture
+
+      if (shouldCaptureKey(event, keyboardCaptureSettings)) {
+        // Key should be captured by terminal, don't handle it here
+        return
+      }
+
       const searchShortcut = getSearchShortcut()
 
       // Check if this matches our search shortcut
