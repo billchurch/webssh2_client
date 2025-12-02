@@ -409,7 +409,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 }
                 title="Prevent Escape from closing modals/search, send to terminal instead"
               >
-                <option value="true">Enabled (fixes Termux Escape issue)</option>
+                <option value="true">Enabled (fixes vi Escape issue)</option>
                 <option value="false">Disabled (default)</option>
               </select>
 
@@ -433,7 +433,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 }
                 title="Prevent Ctrl+B from opening browser bookmarks, send to terminal instead"
               >
-                <option value="true">Enabled (for Termux/tmux)</option>
+                <option value="true">Enabled (for tmux)</option>
                 <option value="false">Disabled (default)</option>
               </select>
 
