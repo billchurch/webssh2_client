@@ -8,6 +8,16 @@
 
 import type { Component } from 'solid-js'
 import { createSignal, Show } from 'solid-js'
+import {
+  ArrowLeft,
+  Home,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  FolderPlus,
+  Upload,
+  X
+} from 'lucide-solid'
 
 interface SftpToolbarProps {
   currentPath: string
@@ -70,21 +80,10 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
           class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-50"
           onClick={props.onNavigateUp}
           title="Go up"
+          aria-label="Go to parent directory"
           disabled={props.loading}
         >
-          <svg
-            class="size-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M11 17l-5-5m0 0l5-5m-5 5h12"
-            />
-          </svg>
+          <ArrowLeft class="size-4" aria-hidden="true" />
         </button>
 
         {/* Home button */}
@@ -93,21 +92,10 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
           class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-50"
           onClick={() => props.onNavigate('~')}
           title="Home"
+          aria-label="Go to home directory"
           disabled={props.loading}
         >
-          <svg
-            class="size-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-            />
-          </svg>
+          <Home class="size-4" aria-hidden="true" />
         </button>
 
         {/* Path bar - editable on click */}
@@ -117,7 +105,11 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
             <div
               class="flex-1 cursor-text truncate rounded bg-neutral-900 px-2 py-1 text-sm text-neutral-300 hover:bg-neutral-800"
               onClick={startEditingPath}
+              onKeyDown={(e) => e.key === 'Enter' && startEditingPath()}
               title="Click to edit path"
+              role="button"
+              tabIndex={0}
+              aria-label={`Current path: ${props.currentPath}. Press Enter to edit.`}
             >
               {props.currentPath}
             </div>
@@ -133,6 +125,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
               if (e.key === 'Escape') cancelEditingPath()
             }}
             onBlur={handlePathSubmit}
+            aria-label="Directory path"
             autofocus
           />
         </Show>
@@ -143,22 +136,13 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
           class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-50"
           onClick={props.onRefresh}
           title="Refresh"
+          aria-label="Refresh directory listing"
           disabled={props.loading}
         >
-          <svg
-            class={`size-4 ${props.loading ? 'animate-spin direction-reverse' : ''}`}
-            style={props.loading ? { 'animation-direction': 'reverse' } : {}}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
+          <RefreshCw
+            class={`size-4 ${props.loading ? 'animate-spin' : ''}`}
+            aria-hidden="true"
+          />
         </button>
 
         {/* Toggle hidden files */}
@@ -171,32 +155,17 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
           }`}
           onClick={props.onToggleHidden}
           title={props.showHidden ? 'Hide hidden files' : 'Show hidden files'}
+          aria-label={
+            props.showHidden ? 'Hide hidden files' : 'Show hidden files'
+          }
+          aria-pressed={props.showHidden}
         >
-          <svg
-            class="size-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <Show
+            when={props.showHidden}
+            fallback={<Eye class="size-4" aria-hidden="true" />}
           >
-            <Show
-              when={props.showHidden}
-              fallback={
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              }
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-              />
-            </Show>
-          </svg>
+            <EyeOff class="size-4" aria-hidden="true" />
+          </Show>
         </button>
 
         {/* Separator */}
@@ -215,20 +184,10 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
             }
           }}
           title="New folder"
+          aria-label="Create new folder"
+          aria-expanded={showNewFolderInput()}
         >
-          <svg
-            class="size-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
-            />
-          </svg>
+          <FolderPlus class="size-4" aria-hidden="true" />
         </button>
 
         {/* Upload button */}
@@ -237,20 +196,9 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
           class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white"
           onClick={props.onUpload}
           title="Upload files"
+          aria-label="Upload files"
         >
-          <svg
-            class="size-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-            />
-          </svg>
+          <Upload class="size-4" aria-hidden="true" />
         </button>
 
         {/* Separator */}
@@ -262,29 +210,25 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
           class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white"
           onClick={props.onClose}
           title="Close file browser"
+          aria-label="Close file browser"
         >
-          <svg
-            class="size-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <X class="size-4" aria-hidden="true" />
         </button>
       </div>
 
       {/* New folder input */}
       <Show when={showNewFolderInput()}>
-        <div class="flex items-center gap-2 border-t border-neutral-700 px-2 py-1">
-          <span class="text-sm text-neutral-400">New folder:</span>
+        <div
+          class="flex items-center gap-2 border-t border-neutral-700 px-2 py-1"
+          role="group"
+          aria-label="Create new folder"
+        >
+          <label for="new-folder-name" class="text-sm text-neutral-400">
+            New folder:
+          </label>
           <input
             ref={newFolderInputRef}
+            id="new-folder-name"
             type="text"
             class="flex-1 rounded border border-neutral-600 bg-neutral-900 px-2 py-1 text-sm text-neutral-200 focus:border-blue-500 focus:outline-none"
             placeholder="Folder name"
@@ -294,11 +238,16 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
               if (e.key === 'Enter') handleNewFolder()
               if (e.key === 'Escape') setShowNewFolderInput(false)
             }}
+            aria-describedby="new-folder-hint"
           />
+          <span id="new-folder-hint" class="sr-only">
+            Press Enter to create or Escape to cancel
+          </span>
           <button
             type="button"
             class="rounded bg-blue-600 px-2 py-1 text-sm text-white hover:bg-blue-700"
             onClick={handleNewFolder}
+            aria-label="Create folder"
           >
             Create
           </button>
@@ -306,6 +255,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
             type="button"
             class="rounded bg-neutral-700 px-2 py-1 text-sm text-neutral-300 hover:bg-neutral-600"
             onClick={() => setShowNewFolderInput(false)}
+            aria-label="Cancel folder creation"
           >
             Cancel
           </button>

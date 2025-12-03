@@ -8,6 +8,7 @@
 
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
+import { Upload, Download, X } from 'lucide-solid'
 import type { ClientTransfer, TransferId } from '../../types/sftp.js'
 import {
   formatFileSize,
@@ -59,39 +60,27 @@ export const TransferProgress: Component<TransferProgressProps> = (props) => {
 
   const getDirectionIcon = () => {
     if (props.transfer.direction === 'upload') {
-      return (
-        <svg
-          class="size-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-          />
-        </svg>
-      )
+      return <Upload class="size-4" aria-hidden="true" />
     }
-    return (
-      <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-        />
-      </svg>
-    )
+    return <Download class="size-4" aria-hidden="true" />
   }
 
   return (
-    <div class="rounded border border-neutral-700 bg-neutral-800 p-2">
+    <div
+      class="rounded border border-neutral-700 bg-neutral-800 p-2"
+      role="listitem"
+      aria-label={`${props.transfer.direction === 'upload' ? 'Uploading' : 'Downloading'} ${props.transfer.fileName}, ${props.transfer.percentComplete}% complete`}
+    >
       <div class="mb-1 flex items-center gap-2">
         {/* Direction icon */}
-        <span class="text-neutral-400">{getDirectionIcon()}</span>
+        <span
+          class="text-neutral-400"
+          aria-label={
+            props.transfer.direction === 'upload' ? 'Upload' : 'Download'
+          }
+        >
+          {getDirectionIcon()}
+        </span>
 
         {/* File name */}
         <span
@@ -113,26 +102,22 @@ export const TransferProgress: Component<TransferProgressProps> = (props) => {
             class="rounded p-1 text-neutral-400 hover:bg-neutral-600 hover:text-white"
             onClick={() => props.onCancel?.(props.transfer.id)}
             title="Cancel"
+            aria-label={`Cancel ${props.transfer.direction} of ${props.transfer.fileName}`}
           >
-            <svg
-              class="size-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X class="size-4" aria-hidden="true" />
           </button>
         </Show>
       </div>
 
       {/* Progress bar */}
-      <div class="mb-1 h-2 overflow-hidden rounded-full bg-neutral-700">
+      <div
+        class="mb-1 h-2 overflow-hidden rounded-full bg-neutral-700"
+        role="progressbar"
+        aria-valuenow={props.transfer.percentComplete}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Transfer progress: ${props.transfer.percentComplete}%`}
+      >
         <div
           class={`h-full transition-all duration-300 ${getStatusColor()}`}
           style={{ width: `${props.transfer.percentComplete}%` }}
@@ -145,7 +130,7 @@ export const TransferProgress: Component<TransferProgressProps> = (props) => {
           {formatFileSize(props.transfer.bytesTransferred)} /{' '}
           {formatFileSize(props.transfer.totalBytes)}
         </span>
-        <span>{getStatusText()}</span>
+        <span aria-live="polite">{getStatusText()}</span>
         <Show
           when={
             props.transfer.status === 'active' &&

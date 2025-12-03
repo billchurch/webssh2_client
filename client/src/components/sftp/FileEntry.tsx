@@ -8,8 +8,10 @@
 
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
+import { Download, Trash2 } from 'lucide-solid'
 import type { SftpFileEntry } from '../../types/sftp.js'
-import { getFileIcon, formatFileSize } from '../../types/sftp.js'
+import { formatFileSize } from '../../types/sftp.js'
+import { FileIcon } from './FileIcon.jsx'
 
 interface FileEntryProps {
   entry: SftpFileEntry
@@ -33,6 +35,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
 
   const formatDate = (isoString: string): string => {
     const date = new Date(isoString)
+    // Use a compact format: "Dec 2, 2025, 03:09 PM"
     return date.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
@@ -50,12 +53,13 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       tabIndex={0}
-      role="button"
+      role="listitem"
       aria-selected={props.selected}
+      aria-label={`${props.entry.type === 'directory' ? 'Folder' : 'File'}: ${props.entry.name}${props.entry.type === 'file' ? `, ${formatFileSize(props.entry.size)}` : ''}`}
     >
       {/* Icon */}
-      <span class="w-5 text-center text-base" aria-hidden="true">
-        {getFileIcon(props.entry)}
+      <span class="flex w-5 items-center justify-center">
+        <FileIcon entry={props.entry} class="size-4" />
       </span>
 
       {/* Name */}
@@ -70,27 +74,31 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
 
       {/* Size (for files only) */}
       <Show when={props.entry.type === 'file'}>
-        <span class="w-20 text-right text-neutral-400">
+        <span class="w-20 shrink-0 text-right text-neutral-400">
           {formatFileSize(props.entry.size)}
         </span>
       </Show>
       <Show when={props.entry.type !== 'file'}>
-        <span class="w-20 text-right text-neutral-500">--</span>
+        <span class="w-20 shrink-0 text-right text-neutral-500">--</span>
       </Show>
 
       {/* Modified date */}
-      <span class="hidden w-40 text-right text-neutral-400 sm:block">
+      <span class="hidden shrink-0 whitespace-nowrap text-right text-neutral-400 sm:block sm:w-44 lg:w-48">
         {formatDate(props.entry.modifiedAt)}
       </span>
 
       {/* Permissions */}
-      <span class="hidden w-24 font-mono text-xs text-neutral-500 md:block">
+      <span class="hidden w-24 shrink-0 font-mono text-xs text-neutral-500 md:block">
         {props.entry.permissions}
       </span>
 
       {/* Actions */}
-      <div class="flex gap-1">
-        <Show when={props.entry.type === 'file' && props.onDownload}>
+      <div class="flex shrink-0 gap-1">
+        {/* Download button for files, placeholder for directories */}
+        <Show
+          when={props.entry.type === 'file' && props.onDownload}
+          fallback={<span class="size-6" aria-hidden="true" />}
+        >
           <button
             type="button"
             class="rounded p-1 text-neutral-400 hover:bg-neutral-600 hover:text-white"
@@ -99,20 +107,9 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
               props.onDownload?.()
             }}
             title="Download"
+            aria-label={`Download ${props.entry.name}`}
           >
-            <svg
-              class="size-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              />
-            </svg>
+            <Download class="size-4" aria-hidden="true" />
           </button>
         </Show>
         <Show when={props.onDelete}>
@@ -127,20 +124,9 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
               }
             }}
             title="Delete"
+            aria-label={`Delete ${props.entry.name}`}
           >
-            <svg
-              class="size-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
+            <Trash2 class="size-4" aria-hidden="true" />
           </button>
         </Show>
       </div>
@@ -162,11 +148,13 @@ export const ParentEntry: Component<ParentEntryProps> = (props) => {
       onClick={props.onNavigateUp}
       onKeyDown={(e) => e.key === 'Enter' && props.onNavigateUp()}
       tabIndex={0}
-      role="button"
+      role="listitem"
+      aria-label="Go to parent directory"
     >
       <span class="w-5 text-center text-base" aria-hidden="true">
         ..
       </span>
+      <span class="sr-only">Parent directory</span>
     </div>
   )
 }

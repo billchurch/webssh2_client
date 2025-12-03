@@ -8,6 +8,7 @@
 
 import type { Component, JSX } from 'solid-js'
 import { createSignal, Show } from 'solid-js'
+import { CloudUpload } from 'lucide-solid'
 
 interface UploadDropzoneProps {
   onDrop: (files: File[]) => void
@@ -73,21 +74,13 @@ export const UploadDropzone: Component<UploadDropzoneProps> = (props) => {
 
       {/* Drag overlay */}
       <Show when={isDragOver()}>
-        <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-blue-900/50 backdrop-blur-sm">
+        <div
+          class="pointer-events-none absolute inset-0 flex items-center justify-center bg-blue-900/50 backdrop-blur-sm"
+          role="status"
+          aria-live="assertive"
+        >
           <div class="flex flex-col items-center gap-2 text-white">
-            <svg
-              class="size-12"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
+            <CloudUpload class="size-12" aria-hidden="true" />
             <span class="text-lg font-medium">Drop files to upload</span>
           </div>
         </div>

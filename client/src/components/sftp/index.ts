@@ -8,6 +8,8 @@
 
 export { FileBrowser } from './FileBrowser.jsx'
 export { FileEntry, ParentEntry } from './FileEntry.jsx'
+export { FileIcon } from './FileIcon.jsx'
+export { FileInfoModal } from './FileInfoModal.jsx'
 export { UploadDropzone } from './UploadDropzone.jsx'
 export { TransferProgress } from './TransferProgress.jsx'
 export { TransferList } from './TransferList.jsx'

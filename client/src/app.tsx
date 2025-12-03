@@ -152,7 +152,9 @@ const App: Component = () => {
       checkSavedLog()
 
       // Initialize loggedData state based on localStorage
-      const hasSessionLog = globalThis.localStorage.getItem('webssh2_session_log')
+      const hasSessionLog = globalThis.localStorage.getItem(
+        'webssh2_session_log'
+      )
       setState('loggedData', !!hasSessionLog)
       debug('Initialized loggedData state:', !!hasSessionLog)
 

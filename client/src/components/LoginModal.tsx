@@ -290,13 +290,12 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
           </span>
         )}
         {authLoadFailed() && (
-          <span
+          <output
             class="text-xs text-amber-600"
-            role="status"
             title="Server config unavailable; showing default methods"
           >
             Using defaults; server config unavailable
-          </span>
+          </output>
         )}
       </div>
       <button
@@ -314,10 +313,10 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   const renderPrivateKeySection = () => (
     <div class={shouldShowPrivateKey() ? '' : 'hidden'}>
       <div class="mt-2 rounded border border-neutral-300 bg-neutral-50 p-3 text-neutral-800">
-        <label for="privateKeyText" class="sr-only">
-          Private Key
-        </label>
         <div class="relative">
+          <label for="privateKeyText" class="sr-only">
+            Private Key
+          </label>
           <textarea
             id="privateKeyText"
             name="privateKey"
@@ -396,22 +395,24 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
           </label>
         </div>
 
-        <label for="passphraseInput" class="sr-only">
-          Key Passphrase
-        </label>
-        <input
-          type="password"
-          id="passphraseInput"
-          name="passphrase"
-          autocomplete="off"
-          autocapitalize="off"
-          spellcheck={false}
-          enterkeyhint="go"
-          placeholder="Key password (if encrypted)"
-          class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData().passphrase || ''}
-          onInput={(e) => updateFormData('passphrase', e.currentTarget.value)}
-        />
+        <div>
+          <label for="passphraseInput" class="sr-only">
+            Key Passphrase
+          </label>
+          <input
+            type="password"
+            id="passphraseInput"
+            name="passphrase"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck={false}
+            enterkeyhint="go"
+            placeholder="Key password (if encrypted)"
+            class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={formData().passphrase || ''}
+            onInput={(e) => updateFormData('passphrase', e.currentTarget.value)}
+          />
+        </div>
       </div>
     </div>
   )
@@ -487,7 +488,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
               onInput={(e) =>
                 updateFormData(
                   'port',
-                  parseInt(e.currentTarget.value, 10) || 22
+                  Number.parseInt(e.currentTarget.value, 10) || 22
                 )
               }
             />

@@ -27,10 +27,14 @@ export const TransferList: Component<TransferListProps> = (props) => {
     )
 
   return (
-    <div class="shrink-0 border-t border-neutral-700 bg-neutral-900">
+    <div
+      class="shrink-0 border-t border-neutral-700 bg-neutral-900"
+      role="region"
+      aria-label="File transfers"
+    >
       {/* Header */}
       <div class="flex items-center justify-between border-b border-neutral-700 px-2 py-1">
-        <span class="text-sm font-medium text-neutral-300">
+        <span class="text-sm font-medium text-neutral-300" id="transfers-label">
           Transfers ({props.transfers.length})
         </span>
         <Show when={hasCompletedOrFailed() && props.onClearCompleted}>
@@ -38,6 +42,7 @@ export const TransferList: Component<TransferListProps> = (props) => {
             type="button"
             class="text-xs text-neutral-400 hover:text-white"
             onClick={props.onClearCompleted}
+            aria-label="Clear completed transfers"
           >
             Clear completed
           </button>
@@ -45,11 +50,19 @@ export const TransferList: Component<TransferListProps> = (props) => {
       </div>
 
       {/* Transfer list - limit height to show max 3 transfers */}
-      <div class="max-h-32 overflow-y-auto p-2">
+      <div
+        class="max-h-32 overflow-y-auto p-2"
+        role="list"
+        aria-labelledby="transfers-label"
+        aria-live="polite"
+      >
         <Show
           when={props.transfers.length > 0}
           fallback={
-            <div class="py-4 text-center text-sm text-neutral-500">
+            <div
+              class="py-4 text-center text-sm text-neutral-500"
+              role="status"
+            >
               No active transfers
             </div>
           }
