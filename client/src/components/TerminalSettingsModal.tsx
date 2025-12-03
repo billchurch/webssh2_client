@@ -424,7 +424,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 id="keyboardCaptureCtrlB"
                 name="keyboardCaptureCtrlB"
                 class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={settings().keyboardCapture.captureCtrlB ? 'true' : 'false'}
+                value={
+                  settings().keyboardCapture.captureCtrlB ? 'true' : 'false'
+                }
                 onChange={(e) =>
                   updateSetting('keyboardCapture', {
                     ...settings().keyboardCapture,

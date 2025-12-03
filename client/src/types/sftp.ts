@@ -1,0 +1,573 @@
+/**
+ * SFTP Client Type Definitions
+ *
+ * Client-side types for SFTP operations, mirroring the server contract.
+ * This module provides types for socket events, file entries, and transfers.
+ *
+ * @module types/sftp
+ */
+
+// =============================================================================
+// Branded Types (simplified for client - no runtime validation needed)
+// =============================================================================
+
+/** Transfer ID - UUID string identifying a file transfer */
+export type TransferId = string & { readonly __brand: 'TransferId' }
+
+/** Create a TransferId from a string (client-side helper) */
+export function createTransferId(): TransferId {
+  return crypto.randomUUID() as TransferId
+}
+
+// =============================================================================
+// Client → Server Request Types
+// =============================================================================
+
+/**
+ * Request directory listing
+ */
+export interface SftpListRequest {
+  /** Remote path (default: "~" or ".") */
+  readonly path: string
+  /** Include dotfiles (default: false) */
+  readonly showHidden?: boolean
+}
+
+/**
+ * Get file/directory information
+ */
+export interface SftpStatRequest {
+  /** Remote path to stat */
+  readonly path: string
+}
+
+/**
+ * Create directory
+ */
+export interface SftpMkdirRequest {
+  /** Remote path for new directory */
+  readonly path: string
+  /** Unix permissions (default: 0o755) */
+  readonly mode?: number
+}
+
+/**
+ * Delete file or directory
+ */
+export interface SftpDeleteRequest {
+  /** Remote path to delete */
+  readonly path: string
+  /** For directories, delete recursively (default: false) */
+  readonly recursive?: boolean
+}
+
+/**
+ * Initiate file upload
+ */
+export interface SftpUploadStartRequest {
+  /** Client-generated UUID for this transfer */
+  readonly transferId: TransferId
+  /** Destination path on remote */
+  readonly remotePath: string
+  /** Original filename */
+  readonly fileName: string
+  /** Total file size in bytes */
+  readonly fileSize: number
+  /** MIME type (optional) */
+  readonly mimeType?: string
+  /** Overwrite existing file (default: false) */
+  readonly overwrite?: boolean
+}
+
+/**
+ * Send file chunk
+ */
+export interface SftpUploadChunkRequest {
+  /** Must match sftp-upload-start */
+  readonly transferId: TransferId
+  /** 0-based chunk index */
+  readonly chunkIndex: number
+  /** Binary chunk data (base64 encoded) */
+  readonly data: string
+  /** True for final chunk */
+  readonly isLast: boolean
+}
+
+/**
+ * Cancel in-progress upload
+ */
+export interface SftpUploadCancelRequest {
+  /** Transfer to cancel */
+  readonly transferId: TransferId
+}
+
+/**
+ * Initiate file download
+ */
+export interface SftpDownloadStartRequest {
+  /** Client-generated UUID */
+  readonly transferId: TransferId
+  /** Source path on remote */
+  readonly remotePath: string
+}
+
+/**
+ * Cancel in-progress download
+ */
+export interface SftpDownloadCancelRequest {
+  /** Transfer to cancel */
+  readonly transferId: TransferId
+}
+
+// =============================================================================
+// Server → Client Response Types
+// =============================================================================
+
+/**
+ * File type enumeration
+ */
+export type SftpFileType = 'file' | 'directory' | 'symlink' | 'other'
+
+/**
+ * File entry in directory listing
+ */
+export interface SftpFileEntry {
+  /** File or directory name */
+  readonly name: string
+  /** Full path */
+  readonly path: string
+  /** Entry type */
+  readonly type: SftpFileType
+  /** Size in bytes (0 for directories) */
+  readonly size: number
+  /** Permissions string (e.g., "rwxr-xr-x") */
+  readonly permissions: string
+  /** Octal permissions (e.g., 0o755) */
+  readonly permissionsOctal: number
+  /** Username or UID */
+  readonly owner: string
+  /** Group name or GID */
+  readonly group: string
+  /** ISO 8601 timestamp */
+  readonly modifiedAt: string
+  /** ISO 8601 timestamp */
+  readonly accessedAt: string
+  /** Starts with dot */
+  readonly isHidden: boolean
+}
+
+/**
+ * Directory listing response
+ */
+export interface SftpDirectoryResponse {
+  /** Listed path */
+  readonly path: string
+  /** Directory entries */
+  readonly entries: readonly SftpFileEntry[]
+  /** Error message if failed */
+  readonly error?: string
+}
+
+/**
+ * File stat response
+ */
+export interface SftpStatResponse {
+  /** Stated path */
+  readonly path: string
+  /** File entry if found */
+  readonly entry?: SftpFileEntry
+  /** Error message if failed */
+  readonly error?: string
+}
+
+/**
+ * Operation result response (for mkdir, delete)
+ */
+export interface SftpOperationResponse {
+  /** Whether operation succeeded */
+  readonly success: boolean
+  /** Affected path */
+  readonly path: string
+  /** Error message if failed */
+  readonly error?: string
+}
+
+/**
+ * Server ready to receive upload chunks
+ */
+export interface SftpUploadReadyResponse {
+  /** Transfer ID */
+  readonly transferId: TransferId
+  /** Recommended chunk size from server config */
+  readonly chunkSize: number
+  /** Maximum concurrent chunks (for future pipelining) */
+  readonly maxConcurrentChunks: number
+}
+
+/**
+ * Chunk received acknowledgment
+ */
+export interface SftpUploadAckResponse {
+  /** Transfer ID */
+  readonly transferId: TransferId
+  /** Acknowledged chunk index */
+  readonly chunkIndex: number
+  /** Total bytes received so far */
+  readonly bytesReceived: number
+}
+
+/**
+ * Download metadata after start
+ */
+export interface SftpDownloadReadyResponse {
+  /** Transfer ID */
+  readonly transferId: TransferId
+  /** File name */
+  readonly fileName: string
+  /** Total file size in bytes */
+  readonly fileSize: number
+  /** MIME type if detectable */
+  readonly mimeType?: string
+}
+
+/**
+ * Download data chunk
+ */
+export interface SftpDownloadChunkResponse {
+  /** Transfer ID */
+  readonly transferId: TransferId
+  /** 0-based chunk index */
+  readonly chunkIndex: number
+  /** Base64 encoded binary data */
+  readonly data: string
+  /** True for final chunk */
+  readonly isLast: boolean
+}
+
+/**
+ * Transfer direction
+ */
+export type TransferDirection = 'upload' | 'download'
+
+/**
+ * Transfer progress update
+ */
+export interface SftpProgressResponse {
+  /** Transfer ID */
+  readonly transferId: TransferId
+  /** Transfer direction */
+  readonly direction: TransferDirection
+  /** Bytes transferred so far */
+  readonly bytesTransferred: number
+  /** Total bytes */
+  readonly totalBytes: number
+  /** Percentage complete (0-100) */
+  readonly percentComplete: number
+  /** Current transfer rate */
+  readonly bytesPerSecond: number
+  /** Estimated seconds remaining (null if unknown) */
+  readonly estimatedSecondsRemaining: number | null
+}
+
+/**
+ * Transfer completed successfully
+ */
+export interface SftpCompleteResponse {
+  /** Transfer ID */
+  readonly transferId: TransferId
+  /** Transfer direction */
+  readonly direction: TransferDirection
+  /** Total bytes transferred */
+  readonly bytesTransferred: number
+  /** Duration in milliseconds */
+  readonly durationMs: number
+  /** Average transfer rate */
+  readonly averageBytesPerSecond: number
+}
+
+/**
+ * SFTP operation type
+ */
+export type SftpOperation =
+  | 'list'
+  | 'stat'
+  | 'mkdir'
+  | 'delete'
+  | 'upload'
+  | 'download'
+
+/**
+ * SFTP error codes
+ */
+export type SftpErrorCode =
+  | 'SFTP_NOT_ENABLED'
+  | 'SFTP_NO_CONNECTION'
+  | 'SFTP_SESSION_ERROR'
+  | 'SFTP_NOT_FOUND'
+  | 'SFTP_PERMISSION_DENIED'
+  | 'SFTP_PATH_FORBIDDEN'
+  | 'SFTP_EXTENSION_BLOCKED'
+  | 'SFTP_FILE_TOO_LARGE'
+  | 'SFTP_ALREADY_EXISTS'
+  | 'SFTP_TRANSFER_CANCELLED'
+  | 'SFTP_RATE_LIMITED'
+  | 'SFTP_MAX_TRANSFERS'
+  | 'SFTP_CHUNK_ERROR'
+  | 'SFTP_TIMEOUT'
+  | 'SFTP_INVALID_REQUEST'
+
+/**
+ * SFTP error response
+ */
+export interface SftpErrorResponse {
+  /** Present for transfer-related errors */
+  readonly transferId?: TransferId
+  /** Operation that failed */
+  readonly operation: SftpOperation
+  /** Error code */
+  readonly code: SftpErrorCode
+  /** Human-readable message */
+  readonly message: string
+  /** Related path if applicable */
+  readonly path?: string
+}
+
+/**
+ * SFTP server config limits (sent when SFTP is enabled)
+ */
+export interface SftpServerConfig {
+  /** Maximum file size in bytes */
+  readonly maxFileSize: number
+  /** Chunk size for transfers */
+  readonly chunkSize: number
+  /** Maximum concurrent transfers per session */
+  readonly maxConcurrentTransfers: number
+  /** Whether there are path restrictions */
+  readonly hasPathRestrictions: boolean
+  /** Blocked file extensions (if any) */
+  readonly blockedExtensions: readonly string[]
+}
+
+/**
+ * SFTP status response - sent after authentication to indicate SFTP availability
+ */
+export interface SftpStatusResponse {
+  /** Whether SFTP feature is enabled on the server */
+  readonly enabled: boolean
+  /** Configuration limits (only present if enabled) */
+  readonly config?: SftpServerConfig
+}
+
+// =============================================================================
+// Client-Side Transfer State Types
+// =============================================================================
+
+/**
+ * Transfer status
+ */
+export type TransferStatus =
+  | 'pending'
+  | 'active'
+  | 'paused'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+
+/**
+ * Client-side transfer tracking
+ */
+export interface ClientTransfer {
+  /** Transfer ID */
+  readonly id: TransferId
+  /** Transfer direction */
+  readonly direction: TransferDirection
+  /** Remote file path */
+  readonly remotePath: string
+  /** File name (mutable for downloads where name comes from server) */
+  fileName: string
+  /** Total bytes (mutable for downloads where size comes from server) */
+  totalBytes: number
+  /** Bytes transferred so far */
+  bytesTransferred: number
+  /** Percentage complete (0-100) */
+  percentComplete: number
+  /** Current transfer rate (bytes per second) */
+  bytesPerSecond: number
+  /** Estimated seconds remaining */
+  estimatedSecondsRemaining: number | null
+  /** Start timestamp */
+  readonly startedAt: number
+  /** Current status */
+  status: TransferStatus
+  /** Error message if failed */
+  error?: string
+}
+
+// =============================================================================
+// Socket Event Maps (for Socket.IO typing)
+// =============================================================================
+
+/**
+ * SFTP client-to-server events
+ */
+export interface SftpClientToServerEvents {
+  'sftp-list': (request: SftpListRequest) => void
+  'sftp-stat': (request: SftpStatRequest) => void
+  'sftp-mkdir': (request: SftpMkdirRequest) => void
+  'sftp-delete': (request: SftpDeleteRequest) => void
+  'sftp-upload-start': (request: SftpUploadStartRequest) => void
+  'sftp-upload-chunk': (request: SftpUploadChunkRequest) => void
+  'sftp-upload-cancel': (request: SftpUploadCancelRequest) => void
+  'sftp-download-start': (request: SftpDownloadStartRequest) => void
+  'sftp-download-cancel': (request: SftpDownloadCancelRequest) => void
+}
+
+/**
+ * SFTP server-to-client events
+ */
+export interface SftpServerToClientEvents {
+  'sftp-status': (response: SftpStatusResponse) => void
+  'sftp-directory': (response: SftpDirectoryResponse) => void
+  'sftp-stat-result': (response: SftpStatResponse) => void
+  'sftp-operation-result': (response: SftpOperationResponse) => void
+  'sftp-upload-ready': (response: SftpUploadReadyResponse) => void
+  'sftp-upload-ack': (response: SftpUploadAckResponse) => void
+  'sftp-download-ready': (response: SftpDownloadReadyResponse) => void
+  'sftp-download-chunk': (response: SftpDownloadChunkResponse) => void
+  'sftp-progress': (response: SftpProgressResponse) => void
+  'sftp-complete': (response: SftpCompleteResponse) => void
+  'sftp-error': (response: SftpErrorResponse) => void
+}
+
+// =============================================================================
+// Utility Types
+// =============================================================================
+
+/**
+ * Upload options for file upload
+ */
+export interface UploadOptions {
+  /** Transfer ID (if not provided, one will be generated) */
+  transferId?: TransferId
+  /** Overwrite existing file (default: false) */
+  overwrite?: boolean
+  /** Progress callback */
+  onProgress?: (progress: SftpProgressResponse) => void
+}
+
+/**
+ * Download options for file download
+ */
+export interface DownloadOptions {
+  /** Transfer ID (if not provided, one will be generated) */
+  transferId?: TransferId
+  /** Progress callback */
+  onProgress?: (progress: SftpProgressResponse) => void
+}
+
+/**
+ * File size formatting helper
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${Number.parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`
+}
+
+/**
+ * Format transfer speed
+ */
+export function formatTransferSpeed(bytesPerSecond: number): string {
+  return `${formatFileSize(bytesPerSecond)}/s`
+}
+
+/**
+ * Format time remaining
+ */
+export function formatTimeRemaining(seconds: number | null): string {
+  if (seconds === null || seconds < 0) return '--'
+  if (seconds < 60) return `${Math.round(seconds)}s`
+  if (seconds < 3600)
+    return `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`
+  return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
+}
+
+/**
+ * Get file icon based on type and extension
+ */
+export function getFileIcon(entry: SftpFileEntry): string {
+  if (entry.type === 'directory') return '📁'
+  if (entry.type === 'symlink') return '🔗'
+
+  const ext = entry.name.split('.').pop()?.toLowerCase()
+  switch (ext) {
+    case 'txt':
+    case 'md':
+    case 'log':
+      return '📄'
+    case 'js':
+    case 'ts':
+    case 'jsx':
+    case 'tsx':
+    case 'py':
+    case 'rb':
+    case 'go':
+    case 'rs':
+    case 'java':
+    case 'c':
+    case 'cpp':
+    case 'h':
+      return '📜'
+    case 'json':
+    case 'xml':
+    case 'yaml':
+    case 'yml':
+    case 'toml':
+      return '⚙️'
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+    case 'svg':
+    case 'webp':
+    case 'ico':
+      return '🖼️'
+    case 'mp3':
+    case 'wav':
+    case 'ogg':
+    case 'flac':
+      return '🎵'
+    case 'mp4':
+    case 'mkv':
+    case 'avi':
+    case 'mov':
+    case 'webm':
+      return '🎬'
+    case 'zip':
+    case 'tar':
+    case 'gz':
+    case 'bz2':
+    case '7z':
+    case 'rar':
+      return '📦'
+    case 'pdf':
+      return '📕'
+    case 'doc':
+    case 'docx':
+      return '📘'
+    case 'xls':
+    case 'xlsx':
+      return '📗'
+    case 'ppt':
+    case 'pptx':
+      return '📙'
+    case 'sh':
+    case 'bash':
+    case 'zsh':
+      return '⚡'
+    default:
+      return '📄'
+  }
+}
