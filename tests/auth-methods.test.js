@@ -9,9 +9,8 @@ import { pathToFileURL } from 'node:url'
 
 await register('./tests/ts-loader.mjs', pathToFileURL('./'))
 
-const { loadServerAuthMethods } = await import(
-  '../client/src/services/config.ts'
-)
+const { loadServerAuthMethods } =
+  await import('../client/src/services/config.ts')
 const {
   allowedAuthMethods,
   sanitizeClientAuthPayload,

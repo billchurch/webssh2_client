@@ -61,12 +61,12 @@
     "@axe-core/cli": "^4.11.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@tailwindcss/forms": "^0.5.10",
-    "@types/node": "^24.10.0",
-    "@typescript-eslint/eslint-plugin": "^8.46.3",
-    "@typescript-eslint/parser": "^8.46.3",
+    "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.48.1",
+    "@typescript-eslint/parser": "^8.48.1",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
-    "autoprefixer": "^10.4.21",
+    "autoprefixer": "^10.4.22",
     "debug": "^4.4.3",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^10.1.8",
@@ -74,21 +74,21 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-tailwindcss": "^3.18.2",
-    "html-validate": "^10.3.0",
+    "html-validate": "^10.4.0",
     "jest-axe": "^10.0.0",
-    "jsdom": "^27.1.0",
+    "jsdom": "^27.2.0",
     "jsmasker": "^2.0.0",
-    "lucide-solid": "^0.552.0",
+    "lucide-solid": "^0.555.0",
     "postcss": "^8.5.6",
-    "prettier": "^3.6.2",
-    "prettier-plugin-tailwindcss": "^0.7.1",
+    "prettier": "^3.7.4",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "socket.io-client": "^4.8.1",
     "solid-js": "^1.9.10",
-    "stylelint": "^16.25.0",
+    "stylelint": "^16.26.1",
     "stylelint-config-standard": "^39.0.1",
     "tailwindcss": "3.4.13",
     "typescript": "^5.9.3",
-    "vite": "^7.2.1",
+    "vite": "^7.2.6",
     "vite-bundle-visualizer": "^1.2.1",
     "vite-plugin-solid": "^2.11.10"
   },
@@ -106,6 +106,6 @@
     "@xterm/addon-search": "^0.15.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.52.5"
+    "@rollup/rollup-linux-x64-gnu": "^4.53.3"
   }
 }
