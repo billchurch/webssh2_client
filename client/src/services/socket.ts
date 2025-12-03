@@ -404,6 +404,15 @@ export class SocketService {
       })
     })
 
+    // SFTP status event - indicates if SFTP is available
+    socketInstance.on('sftp-status', (status) => {
+      debug('SFTP status', status)
+      // Import sftpStore dynamically to avoid circular dependency
+      import('../stores/sftp-store.js').then(({ sftpStore }) => {
+        sftpStore.setStatus(status)
+      })
+    })
+
     // Terminal events
     socketInstance.on('getTerminal', () => this.getTerminal())
     socketInstance.on('data', (chunk: string) => {

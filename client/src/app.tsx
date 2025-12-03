@@ -57,6 +57,8 @@ import { ErrorModal, PromptModal } from './components/Modal'
 import { TerminalSettingsModal } from './components/TerminalSettingsModal'
 import { MenuDropdown } from './components/MenuDropdown'
 import { TerminalSearch } from './components/TerminalSearch'
+import { FileBrowser } from './components/sftp/index.js'
+import { sftpStore } from './stores/sftp-store.js'
 
 // Import socket service
 import {
@@ -150,7 +152,7 @@ const App: Component = () => {
       checkSavedLog()
 
       // Initialize loggedData state based on localStorage
-      const hasSessionLog = window.localStorage.getItem('webssh2_session_log')
+      const hasSessionLog = globalThis.localStorage.getItem('webssh2_session_log')
       setState('loggedData', !!hasSessionLog)
       debug('Initialized loggedData state:', !!hasSessionLog)
 
@@ -249,6 +251,10 @@ const App: Component = () => {
 
   const onDisconnect = (reason: string, details?: unknown) => {
     debug('Disconnected:', reason)
+
+    // Always reset SFTP state on disconnect - the session is no longer valid
+    sftpStore.reset()
+
     switch (reason) {
       case 'auth_required':
       case 'auth_failed':
@@ -261,16 +267,18 @@ const App: Component = () => {
         break
       case 'error':
       case 'ssh_error':
-        if (!state.reauthRequired) {
-          setErrorMessage(`${String(details || reason)}`)
+        if (state.reauthRequired) {
+          setState('reauthRequired', false)
+        } else {
+          setErrorMessage(typeof details === 'string' ? details : reason)
           setIsErrorDialogOpen(true)
           commonPostDisconnectTasks()
-        } else {
-          setState('reauthRequired', false)
         }
         break
       default:
-        setErrorMessage(`Disconnected: ${String(details || reason)}`)
+        setErrorMessage(
+          `Disconnected: ${typeof details === 'string' ? details : reason}`
+        )
         setIsErrorDialogOpen(true)
         commonPostDisconnectTasks()
         break
@@ -405,6 +413,14 @@ const App: Component = () => {
 
   const handleSearch = () => {
     setIsSearchVisible(!isSearchVisible())
+  }
+
+  const handleFileBrowser = () => {
+    if (sftpStore.isOpen) {
+      sftpStore.close()
+    } else {
+      sftpStore.open()
+    }
   }
 
   // Utility functions
@@ -578,10 +594,10 @@ const App: Component = () => {
                 const styles: Record<string, string> = {}
                 if (header.fullStyle.includes('background')) {
                   // Simple regex to extract background-color or background
-                  const bgMatch = header.fullStyle.match(
-                    /background(?:-color)?:\s*([^;]+)/i
+                  const bgMatch = /background(?:-color)?:\s*([^;]+)/i.exec(
+                    header.fullStyle
                   )
-                  if (bgMatch && bgMatch[1]) {
+                  if (bgMatch?.[1]) {
                     styles['background-color'] = bgMatch[1].trim()
                   }
                 }
@@ -620,6 +636,9 @@ const App: Component = () => {
           </div>
         </Show>
 
+        {/* SFTP File Browser */}
+        <FileBrowser />
+
         {/* Bottom Bar */}
         <div class="z-[99] flex h-6 shrink-0 items-center border-t border-neutral-200 bg-neutral-800 text-neutral-100">
           {/* Menu */}
@@ -632,17 +651,15 @@ const App: Component = () => {
             onReauth={handleReauth}
             onTerminalSettings={() => setIsTerminalSettingsOpen(true)}
             onSearch={handleSearch}
+            onFileBrowser={handleFileBrowser}
           />
 
           {/* Footer and Status */}
           <div class="inline-block border-l border-neutral-200 px-[10px] text-left">
             {sessionFooter()}
           </div>
-          <div
+          <output
             id="status"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
             class={`z-[100] inline-block border-x border-neutral-200 px-[10px] text-left text-white ${(() => {
               const color = connectionStatusColor()
               if (color === 'green') return 'bg-green-700'
@@ -652,7 +669,7 @@ const App: Component = () => {
             })()}`}
           >
             {connectionStatus()}
-          </div>
+          </output>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js'
 import { createSignal, Show, onMount, onCleanup } from 'solid-js'
 import { state } from '../stores/terminal.js'
+import { sftpStore } from '../stores/sftp-store.js'
 import { hasLogData } from '../services/logging.js'
 import { getSearchShortcut } from '../utils/os-detection'
 import {
@@ -10,7 +11,8 @@ import {
   Clipboard,
   Download,
   Key,
-  Search
+  Search,
+  FolderOpen
 } from 'lucide-solid'
 
 interface MenuDropdownProps {
@@ -22,6 +24,7 @@ interface MenuDropdownProps {
   onReauth?: () => void
   onTerminalSettings?: () => void
   onSearch?: () => void
+  onFileBrowser?: () => void
 }
 
 export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
@@ -183,6 +186,19 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
               role="menuitem"
             >
               <Key class="inline-block size-5" /> Switch User
+            </button>
+          </Show>
+
+          {/* File Browser Button - only show when SFTP is available */}
+          <Show when={sftpStore.isAvailable}>
+            <button
+              type="button"
+              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+              onClick={handleMenuItemClick(props.onFileBrowser || (() => {}))}
+              role="menuitem"
+              title="Open SFTP file browser"
+            >
+              <FolderOpen class="inline-block size-5" /> File Browser
             </button>
           </Show>
 
