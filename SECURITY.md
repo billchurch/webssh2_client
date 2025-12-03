@@ -21,12 +21,21 @@ WebSSH2 Client implements comprehensive security measures to protect against sup
 
 ##### 2. Automated Security Scanning
 
+**Local scanning:**
+
 ```bash
-# Run security checks
-npm run security:check     # Check for compromised packages
-npm run security:audit     # Run npm audit + recommend Trivy
-npm run security:socket    # Instructions for Socket.dev scan
+# Run security audit (npm audit + Trivy filesystem scan)
+npm run security:audit
 ```
+
+**GitHub Actions CI pipeline** (runs on every pull request):
+
+| Check | Tool | Description |
+|-------|------|-------------|
+| Dependency audit | `npm audit` | Checks for known vulnerabilities in dependencies |
+| Vulnerability scan | Trivy | Filesystem scan for CRITICAL/HIGH severity CVEs |
+| Dependency review | GitHub | Flags new dependencies with known vulnerabilities |
+| SARIF upload | CodeQL | Results visible in GitHub Security tab |
 
 ##### 3. Client-Specific Security
 
@@ -37,20 +46,16 @@ npm run security:socket    # Instructions for Socket.dev scan
 
 ##### 4. Build Pipeline Security
 
-- Pre-build dependency verification
-- Post-build artifact scanning with Trivy
-- Bundle analysis for security review
-- Release-please integration with security checks
+- **Pre-build**: `npm ci --ignore-scripts` prevents lifecycle script attacks
+- **Post-build**: Trivy scans final artifacts for vulnerabilities
+- **Bundle analysis**: `npm run analyze` for security review of bundled code
+- **CI enforcement**: All GitHub Actions pinned to commit SHAs
 
-#### Locked Package Versions
+#### Dependency Version Policy
 
-The following packages are locked to safe versions via `overrides`:
-
-```json
-{
-  "debug": "4.4.1"
-}
-```
+- Dependencies use caret (`^`) ranges with 2-week adoption delay for new releases
+- `package-lock.json` ensures reproducible builds with exact versions
+- Critical packages are reviewed before any version updates
 
 ### Build Security Process
 
@@ -87,7 +92,7 @@ Please report security vulnerabilities to:
 1. **Never commit secrets** - Use environment variables
 2. **Pin dependency versions** - Avoid automatic updates
 3. **Review build tool updates** - Wait 2 weeks for new releases
-4. **Run security checks** - Before every commit
+4. **Run security audit** - `npm run security:audit` before commits
 5. **Verify bundle integrity** - Check final build outputs
 
 ### Dependency Management Policy
@@ -109,25 +114,40 @@ Please report security vulnerabilities to:
 
 ### Security Tools Integration
 
-#### Socket.dev
+#### GitHub Actions CI (`ci.yml`)
 
-```bash
-# Install Socket.dev CLI
-npm install -g @socketsecurity/cli
-# Scan project with strict settings
-socket.dev cli scan --strict
+Every pull request runs the following security checks:
+
+```yaml
+# 1. npm audit - checks for known vulnerabilities
+npm audit --audit-level=high
+
+# 2. Trivy filesystem scan - CRITICAL/HIGH severity
+aquasecurity/trivy-action@v0.33.1
+  scan-type: 'fs'
+  severity: 'CRITICAL,HIGH'
+  ignore-unfixed: true
+
+# 3. GitHub Dependency Review - flags risky new dependencies
+actions/dependency-review-action@v4
+  fail-on-severity: high
 ```
 
-#### Trivy
+Results are uploaded to GitHub Security tab via SARIF format.
+
+#### Local Security Tools
+
+**Trivy:**
 
 ```bash
 # Install Trivy (macOS)
 brew install trivy
-# Scan all files including build output
-trivy fs --security-checks vuln .
+
+# Run combined audit (npm + Trivy)
+npm run security:audit
 ```
 
-#### Vite Security
+**Bundle Analysis:**
 
 ```bash
 # Build with security analysis
