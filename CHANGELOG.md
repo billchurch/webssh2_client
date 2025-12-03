@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/billchurch/webssh2_client/compare/v2.2.0...v2.3.0) (2025-12-03)
+
+
+### Features
+
+* add SFTP client types and events for file transfer operations ([#67](https://github.com/billchurch/webssh2_client/issues/67)) ([e5a5056](https://github.com/billchurch/webssh2_client/commit/e5a505612ac692b7b3bd5594295a83d482798454))
+
 ## [2.2.0](https://github.com/billchurch/webssh2_client/compare/v2.1.0...v2.2.0) (2025-12-01)
 
 
