@@ -76,9 +76,7 @@ npm run security:audit
 
 Please report security vulnerabilities to:
 
-- **Email**: security@webssh2.com (if available)
-- **GitHub**: Create a private security advisory
-- **Emergency**: Create a public issue with `security` label
+- **GitHub**: Use the [Security Advisories](https://github.com/billchurch/WebSSH2/security/advisories) feature to privately report vulnerabilities
 
 ### Security Response Timeline
 

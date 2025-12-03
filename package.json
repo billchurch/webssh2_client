@@ -54,7 +54,7 @@
     "security:audit": "npm audit && trivy fs --scanners vuln ."
   },
   "author": "",
-  "license": "SEE LICENSE IN FILE - LICENSE",
+  "license": "MIT",
   "devDependencies": {
     "@axe-core/cli": "^4.11.0",
     "@rollup/plugin-terser": "^0.4.4",
