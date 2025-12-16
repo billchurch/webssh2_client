@@ -53,7 +53,7 @@
     "check:all": "npm run lint:fix && npm run lint:css:fix && npm run format:write && npm run lint:html && npm run typecheck && npm run typecheck:client && node --test",
     "security:audit": "npm audit && trivy fs --scanners vuln ."
   },
-  "author": "",
+  "author": "Bill Church",
   "license": "MIT",
   "devDependencies": {
     "@axe-core/cli": "^4.11.0",

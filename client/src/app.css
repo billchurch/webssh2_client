@@ -13,3 +13,36 @@
 .xterm-decoration.xterm-find-result-decoration.xterm-find-active-result-decoration {
   box-shadow: 0 0 5px rgb(255 69 0 / 100%); /* Stronger orange-red glow for active match */
 }
+
+/* Toast notification animations */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.2s ease-out;
+}
+
+.animate-slide-out {
+  animation: slide-out 0.2s ease-out;
+}
