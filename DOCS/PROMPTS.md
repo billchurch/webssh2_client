@@ -115,6 +115,7 @@ socket.emit('prompt', {
 ```
 
 Toasts support:
+
 - Close button for manual dismiss
 - Swipe-to-dismiss on touch devices
 - Auto-timeout (default 5 seconds)
@@ -174,9 +175,9 @@ Icons are loaded from a static registry of [Lucide icons](https://lucide.dev/ico
 | Icon Name | Use Case |
 |-----------|----------|
 | `Info` | Information notices |
-| `AlertTriangle` | Warnings |
-| `AlertCircle` | Errors |
-| `CheckCircle` | Success messages |
+| `TriangleAlert` | Warnings |
+| `CircleAlert` | Errors |
+| `CircleCheckBig` | Success messages |
 | `Lock` | Authentication |
 | `Key` | Credentials |
 | `Trash2` | Delete actions |
@@ -187,10 +188,11 @@ Icons are loaded from a static registry of [Lucide icons](https://lucide.dev/ico
 | `Terminal` | Terminal operations |
 
 If an invalid icon name is provided, the system falls back to the severity default:
+
 - `info` → Info
-- `warning` → AlertTriangle
-- `error` → AlertCircle
-- `success` → CheckCircle
+- `warning` → TriangleAlert
+- `error` → CircleAlert
+- `success` → CircleCheckBig
 
 ## Severity Styling
 

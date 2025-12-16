@@ -8,7 +8,7 @@
 
 import type { Component } from 'solid-js'
 import { Show, For, createEffect, createSignal } from 'solid-js'
-import { X, Loader2, Folder } from 'lucide-solid'
+import { X, LoaderCircle, Folder } from 'lucide-solid'
 import createDebug from 'debug'
 
 import { sftpStore } from '../../stores/sftp-store.js'
@@ -156,7 +156,7 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
                 aria-live="polite"
               >
                 <div class="flex items-center gap-2 text-neutral-400">
-                  <Loader2 class="size-5 animate-spin" aria-hidden="true" />
+                  <LoaderCircle class="size-5 animate-spin" aria-hidden="true" />
                   <span>Loading...</span>
                 </div>
               </div>

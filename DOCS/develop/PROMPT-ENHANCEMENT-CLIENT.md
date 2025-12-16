@@ -300,15 +300,15 @@ Create: `client/src/utils/prompt-icons.ts`
 
 ```typescript
 import {
-  Info, AlertTriangle, AlertCircle, CheckCircle, XCircle,
-  Key, KeyRound, Lock, Unlock, Shield, ShieldCheck, ShieldAlert,
-  Fingerprint, UserCheck, UserX,
-  File, FileText, FileQuestion, FilePlus, FileMinus, FileX,
+  Info, TriangleAlert, CircleAlert, CircleCheckBig, CircleX,
+  Key, KeyRound, Lock, LockOpen, Shield, ShieldCheck, ShieldAlert,
+  FingerprintPattern, UserCheck, UserX,
+  File, FileText, FileQuestionMark, FilePlus, FileMinus, FileX,
   Folder, FolderOpen, Upload, Download, Trash2, Save, Copy, Clipboard,
   Wifi, WifiOff, Globe, Server, Database, Link, Unlink, RefreshCw, RotateCcw,
-  Settings, HelpCircle, MessageSquare, Bell, BellOff, Clock, Timer,
+  Settings, CircleQuestionMark, MessageSquare, Bell, BellOff, Clock, Timer,
   Terminal, Code, Zap, Power, LogOut, LogIn,
-  Eye, EyeOff, Search, Edit, Pencil, Plus, Minus, X, Check, Ban, Loader2
+  Eye, EyeOff, Search, SquarePen, Pencil, Plus, Minus, X, Check, Ban, LoaderCircle
 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import type { LucideProps } from 'lucide-solid'
@@ -321,28 +321,28 @@ import type { LucideProps } from 'lucide-solid'
  */
 export const PROMPT_ICON_REGISTRY: Record<string, Component<LucideProps>> = {
   // Severity/Status icons (defaults)
-  Info, AlertTriangle, AlertCircle, CheckCircle, XCircle,
+  Info, TriangleAlert, CircleAlert, CircleCheckBig, CircleX,
   // Authentication & Security
-  Key, KeyRound, Lock, Unlock, Shield, ShieldCheck, ShieldAlert,
-  Fingerprint, UserCheck, UserX,
+  Key, KeyRound, Lock, LockOpen, Shield, ShieldCheck, ShieldAlert,
+  FingerprintPattern, UserCheck, UserX,
   // File operations
-  File, FileText, FileQuestion, FilePlus, FileMinus, FileX,
+  File, FileText, FileQuestionMark, FilePlus, FileMinus, FileX,
   Folder, FolderOpen, Upload, Download, Trash2, Save, Copy, Clipboard,
   // Connection & Network
   Wifi, WifiOff, Globe, Server, Database, Link, Unlink, RefreshCw, RotateCcw,
   // Actions & UI
-  Settings, HelpCircle, MessageSquare, Bell, BellOff, Clock, Timer,
+  Settings, CircleQuestionMark, MessageSquare, Bell, BellOff, Clock, Timer,
   Terminal, Code, Zap, Power, LogOut, LogIn,
   // Misc
-  Eye, EyeOff, Search, Edit, Pencil, Plus, Minus, X, Check, Ban, Loader2,
+  Eye, EyeOff, Search, SquarePen, Pencil, Plus, Minus, X, Check, Ban, LoaderCircle,
 }
 
 /** Default icons for each severity level */
 const SEVERITY_DEFAULT_ICONS: Record<string, Component<LucideProps>> = {
   info: Info,
-  warning: AlertTriangle,
-  error: AlertCircle,
-  success: CheckCircle,
+  warning: TriangleAlert,
+  error: CircleAlert,
+  success: CircleCheckBig,
 }
 
 /**

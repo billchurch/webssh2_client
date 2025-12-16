@@ -107,9 +107,9 @@ describe('Prompt Security', () => {
       // Simulate the icon registry lookup
       const PROMPT_ICON_REGISTRY = {
         Info: 'Info',
-        AlertTriangle: 'AlertTriangle',
-        AlertCircle: 'AlertCircle',
-        CheckCircle: 'CheckCircle',
+        TriangleAlert: 'TriangleAlert',
+        CircleAlert: 'CircleAlert',
+        CircleCheckBig: 'CircleCheckBig',
         Key: 'Key',
         Lock: 'Lock'
         // ... other icons
@@ -117,9 +117,9 @@ describe('Prompt Security', () => {
 
       const SEVERITY_DEFAULTS = {
         info: 'Info',
-        warning: 'AlertTriangle',
-        error: 'AlertCircle',
-        success: 'CheckCircle'
+        warning: 'TriangleAlert',
+        error: 'CircleAlert',
+        success: 'CircleCheckBig'
       }
 
       const resolvePromptIcon = (iconName, severity = 'info') => {
@@ -140,7 +140,7 @@ describe('Prompt Security', () => {
       // Invalid icon should fallback to severity default
       assert.strictEqual(
         resolvePromptIcon('NonExistentIcon', 'warning'),
-        'AlertTriangle'
+        'TriangleAlert'
       )
 
       // Path traversal attempt should fallback

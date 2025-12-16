@@ -5,23 +5,23 @@
  */
 import {
   Info,
-  AlertTriangle,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
+  TriangleAlert,
+  CircleAlert,
+  CircleCheckBig,
+  CircleX,
   Key,
   KeyRound,
   Lock,
-  Unlock,
+  LockOpen,
   Shield,
   ShieldCheck,
   ShieldAlert,
-  Fingerprint,
+  FingerprintPattern,
   UserCheck,
   UserX,
   File,
   FileText,
-  FileQuestion,
+  FileQuestionMark,
   FilePlus,
   FileMinus,
   FileX,
@@ -43,7 +43,7 @@ import {
   RefreshCw,
   RotateCcw,
   Settings,
-  HelpCircle,
+  CircleQuestionMark,
   MessageSquare,
   Bell,
   BellOff,
@@ -58,14 +58,14 @@ import {
   Eye,
   EyeOff,
   Search,
-  Edit,
+  SquarePen,
   Pencil,
   Plus,
   Minus,
   X,
   Check,
   Ban,
-  Loader2
+  LoaderCircle
 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import type { LucideProps } from 'lucide-solid'
@@ -75,30 +75,31 @@ import type { PromptSeverity } from '../types/prompt'
  * Static icon registry - SECURITY: Only these icons can be rendered
  * Icons are imported statically to prevent dynamic import attacks
  *
- * This list should match ALLOWED_PROMPT_ICONS on the server
+ * Icon names use exact PascalCase matching lucide-solid exports.
+ * This list should match ALLOWED_PROMPT_ICONS on the server.
  */
 export const PROMPT_ICON_REGISTRY: Record<string, Component<LucideProps>> = {
   // Severity/Status icons (defaults)
   Info,
-  AlertTriangle,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
+  TriangleAlert,
+  CircleAlert,
+  CircleCheckBig,
+  CircleX,
   // Authentication & Security
   Key,
   KeyRound,
   Lock,
-  Unlock,
+  LockOpen,
   Shield,
   ShieldCheck,
   ShieldAlert,
-  Fingerprint,
+  FingerprintPattern,
   UserCheck,
   UserX,
   // File operations
   File,
   FileText,
-  FileQuestion,
+  FileQuestionMark,
   FilePlus,
   FileMinus,
   FileX,
@@ -122,7 +123,7 @@ export const PROMPT_ICON_REGISTRY: Record<string, Component<LucideProps>> = {
   RotateCcw,
   // Actions & UI
   Settings,
-  HelpCircle,
+  CircleQuestionMark,
   MessageSquare,
   Bell,
   BellOff,
@@ -138,29 +139,29 @@ export const PROMPT_ICON_REGISTRY: Record<string, Component<LucideProps>> = {
   Eye,
   EyeOff,
   Search,
-  Edit,
+  SquarePen,
   Pencil,
   Plus,
   Minus,
   X,
   Check,
   Ban,
-  Loader2
+  LoaderCircle
 }
 
 /** Default icons for each severity level */
 const SEVERITY_DEFAULT_ICONS: Record<PromptSeverity, Component<LucideProps>> = {
   info: Info,
-  warning: AlertTriangle,
-  error: AlertCircle,
-  success: CheckCircle
+  warning: TriangleAlert,
+  error: CircleAlert,
+  success: CircleCheckBig
 }
 
 /**
  * Resolve an icon by name with graceful fallback
  * SECURITY: Only returns icons from the static registry
  *
- * @param iconName - The icon name from the server (optional)
+ * @param iconName - The icon name from the server (exact PascalCase match)
  * @param severity - The severity level for fallback
  * @returns The icon component, or default based on severity
  */
