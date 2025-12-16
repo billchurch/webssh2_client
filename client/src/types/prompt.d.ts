@@ -21,9 +21,11 @@ export type PromptType = 'input' | 'confirm' | 'notice' | 'toast'
  * Button configuration for prompts
  */
 export interface PromptButton {
-  id: string
+  /** Action identifier sent back in response */
+  action: string
   label: string
   variant?: 'primary' | 'secondary' | 'danger'
+  /** Client-side only: marks this as the default/submit button */
   default?: boolean
 }
 

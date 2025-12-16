@@ -687,10 +687,10 @@ export const UniversalPrompt: Component<UniversalPromptProps> = (props) => {
 
         {/* Buttons */}
         <div class="flex justify-end gap-2">
-          <For each={props.prompt.buttons ?? [{ id: 'ok', label: 'OK', variant: 'primary', default: true }]}>
+          <For each={props.prompt.buttons ?? [{ action: 'ok', label: 'OK', variant: 'primary', default: true }]}>
             {(button) => (
               <button
-                onClick={() => handleButtonClick(button.id)}
+                onClick={() => handleButtonClick(button.action)}
                 class={`px-4 py-2 rounded-md font-medium transition-colors ${
                   button.variant === 'danger'
                     ? 'bg-red-600 text-white hover:bg-red-700'
@@ -830,8 +830,8 @@ private handleKeyboardInteractive(data: {
       required: true
     })),
     buttons: [
-      { id: 'cancel', label: 'Cancel', variant: 'secondary' },
-      { id: 'submit', label: 'Submit', variant: 'primary', default: true }
+      { action: 'cancel', label: 'Cancel', variant: 'secondary' },
+      { action: 'submit', label: 'Submit', variant: 'primary', default: true }
     ],
     autoFocus: true,
     closeOnBackdrop: false
