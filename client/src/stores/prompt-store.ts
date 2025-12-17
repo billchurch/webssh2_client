@@ -173,7 +173,11 @@ function createPromptStoreInternal() {
 
     if (state.activePrompt?.id === id) {
       // Send response to server
-      submitResponse({ id, action: effectiveAction, inputs })
+      const response: PromptResponsePayload = { id, action: effectiveAction }
+      if (inputs !== undefined) {
+        response.inputs = inputs
+      }
+      submitResponse(response)
 
       // Show next queued prompt or clear
       const nextPrompt = state.promptQueue[0]

@@ -4,6 +4,7 @@
  */
 import type { Component } from 'solid-js'
 import { createSignal, onMount, onCleanup } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
 import { X } from 'lucide-solid'
 import type { PromptPayload, PromptSeverity } from '../../types/prompt'
 import { resolvePromptIcon } from '../../utils/prompt-icons'
@@ -26,18 +27,20 @@ const severityStyles: Record<PromptSeverity, string> = {
 }
 
 export const Toast: Component<ToastProps> = (props) => {
-  let toastRef: HTMLDivElement | undefined
+  let toastRef: HTMLOutputElement | undefined
   const [swipeOffset, setSwipeOffset] = createSignal(0)
   const [isDismissing, setIsDismissing] = createSignal(false)
   const [touchStartX, setTouchStartX] = createSignal<number | null>(null)
 
   const severity = () => props.toast.severity ?? 'info'
-  const IconComponent = () => resolvePromptIcon(props.toast.icon, severity())
+  const icon = () => resolvePromptIcon(props.toast.icon, severity())
   const styles = () => severityStyles[severity()]
 
   // Handle touch start
   const handleTouchStart = (e: TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX)
+    const touch = e.touches[0]
+    if (touch === undefined) return
+    setTouchStartX(touch.clientX)
   }
 
   // Handle touch move
@@ -45,7 +48,10 @@ export const Toast: Component<ToastProps> = (props) => {
     const startX = touchStartX()
     if (startX === null) return
 
-    const currentX = e.touches[0].clientX
+    const touch = e.touches[0]
+    if (touch === undefined) return
+
+    const currentX = touch.clientX
     const diff = currentX - startX
 
     // Only allow swiping right (positive diff)
@@ -101,7 +107,7 @@ export const Toast: Component<ToastProps> = (props) => {
   })
 
   return (
-    <div
+    <output
       ref={toastRef}
       class={`flex items-center gap-3 rounded-lg border p-4 shadow-lg ${styles()} ${
         isDismissing() ? 'animate-slide-out' : 'animate-slide-in'
@@ -114,10 +120,8 @@ export const Toast: Component<ToastProps> = (props) => {
             ? `transform ${PROMPT_ANIMATION_DURATION_MS}ms ease-out, opacity ${PROMPT_ANIMATION_DURATION_MS}ms ease-out`
             : 'none'
       }}
-      role="status"
-      aria-live="polite"
     >
-      <IconComponent class="size-5 shrink-0" />
+      <Dynamic component={icon()} class="size-5 shrink-0" />
       <p class="flex-1 text-sm">{props.toast.message ?? props.toast.title}</p>
       <button
         onClick={handleDismissClick}
@@ -127,6 +131,6 @@ export const Toast: Component<ToastProps> = (props) => {
       >
         <X class="size-4" />
       </button>
-    </div>
+    </output>
   )
 }

@@ -34,7 +34,7 @@ describe('Prompt Security', () => {
         '{{constructor.constructor("alert(1)")()}}'
       ]
 
-      maliciousPayloads.forEach((payload) => {
+      maliciousPayloads.forEach((payload) => { // NOSONAR - ESLint requires forEach over for...of
         const escaped = escapeHtml(payload)
 
         // Verify HTML special characters are escaped
@@ -79,7 +79,7 @@ describe('Prompt Security', () => {
         }
       ]
 
-      testCases.forEach(({ input, expected }) => {
+      testCases.forEach(({ input, expected }) => { // NOSONAR - ESLint requires forEach over for...of
         const result = escapeHtml(input)
         assert.strictEqual(
           result,

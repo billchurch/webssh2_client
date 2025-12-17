@@ -11,6 +11,7 @@ import {
   For,
   Show
 } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
 import type {
   PromptPayload,
   PromptResponsePayload,
@@ -77,14 +78,14 @@ export const UniversalPrompt: Component<UniversalPromptProps> = (props) => {
   })
 
   const handleButtonClick = (action: string) => {
-    props.onResponse({
+    const response: PromptResponsePayload = {
       id: props.prompt.id,
-      action,
-      inputs:
-        props.prompt.inputs !== undefined && props.prompt.inputs.length > 0
-          ? inputValues()
-          : undefined
-    })
+      action
+    }
+    if (props.prompt.inputs !== undefined && props.prompt.inputs.length > 0) {
+      response.inputs = inputValues()
+    }
+    props.onResponse(response)
   }
 
   const handleBackdropClick = () => {
@@ -107,7 +108,7 @@ export const UniversalPrompt: Component<UniversalPromptProps> = (props) => {
   }
 
   // Resolve icon: use custom icon if provided, otherwise fallback to severity default
-  const IconComponent = () =>
+  const icon = () =>
     resolvePromptIcon(props.prompt.icon, props.prompt.severity ?? 'info')
   const severity = () => props.prompt.severity ?? 'info'
   const severityColor = () => severityColors[severity()]
@@ -144,7 +145,7 @@ export const UniversalPrompt: Component<UniversalPromptProps> = (props) => {
       >
         {/* Header with icon and title */}
         <div class="mb-4 flex items-center gap-3">
-          <IconComponent class={`size-6 ${severityColor()}`} />
+          <Dynamic component={icon()} class={`size-6 ${severityColor()}`} />
           <h3 id="prompt-title" class="text-lg font-semibold text-slate-900">
             {props.prompt.title}
           </h3>
