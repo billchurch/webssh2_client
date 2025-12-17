@@ -58,13 +58,16 @@ import { TerminalSettingsModal } from './components/TerminalSettingsModal'
 import { MenuDropdown } from './components/MenuDropdown'
 import { TerminalSearch } from './components/TerminalSearch'
 import { FileBrowser } from './components/sftp/index.js'
+import { UniversalPrompt, ToastContainer } from './components/prompts'
 import { sftpStore } from './stores/sftp-store.js'
+import { promptStore } from './stores/prompt-store.js'
 
 // Import socket service
 import {
   socketService,
   setTerminalDimensions,
   submitPromptResponses,
+  submitPromptResponse,
   connectionStatus,
   connectionStatusColor
 } from './services/socket.js'
@@ -144,6 +147,12 @@ const App: Component = () => {
         writeToTerminal,
         focusTerminal
       )
+
+      // Set up prompt store error callback (for circuit breaker)
+      promptStore.setShowErrorCallback((message: string) => {
+        setErrorMessage(message)
+        setIsErrorDialogOpen(true)
+      })
 
       // Set up reactive effects within the SolidJS context
       socketService.setupReactiveEffects()
@@ -559,6 +568,27 @@ const App: Component = () => {
         >
           Reconnect
         </button>
+      </Show>
+
+      {/* Toast notifications (always rendered) */}
+      <ToastContainer />
+
+      {/* Universal prompts (conditionally rendered) */}
+      <Show when={promptStore.activePrompt !== null}>
+        <UniversalPrompt
+          prompt={promptStore.activePrompt!}
+          onResponse={(response) => {
+            submitPromptResponse(response)
+            promptStore.dismissPrompt(
+              response.id,
+              response.action,
+              response.inputs
+            )
+          }}
+          onDismiss={() =>
+            promptStore.dismissPrompt(promptStore.activePrompt!.id)
+          }
+        />
       </Show>
 
       {/* Main Container */}

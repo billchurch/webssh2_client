@@ -1,3 +1,15 @@
+import type { PromptPayload, PromptResponsePayload } from './prompt'
+
+// Re-export prompt types for convenience
+export type {
+  PromptSeverity,
+  PromptType,
+  PromptButton,
+  PromptInput,
+  PromptPayload,
+  PromptResponsePayload
+} from './prompt'
+
 export interface AuthenticationRequest {
   action:
     | 'request_auth'
@@ -89,6 +101,8 @@ export interface ServerToClientEvents {
   'sftp-progress': (response: SftpProgressResponse) => void
   'sftp-complete': (response: SftpCompleteResponse) => void
   'sftp-error': (response: SftpErrorResponse) => void
+  // Prompt events
+  prompt: (payload: PromptPayload) => void
 }
 
 export interface ClientToServerEvents {
@@ -111,4 +125,6 @@ export interface ClientToServerEvents {
   'sftp-upload-cancel': (request: SftpUploadCancelRequest) => void
   'sftp-download-start': (request: SftpDownloadStartRequest) => void
   'sftp-download-cancel': (request: SftpDownloadCancelRequest) => void
+  // Prompt events
+  'prompt-response': (response: PromptResponsePayload) => void
 }

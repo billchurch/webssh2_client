@@ -40,6 +40,15 @@ const defaultConfig: WebSSH2Config = {
       captureEscape: false,
       captureCtrlB: false,
       customCaptureKeys: []
+    },
+    promptSounds: {
+      enabled: false,
+      severities: {
+        info: true,
+        warning: true,
+        error: true,
+        success: true
+      }
     }
   },
   header: {

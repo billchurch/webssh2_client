@@ -8,6 +8,16 @@ export interface KeyboardCaptureSettings {
   customCaptureKeys: string[]
 }
 
+export interface PromptSoundSettings {
+  enabled: boolean
+  severities: {
+    info: boolean
+    warning: boolean
+    error: boolean
+    success: boolean
+  }
+}
+
 export interface TerminalSettings {
   cursorBlink: boolean
   scrollback: number
@@ -22,6 +32,7 @@ export interface TerminalSettings {
   clipboardEnableMiddleClickPaste: boolean
   clipboardEnableKeyboardShortcuts: boolean
   keyboardCapture: KeyboardCaptureSettings
+  promptSounds: PromptSoundSettings
 }
 
 export interface WebSocketConfig {

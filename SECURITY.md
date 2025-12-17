@@ -30,12 +30,12 @@ npm run security:audit
 
 **GitHub Actions CI pipeline** (runs on every pull request):
 
-| Check | Tool | Description |
-|-------|------|-------------|
-| Dependency audit | `npm audit` | Checks for known vulnerabilities in dependencies |
-| Vulnerability scan | Trivy | Filesystem scan for CRITICAL/HIGH severity CVEs |
-| Dependency review | GitHub | Flags new dependencies with known vulnerabilities |
-| SARIF upload | CodeQL | Results visible in GitHub Security tab |
+| Check              | Tool        | Description                                       |
+| ------------------ | ----------- | ------------------------------------------------- |
+| Dependency audit   | `npm audit` | Checks for known vulnerabilities in dependencies  |
+| Vulnerability scan | Trivy       | Filesystem scan for CRITICAL/HIGH severity CVEs   |
+| Dependency review  | GitHub      | Flags new dependencies with known vulnerabilities |
+| SARIF upload       | CodeQL      | Results visible in GitHub Security tab            |
 
 ##### 3. Client-Specific Security
 
@@ -76,9 +76,7 @@ npm run security:audit
 
 Please report security vulnerabilities to:
 
-- **Email**: security@webssh2.com (if available)
-- **GitHub**: Create a private security advisory
-- **Emergency**: Create a public issue with `security` label
+- **GitHub**: Use the [Security Advisories](https://github.com/billchurch/WebSSH2/security/advisories) feature to privately report vulnerabilities
 
 ### Security Response Timeline
 

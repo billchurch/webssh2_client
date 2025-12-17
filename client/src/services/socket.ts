@@ -33,9 +33,14 @@ import type {
   ClientResizePayload,
   ClientToServerEvents,
   ServerToClientEvents,
-  PermissionsPayload
+  PermissionsPayload,
+  PromptPayload,
+  PromptResponsePayload
 } from '../types/events.d'
 import type { WebSSH2Config } from '../types/config.d'
+
+// Import prompt store
+import { promptStore } from '../stores/prompt-store.js'
 // import type { ElementId } from '../../types/dom.d'
 
 declare global {
@@ -141,6 +146,11 @@ export class SocketService {
     onDataCallback = dataCallback
     writeToTerminal = writeFunction
     focusTerminalCallback = focusCallback
+
+    // Set up prompt store callbacks
+    promptStore.setResponseCallback(submitPromptResponse)
+    promptStore.setDisconnectCallback(() => this.closeConnection())
+
     debug('Socket service initialized')
   }
 
@@ -560,6 +570,16 @@ export class SocketService {
           break
       }
     })
+
+    // Prompt events (generic prompt system)
+    socketInstance.on('prompt', (payload: PromptPayload) => {
+      debug('Prompt received', payload)
+      if (payload.type === 'toast') {
+        promptStore.addToast(payload)
+      } else {
+        promptStore.showPrompt(payload)
+      }
+    })
   }
 
   private handleAuthResult(result: {
@@ -623,3 +643,14 @@ export const reauth = () => socketService.reauth()
 export const replayCredentials = () => socketService.replayCredentials()
 export const submitPromptResponses = (responses: string[]) =>
   socketService.submitPromptResponses(responses)
+
+/**
+ * Submit a generic prompt response to the server
+ */
+export const submitPromptResponse = (response: PromptResponsePayload): void => {
+  const currentSocket = socket()
+  if (currentSocket !== null) {
+    debug('Submitting prompt response', response.id, response.action)
+    currentSocket.emit('prompt-response', response)
+  }
+}
