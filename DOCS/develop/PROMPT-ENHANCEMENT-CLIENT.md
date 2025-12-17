@@ -76,16 +76,18 @@ This PRD covers:
 ### Current Socket Events
 
 **Server → Client:**
+
 - `authentication` - Auth flow including `keyboard-interactive` action with prompts array
 - `ssherror` - Simple error string
 - `updateUI` - Dynamic UI updates (header, footer, status)
 
 **Client → Server:**
+
 - `data` - Terminal data (keyboard-interactive responses sent via this)
 
 ## Architecture Design
 
-```
+```bash
 ┌─────────────────────────────────────────────────────────────┐
 │                      Server Side                             │
 │              (See Server PRD for details)                    │

@@ -6,6 +6,19 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert'
 
+// SolidJS text interpolation escapes these characters:
+const escapeMap = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#x27;'
+}
+
+const escapeHtml = (text) => {
+  return text.replaceAll(/[&<>"']/g, (char) => escapeMap[char] || char)
+}
+
 describe('Prompt Security', () => {
   describe('XSS Prevention', () => {
     it('should NOT have HTML special characters in prompt text fields', () => {
@@ -21,20 +34,7 @@ describe('Prompt Security', () => {
         '{{constructor.constructor("alert(1)")()}}'
       ]
 
-      // SolidJS text interpolation escapes these characters:
-      const escapeMap = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;'
-      }
-
-      const escapeHtml = (text) => {
-        return text.replace(/[&<>"']/g, (char) => escapeMap[char] || char)
-      }
-
-      maliciousPayloads.forEach((payload) => {
+      for (const payload of maliciousPayloads) {
         const escaped = escapeHtml(payload)
 
         // Verify HTML special characters are escaped
@@ -61,22 +61,10 @@ describe('Prompt Security', () => {
             `Escaped text should contain &gt; for >: ${escaped}`
           )
         }
-      })
+      }
     })
 
     it('should properly escape HTML entities', () => {
-      const escapeMap = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;'
-      }
-
-      const escapeHtml = (text) => {
-        return text.replace(/[&<>"']/g, (char) => escapeMap[char] || char)
-      }
-
       const testCases = [
         { input: '<', expected: '&lt;' },
         { input: '>', expected: '&gt;' },
@@ -91,14 +79,14 @@ describe('Prompt Security', () => {
         }
       ]
 
-      testCases.forEach(({ input, expected }) => {
+      for (const { input, expected } of testCases) {
         const result = escapeHtml(input)
         assert.strictEqual(
           result,
           expected,
           `escapeHtml("${input}") should equal "${expected}"`
         )
-      })
+      }
     })
   })
 
