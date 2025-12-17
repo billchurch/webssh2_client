@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/billchurch/webssh2_client/compare/v2.3.1...v2.4.0) (2025-12-17)
+
+
+### Features
+
+* add generic prompt system for server-driven UI ([#73](https://github.com/billchurch/webssh2_client/issues/73)) ([194c56c](https://github.com/billchurch/webssh2_client/commit/194c56cf912284cce183b9bad748953ab35b0a56))
+
 ## [2.3.1](https://github.com/billchurch/webssh2_client/compare/v2.3.0...v2.3.1) (2025-12-03)
 
 
