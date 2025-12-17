@@ -3,7 +3,7 @@
 [![CI](https://github.com/billchurch/webssh2_client/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/billchurch/webssh2_client/actions/workflows/ci.yml)
 [![Release](https://github.com/billchurch/webssh2_client/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/billchurch/webssh2_client/actions/workflows/release.yml)
 
-![Orthrus Mascot](images/orthrus.png)
+![Orthrus Mascot](https://github.com/billchurch/webssh2/raw/main/DOCS/images/orthrus2.png)
 
 WebSSH2 Client is an HTML5 web-based terminal emulator and SSH client component. It uses WebSockets to communicate with a WebSSH2 server, which in turn uses SSH2 to connect to SSH servers.
 
