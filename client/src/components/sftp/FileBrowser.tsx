@@ -142,27 +142,25 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
 
         {/* File list - min-h-0 and flex-1 required for proper scrolling in flex container */}
         <UploadDropzone onDrop={handleDrop} disabled={sftpStore.loading}>
-          <div
+          <section
             class="min-h-0 flex-1 overflow-y-scroll"
-            role="region"
             aria-label="File browser"
             aria-busy={sftpStore.loading}
           >
             {/* Loading state */}
             <Show when={sftpStore.loading && sftpStore.rawEntries.length === 0}>
-              <div
+              <output
                 class="flex h-full items-center justify-center"
-                role="status"
                 aria-live="polite"
               >
-                <div class="flex items-center gap-2 text-neutral-400">
+                <span class="flex items-center gap-2 text-neutral-400">
                   <LoaderCircle
                     class="size-5 animate-spin"
                     aria-hidden="true"
                   />
                   <span>Loading...</span>
-                </div>
-              </div>
+                </span>
+              </output>
             </Show>
 
             {/* Empty state */}
@@ -174,15 +172,14 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
                 sftpStore.currentPath !== '/'
               }
             >
-              <div
+              <output
                 class="flex h-full flex-col items-center justify-center text-neutral-500"
-                role="status"
                 aria-live="polite"
               >
                 <Folder class="mb-2 size-12" aria-hidden="true" />
                 <span>Empty directory</span>
                 <span class="text-sm">Drop files here to upload</span>
-              </div>
+              </output>
             </Show>
 
             {/* File list content */}
@@ -191,9 +188,8 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
                 sftpStore.entries.length > 0 || sftpStore.currentPath !== '~'
               }
             >
-              <div
+              <ul
                 class="divide-y divide-neutral-800"
-                role="list"
                 aria-label={`Directory contents: ${sftpStore.entries.length} items`}
               >
                 {/* Parent directory link */}
@@ -218,7 +214,7 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
                         selected={sftpStore.selectedPaths.includes(entry.path)}
                         onClick={() => handleEntryClick(entry)}
                         {...(isFile
-                          ? { onDownload: () => sftpStore.downloadFile(entry) }
+                          ? { onDownload: () => void sftpStore.downloadFile(entry) }
                           : {})}
                         onDelete={() => {
                           sftpStore.deleteEntry(entry)
@@ -227,9 +223,9 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
                     )
                   }}
                 </For>
-              </div>
+              </ul>
             </Show>
-          </div>
+          </section>
         </UploadDropzone>
 
         {/* Transfer list */}

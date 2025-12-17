@@ -34,7 +34,7 @@ describe('Prompt Security', () => {
         '{{constructor.constructor("alert(1)")()}}'
       ]
 
-      maliciousPayloads.forEach((payload) => {
+      for (const payload of maliciousPayloads) {
         const escaped = escapeHtml(payload)
 
         // Verify HTML special characters are escaped
@@ -61,7 +61,7 @@ describe('Prompt Security', () => {
             `Escaped text should contain &gt; for >: ${escaped}`
           )
         }
-      })
+      }
     })
 
     it('should properly escape HTML entities', () => {
@@ -79,14 +79,14 @@ describe('Prompt Security', () => {
         }
       ]
 
-      testCases.forEach(({ input, expected }) => {
+      for (const { input, expected } of testCases) {
         const result = escapeHtml(input)
         assert.strictEqual(
           result,
           expected,
           `escapeHtml("${input}") should equal "${expected}"`
         )
-      })
+      }
     })
   })
 
