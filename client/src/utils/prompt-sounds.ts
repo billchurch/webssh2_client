@@ -1,14 +1,31 @@
 /**
  * Optional sound notifications for prompts
- * Uses Web Audio API - no external audio files required
+ * Uses Web Audio API synthesized tones - no external audio files required
  */
 import type { PromptSeverity } from '../types/prompt'
+import type { PromptSoundSettings } from '../types/config.d'
+import { getStoredSettings, saveTerminalSettings } from './settings.js'
+import { defaultSettings } from './index.js'
 
 /** Audio context singleton (created on first use) */
 let audioContext: AudioContext | null = null
 
-/** Sound settings key in localStorage */
-const SOUND_ENABLED_KEY = 'webssh2_prompt_sounds_enabled'
+/** Old localStorage key for migration */
+const OLD_SOUND_ENABLED_KEY = 'webssh2_prompt_sounds_enabled'
+
+/**
+ * Synthesized sound configurations for each severity
+ * Uses simple sine wave tones with different frequencies
+ */
+const SEVERITY_SOUNDS: Record<
+  PromptSeverity,
+  { frequency: number; duration: number; type: OscillatorType }
+> = {
+  info: { frequency: 440, duration: 0.15, type: 'sine' },
+  success: { frequency: 523, duration: 0.2, type: 'sine' },
+  warning: { frequency: 349, duration: 0.25, type: 'triangle' },
+  error: { frequency: 220, duration: 0.3, type: 'square' }
+}
 
 /**
  * Get or create the audio context
@@ -27,46 +44,74 @@ function getAudioContext(): AudioContext | null {
 }
 
 /**
- * Check if audio notifications are enabled in settings
+ * Migrate old sound setting to unified settings format
+ */
+function migrateOldSoundSettings(): void {
+  try {
+    const oldValue = localStorage.getItem(OLD_SOUND_ENABLED_KEY)
+    if (oldValue !== null) {
+      const wasEnabled = oldValue === 'true'
+      if (wasEnabled) {
+        saveTerminalSettings({
+          promptSounds: {
+            ...defaultSettings.promptSounds,
+            enabled: true
+          }
+        })
+      }
+      localStorage.removeItem(OLD_SOUND_ENABLED_KEY)
+    }
+  } catch {
+    // Ignore migration errors
+  }
+}
+
+/**
+ * Get prompt sound settings from unified storage
+ */
+export function getPromptSoundSettings(): PromptSoundSettings {
+  // Attempt migration on first access
+  migrateOldSoundSettings()
+
+  const stored = getStoredSettings()
+  const storedSounds = stored['promptSounds'] as
+    | Partial<PromptSoundSettings>
+    | undefined
+
+  if (storedSounds && typeof storedSounds === 'object') {
+    return {
+      enabled: storedSounds.enabled ?? defaultSettings.promptSounds.enabled,
+      severities: {
+        info:
+          storedSounds.severities?.info ??
+          defaultSettings.promptSounds.severities.info,
+        warning:
+          storedSounds.severities?.warning ??
+          defaultSettings.promptSounds.severities.warning,
+        error:
+          storedSounds.severities?.error ??
+          defaultSettings.promptSounds.severities.error,
+        success:
+          storedSounds.severities?.success ??
+          defaultSettings.promptSounds.severities.success
+      }
+    }
+  }
+
+  return { ...defaultSettings.promptSounds }
+}
+
+/**
+ * Check if audio notifications are enabled
+ * @deprecated Use getPromptSoundSettings().enabled instead
  */
 export function isAudioEnabled(): boolean {
-  try {
-    const stored = localStorage.getItem(SOUND_ENABLED_KEY)
-    // Default to false - opt-in for sounds
-    return stored === 'true'
-  } catch {
-    return false
-  }
-}
-
-/**
- * Enable or disable audio notifications
- */
-export function setAudioEnabled(enabled: boolean): void {
-  try {
-    localStorage.setItem(SOUND_ENABLED_KEY, String(enabled))
-  } catch {
-    // localStorage not available
-  }
-}
-
-/**
- * Sound configurations for each severity
- * Uses simple sine wave tones with different frequencies
- */
-const SEVERITY_SOUNDS: Record<
-  PromptSeverity,
-  { frequency: number; duration: number; type: OscillatorType }
-> = {
-  info: { frequency: 440, duration: 0.15, type: 'sine' },
-  success: { frequency: 523, duration: 0.2, type: 'sine' },
-  warning: { frequency: 349, duration: 0.25, type: 'triangle' },
-  error: { frequency: 220, duration: 0.3, type: 'square' }
+  return getPromptSoundSettings().enabled
 }
 
 /**
  * Play a notification sound for a given severity
- * Only plays if audio is enabled in settings
+ * Checks settings for enabled state and severity toggles
  *
  * @param severity - The prompt severity level
  * @param forcePlay - Override the enabled setting (for testing)
@@ -75,8 +120,15 @@ export function playPromptSound(
   severity: PromptSeverity,
   forcePlay: boolean = false
 ): void {
-  // Check if sounds are enabled
-  if (!forcePlay && !isAudioEnabled()) {
+  const settings = getPromptSoundSettings()
+
+  // Check if sounds are globally enabled
+  if (!forcePlay && !settings.enabled) {
+    return
+  }
+
+  // Check if this severity is enabled
+  if (!forcePlay && !settings.severities[severity]) {
     return
   }
 
@@ -87,9 +139,7 @@ export function playPromptSound(
 
   // Resume context if suspended (browser autoplay policy)
   if (ctx.state === 'suspended') {
-    ctx.resume().catch(() => {
-      // Ignore resume errors
-    })
+    ctx.resume().catch(() => {})
   }
 
   const config = SEVERITY_SOUNDS[severity]
@@ -98,12 +148,10 @@ export function playPromptSound(
   }
 
   try {
-    // Create oscillator
     const oscillator = ctx.createOscillator()
     oscillator.type = config.type
     oscillator.frequency.setValueAtTime(config.frequency, ctx.currentTime)
 
-    // Create gain node for volume envelope
     const gainNode = ctx.createGain()
     gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
     gainNode.gain.exponentialRampToValueAtTime(
@@ -111,22 +159,21 @@ export function playPromptSound(
       ctx.currentTime + config.duration
     )
 
-    // Connect and play
     oscillator.connect(gainNode)
     gainNode.connect(ctx.destination)
     oscillator.start(ctx.currentTime)
     oscillator.stop(ctx.currentTime + config.duration)
   } catch {
-    // Ignore audio errors - sounds are optional
+    // Ignore audio errors
   }
 }
 
 /**
- * Play a two-tone notification (for more attention-grabbing alerts)
- * Used for critical errors
+ * Play a two-tone alert notification (for critical alerts)
  */
 export function playAlertSound(): void {
-  if (!isAudioEnabled()) {
+  const settings = getPromptSoundSettings()
+  if (!settings.enabled || !settings.severities.error) {
     return
   }
 

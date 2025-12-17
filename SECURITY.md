@@ -30,12 +30,12 @@ npm run security:audit
 
 **GitHub Actions CI pipeline** (runs on every pull request):
 
-| Check | Tool | Description |
-|-------|------|-------------|
-| Dependency audit | `npm audit` | Checks for known vulnerabilities in dependencies |
-| Vulnerability scan | Trivy | Filesystem scan for CRITICAL/HIGH severity CVEs |
-| Dependency review | GitHub | Flags new dependencies with known vulnerabilities |
-| SARIF upload | CodeQL | Results visible in GitHub Security tab |
+| Check              | Tool        | Description                                       |
+| ------------------ | ----------- | ------------------------------------------------- |
+| Dependency audit   | `npm audit` | Checks for known vulnerabilities in dependencies  |
+| Vulnerability scan | Trivy       | Filesystem scan for CRITICAL/HIGH severity CVEs   |
+| Dependency review  | GitHub      | Flags new dependencies with known vulnerabilities |
+| SARIF upload       | CodeQL      | Results visible in GitHub Security tab            |
 
 ##### 3. Client-Specific Security
 

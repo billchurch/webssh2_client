@@ -23,8 +23,8 @@ Listen for the response:
 
 ```javascript
 socket.on('prompt-response', (response) => {
-  console.log(response.id)      // 'example-1'
-  console.log(response.action)  // 'confirm' or 'cancel'
+  console.log(response.id) // 'example-1'
+  console.log(response.action) // 'confirm' or 'cancel'
 })
 ```
 
@@ -110,7 +110,7 @@ socket.emit('prompt', {
   type: 'toast',
   title: 'File uploaded successfully',
   severity: 'success',
-  timeout: 3000  // Auto-dismiss after 3 seconds
+  timeout: 3000 // Auto-dismiss after 3 seconds
 })
 ```
 
@@ -125,67 +125,67 @@ Toasts support:
 
 ### PromptPayload
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `id` | `string` | Yes | Unique identifier for the prompt |
-| `type` | `'input' \| 'confirm' \| 'notice' \| 'toast'` | Yes | Prompt type |
-| `title` | `string` | Yes | Title text |
-| `message` | `string` | No | Body text |
-| `buttons` | `PromptButton[]` | No | Action buttons |
-| `inputs` | `PromptInput[]` | No | Input fields (for `type: 'input'`) |
-| `severity` | `'info' \| 'warning' \| 'error' \| 'success'` | No | Visual styling (default: `'info'`) |
-| `icon` | `string` | No | Icon name from registry |
-| `autoFocus` | `boolean` | No | Auto-focus first input (default: `true`) |
-| `timeout` | `number` | No | Toast auto-dismiss in ms (default: 5000) |
-| `closeOnBackdrop` | `boolean` | No | Allow backdrop click to close (default: `true`) |
-| `sound` | `boolean` | No | Play sound notification |
+| Property          | Type                                          | Required | Description                                     |
+| ----------------- | --------------------------------------------- | -------- | ----------------------------------------------- |
+| `id`              | `string`                                      | Yes      | Unique identifier for the prompt                |
+| `type`            | `'input' \| 'confirm' \| 'notice' \| 'toast'` | Yes      | Prompt type                                     |
+| `title`           | `string`                                      | Yes      | Title text                                      |
+| `message`         | `string`                                      | No       | Body text                                       |
+| `buttons`         | `PromptButton[]`                              | No       | Action buttons                                  |
+| `inputs`          | `PromptInput[]`                               | No       | Input fields (for `type: 'input'`)              |
+| `severity`        | `'info' \| 'warning' \| 'error' \| 'success'` | No       | Visual styling (default: `'info'`)              |
+| `icon`            | `string`                                      | No       | Icon name from registry                         |
+| `autoFocus`       | `boolean`                                     | No       | Auto-focus first input (default: `true`)        |
+| `timeout`         | `number`                                      | No       | Toast auto-dismiss in ms (default: 5000)        |
+| `closeOnBackdrop` | `boolean`                                     | No       | Allow backdrop click to close (default: `true`) |
+| `sound`           | `boolean`                                     | No       | Play sound notification                         |
 
 ### PromptButton
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `action` | `string` | Yes | Action identifier (returned in response) |
-| `label` | `string` | Yes | Button text |
-| `variant` | `'primary' \| 'secondary' \| 'danger'` | No | Button style |
-| `default` | `boolean` | No | Submit on Enter key (client-side only) |
+| Property  | Type                                   | Required | Description                              |
+| --------- | -------------------------------------- | -------- | ---------------------------------------- |
+| `action`  | `string`                               | Yes      | Action identifier (returned in response) |
+| `label`   | `string`                               | Yes      | Button text                              |
+| `variant` | `'primary' \| 'secondary' \| 'danger'` | No       | Button style                             |
+| `default` | `boolean`                              | No       | Submit on Enter key (client-side only)   |
 
 ### PromptInput
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `id` | `string` | Yes | Input identifier (key in response) |
-| `label` | `string` | Yes | Input label |
-| `type` | `'text' \| 'password'` | Yes | Input type |
-| `placeholder` | `string` | No | Placeholder text |
-| `required` | `boolean` | No | Validation required |
-| `value` | `string` | No | Initial value |
+| Property      | Type                   | Required | Description                        |
+| ------------- | ---------------------- | -------- | ---------------------------------- |
+| `id`          | `string`               | Yes      | Input identifier (key in response) |
+| `label`       | `string`               | Yes      | Input label                        |
+| `type`        | `'text' \| 'password'` | Yes      | Input type                         |
+| `placeholder` | `string`               | No       | Placeholder text                   |
+| `required`    | `boolean`              | No       | Validation required                |
+| `value`       | `string`               | No       | Initial value                      |
 
 ### PromptResponsePayload
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `id` | `string` | Prompt ID |
-| `action` | `string` | Button action that was clicked, or `'dismissed'`/`'timeout'` |
-| `inputs` | `Record<string, string>` | Input values (only for `type: 'input'`) |
+| Property | Type                     | Description                                                  |
+| -------- | ------------------------ | ------------------------------------------------------------ |
+| `id`     | `string`                 | Prompt ID                                                    |
+| `action` | `string`                 | Button action that was clicked, or `'dismissed'`/`'timeout'` |
+| `inputs` | `Record<string, string>` | Input values (only for `type: 'input'`)                      |
 
 ## Icons
 
 Icons are loaded from a static registry of [Lucide icons](https://lucide.dev/icons/). Common icons include:
 
-| Icon Name | Use Case |
-|-----------|----------|
-| `Info` | Information notices |
-| `TriangleAlert` | Warnings |
-| `CircleAlert` | Errors |
-| `CircleCheckBig` | Success messages |
-| `Lock` | Authentication |
-| `Key` | Credentials |
-| `Trash2` | Delete actions |
-| `Download` | Downloads |
-| `Upload` | Uploads |
-| `WifiOff` | Connection issues |
-| `Shield` | Security |
-| `Terminal` | Terminal operations |
+| Icon Name        | Use Case            |
+| ---------------- | ------------------- |
+| `Info`           | Information notices |
+| `TriangleAlert`  | Warnings            |
+| `CircleAlert`    | Errors              |
+| `CircleCheckBig` | Success messages    |
+| `Lock`           | Authentication      |
+| `Key`            | Credentials         |
+| `Trash2`         | Delete actions      |
+| `Download`       | Downloads           |
+| `Upload`         | Uploads             |
+| `WifiOff`        | Connection issues   |
+| `Shield`         | Security            |
+| `Terminal`       | Terminal operations |
 
 If an invalid icon name is provided, the system falls back to the severity default:
 
@@ -196,12 +196,12 @@ If an invalid icon name is provided, the system falls back to the severity defau
 
 ## Severity Styling
 
-| Severity | Icon Color | Border Color |
-|----------|------------|--------------|
-| `info` | Blue | Blue |
-| `warning` | Yellow | Yellow |
-| `error` | Red | Red |
-| `success` | Green | Green |
+| Severity  | Icon Color | Border Color |
+| --------- | ---------- | ------------ |
+| `info`    | Blue       | Blue         |
+| `warning` | Yellow     | Yellow       |
+| `error`   | Red        | Red          |
+| `success` | Green      | Green        |
 
 ## Security Features
 
@@ -225,13 +225,13 @@ Icons are resolved from a static registry. Arbitrary icon names cannot load exte
 
 ## Keyboard Navigation
 
-| Key | Action |
-|-----|--------|
-| `Tab` | Navigate between inputs/buttons |
-| `Shift+Tab` | Navigate backwards |
-| `Enter` | Submit (when on default button) |
-| `Escape` | Close (if `closeOnBackdrop: true` or after 5s) |
-| `Ctrl+Shift+Escape` | Emergency close all prompts |
+| Key                 | Action                                         |
+| ------------------- | ---------------------------------------------- |
+| `Tab`               | Navigate between inputs/buttons                |
+| `Shift+Tab`         | Navigate backwards                             |
+| `Enter`             | Submit (when on default button)                |
+| `Escape`            | Close (if `closeOnBackdrop: true` or after 5s) |
+| `Ctrl+Shift+Escape` | Emergency close all prompts                    |
 
 ## Focus Trap Safety
 
@@ -249,7 +249,7 @@ Optional audio alerts can be triggered with `sound: true`. Users can enable/disa
 // Check if audio is enabled
 import { isAudioEnabled, setAudioEnabled } from './utils/prompt-sounds'
 
-isAudioEnabled()      // Returns boolean
+isAudioEnabled() // Returns boolean
 setAudioEnabled(true) // Enable sounds
 ```
 
@@ -290,7 +290,8 @@ socket.emit('prompt', {
   id: 'hostkey-1',
   type: 'confirm',
   title: 'Unknown Host',
-  message: 'The authenticity of host "192.168.1.100" cannot be established.\n\nFingerprint: SHA256:abc123...\n\nAre you sure you want to continue?',
+  message:
+    'The authenticity of host "192.168.1.100" cannot be established.\n\nFingerprint: SHA256:abc123...\n\nAre you sure you want to continue?',
   icon: 'Shield',
   severity: 'warning',
   buttons: [
@@ -323,7 +324,7 @@ socket.emit('prompt', {
   type: 'toast',
   title: 'Uploading document.pdf...',
   severity: 'info',
-  timeout: 0  // No auto-dismiss
+  timeout: 0 // No auto-dismiss
 })
 
 // Complete transfer

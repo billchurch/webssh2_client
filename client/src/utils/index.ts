@@ -35,6 +35,15 @@ export const defaultSettings: TerminalSettings = {
     captureEscape: false,
     captureCtrlB: false,
     customCaptureKeys: []
+  },
+  promptSounds: {
+    enabled: false,
+    severities: {
+      info: true,
+      warning: true,
+      error: true,
+      success: true
+    }
   }
 }
 

@@ -5,9 +5,11 @@ import { ChevronDown, ChevronUp } from 'lucide-solid'
 import type { ITerminalOptions } from '@xterm/xterm'
 import { getStoredSettings, saveTerminalSettings } from '../utils/settings.js'
 import { defaultSettings } from '../utils/index.js'
+import { playPromptSound } from '../utils/prompt-sounds.js'
 import type {
   TerminalSettings,
-  KeyboardCaptureSettings
+  KeyboardCaptureSettings,
+  PromptSoundSettings
 } from '../types/config.d'
 
 interface TerminalSettingsModalProps {
@@ -29,6 +31,7 @@ interface TerminalSettingsForm {
   clipboardEnableMiddleClickPaste: boolean
   clipboardEnableKeyboardShortcuts: boolean
   keyboardCapture: KeyboardCaptureSettings
+  promptSounds: PromptSoundSettings
 }
 
 export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
@@ -46,11 +49,13 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
       defaultSettings.clipboardEnableMiddleClickPaste,
     clipboardEnableKeyboardShortcuts:
       defaultSettings.clipboardEnableKeyboardShortcuts,
-    keyboardCapture: defaultSettings.keyboardCapture
+    keyboardCapture: defaultSettings.keyboardCapture,
+    promptSounds: defaultSettings.promptSounds
   })
 
   const [clipboardExpanded, setClipboardExpanded] = createSignal(false)
   const [keyboardExpanded, setKeyboardExpanded] = createSignal(false)
+  const [soundsExpanded, setSoundsExpanded] = createSignal(false)
 
   // Load current settings when modal opens
   createEffect(() => {
@@ -73,7 +78,28 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
           stored.clipboardEnableKeyboardShortcuts ??
           defaultSettings.clipboardEnableKeyboardShortcuts,
         keyboardCapture:
-          stored.keyboardCapture || defaultSettings.keyboardCapture
+          stored.keyboardCapture || defaultSettings.keyboardCapture,
+        promptSounds: stored.promptSounds
+          ? {
+              enabled:
+                stored.promptSounds.enabled ??
+                defaultSettings.promptSounds.enabled,
+              severities: {
+                info:
+                  stored.promptSounds.severities?.info ??
+                  defaultSettings.promptSounds.severities.info,
+                warning:
+                  stored.promptSounds.severities?.warning ??
+                  defaultSettings.promptSounds.severities.warning,
+                error:
+                  stored.promptSounds.severities?.error ??
+                  defaultSettings.promptSounds.severities.error,
+                success:
+                  stored.promptSounds.severities?.success ??
+                  defaultSettings.promptSounds.severities.success
+              }
+            }
+          : defaultSettings.promptSounds
       })
     }
   })
@@ -101,7 +127,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
     // Save settings
     saveTerminalSettings(currentSettings as unknown as Record<string, unknown>)
 
-    // Apply to terminal - pass ALL settings including clipboard and keyboard capture settings
+    // Apply to terminal - pass ALL settings including clipboard, keyboard capture, and prompt sounds
     props.onSave({
       ...terminalOptions,
       clipboardAutoSelectToCopy: currentSettings.clipboardAutoSelectToCopy,
@@ -109,7 +135,8 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
         currentSettings.clipboardEnableMiddleClickPaste,
       clipboardEnableKeyboardShortcuts:
         currentSettings.clipboardEnableKeyboardShortcuts,
-      keyboardCapture: currentSettings.keyboardCapture
+      keyboardCapture: currentSettings.keyboardCapture,
+      promptSounds: currentSettings.promptSounds
     } as Partial<ITerminalOptions> & Partial<TerminalSettings>)
     props.onClose()
   }
@@ -466,6 +493,217 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 }}
                 title="Comma-separated list of keys to capture (e.g., F11, Ctrl+T, Alt+D)"
               />
+            </Show>
+
+            {/* Prompt Sounds Settings Section Header */}
+            <div class="col-span-full mb-2 mt-4 border-t pt-2">
+              <button
+                type="button"
+                class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => setSoundsExpanded(!soundsExpanded())}
+                aria-expanded={soundsExpanded()}
+              >
+                <span>Prompt Sounds</span>
+                {soundsExpanded() ? (
+                  <ChevronUp class="size-4" />
+                ) : (
+                  <ChevronDown class="size-4" />
+                )}
+              </button>
+              <Show when={soundsExpanded()}>
+                <p class="mt-1 text-xs text-slate-600">
+                  Configure audio notifications for server prompts
+                </p>
+              </Show>
+            </div>
+
+            <Show when={soundsExpanded()}>
+              {/* Enable Sounds */}
+              <label
+                for="promptSoundsEnabled"
+                class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+              >
+                Enable Sounds
+              </label>
+              <select
+                id="promptSoundsEnabled"
+                name="promptSoundsEnabled"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={settings().promptSounds.enabled ? 'true' : 'false'}
+                onChange={(e) => {
+                  const enabled = e.currentTarget.value === 'true'
+                  updateSetting('promptSounds', {
+                    ...settings().promptSounds,
+                    enabled
+                  })
+                }}
+              >
+                <option value="true">Enabled</option>
+                <option value="false">Disabled</option>
+              </select>
+
+              {/* Per-severity toggles - only show when sounds enabled */}
+              <Show when={settings().promptSounds.enabled}>
+                <div class="col-span-full mt-2">
+                  <span class="text-xs font-medium text-slate-600">
+                    Severity Levels:
+                  </span>
+                </div>
+
+                {/* Info Toggle */}
+                <label
+                  for="promptSoundsInfo"
+                  class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+                >
+                  Info
+                </label>
+                <div class="flex items-center gap-2">
+                  <select
+                    id="promptSoundsInfo"
+                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={
+                      settings().promptSounds.severities.info ? 'true' : 'false'
+                    }
+                    onChange={(e) =>
+                      updateSetting('promptSounds', {
+                        ...settings().promptSounds,
+                        severities: {
+                          ...settings().promptSounds.severities,
+                          info: e.currentTarget.value === 'true'
+                        }
+                      })
+                    }
+                  >
+                    <option value="true">On</option>
+                    <option value="false">Off</option>
+                  </select>
+                  <button
+                    type="button"
+                    class="shrink-0 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                    onClick={() => playPromptSound('info', true)}
+                    title="Test info sound"
+                  >
+                    Test
+                  </button>
+                </div>
+
+                {/* Warning Toggle */}
+                <label
+                  for="promptSoundsWarning"
+                  class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+                >
+                  Warning
+                </label>
+                <div class="flex items-center gap-2">
+                  <select
+                    id="promptSoundsWarning"
+                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={
+                      settings().promptSounds.severities.warning
+                        ? 'true'
+                        : 'false'
+                    }
+                    onChange={(e) =>
+                      updateSetting('promptSounds', {
+                        ...settings().promptSounds,
+                        severities: {
+                          ...settings().promptSounds.severities,
+                          warning: e.currentTarget.value === 'true'
+                        }
+                      })
+                    }
+                  >
+                    <option value="true">On</option>
+                    <option value="false">Off</option>
+                  </select>
+                  <button
+                    type="button"
+                    class="shrink-0 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                    onClick={() => playPromptSound('warning', true)}
+                    title="Test warning sound"
+                  >
+                    Test
+                  </button>
+                </div>
+
+                {/* Error Toggle */}
+                <label
+                  for="promptSoundsError"
+                  class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+                >
+                  Error
+                </label>
+                <div class="flex items-center gap-2">
+                  <select
+                    id="promptSoundsError"
+                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={
+                      settings().promptSounds.severities.error
+                        ? 'true'
+                        : 'false'
+                    }
+                    onChange={(e) =>
+                      updateSetting('promptSounds', {
+                        ...settings().promptSounds,
+                        severities: {
+                          ...settings().promptSounds.severities,
+                          error: e.currentTarget.value === 'true'
+                        }
+                      })
+                    }
+                  >
+                    <option value="true">On</option>
+                    <option value="false">Off</option>
+                  </select>
+                  <button
+                    type="button"
+                    class="shrink-0 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                    onClick={() => playPromptSound('error', true)}
+                    title="Test error sound"
+                  >
+                    Test
+                  </button>
+                </div>
+
+                {/* Success Toggle */}
+                <label
+                  for="promptSoundsSuccess"
+                  class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right"
+                >
+                  Success
+                </label>
+                <div class="flex items-center gap-2">
+                  <select
+                    id="promptSoundsSuccess"
+                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={
+                      settings().promptSounds.severities.success
+                        ? 'true'
+                        : 'false'
+                    }
+                    onChange={(e) =>
+                      updateSetting('promptSounds', {
+                        ...settings().promptSounds,
+                        severities: {
+                          ...settings().promptSounds.severities,
+                          success: e.currentTarget.value === 'true'
+                        }
+                      })
+                    }
+                  >
+                    <option value="true">On</option>
+                    <option value="false">Off</option>
+                  </select>
+                  <button
+                    type="button"
+                    class="shrink-0 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                    onClick={() => playPromptSound('success', true)}
+                    title="Test success sound"
+                  >
+                    Test
+                  </button>
+                </div>
+              </Show>
             </Show>
           </fieldset>
 

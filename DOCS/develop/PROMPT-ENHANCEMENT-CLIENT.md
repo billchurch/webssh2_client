@@ -6,25 +6,25 @@
 
 ## Implementation Status
 
-| Phase | Status | Notes |
-|-------|--------|-------|
-| Phase 1: Type Definitions & Constants | **COMPLETE** | `prompt.d.ts`, `events.d.ts`, `constants.ts` updated |
-| Phase 2: Icon Registry | **COMPLETE** | `prompt-icons.ts` with static imports |
-| Phase 3: Client Components | **COMPLETE** | `prompt-store.ts`, `UniversalPrompt.tsx`, `Toast.tsx`, `ToastContainer.tsx` |
-| Phase 4: Socket Integration | **COMPLETE** | `socket.ts` updated with event handlers |
-| Phase 5: App Integration | **COMPLETE** | `app.tsx` integrated with store and components |
-| Phase 6: Backwards Compatibility | **COMPLETE** | Existing keyboard-interactive unchanged, works alongside new system |
-| Phase 7: Testing | **COMPLETE** | `prompt-store.test.js`, `prompt-security.test.js`, `prompt-components.test.js` |
-| Verification | **PASSED** | TypeScript, ESLint (0 errors), 157 tests passing |
+| Phase                                 | Status       | Notes                                                                          |
+| ------------------------------------- | ------------ | ------------------------------------------------------------------------------ |
+| Phase 1: Type Definitions & Constants | **COMPLETE** | `prompt.d.ts`, `events.d.ts`, `constants.ts` updated                           |
+| Phase 2: Icon Registry                | **COMPLETE** | `prompt-icons.ts` with static imports                                          |
+| Phase 3: Client Components            | **COMPLETE** | `prompt-store.ts`, `UniversalPrompt.tsx`, `Toast.tsx`, `ToastContainer.tsx`    |
+| Phase 4: Socket Integration           | **COMPLETE** | `socket.ts` updated with event handlers                                        |
+| Phase 5: App Integration              | **COMPLETE** | `app.tsx` integrated with store and components                                 |
+| Phase 6: Backwards Compatibility      | **COMPLETE** | Existing keyboard-interactive unchanged, works alongside new system            |
+| Phase 7: Testing                      | **COMPLETE** | `prompt-store.test.js`, `prompt-security.test.js`, `prompt-components.test.js` |
+| Verification                          | **PASSED**   | TypeScript, ESLint (0 errors), 157 tests passing                               |
 
 **Branch**: `feature/generic-prompt-system`
 
 ### Resolved Questions
 
-| Question | Decision |
-|----------|----------|
-| Toast close button? | **Both** - Close button + auto-timeout (5s default) |
-| Swipe-to-dismiss? | **Yes** - Implemented for touch devices |
+| Question             | Decision                                                          |
+| -------------------- | ----------------------------------------------------------------- |
+| Toast close button?  | **Both** - Close button + auto-timeout (5s default)               |
+| Swipe-to-dismiss?    | **Yes** - Implemented for touch devices                           |
 | Sound notifications? | **Yes (optional)** - Web Audio API, configurable via localStorage |
 
 ### Additional Features Implemented
@@ -129,12 +129,12 @@ This PRD covers:
 
 ## Prompt Types and Behavior
 
-| Type | Takes Focus | Blocks Terminal | Auto-Dismiss | Use Case |
-|------|-------------|-----------------|--------------|----------|
-| `input` | YES | YES | NO | Text/password inputs, forms |
-| `confirm` | YES | YES | NO | Yes/No/Cancel dialogs |
-| `notice` | YES | YES | NO | Information with OK button |
-| `toast` | NO | NO | YES (5s default) | Status updates |
+| Type      | Takes Focus | Blocks Terminal | Auto-Dismiss     | Use Case                    |
+| --------- | ----------- | --------------- | ---------------- | --------------------------- |
+| `input`   | YES         | YES             | NO               | Text/password inputs, forms |
+| `confirm` | YES         | YES             | NO               | Yes/No/Cancel dialogs       |
+| `notice`  | YES         | YES             | NO               | Information with OK button  |
+| `toast`   | NO          | NO              | YES (5s default) | Status updates              |
 
 ## TypeScript Type Definitions
 
@@ -302,15 +302,68 @@ Create: `client/src/utils/prompt-icons.ts`
 
 ```typescript
 import {
-  Info, TriangleAlert, CircleAlert, CircleCheckBig, CircleX,
-  Key, KeyRound, Lock, LockOpen, Shield, ShieldCheck, ShieldAlert,
-  FingerprintPattern, UserCheck, UserX,
-  File, FileText, FileQuestionMark, FilePlus, FileMinus, FileX,
-  Folder, FolderOpen, Upload, Download, Trash2, Save, Copy, Clipboard,
-  Wifi, WifiOff, Globe, Server, Database, Link, Unlink, RefreshCw, RotateCcw,
-  Settings, CircleQuestionMark, MessageSquare, Bell, BellOff, Clock, Timer,
-  Terminal, Code, Zap, Power, LogOut, LogIn,
-  Eye, EyeOff, Search, SquarePen, Pencil, Plus, Minus, X, Check, Ban, LoaderCircle
+  Info,
+  TriangleAlert,
+  CircleAlert,
+  CircleCheckBig,
+  CircleX,
+  Key,
+  KeyRound,
+  Lock,
+  LockOpen,
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  FingerprintPattern,
+  UserCheck,
+  UserX,
+  File,
+  FileText,
+  FileQuestionMark,
+  FilePlus,
+  FileMinus,
+  FileX,
+  Folder,
+  FolderOpen,
+  Upload,
+  Download,
+  Trash2,
+  Save,
+  Copy,
+  Clipboard,
+  Wifi,
+  WifiOff,
+  Globe,
+  Server,
+  Database,
+  Link,
+  Unlink,
+  RefreshCw,
+  RotateCcw,
+  Settings,
+  CircleQuestionMark,
+  MessageSquare,
+  Bell,
+  BellOff,
+  Clock,
+  Timer,
+  Terminal,
+  Code,
+  Zap,
+  Power,
+  LogOut,
+  LogIn,
+  Eye,
+  EyeOff,
+  Search,
+  SquarePen,
+  Pencil,
+  Plus,
+  Minus,
+  X,
+  Check,
+  Ban,
+  LoaderCircle
 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import type { LucideProps } from 'lucide-solid'
@@ -323,20 +376,73 @@ import type { LucideProps } from 'lucide-solid'
  */
 export const PROMPT_ICON_REGISTRY: Record<string, Component<LucideProps>> = {
   // Severity/Status icons (defaults)
-  Info, TriangleAlert, CircleAlert, CircleCheckBig, CircleX,
+  Info,
+  TriangleAlert,
+  CircleAlert,
+  CircleCheckBig,
+  CircleX,
   // Authentication & Security
-  Key, KeyRound, Lock, LockOpen, Shield, ShieldCheck, ShieldAlert,
-  FingerprintPattern, UserCheck, UserX,
+  Key,
+  KeyRound,
+  Lock,
+  LockOpen,
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  FingerprintPattern,
+  UserCheck,
+  UserX,
   // File operations
-  File, FileText, FileQuestionMark, FilePlus, FileMinus, FileX,
-  Folder, FolderOpen, Upload, Download, Trash2, Save, Copy, Clipboard,
+  File,
+  FileText,
+  FileQuestionMark,
+  FilePlus,
+  FileMinus,
+  FileX,
+  Folder,
+  FolderOpen,
+  Upload,
+  Download,
+  Trash2,
+  Save,
+  Copy,
+  Clipboard,
   // Connection & Network
-  Wifi, WifiOff, Globe, Server, Database, Link, Unlink, RefreshCw, RotateCcw,
+  Wifi,
+  WifiOff,
+  Globe,
+  Server,
+  Database,
+  Link,
+  Unlink,
+  RefreshCw,
+  RotateCcw,
   // Actions & UI
-  Settings, CircleQuestionMark, MessageSquare, Bell, BellOff, Clock, Timer,
-  Terminal, Code, Zap, Power, LogOut, LogIn,
+  Settings,
+  CircleQuestionMark,
+  MessageSquare,
+  Bell,
+  BellOff,
+  Clock,
+  Timer,
+  Terminal,
+  Code,
+  Zap,
+  Power,
+  LogOut,
+  LogIn,
   // Misc
-  Eye, EyeOff, Search, SquarePen, Pencil, Plus, Minus, X, Check, Ban, LoaderCircle,
+  Eye,
+  EyeOff,
+  Search,
+  SquarePen,
+  Pencil,
+  Plus,
+  Minus,
+  X,
+  Check,
+  Ban,
+  LoaderCircle
 }
 
 /** Default icons for each severity level */
@@ -344,7 +450,7 @@ const SEVERITY_DEFAULT_ICONS: Record<string, Component<LucideProps>> = {
   info: Info,
   warning: TriangleAlert,
   error: CircleAlert,
-  success: CircleCheckBig,
+  success: CircleCheckBig
 }
 
 /**
@@ -368,8 +474,8 @@ export function resolvePromptIcon(
     // Icon not found - log warning and fallback gracefully
     console.warn(
       `[WebSSH2] Unknown prompt icon: '${iconName}'. ` +
-      `Icon not in PROMPT_ICON_REGISTRY. Falling back to severity default. ` +
-      `This may indicate a server/client version mismatch.`
+        `Icon not in PROMPT_ICON_REGISTRY. Falling back to severity default. ` +
+        `This may indicate a server/client version mismatch.`
     )
   }
 
@@ -397,7 +503,7 @@ import {
 } from '../constants.js'
 
 interface PromptRateLimitState {
-  recentPrompts: number[]  // timestamps
+  recentPrompts: number[] // timestamps
   circuitBreakerTripped: boolean
 }
 
@@ -414,12 +520,12 @@ function checkPromptRateLimit(): boolean {
 
   // Clean old timestamps
   const recentPrompts = rateLimitState.recentPrompts.filter(
-    t => now - t < PROMPT_RATE_LIMIT_CLEANUP_WINDOW_MS
+    (t) => now - t < PROMPT_RATE_LIMIT_CLEANUP_WINDOW_MS
   )
 
   // Circuit breaker: if >10 prompts in 1 second, trip it
   const veryRecentCount = recentPrompts.filter(
-    t => now - t < PROMPT_RATE_LIMIT_CHECK_WINDOW_MS
+    (t) => now - t < PROMPT_RATE_LIMIT_CHECK_WINDOW_MS
   ).length
 
   if (veryRecentCount > PROMPT_CIRCUIT_BREAKER_THRESHOLD) {
@@ -427,7 +533,9 @@ function checkPromptRateLimit(): boolean {
     console.error('SECURITY: Circuit breaker tripped - too many prompts')
 
     // Show error modal to user
-    showErrorModal('Too many prompts received. Possible attack detected. Please reconnect.')
+    showErrorModal(
+      'Too many prompts received. Possible attack detected. Please reconnect.'
+    )
 
     // Disconnect socket
     disconnectSocket()
@@ -436,7 +544,7 @@ function checkPromptRateLimit(): boolean {
 
   // Normal rate limit: max 5 prompts per second
   const recentCount = recentPrompts.filter(
-    t => now - t < PROMPT_RATE_LIMIT_CHECK_WINDOW_MS
+    (t) => now - t < PROMPT_RATE_LIMIT_CHECK_WINDOW_MS
   ).length
 
   if (recentCount >= PROMPT_RATE_LIMIT_MAX_PER_SECOND) {
@@ -498,7 +606,7 @@ import {
 
 interface PromptState {
   activePrompt: PromptPayload | null
-  promptQueue: PromptPayload[]  // Queue for modals when one is already showing
+  promptQueue: PromptPayload[] // Queue for modals when one is already showing
   toasts: PromptPayload[]
 }
 
@@ -556,13 +664,19 @@ export function addToast(payload: PromptPayload): void {
 }
 
 export function removeToast(id: string): void {
-  setPromptState('toasts', promptState.toasts.filter(t => t.id !== id))
+  setPromptState(
+    'toasts',
+    promptState.toasts.filter((t) => t.id !== id)
+  )
 }
 
 export function dismissAllPrompts(): void {
   // Send dismiss responses for all active prompts
   if (promptState.activePrompt !== null) {
-    submitPromptResponse({ id: promptState.activePrompt.id, action: 'dismissed' })
+    submitPromptResponse({
+      id: promptState.activePrompt.id,
+      action: 'dismissed'
+    })
   }
   for (const prompt of promptState.promptQueue) {
     submitPromptResponse({ id: prompt.id, action: 'dismissed' })
@@ -582,7 +696,14 @@ export { promptState }
 ### 2. UniversalPrompt Component (`components/prompts/UniversalPrompt.tsx`)
 
 ```tsx
-import { Component, createSignal, createEffect, onCleanup, For, Show } from 'solid-js'
+import {
+  Component,
+  createSignal,
+  createEffect,
+  onCleanup,
+  For,
+  Show
+} from 'solid-js'
 import { X } from 'lucide-solid'
 import type { PromptPayload, PromptResponsePayload } from '../../types/prompt'
 import { Modal } from '../Modal'
@@ -647,39 +768,45 @@ export const UniversalPrompt: Component<UniversalPromptProps> = (props) => {
 
   return (
     <Modal isOpen={true} onClose={handleBackdropClick}>
-      <div class="p-6 max-w-md">
+      <div class="max-w-md p-6">
         {/* Header with icon and title */}
-        <div class="flex items-center gap-3 mb-4">
-          <IconComponent class={`w-6 h-6 ${severityColor}`} />
+        <div class="mb-4 flex items-center gap-3">
+          <IconComponent class={`h-6 w-6 ${severityColor}`} />
           <h3 class="text-lg font-semibold">{props.prompt.title}</h3>
         </div>
 
         {/* Message */}
         <Show when={props.prompt.message}>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="mb-4 text-gray-600 dark:text-gray-300">
             {props.prompt.message}
           </p>
         </Show>
 
         {/* Input fields */}
-        <Show when={props.prompt.inputs !== undefined && props.prompt.inputs.length > 0}>
-          <div class="space-y-4 mb-4">
+        <Show
+          when={
+            props.prompt.inputs !== undefined && props.prompt.inputs.length > 0
+          }
+        >
+          <div class="mb-4 space-y-4">
             <For each={props.prompt.inputs}>
               {(input) => (
                 <div>
-                  <label class="block text-sm font-medium mb-1">
+                  <label class="mb-1 block text-sm font-medium">
                     {input.label}
                   </label>
                   <input
                     type={input.type}
                     placeholder={input.placeholder}
                     value={inputValues()[input.id] ?? ''}
-                    onInput={(e) => setInputValues(prev => ({
-                      ...prev,
-                      [input.id]: e.currentTarget.value
-                    }))}
+                    onInput={(e) =>
+                      setInputValues((prev) => ({
+                        ...prev,
+                        [input.id]: e.currentTarget.value
+                      }))
+                    }
                     required={input.required}
-                    class="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                    class="w-full rounded-md border px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
                   />
                 </div>
               )}
@@ -689,16 +816,22 @@ export const UniversalPrompt: Component<UniversalPromptProps> = (props) => {
 
         {/* Buttons */}
         <div class="flex justify-end gap-2">
-          <For each={props.prompt.buttons ?? [{ action: 'ok', label: 'OK', variant: 'primary', default: true }]}>
+          <For
+            each={
+              props.prompt.buttons ?? [
+                { action: 'ok', label: 'OK', variant: 'primary', default: true }
+              ]
+            }
+          >
             {(button) => (
               <button
                 onClick={() => handleButtonClick(button.action)}
-                class={`px-4 py-2 rounded-md font-medium transition-colors ${
+                class={`rounded-md px-4 py-2 font-medium transition-colors ${
                   button.variant === 'danger'
                     ? 'bg-red-600 text-white hover:bg-red-700'
                     : button.variant === 'primary'
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-600 dark:text-white'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-600 dark:text-white'
                 }`}
                 autofocus={button.default}
               >
@@ -728,9 +861,12 @@ interface ToastProps {
 
 const severityStyles = {
   info: 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200',
-  warning: 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200',
-  error: 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200',
-  success: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
+  warning:
+    'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200',
+  error:
+    'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200',
+  success:
+    'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
 }
 
 export const Toast: Component<ToastProps> = (props) => {
@@ -741,18 +877,18 @@ export const Toast: Component<ToastProps> = (props) => {
 
   return (
     <div
-      class={`flex items-center gap-3 p-4 rounded-lg border shadow-lg animate-slide-in ${styles}`}
+      class={`animate-slide-in flex items-center gap-3 rounded-lg border p-4 shadow-lg ${styles}`}
       role="status"
       aria-live="polite"
     >
-      <IconComponent class="w-5 h-5 flex-shrink-0" />
+      <IconComponent class="h-5 w-5 flex-shrink-0" />
       <p class="flex-1">{props.toast.message ?? props.toast.title}</p>
       <button
         onClick={() => props.onDismiss(props.toast.id)}
-        class="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+        class="rounded p-1 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
         aria-label="Dismiss"
       >
-        <X class="w-4 h-4" />
+        <X class="h-4 w-4" />
       </button>
     </div>
   )
@@ -768,7 +904,7 @@ import { promptState, removeToast } from '../../stores/prompt-store'
 
 export const ToastContainer: Component = () => {
   return (
-    <div class="fixed bottom-6 right-6 z-[1000] flex flex-col gap-2 max-w-sm">
+    <div class="fixed right-6 bottom-6 z-[1000] flex max-w-sm flex-col gap-2">
       <For each={promptState.toasts}>
         {(toast) => <Toast toast={toast} onDismiss={removeToast} />}
       </For>
@@ -853,7 +989,11 @@ private handleKeyboardInteractive(data: {
 ```tsx
 import { UniversalPrompt } from './components/prompts/UniversalPrompt'
 import { ToastContainer } from './components/prompts/ToastContainer'
-import { promptState, dismissPrompt, submitPromptResponse } from './stores/prompt-store'
+import {
+  promptState,
+  dismissPrompt,
+  submitPromptResponse
+} from './stores/prompt-store'
 
 // In the component JSX:
 return (
@@ -1037,40 +1177,40 @@ Add to your global styles or Tailwind config:
 
 ## Questions Resolved ✅
 
-| Question | Decision | Implementation |
-|----------|----------|----------------|
-| Should toasts have a close button, or be dismissible only by timeout/swipe? | **Both** | Close button + auto-timeout (5s default) |
-| Should we implement swipe-to-dismiss for touch devices? | **Yes** | `Toast.tsx` with 100px swipe threshold |
-| How should screen readers announce queued prompts? | **ARIA live regions** | `role="status"` with `aria-live="polite"` |
-| Should we add sound notifications for important prompts? | **Yes (optional)** | `prompt-sounds.ts` using Web Audio API, opt-in via localStorage |
+| Question                                                                    | Decision              | Implementation                                                  |
+| --------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------- |
+| Should toasts have a close button, or be dismissible only by timeout/swipe? | **Both**              | Close button + auto-timeout (5s default)                        |
+| Should we implement swipe-to-dismiss for touch devices?                     | **Yes**               | `Toast.tsx` with 100px swipe threshold                          |
+| How should screen readers announce queued prompts?                          | **ARIA live regions** | `role="status"` with `aria-live="polite"`                       |
+| Should we add sound notifications for important prompts?                    | **Yes (optional)**    | `prompt-sounds.ts` using Web Audio API, opt-in via localStorage |
 
 ## Files Created/Modified
 
 ### New Files
 
-| File | Purpose |
-|------|---------|
-| `client/src/types/prompt.d.ts` | Type definitions for prompts |
-| `client/src/utils/prompt-icons.ts` | Static icon registry (security) |
-| `client/src/utils/prompt-sounds.ts` | Optional Web Audio API sounds |
-| `client/src/stores/prompt-store.ts` | State management with rate limiting |
-| `client/src/components/prompts/UniversalPrompt.tsx` | Modal prompt component |
-| `client/src/components/prompts/Toast.tsx` | Toast with swipe-to-dismiss |
-| `client/src/components/prompts/ToastContainer.tsx` | Toast container |
-| `client/src/components/prompts/index.ts` | Barrel export |
-| `tests/prompt-store.test.js` | Rate limiting and queue tests |
-| `tests/prompt-security.test.js` | XSS and security tests |
-| `tests/prompt-components.test.js` | Component behavior tests |
+| File                                                | Purpose                             |
+| --------------------------------------------------- | ----------------------------------- |
+| `client/src/types/prompt.d.ts`                      | Type definitions for prompts        |
+| `client/src/utils/prompt-icons.ts`                  | Static icon registry (security)     |
+| `client/src/utils/prompt-sounds.ts`                 | Optional Web Audio API sounds       |
+| `client/src/stores/prompt-store.ts`                 | State management with rate limiting |
+| `client/src/components/prompts/UniversalPrompt.tsx` | Modal prompt component              |
+| `client/src/components/prompts/Toast.tsx`           | Toast with swipe-to-dismiss         |
+| `client/src/components/prompts/ToastContainer.tsx`  | Toast container                     |
+| `client/src/components/prompts/index.ts`            | Barrel export                       |
+| `tests/prompt-store.test.js`                        | Rate limiting and queue tests       |
+| `tests/prompt-security.test.js`                     | XSS and security tests              |
+| `tests/prompt-components.test.js`                   | Component behavior tests            |
 
 ### Modified Files
 
-| File | Changes |
-|------|---------|
-| `client/src/types/events.d.ts` | Added `prompt` and `prompt-response` events |
-| `client/src/constants.ts` | Added prompt system constants |
-| `client/src/services/socket.ts` | Added prompt event handling |
-| `client/src/app.tsx` | Integrated ToastContainer and UniversalPrompt |
-| `client/src/app.css` | Added toast slide animations |
+| File                            | Changes                                       |
+| ------------------------------- | --------------------------------------------- |
+| `client/src/types/events.d.ts`  | Added `prompt` and `prompt-response` events   |
+| `client/src/constants.ts`       | Added prompt system constants                 |
+| `client/src/services/socket.ts` | Added prompt event handling                   |
+| `client/src/app.tsx`            | Integrated ToastContainer and UniversalPrompt |
+| `client/src/app.css`            | Added toast slide animations                  |
 
 ## Next Steps
 

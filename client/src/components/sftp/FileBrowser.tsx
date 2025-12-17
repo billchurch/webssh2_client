@@ -156,7 +156,10 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
                 aria-live="polite"
               >
                 <div class="flex items-center gap-2 text-neutral-400">
-                  <LoaderCircle class="size-5 animate-spin" aria-hidden="true" />
+                  <LoaderCircle
+                    class="size-5 animate-spin"
+                    aria-hidden="true"
+                  />
                   <span>Loading...</span>
                 </div>
               </div>
