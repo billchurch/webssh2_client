@@ -311,7 +311,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 <select
                   name="clipboardAutoSelectToCopy"
                   class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={settings().clipboardAutoSelectToCopy ? 'true' : 'false'}
+                  value={
+                    settings().clipboardAutoSelectToCopy ? 'true' : 'false'
+                  }
                   onChange={(e) =>
                     updateSetting(
                       'clipboardAutoSelectToCopy',
@@ -333,7 +335,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   name="clipboardEnableMiddleClickPaste"
                   class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={
-                    settings().clipboardEnableMiddleClickPaste ? 'true' : 'false'
+                    settings().clipboardEnableMiddleClickPaste
+                      ? 'true'
+                      : 'false'
                   }
                   onChange={(e) =>
                     updateSetting(
@@ -356,7 +360,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   name="clipboardEnableKeyboardShortcuts"
                   class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={
-                    settings().clipboardEnableKeyboardShortcuts ? 'true' : 'false'
+                    settings().clipboardEnableKeyboardShortcuts
+                      ? 'true'
+                      : 'false'
                   }
                   onChange={(e) =>
                     updateSetting(
@@ -454,7 +460,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   name="keyboardCaptureCustomKeys"
                   placeholder="e.g., F11, Ctrl+T, Alt+D"
                   class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={settings().keyboardCapture.customCaptureKeys.join(', ')}
+                  value={settings().keyboardCapture.customCaptureKeys.join(
+                    ', '
+                  )}
                   onInput={(e) => {
                     const value = e.currentTarget.value
                     const keys = value
@@ -533,7 +541,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                     <select
                       class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={
-                        settings().promptSounds.severities.info ? 'true' : 'false'
+                        settings().promptSounds.severities.info
+                          ? 'true'
+                          : 'false'
                       }
                       onChange={(e) =>
                         updateSetting('promptSounds', {

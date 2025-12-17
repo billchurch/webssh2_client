@@ -214,7 +214,11 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
                         selected={sftpStore.selectedPaths.includes(entry.path)}
                         onClick={() => handleEntryClick(entry)}
                         {...(isFile
-                          ? { onDownload: () => void sftpStore.downloadFile(entry) }
+                          ? {
+                              onDownload: () => {
+                                sftpStore.downloadFile(entry)
+                              }
+                            }
                           : {})}
                         onDelete={() => {
                           sftpStore.deleteEntry(entry)
