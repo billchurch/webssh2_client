@@ -570,6 +570,7 @@ export const terminalManager = new SolidTerminalManager()
 
 // Expose terminal manager globally for testing
 if (globalThis.window !== undefined) {
-  ;(globalThis as unknown as { terminalManager?: SolidTerminalManager }).terminalManager =
-    terminalManager
+  ;(
+    globalThis as unknown as { terminalManager?: SolidTerminalManager }
+  ).terminalManager = terminalManager
 }
