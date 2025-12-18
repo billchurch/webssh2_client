@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.1](https://github.com/billchurch/webssh2_client/compare/v2.4.0...v2.4.1) (2025-12-18)
+
+
+### Bug Fixes
+
+* terminal bell sound ([#76](https://github.com/billchurch/webssh2_client/issues/76)) ([3153310](https://github.com/billchurch/webssh2_client/commit/31533101fd27a69bfec5ccdb55f519240edcb7f0))
+* update release-please to skip malformed commit [skip ci] ([186d46f](https://github.com/billchurch/webssh2_client/commit/186d46f29964736a443b94198a20958532c5b2bb))
+
 ## [2.4.0](https://github.com/billchurch/webssh2_client/compare/v2.3.1...v2.4.0) (2025-12-17)
 
 
