@@ -5,7 +5,7 @@
       "release-type": "node",
       "monorepo-tags": false,
       "include-component-in-tag": false,
-      "last-release-sha": "2b8b4a3bf30b4bd6b5d25e65b1166fbe5fdba17b",
+      "last-release-sha": "1b981441136549da3703703d58c55a953f8f6814",
       "changelog-sections": [
         {
           "type": "feat",
