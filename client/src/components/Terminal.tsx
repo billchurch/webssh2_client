@@ -105,19 +105,25 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
         terminalConfig.cursorBlink ??
         defaultSettings.cursorBlink,
       scrollback: validateNumber(
-        storedSettings.scrollback ?? terminalConfig.scrollback,
+        storedSettings.scrollback ??
+          terminalConfig.scrollback ??
+          defaultSettings.scrollback,
         1,
         200000,
         defaultSettings.scrollback
       ),
       tabStopWidth: validateNumber(
-        storedSettings.tabStopWidth ?? terminalConfig.tabStopWidth,
+        storedSettings.tabStopWidth ??
+          terminalConfig.tabStopWidth ??
+          defaultSettings.tabStopWidth,
         1,
         100,
         defaultSettings.tabStopWidth
       ),
       fontSize: validateNumber(
-        storedSettings.fontSize ?? terminalConfig.fontSize,
+        storedSettings.fontSize ??
+          terminalConfig.fontSize ??
+          defaultSettings.fontSize,
         1,
         72,
         defaultSettings.fontSize
