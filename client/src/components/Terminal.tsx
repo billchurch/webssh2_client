@@ -26,6 +26,9 @@ import {
 } from '../lib/clipboard/terminal-clipboard-integration'
 import { ClipboardCompatibility } from '../utils/clipboard-compatibility'
 
+// Import bell sound
+import { playBellSound } from '../utils/bell-sound.js'
+
 const debug = createDebug('webssh2-client:terminal-component')
 
 // Reactive terminal actions interface
@@ -97,23 +100,30 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
       {}) as Partial<TerminalSettings>
 
     const mergedOptions: Partial<ITerminalOptions> = {
-      cursorBlink: (storedSettings.cursorBlink ??
+      cursorBlink:
+        storedSettings.cursorBlink ??
         terminalConfig.cursorBlink ??
-        defaultSettings.cursorBlink) as boolean,
+        defaultSettings.cursorBlink,
       scrollback: validateNumber(
-        (storedSettings.scrollback ?? terminalConfig.scrollback) as number,
+        storedSettings.scrollback ??
+          terminalConfig.scrollback ??
+          defaultSettings.scrollback,
         1,
         200000,
         defaultSettings.scrollback
       ),
       tabStopWidth: validateNumber(
-        (storedSettings.tabStopWidth ?? terminalConfig.tabStopWidth) as number,
+        storedSettings.tabStopWidth ??
+          terminalConfig.tabStopWidth ??
+          defaultSettings.tabStopWidth,
         1,
         100,
         defaultSettings.tabStopWidth
       ),
       fontSize: validateNumber(
-        (storedSettings.fontSize ?? terminalConfig.fontSize) as number,
+        storedSettings.fontSize ??
+          terminalConfig.fontSize ??
+          defaultSettings.fontSize,
         1,
         72,
         defaultSettings.fontSize
@@ -123,12 +133,14 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
           terminalConfig.fontFamily ??
           defaultSettings.fontFamily
       ),
-      letterSpacing: (storedSettings.letterSpacing ??
+      letterSpacing:
+        storedSettings.letterSpacing ??
         terminalConfig.letterSpacing ??
-        defaultSettings.letterSpacing) as number,
-      lineHeight: (storedSettings.lineHeight ??
+        defaultSettings.letterSpacing,
+      lineHeight:
+        storedSettings.lineHeight ??
         terminalConfig.lineHeight ??
-        defaultSettings.lineHeight) as number,
+        defaultSettings.lineHeight,
       allowProposedApi: true // Required for SearchAddon decorations
     }
 
@@ -274,31 +286,28 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
 
         // Apply validated settings
         const validatedSettings = {
-          cursorBlink: (options.cursorBlink ??
-            defaultSettings.cursorBlink) as boolean,
+          cursorBlink: options.cursorBlink ?? defaultSettings.cursorBlink,
           scrollback: validateNumber(
-            options.scrollback as number,
+            options.scrollback ?? defaultSettings.scrollback,
             1,
             200000,
             defaultSettings.scrollback
           ),
           tabStopWidth: validateNumber(
-            options.tabStopWidth as number,
+            options.tabStopWidth ?? defaultSettings.tabStopWidth,
             1,
             100,
             defaultSettings.tabStopWidth
           ),
           fontSize: validateNumber(
-            options.fontSize as number,
+            options.fontSize ?? defaultSettings.fontSize,
             1,
             72,
             defaultSettings.fontSize
           ),
           fontFamily: String(options.fontFamily ?? defaultSettings.fontFamily),
-          letterSpacing: (options.letterSpacing ??
-            defaultSettings.letterSpacing) as number,
-          lineHeight: (options.lineHeight ??
-            defaultSettings.lineHeight) as number
+          letterSpacing: options.letterSpacing ?? defaultSettings.letterSpacing,
+          lineHeight: options.lineHeight ?? defaultSettings.lineHeight
         }
 
         Object.assign(currentRef.terminal.options, validatedSettings)
@@ -363,7 +372,7 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
           }) => void
         ) => {
           const addon = searchAddon()
-          if (addon && addon.onDidChangeResults) {
+          if (addon?.onDidChangeResults) {
             try {
               // The onDidChangeResults is an IEvent interface that returns a disposable
               const disposable = addon.onDidChangeResults(callback)
@@ -433,6 +442,7 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
     addons: [], // We load FitAddon directly in handleTerminalMount
     onData: handleTerminalData,
     onTitleChange: handleTitleChange,
+    onBell: playBellSound,
     onMount: handleTerminalMount,
     class: props.class || 'terminal-container',
     style: {
@@ -460,7 +470,7 @@ export class SolidTerminalManager {
 
   // Helper method to ensure terminal is ready
   private ensureTerminal(): boolean {
-    return !!(this.terminalRef && this.terminalRef.terminal)
+    return !!this.terminalRef?.terminal
   }
 
   writeToTerminal(data: string): void {
@@ -526,30 +536,28 @@ export class SolidTerminalManager {
     debug('applyTerminalSettings', options)
 
     const terminalSettings: Partial<ITerminalOptions> = {
-      cursorBlink: (options.cursorBlink ??
-        defaultSettings.cursorBlink) as boolean,
+      cursorBlink: options.cursorBlink ?? defaultSettings.cursorBlink,
       scrollback: validateNumber(
-        options.scrollback as number,
+        options.scrollback ?? defaultSettings.scrollback,
         1,
         200000,
         defaultSettings.scrollback
       ),
       tabStopWidth: validateNumber(
-        options.tabStopWidth as number,
+        options.tabStopWidth ?? defaultSettings.tabStopWidth,
         1,
         100,
         defaultSettings.tabStopWidth
       ),
       fontSize: validateNumber(
-        options.fontSize as number,
+        options.fontSize ?? defaultSettings.fontSize,
         1,
         72,
         defaultSettings.fontSize
       ),
       fontFamily: String(options.fontFamily ?? defaultSettings.fontFamily),
-      letterSpacing: (options.letterSpacing ??
-        defaultSettings.letterSpacing) as number,
-      lineHeight: (options.lineHeight ?? defaultSettings.lineHeight) as number
+      letterSpacing: options.letterSpacing ?? defaultSettings.letterSpacing,
+      lineHeight: options.lineHeight ?? defaultSettings.lineHeight
     }
 
     Object.assign(this.terminalRef!.terminal!.options, terminalSettings)
@@ -567,7 +575,8 @@ export class SolidTerminalManager {
 export const terminalManager = new SolidTerminalManager()
 
 // Expose terminal manager globally for testing
-if (typeof window !== 'undefined') {
-  ;(window as { terminalManager?: SolidTerminalManager }).terminalManager =
-    terminalManager
+if (globalThis.window !== undefined) {
+  ;(
+    globalThis as unknown as { terminalManager?: SolidTerminalManager }
+  ).terminalManager = terminalManager
 }
