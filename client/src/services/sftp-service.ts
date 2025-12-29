@@ -15,14 +15,12 @@ import { FileChunker, DEFAULT_CHUNK_SIZE } from '../utils/file-chunker.js'
 import { createDownloadAssembler } from '../utils/download-assembler.js'
 import type { DownloadAssembler } from '../utils/download-assembler.js'
 import {
-  createTransferId,
   type TransferId,
   type SftpFileEntry,
   type SftpListRequest,
   type SftpStatRequest,
   type SftpDeleteRequest,
   type SftpUploadChunkRequest,
-  type SftpDownloadStartRequest,
   type SftpDirectoryResponse,
   type SftpStatResponse,
   type SftpOperationResponse,
@@ -64,6 +62,13 @@ const activeAssemblers = new Map<TransferId, DownloadAssembler>()
 
 /** Pending requests waiting for responses */
 const pendingRequests = new Map<string, PendingRequest<unknown>>()
+
+/** FIFO queue for pending upload-ready responses (server-generated transfer IDs) */
+const pendingUploadReady: Array<PendingRequest<SftpUploadReadyResponse>> = []
+
+/** FIFO queue for pending download-ready responses (server-generated transfer IDs) */
+const pendingDownloadReady: Array<PendingRequest<SftpDownloadReadyResponse>> =
+  []
 
 /** Default request timeout (30 seconds) */
 const REQUEST_TIMEOUT = 30000
@@ -122,7 +127,7 @@ export function initializeSftpListeners(): void {
     }
   )
 
-  // Upload ready
+  // Upload ready - use FIFO queue (server generates transferId)
   socketInstance.on(
     'sftp-upload-ready' as never,
     (response: SftpUploadReadyResponse) => {
@@ -131,7 +136,13 @@ export function initializeSftpListeners(): void {
         response.transferId,
         `chunkSize: ${response.chunkSize}`
       )
-      resolvePendingRequest(`upload-ready:${response.transferId}`, response)
+      const pending = pendingUploadReady.shift()
+      if (pending) {
+        clearTimeout(pending.timeoutId)
+        pending.resolve(response)
+      } else {
+        debug('No pending upload-ready request for', response.transferId)
+      }
     }
   )
 
@@ -234,6 +245,19 @@ export function cleanupSftpListeners(): void {
   }
   pendingRequests.clear()
 
+  // Clear FIFO queues for upload-ready/download-ready
+  for (const pending of pendingUploadReady) {
+    clearTimeout(pending.timeoutId)
+    pending.reject(new Error('SFTP service disconnected'))
+  }
+  pendingUploadReady.length = 0
+
+  for (const pending of pendingDownloadReady) {
+    clearTimeout(pending.timeoutId)
+    pending.reject(new Error('SFTP service disconnected'))
+  }
+  pendingDownloadReady.length = 0
+
   // Clear active transfers
   activeTransfers.clear()
   activeChunkers.clear()
@@ -317,7 +341,14 @@ function rejectPendingRequest(key: string, error: Error): void {
 // =============================================================================
 
 function handleDownloadReady(response: SftpDownloadReadyResponse): void {
-  resolvePendingRequest(`download-ready:${response.transferId}`, response)
+  // Use FIFO queue (server generates transferId)
+  const pending = pendingDownloadReady.shift()
+  if (pending) {
+    clearTimeout(pending.timeoutId)
+    pending.resolve(response)
+  } else {
+    debug('No pending download-ready request for', response.transferId)
+  }
 
   // Create assembler for this download
   const assembler = createDownloadAssembler(
@@ -629,12 +660,13 @@ export async function deleteFile(
 
 /**
  * Upload a file with chunking and progress tracking
+ * @returns Server-generated transfer ID
  */
 export async function uploadFile(
   file: File,
   remotePath: string,
   options: UploadOptions = {}
-): Promise<void> {
+): Promise<TransferId> {
   const socketInstance = getSocket()
   if (!socketInstance) {
     throw new Error('Not connected')
@@ -642,10 +674,42 @@ export async function uploadFile(
 
   initializeSftpListeners()
 
-  const transferId = options.transferId ?? createTransferId()
-  debug('Starting upload', transferId, file.name, `size: ${file.size}`)
+  debug('Starting upload', file.name, 'to', remotePath, `size: ${file.size}`)
 
-  // Create transfer tracking
+  // Build request without transferId (server will generate it)
+  const startRequest = {
+    remotePath,
+    fileName: file.name,
+    fileSize: file.size,
+    ...(file.type ? { mimeType: file.type } : {}),
+    ...(options.overwrite !== undefined ? { overwrite: options.overwrite } : {})
+  }
+
+  // Use FIFO queue for upload-ready (server generates transferId)
+  const readyPromise = new Promise<SftpUploadReadyResponse>(
+    (resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        const idx = pendingUploadReady.findIndex((p) => p.resolve === resolve)
+        if (idx !== -1) pendingUploadReady.splice(idx, 1)
+        reject(new Error('Upload ready timeout'))
+      }, REQUEST_TIMEOUT)
+      pendingUploadReady.push({
+        resolve: resolve as (value: unknown) => void,
+        reject,
+        timeoutId
+      })
+    }
+  )
+
+  socketInstance.emit('sftp-upload-start', startRequest)
+
+  const readyResponse = await readyPromise
+  const transferId = readyResponse.transferId as TransferId
+  const chunkSize = readyResponse.chunkSize || DEFAULT_CHUNK_SIZE
+
+  debug('Upload ready', transferId, `chunk size: ${chunkSize}`)
+
+  // Create transfer tracking AFTER getting server-provided ID
   const transfer: ClientTransfer = {
     id: transferId,
     direction: 'upload',
@@ -657,7 +721,7 @@ export async function uploadFile(
     bytesPerSecond: 0,
     estimatedSecondsRemaining: null,
     startedAt: Date.now(),
-    status: 'pending'
+    status: 'active'
   }
   activeTransfers.set(transferId, transfer)
 
@@ -667,29 +731,6 @@ export async function uploadFile(
   }
 
   try {
-    // Start upload - build request object conditionally for optional fields
-    const startRequest = {
-      transferId,
-      remotePath,
-      fileName: file.name,
-      fileSize: file.size,
-      ...(file.type ? { mimeType: file.type } : {}),
-      ...(options.overwrite !== undefined
-        ? { overwrite: options.overwrite }
-        : {})
-    }
-
-    const readyPromise = createPendingRequest<SftpUploadReadyResponse>(
-      `upload-ready:${transferId}`
-    )
-    socketInstance.emit('sftp-upload-start', startRequest)
-
-    const readyResponse = await readyPromise
-    const chunkSize = readyResponse.chunkSize || DEFAULT_CHUNK_SIZE
-
-    debug('Upload ready', transferId, `chunk size: ${chunkSize}`)
-    transfer.status = 'active'
-
     // Create chunker
     const chunker = new FileChunker(file, chunkSize)
     activeChunkers.set(transferId, chunker)
@@ -755,6 +796,7 @@ export async function uploadFile(
     await completePromise
 
     debug('Upload complete', transferId)
+    return transferId
   } catch (error) {
     transfer.status = 'failed'
     transfer.error = error instanceof Error ? error.message : 'Upload failed'
@@ -768,11 +810,12 @@ export async function uploadFile(
 
 /**
  * Download a file with progress tracking
+ * @returns Server-generated transfer ID
  */
 export async function downloadFile(
   remotePath: string,
   options: DownloadOptions = {}
-): Promise<void> {
+): Promise<TransferId> {
   const socketInstance = getSocket()
   if (!socketInstance) {
     throw new Error('Not connected')
@@ -780,22 +823,52 @@ export async function downloadFile(
 
   initializeSftpListeners()
 
-  const transferId = options.transferId ?? createTransferId()
-  debug('Starting download', transferId, remotePath)
+  debug('Starting download', remotePath)
 
-  // Create transfer tracking (size will be updated when we get ready response)
+  // Build request without transferId (server will generate it)
+  const startRequest = { remotePath }
+
+  // Use FIFO queue for download-ready (server generates transferId)
+  const readyPromise = new Promise<SftpDownloadReadyResponse>(
+    (resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        const idx = pendingDownloadReady.findIndex((p) => p.resolve === resolve)
+        if (idx !== -1) pendingDownloadReady.splice(idx, 1)
+        reject(new Error('Download ready timeout'))
+      }, REQUEST_TIMEOUT)
+      pendingDownloadReady.push({
+        resolve: resolve as (value: unknown) => void,
+        reject,
+        timeoutId
+      })
+    }
+  )
+
+  socketInstance.emit('sftp-download-start', startRequest)
+
+  const readyResponse = await readyPromise
+  const transferId = readyResponse.transferId as TransferId
+
+  debug(
+    'Download ready',
+    transferId,
+    readyResponse.fileName,
+    `size: ${readyResponse.fileSize}`
+  )
+
+  // Create transfer tracking AFTER getting server-provided ID
   const transfer: ClientTransfer = {
     id: transferId,
     direction: 'download',
     remotePath,
-    fileName: remotePath.split('/').pop() || 'download',
-    totalBytes: 0,
+    fileName: readyResponse.fileName,
+    totalBytes: readyResponse.fileSize,
     bytesTransferred: 0,
     percentComplete: 0,
     bytesPerSecond: 0,
     estimatedSecondsRemaining: null,
     startedAt: Date.now(),
-    status: 'pending'
+    status: 'active'
   }
   activeTransfers.set(transferId, transfer)
 
@@ -805,29 +878,6 @@ export async function downloadFile(
   }
 
   try {
-    // Start download
-    const startRequest: SftpDownloadStartRequest = {
-      transferId,
-      remotePath
-    }
-
-    const readyPromise = createPendingRequest<SftpDownloadReadyResponse>(
-      `download-ready:${transferId}`
-    )
-    socketInstance.emit('sftp-download-start', startRequest)
-
-    const readyResponse = await readyPromise
-    transfer.fileName = readyResponse.fileName
-    transfer.totalBytes = readyResponse.fileSize
-    transfer.status = 'active'
-
-    debug(
-      'Download ready',
-      transferId,
-      readyResponse.fileName,
-      `size: ${readyResponse.fileSize}`
-    )
-
     // Wait for completion (chunks are handled by event listeners)
     const completePromise = createPendingRequest<SftpCompleteResponse>(
       `complete:${transferId}`,
@@ -836,6 +886,7 @@ export async function downloadFile(
     await completePromise
 
     debug('Download complete', transferId)
+    return transferId
   } catch (error) {
     transfer.status = 'failed'
     transfer.error = error instanceof Error ? error.message : 'Download failed'

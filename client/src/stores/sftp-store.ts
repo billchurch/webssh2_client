@@ -17,7 +17,6 @@ import {
   cleanupSftpListeners
 } from '../services/sftp-service.js'
 import {
-  createTransferId,
   type SftpFileEntry,
   type ClientTransfer,
   type TransferId,
@@ -27,6 +26,12 @@ import {
 } from '../types/sftp.js'
 
 const debug = createDebug('webssh2-client:sftp-store')
+
+// Placeholder ID counter for transfers before server assigns real ID
+let placeholderCounter = 0
+function createPlaceholderId(): TransferId {
+  return `pending-${++placeholderCounter}` as TransferId
+}
 
 // =============================================================================
 // Types
@@ -349,13 +354,13 @@ function createSftpStoreInternal() {
     // Upload
     async uploadFile(file: File, remotePath?: string) {
       const destination = remotePath ?? `${state.currentPath}/${file.name}`
-      const transferId = createTransferId()
+      const placeholderId = createPlaceholderId()
 
       debug('Uploading file', file.name, 'to', destination)
 
-      // Add transfer to state
-      const transfer: ClientTransfer = {
-        id: transferId,
+      // Add placeholder transfer to state immediately (shows "Initiating..." in UI)
+      const placeholderTransfer: ClientTransfer = {
+        id: placeholderId,
         direction: 'upload',
         remotePath: destination,
         fileName: file.name,
@@ -365,26 +370,65 @@ function createSftpStoreInternal() {
         bytesPerSecond: 0,
         estimatedSecondsRemaining: null,
         startedAt: Date.now(),
-        status: 'pending'
+        status: 'pending' // 'pending' indicates waiting for server
       }
-      setState('transfers', [...state.transfers, transfer])
+      setState('transfers', [...state.transfers, placeholderTransfer])
+
+      let realTransferId: TransferId | null = null
 
       try {
-        await sftpService.uploadFile(file, destination, {
-          transferId,
+        // Service now returns the server-provided transferId
+        realTransferId = await sftpService.uploadFile(file, destination, {
           onProgress: (progress) => {
-            this.updateTransferProgress(transferId, progress)
+            // Replace placeholder with real transfer on first progress (id is readonly)
+            if (
+              realTransferId &&
+              state.transfers.find((t) => t.id === placeholderId)
+            ) {
+              const placeholder = state.transfers.find(
+                (t) => t.id === placeholderId
+              )
+              if (placeholder) {
+                const updatedTransfer = { ...placeholder, id: realTransferId }
+                setState('transfers', (transfers) =>
+                  transfers.map((t) =>
+                    t.id === placeholderId ? updatedTransfer : t
+                  )
+                )
+              }
+            }
+            // Update progress using real ID (or placeholder if not yet replaced)
+            const targetId = realTransferId ?? placeholderId
+            this.updateTransferProgress(targetId, progress)
           }
         })
 
+        // Replace placeholder with real transfer if not already done (id is readonly)
+        if (state.transfers.find((t) => t.id === placeholderId)) {
+          const placeholder = state.transfers.find(
+            (t) => t.id === placeholderId
+          )
+          if (placeholder) {
+            const updatedTransfer = { ...placeholder, id: realTransferId }
+            setState('transfers', (transfers) =>
+              transfers.map((t) =>
+                t.id === placeholderId ? updatedTransfer : t
+              )
+            )
+          }
+        }
+
         // Mark complete
-        this.updateTransferStatus(transferId, 'completed')
+        this.updateTransferStatus(realTransferId, 'completed')
 
         // Refresh directory
         await this.refresh()
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Upload failed'
-        this.updateTransferStatus(transferId, 'failed', message)
+        // Mark placeholder as failed (even if we never got a real ID)
+        const targetId = realTransferId ?? placeholderId
+        this.updateTransferStatus(targetId, 'failed', message)
+        debug('Upload error', message)
         throw err
       }
     },
@@ -408,12 +452,12 @@ function createSftpStoreInternal() {
         return
       }
 
-      const transferId = createTransferId()
+      const placeholderId = createPlaceholderId()
       debug('Downloading file', entry.path)
 
-      // Add transfer to state
-      const transfer: ClientTransfer = {
-        id: transferId,
+      // Add placeholder transfer to state immediately
+      const placeholderTransfer: ClientTransfer = {
+        id: placeholderId,
         direction: 'download',
         remotePath: entry.path,
         fileName: entry.name,
@@ -425,21 +469,57 @@ function createSftpStoreInternal() {
         startedAt: Date.now(),
         status: 'pending'
       }
-      setState('transfers', [...state.transfers, transfer])
+      setState('transfers', [...state.transfers, placeholderTransfer])
+
+      let realTransferId: TransferId | null = null
 
       try {
-        await sftpService.downloadFile(entry.path, {
-          transferId,
+        // Service now returns the server-provided transferId
+        realTransferId = await sftpService.downloadFile(entry.path, {
           onProgress: (progress) => {
-            this.updateTransferProgress(transferId, progress)
+            // Replace placeholder with real transfer on first progress (id is readonly)
+            if (
+              realTransferId &&
+              state.transfers.find((t) => t.id === placeholderId)
+            ) {
+              const placeholder = state.transfers.find(
+                (t) => t.id === placeholderId
+              )
+              if (placeholder) {
+                const updatedTransfer = { ...placeholder, id: realTransferId }
+                setState('transfers', (transfers) =>
+                  transfers.map((t) =>
+                    t.id === placeholderId ? updatedTransfer : t
+                  )
+                )
+              }
+            }
+            const targetId = realTransferId ?? placeholderId
+            this.updateTransferProgress(targetId, progress)
           }
         })
 
+        // Replace placeholder with real transfer if not already done (id is readonly)
+        if (state.transfers.find((t) => t.id === placeholderId)) {
+          const placeholder = state.transfers.find(
+            (t) => t.id === placeholderId
+          )
+          if (placeholder) {
+            const updatedTransfer = { ...placeholder, id: realTransferId }
+            setState('transfers', (transfers) =>
+              transfers.map((t) =>
+                t.id === placeholderId ? updatedTransfer : t
+              )
+            )
+          }
+        }
+
         // Mark complete
-        this.updateTransferStatus(transferId, 'completed')
+        this.updateTransferStatus(realTransferId, 'completed')
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Download failed'
-        this.updateTransferStatus(transferId, 'failed', message)
+        const targetId = realTransferId ?? placeholderId
+        this.updateTransferStatus(targetId, 'failed', message)
         throw err
       }
     },
