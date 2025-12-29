@@ -7,6 +7,8 @@
  * @module types/sftp
  */
 
+import { v4 as uuidv4 } from 'uuid'
+
 // =============================================================================
 // Branded Types (simplified for client - no runtime validation needed)
 // =============================================================================
@@ -16,7 +18,7 @@ export type TransferId = string & { readonly __brand: 'TransferId' }
 
 /** Create a TransferId from a string (client-side helper) */
 export function createTransferId(): TransferId {
-  return crypto.randomUUID() as TransferId
+  return uuidv4() as TransferId
 }
 
 // =============================================================================
