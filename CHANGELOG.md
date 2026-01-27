@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.1.0](https://github.com/billchurch/webssh2_client/compare/v3.0.0...v3.1.0) (2026-01-27)
+
+
+### Features
+
+* **auth:** display inline error messages in login modal ([#81](https://github.com/billchurch/webssh2_client/issues/81)) ([d5ed01c](https://github.com/billchurch/webssh2_client/commit/d5ed01c3e3c5465000de25a48171a9ad85f59aa4))
+
 ## [3.0.0](https://github.com/billchurch/webssh2_client/compare/v2.4.1...v3.0.0) (2025-12-29)
 
 
