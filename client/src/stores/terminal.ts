@@ -37,6 +37,7 @@ export const [sessionFooter, setSessionFooter] = createSignal<string | null>(
   null
 )
 export const [errorMessage, setErrorMessage] = createSignal<string | null>(null)
+export const [loginError, setLoginError] = createSignal<string | null>(null)
 export const [isLoginDialogOpen, setIsLoginDialogOpen] = createSignal(false)
 export const [isErrorDialogOpen, setIsErrorDialogOpen] = createSignal(false)
 export const [isTerminalSettingsOpen, setIsTerminalSettingsOpen] =
@@ -79,7 +80,7 @@ export const toggleBooleanState = <K extends keyof AppState>(
       : never
     : never
 ): boolean => {
-  const currentValue = state[key] as boolean
+  const currentValue = state[key]
   const newValue = !currentValue
   setState(key, newValue as AppState[K])
   debug('toggleBooleanState', { [key]: newValue })
