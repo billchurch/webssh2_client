@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js'
-import { createSignal, createEffect, createMemo, For } from 'solid-js'
+import { createSignal, createEffect, createMemo, For, Show } from 'solid-js'
 import createDebug from 'debug'
 import { Modal } from './Modal'
 import { Key, Settings, Upload, Info } from 'lucide-solid'
@@ -19,6 +19,7 @@ interface LoginModalProps {
   initialValues?: Partial<ClientAuthenticatePayload> | undefined
   allowedAuthMethods: SSHAuthMethod[]
   authMethodLoadFailed?: boolean
+  errorMessage?: string | null
 }
 
 export const LoginModal: Component<LoginModalProps> = (props) => {
@@ -443,6 +444,15 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     >
       <div class="relative w-80 rounded-md border border-neutral-300 bg-white p-6 text-slate-800 shadow-md sm:w-[28rem]">
         <h2 class="mb-4 text-lg font-semibold text-slate-900">WebSSH2 Login</h2>
+        <Show when={props.errorMessage}>
+          <div
+            class="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700"
+            role="alert"
+          >
+            <span class="font-medium">Connection failed: </span>
+            {props.errorMessage}
+          </div>
+        </Show>
         <form onSubmit={handleSubmit} class="space-y-3">
           {/* Host */}
           <div>

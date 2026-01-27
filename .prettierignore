@@ -1,0 +1,9 @@
+# Auto-generated files
+CHANGELOG.md
+
+# Build output
+client/public/
+dist/
+
+# Dependencies
+node_modules/

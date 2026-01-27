@@ -30,6 +30,8 @@ import {
   setSessionFooter,
   errorMessage,
   setErrorMessage,
+  loginError,
+  setLoginError,
   isLoginDialogOpen,
   setIsLoginDialogOpen,
   isErrorDialogOpen,
@@ -268,8 +270,26 @@ const App: Component = () => {
 
     switch (reason) {
       case 'auth_required':
-      case 'auth_failed':
+        setLoginError(null)
         setIsLoginDialogOpen(true)
+        break
+      case 'auth_failed':
+        if (state.isBasicAuthCookiePresent) {
+          // Basic Auth users can't re-enter credentials via modal - show error instead
+          setErrorMessage(
+            typeof details === 'string' && details !== ''
+              ? details
+              : 'Authentication failed'
+          )
+          setIsErrorDialogOpen(true)
+          commonPostDisconnectTasks()
+        } else {
+          // Modal auth users can retry with different credentials
+          if (typeof details === 'string' && details !== '') {
+            setLoginError(details)
+          }
+          setIsLoginDialogOpen(true)
+        }
         break
       case 'reauth_required':
         debug('Reauth required')
@@ -323,6 +343,7 @@ const App: Component = () => {
   // UI event handlers
   const handleLogin = (formData: Partial<ClientAuthenticatePayload>) => {
     debug('Handling login', { host: formData.host, port: formData.port })
+    setLoginError(null)
     connectToServer(formData)
   }
 
@@ -517,6 +538,7 @@ const App: Component = () => {
         onClose={() => {
           debug('Closing login dialog')
           setIsLoginDialogOpen(false)
+          setLoginError(null)
         }}
         onSubmit={handleLogin}
         onOptionsClick={() => setIsTerminalSettingsOpen(true)}
@@ -535,6 +557,7 @@ const App: Component = () => {
         }
         allowedAuthMethods={allowedAuthMethods()}
         authMethodLoadFailed={authMethodLoadFailed()}
+        errorMessage={loginError()}
       />
 
       <ErrorModal

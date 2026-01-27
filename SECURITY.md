@@ -162,9 +162,63 @@ npm run analyze
 - [Vite Security Guidelines](https://vitejs.dev/guide/security.html)
 - [Web Security Best Practices](https://developer.mozilla.org/en-US/docs/Web/Security)
 
+## SolidJS / Seroval Vulnerability Assessment
+
+As of 2026-01-27, we evaluated reported vulnerabilities in solid-js and its seroval dependency. **WebSSH2 Client is NOT affected** by these issues.
+
+### CVE-2026-23737 - Seroval RCE via JSON Deserialization
+
+| Field             | Value              |
+| ----------------- | ------------------ |
+| Severity          | High               |
+| Affected versions | < 1.4.1            |
+| Our version       | 1.5.0 ✅           |
+| Status            | **Not vulnerable** |
+
+The seroval package is used by SolidJS for server-side rendering serialization. WebSSH2 Client:
+
+- Uses seroval 1.5.0, which is above the patched version (1.4.1)
+- Does not use SSR - this is a client-side SPA only
+- Uses Socket.IO native JSON serialization for all client-server communication
+
+### CVE-2025-27109 - SolidJS XSS in JSX Fragments (SSR)
+
+| Field             | Value              |
+| ----------------- | ------------------ |
+| Severity          | Medium (5.1)       |
+| Affected versions | < 1.9.4            |
+| Our version       | 1.9.11 ✅          |
+| Status            | **Not vulnerable** |
+
+This vulnerability affects the `ssr` function in SolidJS, which fails to sanitize JSX expressions in JSX fragments during server-side rendering. WebSSH2 Client:
+
+- Uses solid-js 1.9.11, which is above the patched version (1.9.4)
+- Is a plain SolidJS SPA - no Solid Start, no server functions, no SSR
+- Does not use `innerHTML` or unsafe HTML patterns anywhere in the codebase
+- All user input is rendered via SolidJS reactive primitives which auto-escape
+
+### Verification Commands
+
+```bash
+# Check seroval version
+npm ls seroval
+
+# Verify no innerHTML usage
+grep -r "innerHTML" client/src/
+
+# Verify no Solid Start dependency
+grep -E "solid-start|@solidjs/start" package.json
+```
+
+### References
+
+- [GHSA-3rxj-6cgf-8cfw - Seroval RCE](https://github.com/advisories/GHSA-3rxj-6cgf-8cfw)
+- [CVE-2025-27109 - SolidJS XSS](https://nvd.nist.gov/vuln/detail/CVE-2025-27109)
+- [SolidJS XSS Research](https://ensy.zip/posts/3-xss-solidjs/)
+
 ## Shai-hulud 2.0 supply chain risk
 
-As of 2025-12-03, automated checks for Shai-hulud 2.0 indicators of compromise (IoCs) found **no evidence of compromise** in this repository.
+As of 2026-01-27, automated checks for Shai-hulud 2.0 indicators of compromise (IoCs) found **no evidence of compromise** in this repository.
 
 The scanner performed the following checks:
 
@@ -192,5 +246,5 @@ For more information about detection logic or mitigations, contact the security 
 
 ---
 
-**Last Updated**: December 3, 2025
-**Next Review**: January 3, 2026
+**Last Updated**: January 27, 2026
+**Next Review**: February 27, 2026
