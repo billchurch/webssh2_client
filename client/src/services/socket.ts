@@ -15,7 +15,9 @@ import {
   setSessionFooter,
   headerContent,
   setHeaderContent,
-  setPromptData
+  setPromptData,
+  setConnectionError,
+  setIsConnectionErrorModalOpen
 } from '../stores/terminal.js'
 
 // Import utilities
@@ -35,7 +37,8 @@ import type {
   ServerToClientEvents,
   PermissionsPayload,
   PromptPayload,
-  PromptResponsePayload
+  PromptResponsePayload,
+  ConnectionErrorPayload
 } from '../types/events.d'
 import type { WebSSH2Config } from '../types/config.d'
 
@@ -356,7 +359,7 @@ export class SocketService {
       switch (data.action) {
         case 'request_auth':
           this.authenticate()
-          setConnectionStatus('Requesting authentication...')
+          setConnectionStatus('Awaiting credentials...')
           setConnectionStatusColor('orange')
           break
         case 'auth_result':
@@ -436,13 +439,41 @@ export class SocketService {
       if (onDisconnectCallback) onDisconnectCallback('ssh_error', msg)
     })
 
+    // Connection error event (structured errors with debug info)
+    socketInstance.on('connection-error', (payload: ConnectionErrorPayload) => {
+      debug('Connection error received', payload)
+      setConnectionError(payload)
+      setIsConnectionErrorModalOpen(true)
+      setState('isConnecting', false)
+
+      // Set status based on error type for clarity
+      switch (payload.errorType) {
+        case 'auth':
+          setConnectionStatus('Authentication failed')
+          break
+        case 'algorithm':
+          setConnectionStatus('Negotiation failed')
+          break
+        case 'timeout':
+          setConnectionStatus('Connection timed out')
+          break
+        case 'network':
+          setConnectionStatus('Connection failed')
+          break
+        default:
+          setConnectionStatus('Connection failed')
+      }
+      setConnectionStatusColor('red')
+    })
+
     // Connection events
     socketInstance.on('connect', () => {
       debug('Connected to server')
       setState('isConnecting', false)
       setIsConnected(true)
-      setConnectionStatus('Connected')
-      setConnectionStatusColor('green')
+      // WebSocket connected but SSH not authenticated yet - show connecting state
+      setConnectionStatus('Connecting...')
+      setConnectionStatusColor('orange')
       if (onConnectCallback) onConnectCallback()
     })
 

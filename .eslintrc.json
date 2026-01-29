@@ -166,7 +166,8 @@
     "client/public/**",
     "client/index.js",
     "index.js",
-    "client/src/vite.config.js"
+    "client/src/vite.config.js",
+    "CHANGELOG.md"
   ],
   "settings": {
     "tailwindcss": {

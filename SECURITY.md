@@ -210,7 +210,7 @@ grep -r "innerHTML" client/src/
 grep -E "solid-start|@solidjs/start" package.json
 ```
 
-### References
+### CVE References
 
 - [GHSA-3rxj-6cgf-8cfw - Seroval RCE](https://github.com/advisories/GHSA-3rxj-6cgf-8cfw)
 - [CVE-2025-27109 - SolidJS XSS](https://nvd.nist.gov/vuln/detail/CVE-2025-27109)
