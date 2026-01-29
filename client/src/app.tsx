@@ -44,7 +44,17 @@ import {
   promptData,
   setPromptData,
   isSearchVisible,
-  setIsSearchVisible
+  setIsSearchVisible,
+  connectionError,
+  setConnectionError,
+  isConnectionErrorModalOpen,
+  setIsConnectionErrorModalOpen,
+  connectionMode,
+  setConnectionMode,
+  lockedHost,
+  setLockedHost,
+  lockedPort,
+  setLockedPort
 } from './stores/terminal.js'
 
 // Import components
@@ -56,6 +66,7 @@ import {
 import type { ClipboardSettings } from './lib/clipboard/terminal-clipboard-integration'
 import { LoginModal } from './components/LoginModal'
 import { ErrorModal, PromptModal } from './components/Modal'
+import { ConnectionErrorModal } from './components/ConnectionErrorModal'
 import { TerminalSettingsModal } from './components/TerminalSettingsModal'
 import { MenuDropdown } from './components/MenuDropdown'
 import { TerminalSearch } from './components/TerminalSearch'
@@ -132,6 +143,17 @@ const App: Component = () => {
       // Use reactive config with URL overrides
       const initialConfig = configWithUrlOverrides()
       setConfig(initialConfig)
+
+      // Initialize connection mode from config
+      if (initialConfig.connectionMode !== undefined) {
+        setConnectionMode(initialConfig.connectionMode)
+      }
+      if (initialConfig.lockedHost !== undefined) {
+        setLockedHost(initialConfig.lockedHost)
+      }
+      if (initialConfig.lockedPort !== undefined) {
+        setLockedPort(initialConfig.lockedPort)
+      }
 
       // Set session footer
       const footer = initialConfig.ssh.host
@@ -533,17 +555,18 @@ const App: Component = () => {
   return (
     <div class="flex size-full flex-col overflow-hidden bg-black text-neutral-100">
       {/* Modals */}
-      <LoginModal
-        isOpen={isLoginDialogOpen()}
-        onClose={() => {
-          debug('Closing login dialog')
-          setIsLoginDialogOpen(false)
-          setLoginError(null)
-        }}
-        onSubmit={handleLogin}
-        onOptionsClick={() => setIsTerminalSettingsOpen(true)}
-        initialValues={
-          config()
+      {(() => {
+        // Build LoginModal props, conditionally including locked values
+        const baseProps = {
+          isOpen: isLoginDialogOpen(),
+          onClose: () => {
+            debug('Closing login dialog')
+            setIsLoginDialogOpen(false)
+            setLoginError(null)
+          },
+          onSubmit: handleLogin,
+          onOptionsClick: () => setIsTerminalSettingsOpen(true),
+          initialValues: config()
             ? (Object.fromEntries(
                 Object.entries({
                   ...(config()!.ssh.host && { host: config()!.ssh.host }),
@@ -553,17 +576,41 @@ const App: Component = () => {
                   })
                 }).filter(([_, value]) => value != null)
               ) as Partial<ClientAuthenticatePayload>)
-            : undefined
+            : undefined,
+          allowedAuthMethods: allowedAuthMethods(),
+          authMethodLoadFailed: authMethodLoadFailed(),
+          errorMessage: loginError(),
+          connectionMode: connectionMode()
         }
-        allowedAuthMethods={allowedAuthMethods()}
-        authMethodLoadFailed={authMethodLoadFailed()}
-        errorMessage={loginError()}
-      />
+
+        const host = lockedHost()
+        const port = lockedPort()
+
+        // Only add lockedHost/lockedPort when defined (exactOptionalPropertyTypes)
+        if (host !== null && port !== null) {
+          return <LoginModal {...baseProps} lockedHost={host} lockedPort={port} />
+        }
+        return <LoginModal {...baseProps} />
+      })()}
 
       <ErrorModal
         isOpen={isErrorDialogOpen()}
         onClose={() => setIsErrorDialogOpen(false)}
         message={errorMessage() || 'An error occurred'}
+      />
+
+      <ConnectionErrorModal
+        isOpen={isConnectionErrorModalOpen()}
+        onClose={() => {
+          setIsConnectionErrorModalOpen(false)
+          setConnectionError(null)
+        }}
+        onRetry={() => {
+          setIsConnectionErrorModalOpen(false)
+          setConnectionError(null)
+          setIsLoginDialogOpen(true)
+        }}
+        error={connectionError()}
       />
 
       <TerminalSettingsModal
