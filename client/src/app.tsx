@@ -603,7 +603,9 @@ const App: Component = () => {
 
         // Only add lockedHost/lockedPort when defined (exactOptionalPropertyTypes)
         if (host !== null && port !== null) {
-          return <LoginModal {...baseProps} lockedHost={host} lockedPort={port} />
+          return (
+            <LoginModal {...baseProps} lockedHost={host} lockedPort={port} />
+          )
         }
         return <LoginModal {...baseProps} />
       })()}

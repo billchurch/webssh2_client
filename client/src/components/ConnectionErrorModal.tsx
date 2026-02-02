@@ -32,7 +32,9 @@ const getErrorIcon = (errorType: ConnectionErrorPayload['errorType']) => {
 /**
  * Get title based on error type if not provided
  */
-const getDefaultTitle = (errorType: ConnectionErrorPayload['errorType']): string => {
+const getDefaultTitle = (
+  errorType: ConnectionErrorPayload['errorType']
+): string => {
   switch (errorType) {
     case 'network':
       return 'Connection Failed'
@@ -63,7 +65,8 @@ export const ConnectionErrorModal: Component<ConnectionErrorModalProps> = (
   props
 ) => {
   const error = () => props.error
-  const title = () => error()?.title ?? getDefaultTitle(error()?.errorType ?? 'unknown')
+  const title = () =>
+    error()?.title ?? getDefaultTitle(error()?.errorType ?? 'unknown')
   const hasDebugInfo = () => error()?.debugInfo !== undefined
 
   return (
