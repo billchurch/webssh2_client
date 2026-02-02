@@ -162,9 +162,7 @@ const ConfigSuggestion: Component<ConfigSuggestionProps> = (props) => {
         </Show>
 
         <Show when={hasPreset() && hasEnvVars()}>
-          <p class="mb-2 text-xs text-slate-500">
-            Or set specific algorithms:
-          </p>
+          <p class="mb-2 text-xs text-slate-500">Or set specific algorithms:</p>
         </Show>
 
         <Show when={hasEnvVars()}>

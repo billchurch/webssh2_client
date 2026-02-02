@@ -62,16 +62,16 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
   // Field validators for other fields
   // Use effectiveHost for validation (handles host-locked mode)
-  const hostValidator = createFieldValidator(
-    () => {
-      // If host is locked, use locked value for validation
-      if (props.connectionMode === 'host-locked' && props.lockedHost !== undefined) {
-        return props.lockedHost
-      }
-      return formData().host || ''
-    },
-    [ValidationRules.required(), ValidationRules.hostname()]
-  )
+  const hostValidator = createFieldValidator(() => {
+    // If host is locked, use locked value for validation
+    if (
+      props.connectionMode === 'host-locked' &&
+      props.lockedHost !== undefined
+    ) {
+      return props.lockedHost
+    }
+    return formData().host || ''
+  }, [ValidationRules.required(), ValidationRules.hostname()])
 
   const usernameValidator = createFieldValidator(
     () => formData().username || '',
@@ -156,9 +156,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   const authLoadFailed = createMemo(() => Boolean(props.authMethodLoadFailed))
 
   // Connection mode memos
-  const isHostLocked = createMemo(
-    () => props.connectionMode === 'host-locked'
-  )
+  const isHostLocked = createMemo(() => props.connectionMode === 'host-locked')
   const effectiveHost = createMemo(() =>
     isHostLocked() && props.lockedHost !== undefined
       ? props.lockedHost
