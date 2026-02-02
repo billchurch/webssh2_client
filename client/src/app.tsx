@@ -82,7 +82,9 @@ import {
   submitPromptResponses,
   submitPromptResponse,
   connectionStatus,
-  connectionStatusColor
+  connectionStatusColor,
+  isSocketConnected,
+  retryAuthentication
 } from './services/socket.js'
 import { loadServerAuthMethods } from './services/config.js'
 
@@ -107,6 +109,8 @@ const App: Component = () => {
   const [_isTerminalVisible, setIsTerminalVisible] = createSignal(false)
   const [terminalActions, setTerminalActions] = createSignal<TerminalActions>()
   const [authMethodLoadFailed, setAuthMethodLoadFailed] = createSignal(false)
+  // Track when retrying after connection error (to reuse socket instead of reconnecting)
+  const [isRetryingAuth, setIsRetryingAuth] = createSignal(false)
 
   let terminalRef: TerminalRef | undefined
 
@@ -366,6 +370,17 @@ const App: Component = () => {
   const handleLogin = (formData: Partial<ClientAuthenticatePayload>) => {
     debug('Handling login', { host: formData.host, port: formData.port })
     setLoginError(null)
+
+    // If retrying after connection error and socket is still connected,
+    // reuse the existing socket to avoid triggering browser's cached Basic Auth
+    if (isRetryingAuth() && isSocketConnected()) {
+      debug('Retrying authentication on existing socket')
+      setIsRetryingAuth(false)
+      retryAuthentication(formData)
+      return
+    }
+
+    setIsRetryingAuth(false)
     connectToServer(formData)
   }
 
@@ -608,6 +623,8 @@ const App: Component = () => {
         onRetry={() => {
           setIsConnectionErrorModalOpen(false)
           setConnectionError(null)
+          // Set flag to indicate we're retrying after error - should reuse existing socket
+          setIsRetryingAuth(true)
           setIsLoginDialogOpen(true)
         }}
         error={connectionError()}

@@ -213,6 +213,29 @@ export class SocketService {
     }
   }
 
+  // Check if socket is currently connected
+  isSocketConnected(): boolean {
+    const currentSocket = socket()
+    return currentSocket !== null && currentSocket.connected
+  }
+
+  // Retry authentication on existing socket connection
+  // Used after auth failure to avoid creating new HTTP request (which would send cached Basic Auth)
+  retryAuthentication(formData: Partial<ClientAuthenticatePayload>): void {
+    const currentSocket = socket()
+    if (currentSocket !== null && currentSocket.connected) {
+      debug('Retrying authentication on existing socket')
+      const sanitizedFormData = sanitizeClientAuthPayload(formData)
+      storedFormData = sanitizedFormData
+      this.authenticate(sanitizedFormData)
+    } else {
+      // Fall back to full reconnect if socket is gone
+      debug('Socket not connected, falling back to full reconnect')
+      this.setFormData(formData)
+      this.initializeSocketConnection()
+    }
+  }
+
   // Emit data to server
   emitData(data: string): void {
     const currentSocket = socket()
@@ -674,6 +697,10 @@ export const reauth = () => socketService.reauth()
 export const replayCredentials = () => socketService.replayCredentials()
 export const submitPromptResponses = (responses: string[]) =>
   socketService.submitPromptResponses(responses)
+export const isSocketConnected = () => socketService.isSocketConnected()
+export const retryAuthentication = (
+  formData: Partial<ClientAuthenticatePayload>
+) => socketService.retryAuthentication(formData)
 
 /**
  * Submit a generic prompt response to the server

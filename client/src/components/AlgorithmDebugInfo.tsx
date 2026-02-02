@@ -156,7 +156,7 @@ const ConfigSuggestion: Component<ConfigSuggestionProps> = (props) => {
         <Show when={hasPreset()}>
           <div class="mb-2">
             <code class="rounded bg-slate-800 px-2 py-1 font-mono text-xs text-cyan-300">
-              WEBSSH2_SSH_ALGORITHM_PRESET={props.analysis.suggestedPreset}
+              WEBSSH2_SSH_ALGORITHMS_PRESET={props.analysis.suggestedPreset}
             </code>
           </div>
         </Show>
