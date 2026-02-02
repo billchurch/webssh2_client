@@ -55,6 +55,13 @@ export interface HeaderConfig {
   background: string
 }
 
+/**
+ * Connection mode determines which fields are editable in the login modal.
+ * - 'full': All fields (host, port, username, password) are editable
+ * - 'host-locked': Host/port are fixed from URL, only credentials are editable
+ */
+export type ConnectionMode = 'full' | 'host-locked'
+
 export interface WebSSH2Config {
   socket: WebSocketConfig
   ssh: SSHConfigInput
@@ -63,6 +70,12 @@ export interface WebSSH2Config {
   header: HeaderConfig
   autoConnect: boolean
   logLevel: LogLevel
+  /** Connection mode: 'full' allows editing host/port, 'host-locked' restricts to credentials only */
+  connectionMode?: ConnectionMode
+  /** Host that cannot be changed (when connectionMode is 'host-locked') */
+  lockedHost?: string
+  /** Port that cannot be changed (when connectionMode is 'host-locked') */
+  lockedPort?: number
 }
 
 declare global {

@@ -44,7 +44,17 @@ import {
   promptData,
   setPromptData,
   isSearchVisible,
-  setIsSearchVisible
+  setIsSearchVisible,
+  connectionError,
+  setConnectionError,
+  isConnectionErrorModalOpen,
+  setIsConnectionErrorModalOpen,
+  connectionMode,
+  setConnectionMode,
+  lockedHost,
+  setLockedHost,
+  lockedPort,
+  setLockedPort
 } from './stores/terminal.js'
 
 // Import components
@@ -56,6 +66,7 @@ import {
 import type { ClipboardSettings } from './lib/clipboard/terminal-clipboard-integration'
 import { LoginModal } from './components/LoginModal'
 import { ErrorModal, PromptModal } from './components/Modal'
+import { ConnectionErrorModal } from './components/ConnectionErrorModal'
 import { TerminalSettingsModal } from './components/TerminalSettingsModal'
 import { MenuDropdown } from './components/MenuDropdown'
 import { TerminalSearch } from './components/TerminalSearch'
@@ -71,7 +82,9 @@ import {
   submitPromptResponses,
   submitPromptResponse,
   connectionStatus,
-  connectionStatusColor
+  connectionStatusColor,
+  isSocketConnected,
+  retryAuthentication
 } from './services/socket.js'
 import { loadServerAuthMethods } from './services/config.js'
 
@@ -96,6 +109,8 @@ const App: Component = () => {
   const [_isTerminalVisible, setIsTerminalVisible] = createSignal(false)
   const [terminalActions, setTerminalActions] = createSignal<TerminalActions>()
   const [authMethodLoadFailed, setAuthMethodLoadFailed] = createSignal(false)
+  // Track when retrying after connection error (to reuse socket instead of reconnecting)
+  const [isRetryingAuth, setIsRetryingAuth] = createSignal(false)
 
   let terminalRef: TerminalRef | undefined
 
@@ -132,6 +147,17 @@ const App: Component = () => {
       // Use reactive config with URL overrides
       const initialConfig = configWithUrlOverrides()
       setConfig(initialConfig)
+
+      // Initialize connection mode from config
+      if (initialConfig.connectionMode !== undefined) {
+        setConnectionMode(initialConfig.connectionMode)
+      }
+      if (initialConfig.lockedHost !== undefined) {
+        setLockedHost(initialConfig.lockedHost)
+      }
+      if (initialConfig.lockedPort !== undefined) {
+        setLockedPort(initialConfig.lockedPort)
+      }
 
       // Set session footer
       const footer = initialConfig.ssh.host
@@ -344,6 +370,17 @@ const App: Component = () => {
   const handleLogin = (formData: Partial<ClientAuthenticatePayload>) => {
     debug('Handling login', { host: formData.host, port: formData.port })
     setLoginError(null)
+
+    // If retrying after connection error and socket is still connected,
+    // reuse the existing socket to avoid triggering browser's cached Basic Auth
+    if (isRetryingAuth() && isSocketConnected()) {
+      debug('Retrying authentication on existing socket')
+      setIsRetryingAuth(false)
+      retryAuthentication(formData)
+      return
+    }
+
+    setIsRetryingAuth(false)
     connectToServer(formData)
   }
 
@@ -533,17 +570,18 @@ const App: Component = () => {
   return (
     <div class="flex size-full flex-col overflow-hidden bg-black text-neutral-100">
       {/* Modals */}
-      <LoginModal
-        isOpen={isLoginDialogOpen()}
-        onClose={() => {
-          debug('Closing login dialog')
-          setIsLoginDialogOpen(false)
-          setLoginError(null)
-        }}
-        onSubmit={handleLogin}
-        onOptionsClick={() => setIsTerminalSettingsOpen(true)}
-        initialValues={
-          config()
+      {(() => {
+        // Build LoginModal props, conditionally including locked values
+        const baseProps = {
+          isOpen: isLoginDialogOpen(),
+          onClose: () => {
+            debug('Closing login dialog')
+            setIsLoginDialogOpen(false)
+            setLoginError(null)
+          },
+          onSubmit: handleLogin,
+          onOptionsClick: () => setIsTerminalSettingsOpen(true),
+          initialValues: config()
             ? (Object.fromEntries(
                 Object.entries({
                   ...(config()!.ssh.host && { host: config()!.ssh.host }),
@@ -553,17 +591,43 @@ const App: Component = () => {
                   })
                 }).filter(([_, value]) => value != null)
               ) as Partial<ClientAuthenticatePayload>)
-            : undefined
+            : undefined,
+          allowedAuthMethods: allowedAuthMethods(),
+          authMethodLoadFailed: authMethodLoadFailed(),
+          errorMessage: loginError(),
+          connectionMode: connectionMode()
         }
-        allowedAuthMethods={allowedAuthMethods()}
-        authMethodLoadFailed={authMethodLoadFailed()}
-        errorMessage={loginError()}
-      />
+
+        const host = lockedHost()
+        const port = lockedPort()
+
+        // Only add lockedHost/lockedPort when defined (exactOptionalPropertyTypes)
+        if (host !== null && port !== null) {
+          return <LoginModal {...baseProps} lockedHost={host} lockedPort={port} />
+        }
+        return <LoginModal {...baseProps} />
+      })()}
 
       <ErrorModal
         isOpen={isErrorDialogOpen()}
         onClose={() => setIsErrorDialogOpen(false)}
         message={errorMessage() || 'An error occurred'}
+      />
+
+      <ConnectionErrorModal
+        isOpen={isConnectionErrorModalOpen()}
+        onClose={() => {
+          setIsConnectionErrorModalOpen(false)
+          setConnectionError(null)
+        }}
+        onRetry={() => {
+          setIsConnectionErrorModalOpen(false)
+          setConnectionError(null)
+          // Set flag to indicate we're retrying after error - should reuse existing socket
+          setIsRetryingAuth(true)
+          setIsLoginDialogOpen(true)
+        }}
+        error={connectionError()}
       />
 
       <TerminalSettingsModal

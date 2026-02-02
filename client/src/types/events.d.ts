@@ -10,6 +10,68 @@ export type {
   PromptResponsePayload
 } from './prompt'
 
+// =============================================================================
+// Algorithm Types (mirrored from server for client-side display)
+// =============================================================================
+
+/**
+ * Set of algorithms for a specific direction (client or server).
+ * Mirrors the server-side AlgorithmSet type.
+ */
+export interface AlgorithmSet {
+  kex: string[]
+  serverHostKey: string[]
+  cipher: string[]
+  mac: string[]
+  compress: string[]
+}
+
+/**
+ * Analysis result for a single algorithm category
+ */
+export interface CategoryAnalysis {
+  category: keyof AlgorithmSet
+  label: string
+  common: string[]
+  clientOnly: string[]
+  serverOnly: string[]
+  hasMatch: boolean
+}
+
+/**
+ * Complete analysis of algorithm compatibility
+ */
+export interface AlgorithmAnalysis {
+  categories: CategoryAnalysis[]
+  hasAnyMismatch: boolean
+  suggestedPreset: string | null
+  suggestedEnvVars: string[]
+}
+
+/**
+ * Debug information included with connection errors
+ */
+export interface ConnectionErrorDebugInfo {
+  clientAlgorithms?: AlgorithmSet
+  serverAlgorithms?: AlgorithmSet
+  analysis?: AlgorithmAnalysis
+  errorDetails?: string
+}
+
+/**
+ * Payload for connection error events.
+ * Sent by the server when SSH connection fails.
+ */
+export interface ConnectionErrorPayload {
+  errorType: 'network' | 'timeout' | 'auth' | 'algorithm' | 'unknown'
+  title: string
+  message: string
+  host: string
+  port: number
+  canRetry: boolean
+  debugInfo?: ConnectionErrorDebugInfo
+}
+
 export interface AuthenticationRequest {
   action:
     | 'request_auth'
@@ -85,6 +147,7 @@ export interface ServerToClientEvents {
   getTerminal: () => void
   data: (chunk: string) => void
   ssherror: (message: string) => void
+  'connection-error': (payload: ConnectionErrorPayload) => void
   updateUI: (payload: {
     element: string
     value: string | { text: string; background?: string }

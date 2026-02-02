@@ -2,6 +2,8 @@
 import { createStore } from 'solid-js/store'
 import { createSignal } from 'solid-js'
 import createDebug from 'debug'
+import type { ConnectionErrorPayload } from '../types/events.d'
+import type { ConnectionMode } from '../types/config.d'
 
 const debug = createDebug('webssh2-client:state-solid')
 
@@ -71,6 +73,18 @@ export const [searchResults, setSearchResults] = createSignal({
   currentIndex: 0,
   totalMatches: 0
 })
+
+// Connection error state (for ConnectionErrorModal)
+export const [connectionError, setConnectionError] =
+  createSignal<ConnectionErrorPayload | null>(null)
+export const [isConnectionErrorModalOpen, setIsConnectionErrorModalOpen] =
+  createSignal(false)
+
+// Connection mode state (determines if host/port are editable in LoginModal)
+export const [connectionMode, setConnectionMode] =
+  createSignal<ConnectionMode>('full')
+export const [lockedHost, setLockedHost] = createSignal<string | null>(null)
+export const [lockedPort, setLockedPort] = createSignal<number | null>(null)
 
 // Utility functions for state management
 export const toggleBooleanState = <K extends keyof AppState>(

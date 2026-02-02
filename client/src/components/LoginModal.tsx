@@ -2,11 +2,11 @@ import type { Component } from 'solid-js'
 import { createSignal, createEffect, createMemo, For, Show } from 'solid-js'
 import createDebug from 'debug'
 import { Modal } from './Modal'
-import { Key, Settings, Upload, Info } from 'lucide-solid'
+import { Key, Settings, Upload, Info, Lock } from 'lucide-solid'
 import { usePrivateKeyValidation } from '../hooks/usePrivateKeyValidation'
 import { createFieldValidator, ValidationRules } from '../utils/validation'
 import type { ClientAuthenticatePayload } from '../types/events.d'
-import type { SSHAuthMethod } from '../types/config.d'
+import type { SSHAuthMethod, ConnectionMode } from '../types/config.d'
 import { DEFAULT_AUTH_METHODS } from '../constants.js'
 
 const debug = createDebug('webssh2-client:login-modal')
@@ -20,6 +20,12 @@ interface LoginModalProps {
   allowedAuthMethods: SSHAuthMethod[]
   authMethodLoadFailed?: boolean
   errorMessage?: string | null
+  /** Connection mode: 'full' allows editing host/port, 'host-locked' restricts to credentials only */
+  connectionMode?: ConnectionMode
+  /** Host that cannot be changed (when connectionMode is 'host-locked') */
+  lockedHost?: string
+  /** Port that cannot be changed (when connectionMode is 'host-locked') */
+  lockedPort?: number
 }
 
 export const LoginModal: Component<LoginModalProps> = (props) => {
@@ -55,8 +61,15 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   )
 
   // Field validators for other fields
+  // Use effectiveHost for validation (handles host-locked mode)
   const hostValidator = createFieldValidator(
-    () => formData().host || '',
+    () => {
+      // If host is locked, use locked value for validation
+      if (props.connectionMode === 'host-locked' && props.lockedHost !== undefined) {
+        return props.lockedHost
+      }
+      return formData().host || ''
+    },
     [ValidationRules.required(), ValidationRules.hostname()]
   )
 
@@ -78,12 +91,14 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
       // Small delay to ensure DOM is ready
       setTimeout(() => {
         const data = formData()
+        const hostLocked = isHostLocked()
 
         // Priority order: host → port → username → password
-        if (!data.host || data.host.trim() === '') {
+        // Skip host/port if they're locked
+        if (!hostLocked && (!data.host || data.host.trim() === '')) {
           hostInputRef?.focus()
           debug('Auto-focused host field')
-        } else if (!data.port || data.port === 0) {
+        } else if (!hostLocked && (!data.port || data.port === 0)) {
           // Port is unlikely to be empty since default is 22, but check if it's actually empty/0
           portInputRef?.focus()
           debug('Auto-focused port field')
@@ -139,6 +154,21 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     DEFAULT_AUTH_METHODS.some((method) => !allowedMethods().includes(method))
   )
   const authLoadFailed = createMemo(() => Boolean(props.authMethodLoadFailed))
+
+  // Connection mode memos
+  const isHostLocked = createMemo(
+    () => props.connectionMode === 'host-locked'
+  )
+  const effectiveHost = createMemo(() =>
+    isHostLocked() && props.lockedHost !== undefined
+      ? props.lockedHost
+      : formData().host || ''
+  )
+  const effectivePort = createMemo(() =>
+    isHostLocked() && props.lockedPort !== undefined
+      ? props.lockedPort
+      : formData().port || 22
+  )
 
   createEffect(() => {
     if (!supportsPublicKey()) {
@@ -227,12 +257,21 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     const data = formData()
     const payload: Partial<ClientAuthenticatePayload> = {}
 
-    if (typeof data.host === 'string' && data.host.trim().length > 0) {
-      payload.host = data.host.trim()
-    }
-
-    if (typeof data.port === 'number') {
-      payload.port = data.port
+    // Use locked host/port if in host-locked mode, otherwise use form data
+    if (isHostLocked()) {
+      if (props.lockedHost !== undefined) {
+        payload.host = props.lockedHost
+      }
+      if (props.lockedPort !== undefined) {
+        payload.port = props.lockedPort
+      }
+    } else {
+      if (typeof data.host === 'string' && data.host.trim().length > 0) {
+        payload.host = data.host.trim()
+      }
+      if (typeof data.port === 'number') {
+        payload.port = data.port
+      }
     }
 
     if (typeof data.username === 'string' && data.username.trim().length > 0) {
@@ -454,55 +493,72 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
           </div>
         </Show>
         <form onSubmit={handleSubmit} class="space-y-3">
+          {/* Host/Port locked indicator */}
+          <Show when={isHostLocked()}>
+            <div class="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+              <Lock class="size-4 text-slate-400" />
+              <span>
+                Connecting to{' '}
+                <span class="font-medium text-slate-800">
+                  {effectiveHost()}:{effectivePort()}
+                </span>
+              </span>
+            </div>
+          </Show>
+
           {/* Host */}
-          <div>
-            <label for="hostInput" class="sr-only">
-              Host
-            </label>
-            <input
-              ref={hostInputRef}
-              type="text"
-              id="hostInput"
-              name="host"
-              placeholder="Host"
-              required
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck={false}
-              enterkeyhint="next"
-              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData().host || ''}
-              onInput={(e) => updateFormData('host', e.currentTarget.value)}
-            />
-          </div>
+          <Show when={!isHostLocked()}>
+            <div>
+              <label for="hostInput" class="sr-only">
+                Host
+              </label>
+              <input
+                ref={hostInputRef}
+                type="text"
+                id="hostInput"
+                name="host"
+                placeholder="Host"
+                required
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck={false}
+                enterkeyhint="next"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData().host || ''}
+                onInput={(e) => updateFormData('host', e.currentTarget.value)}
+              />
+            </div>
+          </Show>
 
           {/* Port */}
-          <div>
-            <label for="portInput" class="sr-only">
-              Port
-            </label>
-            <input
-              ref={portInputRef}
-              type="text"
-              id="portInput"
-              name="port"
-              placeholder="Port"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck={false}
-              enterkeyhint="next"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData().port || '22'}
-              onInput={(e) =>
-                updateFormData(
-                  'port',
-                  Number.parseInt(e.currentTarget.value, 10) || 22
-                )
-              }
-            />
-          </div>
+          <Show when={!isHostLocked()}>
+            <div>
+              <label for="portInput" class="sr-only">
+                Port
+              </label>
+              <input
+                ref={portInputRef}
+                type="text"
+                id="portInput"
+                name="port"
+                placeholder="Port"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck={false}
+                enterkeyhint="next"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData().port || '22'}
+                onInput={(e) =>
+                  updateFormData(
+                    'port',
+                    Number.parseInt(e.currentTarget.value, 10) || 22
+                  )
+                }
+              />
+            </div>
+          </Show>
 
           {/* Username */}
           <div>

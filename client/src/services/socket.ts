@@ -15,7 +15,9 @@ import {
   setSessionFooter,
   headerContent,
   setHeaderContent,
-  setPromptData
+  setPromptData,
+  setConnectionError,
+  setIsConnectionErrorModalOpen
 } from '../stores/terminal.js'
 
 // Import utilities
@@ -35,7 +37,8 @@ import type {
   ServerToClientEvents,
   PermissionsPayload,
   PromptPayload,
-  PromptResponsePayload
+  PromptResponsePayload,
+  ConnectionErrorPayload
 } from '../types/events.d'
 import type { WebSSH2Config } from '../types/config.d'
 
@@ -210,6 +213,29 @@ export class SocketService {
     }
   }
 
+  // Check if socket is currently connected
+  isSocketConnected(): boolean {
+    const currentSocket = socket()
+    return currentSocket !== null && currentSocket.connected
+  }
+
+  // Retry authentication on existing socket connection
+  // Used after auth failure to avoid creating new HTTP request (which would send cached Basic Auth)
+  retryAuthentication(formData: Partial<ClientAuthenticatePayload>): void {
+    const currentSocket = socket()
+    if (currentSocket !== null && currentSocket.connected) {
+      debug('Retrying authentication on existing socket')
+      const sanitizedFormData = sanitizeClientAuthPayload(formData)
+      storedFormData = sanitizedFormData
+      this.authenticate(sanitizedFormData)
+    } else {
+      // Fall back to full reconnect if socket is gone
+      debug('Socket not connected, falling back to full reconnect')
+      this.setFormData(formData)
+      this.initializeSocketConnection()
+    }
+  }
+
   // Emit data to server
   emitData(data: string): void {
     const currentSocket = socket()
@@ -356,7 +382,7 @@ export class SocketService {
       switch (data.action) {
         case 'request_auth':
           this.authenticate()
-          setConnectionStatus('Requesting authentication...')
+          setConnectionStatus('Awaiting credentials...')
           setConnectionStatusColor('orange')
           break
         case 'auth_result':
@@ -436,13 +462,41 @@ export class SocketService {
       if (onDisconnectCallback) onDisconnectCallback('ssh_error', msg)
     })
 
+    // Connection error event (structured errors with debug info)
+    socketInstance.on('connection-error', (payload: ConnectionErrorPayload) => {
+      debug('Connection error received', payload)
+      setConnectionError(payload)
+      setIsConnectionErrorModalOpen(true)
+      setState('isConnecting', false)
+
+      // Set status based on error type for clarity
+      switch (payload.errorType) {
+        case 'auth':
+          setConnectionStatus('Authentication failed')
+          break
+        case 'algorithm':
+          setConnectionStatus('Negotiation failed')
+          break
+        case 'timeout':
+          setConnectionStatus('Connection timed out')
+          break
+        case 'network':
+          setConnectionStatus('Connection failed')
+          break
+        default:
+          setConnectionStatus('Connection failed')
+      }
+      setConnectionStatusColor('red')
+    })
+
     // Connection events
     socketInstance.on('connect', () => {
       debug('Connected to server')
       setState('isConnecting', false)
       setIsConnected(true)
-      setConnectionStatus('Connected')
-      setConnectionStatusColor('green')
+      // WebSocket connected but SSH not authenticated yet - show connecting state
+      setConnectionStatus('Connecting...')
+      setConnectionStatusColor('orange')
       if (onConnectCallback) onConnectCallback()
     })
 
@@ -643,6 +697,10 @@ export const reauth = () => socketService.reauth()
 export const replayCredentials = () => socketService.replayCredentials()
 export const submitPromptResponses = (responses: string[]) =>
   socketService.submitPromptResponses(responses)
+export const isSocketConnected = () => socketService.isSocketConnected()
+export const retryAuthentication = (
+  formData: Partial<ClientAuthenticatePayload>
+) => socketService.retryAuthentication(formData)
 
 /**
  * Submit a generic prompt response to the server
