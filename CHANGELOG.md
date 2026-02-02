@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0](https://github.com/billchurch/webssh2_client/compare/v3.1.0...v3.2.0) (2026-02-02)
+
+
+### Features
+
+* **auth:** enhance pre-auth error handling for HTTP Basic Auth route ([#83](https://github.com/billchurch/webssh2_client/issues/83)) ([3b550dd](https://github.com/billchurch/webssh2_client/commit/3b550dd1bdfaf21d80dc5cce07c57469ae961bb4))
+
 ## [3.1.0](https://github.com/billchurch/webssh2_client/compare/v3.0.0...v3.1.0) (2026-01-27)
 
 
