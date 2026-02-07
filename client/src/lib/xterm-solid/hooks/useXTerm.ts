@@ -57,7 +57,7 @@ export function useXTerm(options: UseXTermOptions = {}) {
     get terminal() {
       return term
     },
-    write: (data: string) => term.write(data),
+    write: (data: string | Uint8Array) => term.write(data),
     writeln: (data: string) => term.writeln(data),
     clear: () => term.clear(),
     reset: () => term.reset(),

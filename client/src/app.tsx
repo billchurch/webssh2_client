@@ -342,11 +342,13 @@ const App: Component = () => {
     }
   }
 
-  const onData = (data: string) => {
-    addToLog(data)
+  const textDecoder = new TextDecoder()
+  const onData = (data: string | Uint8Array) => {
+    const text = typeof data === 'string' ? data : textDecoder.decode(data)
+    addToLog(text)
   }
 
-  const writeToTerminal = (data: string) => {
+  const writeToTerminal = (data: string | Uint8Array) => {
     const actions = terminalActions()
     if (actions) {
       actions.write(data)

@@ -145,7 +145,7 @@ export interface ServerToClientEvents {
   authentication: (payload: AuthenticationRequest) => void
   permissions: (payload: PermissionsPayload) => void
   getTerminal: () => void
-  data: (chunk: string) => void
+  data: (chunk: string | ArrayBuffer) => void
   ssherror: (message: string) => void
   'connection-error': (payload: ConnectionErrorPayload) => void
   updateUI: (payload: {
