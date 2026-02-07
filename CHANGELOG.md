@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.1](https://github.com/billchurch/webssh2_client/compare/v3.2.0...v3.2.1) (2026-02-07)
+
+
+### Bug Fixes
+
+* **release:** add perf commit type to release-please config ([dc7e663](https://github.com/billchurch/webssh2_client/commit/dc7e66379ff8e9e525b0524ec2c2d112d6f664e8))
+
+
+### Performance
+
+* binary WebSocket transport for shell data ([#86](https://github.com/billchurch/webssh2_client/issues/86)) ([bead698](https://github.com/billchurch/webssh2_client/commit/bead698acd530cdfe732789e5f37497a3962897e))
+
 ## [3.2.0](https://github.com/billchurch/webssh2_client/compare/v3.1.0...v3.2.0) (2026-02-02)
 
 
