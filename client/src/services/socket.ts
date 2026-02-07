@@ -67,11 +67,11 @@ export const [connectionStatusColor, setConnectionStatusColor] =
 
 // Configuration and callbacks
 let config: WebSSH2Config | null = null
-let writeToTerminal: ((data: string) => void) | null = null
+let writeToTerminal: ((data: string | Uint8Array) => void) | null = null
 let onConnectCallback: (() => void) | null = null
 let onDisconnectCallback: ((reason: string, extra?: unknown) => void) | null =
   null
-let onDataCallback: ((chunk: string) => void) | null = null
+let onDataCallback: ((chunk: string | Uint8Array) => void) | null = null
 let focusTerminalCallback: (() => void) | null = null
 let storedFormData: Partial<ClientAuthenticatePayload> | null = null
 
@@ -139,8 +139,8 @@ export class SocketService {
     configObj: WebSSH2Config,
     connectCallback: () => void,
     disconnectCallback: (reason: string, extra?: unknown) => void,
-    dataCallback: (chunk: string) => void,
-    writeFunction: (data: string) => void,
+    dataCallback: (chunk: string | Uint8Array) => void,
+    writeFunction: (data: string | Uint8Array) => void,
     focusCallback: () => void
   ): void {
     config = configObj
@@ -451,9 +451,15 @@ export class SocketService {
 
     // Terminal events
     socketInstance.on('getTerminal', () => this.getTerminal())
-    socketInstance.on('data', (chunk: string) => {
-      if (writeToTerminal) writeToTerminal(chunk)
-      if (onDataCallback) onDataCallback(chunk)
+    socketInstance.on('data', (chunk: string | ArrayBuffer) => {
+      if (chunk instanceof ArrayBuffer) {
+        const bytes = new Uint8Array(chunk)
+        if (writeToTerminal) writeToTerminal(bytes)
+        if (onDataCallback) onDataCallback(bytes)
+      } else {
+        if (writeToTerminal) writeToTerminal(chunk)
+        if (onDataCallback) onDataCallback(chunk)
+      }
     })
 
     // Error events
@@ -681,8 +687,8 @@ export const initSocket = (
   configObj: WebSSH2Config,
   connectCallback: () => void,
   disconnectCallback: (reason: string, extra?: unknown) => void,
-  dataCallback: (chunk: string) => void,
-  writeFunction: (data: string) => void,
+  dataCallback: (chunk: string | Uint8Array) => void,
+  writeFunction: (data: string | Uint8Array) => void,
   focusCallback: () => void
 ) =>
   socketService.initSocket(

@@ -33,7 +33,7 @@ const debug = createDebug('webssh2-client:terminal-component')
 
 // Reactive terminal actions interface
 export interface TerminalActions {
-  write: (data: string) => void
+  write: (data: string | Uint8Array) => void
   reset: () => void
   resize: () => { cols: number; rows: number } | null
   focus: () => void
@@ -212,7 +212,7 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
 
     // Create reactive terminal actions
     const terminalActions: TerminalActions = {
-      write: (data: string) => ref.write(data),
+      write: (data: string | Uint8Array) => ref.write(data),
       reset: () => ref.reset(),
       resize: () => {
         const currentFit = fitAddon()
@@ -473,7 +473,7 @@ export class SolidTerminalManager {
     return !!this.terminalRef?.terminal
   }
 
-  writeToTerminal(data: string): void {
+  writeToTerminal(data: string | Uint8Array): void {
     if (this.terminalRef) {
       this.terminalRef.write(data)
     }

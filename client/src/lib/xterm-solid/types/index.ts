@@ -51,7 +51,7 @@ export type AddonDefinition =
 // Terminal reference type for imperative access
 export interface TerminalRef {
   readonly terminal: Terminal | undefined
-  write: (data: string) => void
+  write: (data: string | Uint8Array) => void
   writeln: (data: string) => void
   clear: () => void
   reset: () => void

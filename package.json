@@ -62,8 +62,8 @@
     "@types/node": "^24.10.9",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
-    "@xterm/addon-fit": "^0.10.0",
-    "@xterm/xterm": "^5.5.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
     "autoprefixer": "^10.4.24",
     "debug": "^4.4.3",
     "eslint-config-airbnb": "^19.0.4",
@@ -101,7 +101,7 @@
     ]
   },
   "dependencies": {
-    "@xterm/addon-search": "^0.15.0"
+    "@xterm/addon-search": "^0.16.0"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.53.3"
