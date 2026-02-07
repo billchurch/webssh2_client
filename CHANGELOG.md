@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.2](https://github.com/billchurch/webssh2_client/compare/v3.2.1...v3.2.2) (2026-02-07)
+
+
+### Bug Fixes
+
+* **release:** switch npm publish to OIDC trusted publishing ([c1ada4f](https://github.com/billchurch/webssh2_client/commit/c1ada4ffa3a7bc51609b3e0d58b524e6f8ba0367))
+
 ## [3.2.1](https://github.com/billchurch/webssh2_client/compare/v3.2.0...v3.2.1) (2026-02-07)
 
 
