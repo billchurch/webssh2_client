@@ -63,7 +63,7 @@
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "@xterm/addon-fit": "^0.11.0",
-    "@xterm/xterm": "^5.5.0",
+    "@xterm/xterm": "^6.0.0",
     "autoprefixer": "^10.4.24",
     "debug": "^4.4.3",
     "eslint-config-airbnb": "^19.0.4",
