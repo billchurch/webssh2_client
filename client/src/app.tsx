@@ -45,6 +45,8 @@ import {
   setPromptData,
   isSearchVisible,
   setIsSearchVisible,
+  isSpecialKeysOpen,
+  setIsSpecialKeysOpen,
   connectionError,
   setConnectionError,
   isConnectionErrorModalOpen,
@@ -70,6 +72,7 @@ import { ConnectionErrorModal } from './components/ConnectionErrorModal'
 import { TerminalSettingsModal } from './components/TerminalSettingsModal'
 import { MenuDropdown } from './components/MenuDropdown'
 import { TerminalSearch } from './components/TerminalSearch'
+import { SpecialKeysPanel } from './components/SpecialKeysPanel'
 import { FileBrowser } from './components/sftp/index.js'
 import { UniversalPrompt, ToastContainer } from './components/prompts'
 import { sftpStore } from './stores/sftp-store.js'
@@ -288,6 +291,31 @@ const App: Component = () => {
     debug('Connected to server')
   }
 
+  const handleAuthFailed = (details?: unknown) => {
+    if (state.isBasicAuthCookiePresent) {
+      // Basic Auth users can't re-enter credentials via modal - show error instead
+      setErrorMessage(
+        typeof details === 'string' && details !== ''
+          ? details
+          : 'Authentication failed'
+      )
+      setIsErrorDialogOpen(true)
+      commonPostDisconnectTasks()
+    } else {
+      // Modal auth users can retry with different credentials
+      if (typeof details === 'string' && details !== '') {
+        setLoginError(details)
+      }
+      setIsLoginDialogOpen(true)
+    }
+  }
+
+  const showDisconnectError = (reason: string, details?: unknown) => {
+    setErrorMessage(typeof details === 'string' ? details : reason)
+    setIsErrorDialogOpen(true)
+    commonPostDisconnectTasks()
+  }
+
   const onDisconnect = (reason: string, details?: unknown) => {
     debug('Disconnected:', reason)
 
@@ -300,22 +328,7 @@ const App: Component = () => {
         setIsLoginDialogOpen(true)
         break
       case 'auth_failed':
-        if (state.isBasicAuthCookiePresent) {
-          // Basic Auth users can't re-enter credentials via modal - show error instead
-          setErrorMessage(
-            typeof details === 'string' && details !== ''
-              ? details
-              : 'Authentication failed'
-          )
-          setIsErrorDialogOpen(true)
-          commonPostDisconnectTasks()
-        } else {
-          // Modal auth users can retry with different credentials
-          if (typeof details === 'string' && details !== '') {
-            setLoginError(details)
-          }
-          setIsLoginDialogOpen(true)
-        }
+        handleAuthFailed(details)
         break
       case 'reauth_required':
         debug('Reauth required')
@@ -327,17 +340,11 @@ const App: Component = () => {
         if (state.reauthRequired) {
           setState('reauthRequired', false)
         } else {
-          setErrorMessage(typeof details === 'string' ? details : reason)
-          setIsErrorDialogOpen(true)
-          commonPostDisconnectTasks()
+          showDisconnectError(reason, details)
         }
         break
       default:
-        setErrorMessage(
-          `Disconnected: ${typeof details === 'string' ? details : reason}`
-        )
-        setIsErrorDialogOpen(true)
-        commonPostDisconnectTasks()
+        showDisconnectError(`Disconnected: ${reason}`, details)
         break
     }
   }
@@ -484,6 +491,10 @@ const App: Component = () => {
 
   const handleSearch = () => {
     setIsSearchVisible(!isSearchVisible())
+  }
+
+  const handleSpecialKeys = () => {
+    setIsSpecialKeysOpen(!isSpecialKeysOpen())
   }
 
   const handleFileBrowser = () => {
@@ -756,6 +767,7 @@ const App: Component = () => {
               class="size-full"
             />
             <TerminalSearch terminalActions={terminalActions()} />
+            <SpecialKeysPanel onSendKey={focusTerminal} />
           </div>
         </Show>
 
@@ -774,6 +786,7 @@ const App: Component = () => {
             onReauth={handleReauth}
             onTerminalSettings={() => setIsTerminalSettingsOpen(true)}
             onSearch={handleSearch}
+            onSpecialKeys={handleSpecialKeys}
             onFileBrowser={handleFileBrowser}
           />
 

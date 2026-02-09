@@ -63,6 +63,9 @@ export const [promptData, setPromptData] = createSignal<{
 
 // Search state
 export const [isSearchVisible, setIsSearchVisible] = createSignal(false)
+
+// Special keys panel state
+export const [isSpecialKeysOpen, setIsSpecialKeysOpen] = createSignal(false)
 export const [searchTerm, setSearchTerm] = createSignal('')
 export const [searchOptions, setSearchOptions] = createSignal({
   caseSensitive: false,
