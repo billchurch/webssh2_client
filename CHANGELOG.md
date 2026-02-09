@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.3.0](https://github.com/billchurch/webssh2_client/compare/v3.2.2...v3.3.0) (2026-02-09)
+
+
+### Features
+
+* slide-out special key sender panel ([#90](https://github.com/billchurch/webssh2_client/issues/90)) ([ca81f68](https://github.com/billchurch/webssh2_client/commit/ca81f68b72d8efdb77a19d2dbef23f668e91383f))
+
 ## [3.2.2](https://github.com/billchurch/webssh2_client/compare/v3.2.1...v3.2.2) (2026-02-07)
 
 
