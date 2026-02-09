@@ -11,6 +11,7 @@ import {
   Clipboard,
   Download,
   Key,
+  Keyboard,
   Search,
   FolderOpen
 } from 'lucide-solid'
@@ -24,6 +25,7 @@ interface MenuDropdownProps {
   onReauth?: () => void
   onTerminalSettings?: () => void
   onSearch?: () => void
+  onSpecialKeys?: () => void
   onFileBrowser?: () => void
 }
 
@@ -201,6 +203,17 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
               <FolderOpen class="inline-block size-5" /> File Browser
             </button>
           </Show>
+
+          {/* Special Keys Button */}
+          <button
+            type="button"
+            class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+            onClick={handleMenuItemClick(props.onSpecialKeys || (() => {}))}
+            role="menuitem"
+            title="Open special keys panel"
+          >
+            <Keyboard class="inline-block size-5" /> Special Keys
+          </button>
 
           {/* Terminal Settings Button */}
           <button
