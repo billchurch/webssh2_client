@@ -177,6 +177,13 @@ describe('Special Keys Data', () => {
       assert.strictEqual(ctrlW.browserReserved, true)
     })
 
+    it(String.raw`Ctrl+B should be \x02 and browser-reserved`, () => {
+      const ctrlB = findKey('Ctrl+B')
+      assert.ok(ctrlB, 'Ctrl+B should exist')
+      assert.strictEqual(ctrlB.sequence, '\x02')
+      assert.strictEqual(ctrlB.browserReserved, true)
+    })
+
     it('Ctrl+N should be marked as browser-reserved', () => {
       const ctrlN = findKey('Ctrl+N')
       assert.ok(ctrlN, 'Ctrl+N should exist')

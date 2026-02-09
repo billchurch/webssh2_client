@@ -106,6 +106,12 @@ export const keyCategories: KeyCategory[] = [
         description: 'Tab / autocomplete'
       },
       {
+        label: 'Ctrl+B',
+        sequence: '\x02',
+        description: 'tmux prefix / move back one char',
+        browserReserved: true
+      },
+      {
         label: 'Ctrl+N',
         sequence: '\x0e',
         description: 'Next history / down',
