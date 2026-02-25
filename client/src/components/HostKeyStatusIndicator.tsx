@@ -30,9 +30,7 @@ export const HostKeyStatusIndicator: Component = () => {
   }
 
   return (
-    <Show
-      when={hostKeyVerifyConfig()?.enabled && hostKeyStatus() !== 'none'}
-    >
+    <Show when={hostKeyVerifyConfig()?.enabled && hostKeyStatus() !== 'none'}>
       <div class="relative border-l border-neutral-200 px-[10px]">
         <button
           type="button"

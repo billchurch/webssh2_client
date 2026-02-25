@@ -69,8 +69,8 @@ export const HostKeyMismatchModal: Component<HostKeyMismatchModalProps> = (
             id="host-key-mismatch-description"
             class="mb-4 text-center text-sm text-red-300"
           >
-            This could indicate a man-in-the-middle attack or the server key
-            may have changed. The connection has been refused for your safety.
+            This could indicate a man-in-the-middle attack or the server key may
+            have changed. The connection has been refused for your safety.
           </p>
 
           {/* Fingerprint comparison */}
