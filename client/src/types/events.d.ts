@@ -85,10 +85,10 @@ export interface AuthenticationRequest {
 }
 
 export interface PermissionsPayload {
-  autoLog: boolean
-  allowReplay: boolean
-  allowReconnect: boolean
-  allowReauth: boolean
+  autoLog?: boolean
+  allowReplay?: boolean
+  allowReconnect?: boolean
+  allowReauth?: boolean
   hostKeyVerification?: {
     enabled: boolean
     clientStoreEnabled: boolean
