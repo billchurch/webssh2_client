@@ -4,7 +4,7 @@ import {
   coerceAuthMethods,
   allowedAuthMethods
 } from '../stores/config.js'
-import { setHostKeyVerifyConfig } from '../stores/terminal'
+import { setHostKeyVerifyConfig } from '../stores/terminal.js'
 import type { SSHAuthMethod } from '../types/config.d'
 
 const debug = createDebug('webssh2-client:server-config')

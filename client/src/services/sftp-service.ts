@@ -357,11 +357,11 @@ function handleDownloadReady(response: SftpDownloadReadyResponse): void {
     response.fileSize,
     response.mimeType
   )
-  activeAssemblers.set(response.transferId as TransferId, assembler)
+  activeAssemblers.set(response.transferId, assembler)
 }
 
 function handleDownloadChunk(response: SftpDownloadChunkResponse): void {
-  const assembler = activeAssemblers.get(response.transferId as TransferId)
+  const assembler = activeAssemblers.get(response.transferId)
   if (!assembler) {
     debug(`No assembler for download ${response.transferId}`)
     return
@@ -374,7 +374,7 @@ function handleDownloadChunk(response: SftpDownloadChunkResponse): void {
   })
 
   // Update transfer state
-  const transfer = activeTransfers.get(response.transferId as TransferId)
+  const transfer = activeTransfers.get(response.transferId)
   if (transfer) {
     transfer.bytesTransferred = assembler.bytesReceived
     transfer.percentComplete = assembler.progress
@@ -391,7 +391,7 @@ function handleDownloadChunk(response: SftpDownloadChunkResponse): void {
 }
 
 function handleProgress(response: SftpProgressResponse): void {
-  const transfer = activeTransfers.get(response.transferId as TransferId)
+  const transfer = activeTransfers.get(response.transferId)
   if (transfer) {
     transfer.bytesTransferred = response.bytesTransferred
     transfer.percentComplete = response.percentComplete
@@ -401,14 +401,14 @@ function handleProgress(response: SftpProgressResponse): void {
   }
 
   // Notify progress callbacks
-  const callback = progressCallbacks.get(response.transferId as TransferId)
+  const callback = progressCallbacks.get(response.transferId)
   if (callback) {
     callback(response)
   }
 }
 
 function handleComplete(response: SftpCompleteResponse): void {
-  const transfer = activeTransfers.get(response.transferId as TransferId)
+  const transfer = activeTransfers.get(response.transferId)
   if (transfer) {
     transfer.status = 'completed'
     transfer.bytesTransferred = response.bytesTransferred
@@ -419,9 +419,9 @@ function handleComplete(response: SftpCompleteResponse): void {
   resolvePendingRequest(`complete:${response.transferId}`, response)
 
   // Cleanup
-  activeChunkers.delete(response.transferId as TransferId)
-  activeAssemblers.delete(response.transferId as TransferId)
-  progressCallbacks.delete(response.transferId as TransferId)
+  activeChunkers.delete(response.transferId)
+  activeAssemblers.delete(response.transferId)
+  progressCallbacks.delete(response.transferId)
 }
 
 function handleError(response: SftpErrorResponse): void {
@@ -437,14 +437,14 @@ function handleError(response: SftpErrorResponse): void {
 
   // Update transfer status if applicable
   if (response.transferId) {
-    const transfer = activeTransfers.get(response.transferId as TransferId)
+    const transfer = activeTransfers.get(response.transferId)
     if (transfer) {
       transfer.status = 'failed'
       transfer.error = response.message
     }
 
     // Reject any pending promises for this transfer
-    rejectAllForTransfer(response.transferId as TransferId, error)
+    rejectAllForTransfer(response.transferId, error)
   }
 
   // Reject operation-specific requests by path if provided
@@ -616,7 +616,7 @@ export async function mkdir(path: string, mode?: number): Promise<void> {
 
   initializeSftpListeners()
 
-  const request = mode !== undefined ? { path, mode } : { path }
+  const request = mode === undefined ? { path } : { path, mode }
   debug('Creating directory', path)
 
   const responsePromise = createPendingRequest<SftpOperationResponse>(
@@ -682,7 +682,7 @@ export async function uploadFile(
     fileName: file.name,
     fileSize: file.size,
     ...(file.type ? { mimeType: file.type } : {}),
-    ...(options.overwrite !== undefined ? { overwrite: options.overwrite } : {})
+    ...(options.overwrite === undefined ? {} : { overwrite: options.overwrite })
   }
 
   // Use FIFO queue for upload-ready (server generates transferId)
@@ -704,7 +704,7 @@ export async function uploadFile(
   socketInstance.emit('sftp-upload-start', startRequest)
 
   const readyResponse = await readyPromise
-  const transferId = readyResponse.transferId as TransferId
+  const transferId = readyResponse.transferId
   const chunkSize = readyResponse.chunkSize || DEFAULT_CHUNK_SIZE
 
   debug('Upload ready', transferId, `chunk size: ${chunkSize}`)
@@ -847,7 +847,7 @@ export async function downloadFile(
   socketInstance.emit('sftp-download-start', startRequest)
 
   const readyResponse = await readyPromise
-  const transferId = readyResponse.transferId as TransferId
+  const transferId = readyResponse.transferId
 
   debug(
     'Download ready',
