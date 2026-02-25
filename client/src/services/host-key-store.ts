@@ -177,11 +177,7 @@ export function store(
  * @param port - The port number
  * @param algorithm - Optional specific algorithm to remove. If omitted, removes all keys for the host:port.
  */
-export function remove(
-  host: string,
-  port: number,
-  algorithm?: string
-): void {
+export function remove(host: string, port: number, algorithm?: string): void {
   const data = loadStore()
   const hostPortKey = makeHostPortKey(host, port)
 
@@ -200,7 +196,11 @@ export function remove(
   }
 
   saveStore(data)
-  debug('Removed key(s) for %s%s', hostPortKey, algorithm ? ` algorithm ${algorithm}` : '')
+  debug(
+    'Removed key(s) for %s%s',
+    hostPortKey,
+    algorithm ? ` algorithm ${algorithm}` : ''
+  )
 }
 
 /**
@@ -237,15 +237,15 @@ export function importKeys(json: string): { success: boolean; error?: string } {
 
     const imported = parsed as Record<string, unknown>
 
-    if (imported.version !== 1) {
+    if (imported['version'] !== 1) {
       return { success: false, error: 'Unsupported store version' }
     }
 
-    if (typeof imported.keys !== 'object' || imported.keys === null) {
+    if (typeof imported['keys'] !== 'object' || imported['keys'] === null) {
       return { success: false, error: 'Invalid format: missing keys object' }
     }
 
-    const importedKeys = imported.keys as Record<string, unknown>
+    const importedKeys = imported['keys'] as Record<string, unknown>
 
     // Validate structure before merging
     for (const [hostPort, algorithms] of Object.entries(importedKeys)) {
@@ -268,8 +268,8 @@ export function importKeys(json: string): { success: boolean; error?: string } {
 
         const keyEntry = entry as Record<string, unknown>
         if (
-          typeof keyEntry.key !== 'string' ||
-          typeof keyEntry.addedAt !== 'string'
+          typeof keyEntry['key'] !== 'string' ||
+          typeof keyEntry['addedAt'] !== 'string'
         ) {
           return {
             success: false,
@@ -324,8 +324,8 @@ export function addManualKey(
     }
   }
 
-  const algorithm = parts[0]
-  const keyData = parts[1]
+  const algorithm = parts[0] as string
+  const keyData = parts[1] as string
 
   if (!isValidAlgorithm(algorithm)) {
     return {
