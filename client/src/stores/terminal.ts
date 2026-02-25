@@ -89,6 +89,43 @@ export const [connectionMode, setConnectionMode] =
 export const [lockedHost, setLockedHost] = createSignal<string | null>(null)
 export const [lockedPort, setLockedPort] = createSignal<number | null>(null)
 
+// Host key verification state
+export const [hostKeyStatus, setHostKeyStatus] = createSignal<
+  'none' | 'verified' | 'alert' | 'mismatch'
+>('none')
+export const [hostKeySource, setHostKeySource] = createSignal<
+  'server' | 'client' | null
+>(null)
+export const [hostKeyInfo, setHostKeyInfo] = createSignal<{
+  host: string
+  port: number
+  algorithm: string
+  fingerprint: string
+} | null>(null)
+export const [hostKeyVerifyConfig, setHostKeyVerifyConfig] = createSignal<{
+  enabled: boolean
+  clientStoreEnabled: boolean
+  unknownKeyAction: string
+} | null>(null)
+export const [isHostKeyPromptOpen, setIsHostKeyPromptOpen] = createSignal(false)
+export const [isHostKeyMismatchOpen, setIsHostKeyMismatchOpen] =
+  createSignal(false)
+export const [hostKeyMismatchData, setHostKeyMismatchData] = createSignal<{
+  host: string
+  port: number
+  algorithm: string
+  fingerprint: string
+  storedFingerprint: string
+  source: 'server' | 'client'
+} | null>(null)
+export const [hostKeyPromptData, setHostKeyPromptData] = createSignal<{
+  host: string
+  port: number
+  algorithm: string
+  key: string
+  fingerprint: string
+} | null>(null)
+
 // Utility functions for state management
 export const toggleBooleanState = <K extends keyof AppState>(
   key: K extends keyof AppState
