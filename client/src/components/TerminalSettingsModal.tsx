@@ -69,6 +69,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
   const [hostKeysExpanded, setHostKeysExpanded] = createSignal(false)
 
   // Host key management state
+  const [storedKeys, setStoredKeys] = createSignal<
+    [string, Record<string, { key: string; addedAt: string }>][]
+  >([])
   const [hostKeyFingerprints, setHostKeyFingerprints] = createSignal<
     Record<string, Record<string, string>>
   >({})
@@ -94,6 +97,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
    */
   async function refreshFingerprints() {
     const allKeys = hostKeyStore.getAll()
+    setStoredKeys(Object.entries(allKeys))
     const fingerprints: Record<string, Record<string, string>> = {}
 
     // Build a flat list of promises to avoid await-in-loop
@@ -790,7 +794,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 {/* List of stored keys */}
                 <div class="col-span-full space-y-2">
                   <For
-                    each={Object.entries(hostKeyStore.getAll())}
+                    each={storedKeys()}
                     fallback={
                       <p class="py-2 text-center text-sm text-slate-500">
                         No stored host keys
@@ -826,7 +830,20 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                                 const portStr = parts[parts.length - 1] ?? '22'
                                 const port = Number.parseInt(portStr, 10)
                                 hostKeyStore.remove(host, port, algo)
-                                refreshFingerprints()
+                                setStoredKeys(Object.entries(hostKeyStore.getAll()))
+                                setHostKeyFingerprints((prev) => {
+                                  const updated = { ...prev }
+                                  if (updated[hostPort]) {
+                                    const algos = { ...updated[hostPort] }
+                                    delete algos[algo]
+                                    if (Object.keys(algos).length === 0) {
+                                      delete updated[hostPort]
+                                    } else {
+                                      updated[hostPort] = algos
+                                    }
+                                  }
+                                  return updated
+                                })
                               }}
                               title={`Remove ${algo} key for ${hostPort}`}
                               aria-label={`Remove ${algo} key for ${hostPort}`}
