@@ -41,7 +41,10 @@ interface StoreData {
   keys: KeyMap
 }
 
-type LookupResult = 'trusted' | 'mismatch' | 'unknown'
+export type LookupResult =
+  | { status: 'trusted' }
+  | { status: 'mismatch'; storedKey: string }
+  | { status: 'unknown' }
 
 /**
  * Load the key store from localStorage, returning a valid StoreData.
@@ -130,14 +133,18 @@ export function lookup(
   const hostKeys = data.keys[key]
 
   if (!hostKeys || !hostKeys[algorithm]) {
-    return 'unknown'
+    return { status: 'unknown' }
   }
 
   if (presentedKey === undefined) {
-    return 'trusted'
+    return { status: 'trusted' }
   }
 
-  return hostKeys[algorithm].key === presentedKey ? 'trusted' : 'mismatch'
+  if (hostKeys[algorithm].key === presentedKey) {
+    return { status: 'trusted' }
+  }
+
+  return { status: 'mismatch', storedKey: hostKeys[algorithm].key }
 }
 
 /**

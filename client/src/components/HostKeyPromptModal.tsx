@@ -22,7 +22,7 @@ interface HostKeyPromptModalProps {
 export const HostKeyPromptModal: Component<HostKeyPromptModalProps> = (
   props
 ) => {
-  const [rememberKey, setRememberKey] = createSignal(false)
+  const [rememberKey, setRememberKey] = createSignal(true)
 
   const handleAccept = () => {
     props.onAccept(rememberKey())
@@ -39,7 +39,7 @@ export const HostKeyPromptModal: Component<HostKeyPromptModalProps> = (
       isOpen={isHostKeyPromptOpen()}
       onClose={handleReject}
       showCloseButton={false}
-      closeOnBackdropClick={true}
+      closeOnBackdropClick={false}
     >
       <Show when={hostKeyPromptData()}>
         <div

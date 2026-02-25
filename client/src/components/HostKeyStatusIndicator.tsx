@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js'
-import { createSignal, Show } from 'solid-js'
+import { createSignal, onCleanup, Show } from 'solid-js'
 import { ShieldCheck, ShieldAlert } from 'lucide-solid'
 import {
   hostKeyStatus,
@@ -17,10 +17,30 @@ import {
  */
 export const HostKeyStatusIndicator: Component = () => {
   const [isPopoverOpen, setIsPopoverOpen] = createSignal(false)
+  let containerRef: HTMLDivElement | undefined
 
   const togglePopover = () => {
     setIsPopoverOpen(!isPopoverOpen())
   }
+
+  const handleClickOutside = (e: MouseEvent) => {
+    if (containerRef !== undefined && !containerRef.contains(e.target as Node)) {
+      setIsPopoverOpen(false)
+    }
+  }
+
+  const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setIsPopoverOpen(false)
+    }
+  }
+
+  document.addEventListener('mousedown', handleClickOutside)
+  document.addEventListener('keydown', handleEscape)
+  onCleanup(() => {
+    document.removeEventListener('mousedown', handleClickOutside)
+    document.removeEventListener('keydown', handleEscape)
+  })
 
   const sourceLabel = () => {
     const src = hostKeySource()
@@ -31,7 +51,7 @@ export const HostKeyStatusIndicator: Component = () => {
 
   return (
     <Show when={hostKeyVerifyConfig()?.enabled && hostKeyStatus() !== 'none'}>
-      <div class="relative border-l border-neutral-200 px-[10px]">
+      <div ref={containerRef} class="relative border-l border-neutral-200 px-[10px]">
         <button
           type="button"
           class="flex items-center justify-center"
