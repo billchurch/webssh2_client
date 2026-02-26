@@ -53,7 +53,6 @@ const { lookup, store, remove, getAll, exportKeys, importKeys, addManualKey } =
 
 const VALID_KEY = btoa('some-key-data')
 const VALID_KEY_2 = btoa('different-key')
-const VALID_KEY_3 = btoa('third-key-data')
 
 // ---------------------------------------------------------------------------
 // Tests

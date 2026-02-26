@@ -1,9 +1,4 @@
-declare module 'webssh2_client' {
-  interface WebSSH2Client {
-    getPublicPath(): string
-    version: string
-  }
+import clientModule from './client/index.js'
 
-  const client: WebSSH2Client
-  export default client
-}
+export default clientModule
+// # sourceMappingURL=index.d.ts.map

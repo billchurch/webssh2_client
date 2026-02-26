@@ -10,6 +10,6 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["**/*.ts", "types/**/*.d.ts", "client/src/js/csp-config.ts"],
+  "include": ["**/*.ts", "types/**/*.d.ts"],
   "exclude": ["client/public", "node_modules", "client/src/**"]
 }
