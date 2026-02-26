@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.4.1](https://github.com/billchurch/webssh2_client/compare/v3.4.0...v3.4.1) (2026-02-26)
+
+
+### Bug Fixes
+
+* reduce Socket.dev supply chain risk alerts ([#94](https://github.com/billchurch/webssh2_client/issues/94)) ([5cdc146](https://github.com/billchurch/webssh2_client/commit/5cdc146f4f6bfc497d187f0371b9ce6aa88bd181))
+
 ## [3.4.0](https://github.com/billchurch/webssh2_client/compare/v3.3.0...v3.4.0) (2026-02-26)
 
 
