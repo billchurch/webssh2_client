@@ -1,13 +1,9 @@
 // client
 // client/index.ts
 import path from 'path'
-import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const packageJson = JSON.parse(
-  readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')
-)
+import packageJson from '../package.json' with { type: 'json' }
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export default {
   getPublicPath: () => path.join(__dirname, 'public'),
   version: packageJson.version
