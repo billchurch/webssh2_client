@@ -56,7 +56,11 @@ import {
   lockedHost,
   setLockedHost,
   lockedPort,
-  setLockedPort
+  setLockedPort,
+  hostKeyPromptData,
+  isHostKeyRejectedOpen,
+  setIsHostKeyRejectedOpen,
+  hostKeyRejectedReason
 } from './stores/terminal.js'
 
 // Import components
@@ -75,12 +79,17 @@ import { TerminalSearch } from './components/TerminalSearch'
 import { SpecialKeysPanel } from './components/SpecialKeysPanel'
 import { FileBrowser } from './components/sftp/index.js'
 import { UniversalPrompt, ToastContainer } from './components/prompts'
+import { HostKeyPromptModal } from './components/HostKeyPromptModal'
+import { HostKeyMismatchModal } from './components/HostKeyMismatchModal'
+import { HostKeyRejectedModal } from './components/HostKeyRejectedModal'
+import { HostKeyStatusIndicator } from './components/HostKeyStatusIndicator'
 import { sftpStore } from './stores/sftp-store.js'
 import { promptStore } from './stores/prompt-store.js'
 
 // Import socket service
 import {
   socketService,
+  socket,
   setTerminalDimensions,
   submitPromptResponses,
   submitPromptResponse,
@@ -89,6 +98,7 @@ import {
   isSocketConnected,
   retryAuthentication
 } from './services/socket.js'
+import * as hostKeyStore from './services/host-key-store.js'
 import { loadServerAuthMethods } from './services/config.js'
 
 // Import types
@@ -661,6 +671,45 @@ const App: Component = () => {
         />
       </Show>
 
+      {/* Host Key Verification Modals */}
+      <HostKeyPromptModal
+        onAccept={(remember) => {
+          const data = hostKeyPromptData()
+          if (data) {
+            const sock = socket()
+            if (sock) {
+              sock.emit('hostkey:verify-response', { action: 'accept' })
+            }
+            if (remember) {
+              hostKeyStore.store(data.host, data.port, data.algorithm, data.key)
+            }
+          }
+        }}
+        onReject={() => {
+          const sock = socket()
+          if (sock) {
+            sock.emit('hostkey:verify-response', { action: 'reject' })
+          }
+        }}
+      />
+
+      <HostKeyMismatchModal
+        onDismiss={() => {
+          setIsLoginDialogOpen(true)
+        }}
+      />
+
+      <HostKeyRejectedModal
+        isOpen={isHostKeyRejectedOpen()}
+        reason={
+          hostKeyRejectedReason() || 'Connection refused by host key policy'
+        }
+        onDismiss={() => {
+          setIsHostKeyRejectedOpen(false)
+          setIsLoginDialogOpen(true)
+        }}
+      />
+
       {/* Reconnect Button */}
       <Show when={showReconnectButton()}>
         <button
@@ -794,6 +843,7 @@ const App: Component = () => {
           <div class="inline-block border-l border-neutral-200 px-[10px] text-left">
             {sessionFooter()}
           </div>
+          <HostKeyStatusIndicator />
           <output
             id="status"
             class={`z-[100] inline-block border-x border-neutral-200 px-[10px] text-left text-white ${(() => {

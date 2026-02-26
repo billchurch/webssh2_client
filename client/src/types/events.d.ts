@@ -85,10 +85,15 @@ export interface AuthenticationRequest {
 }
 
 export interface PermissionsPayload {
-  autoLog: boolean
-  allowReplay: boolean
-  allowReconnect: boolean
-  allowReauth: boolean
+  autoLog?: boolean
+  allowReplay?: boolean
+  allowReconnect?: boolean
+  allowReauth?: boolean
+  hostKeyVerification?: {
+    enabled: boolean
+    clientStoreEnabled: boolean
+    unknownKeyAction: string
+  }
 }
 
 // Client → Server
@@ -166,6 +171,36 @@ export interface ServerToClientEvents {
   'sftp-error': (response: SftpErrorResponse) => void
   // Prompt events
   prompt: (payload: PromptPayload) => void
+  // Host key verification events
+  'hostkey:verify': (data: {
+    host: string
+    port: number
+    algorithm: string
+    key: string
+    fingerprint: string
+  }) => void
+  'hostkey:verified': (data: {
+    host: string
+    port: number
+    algorithm: string
+    fingerprint: string
+    source: 'server' | 'client'
+  }) => void
+  'hostkey:mismatch': (data: {
+    host: string
+    port: number
+    algorithm: string
+    fingerprint: string
+    storedFingerprint: string
+    source: 'server' | 'client'
+  }) => void
+  'hostkey:alert': (data: {
+    host: string
+    port: number
+    algorithm: string
+    fingerprint: string
+  }) => void
+  'hostkey:rejected': (data: { reason: string }) => void
 }
 
 export interface ClientToServerEvents {
@@ -190,4 +225,8 @@ export interface ClientToServerEvents {
   'sftp-download-cancel': (request: SftpDownloadCancelRequest) => void
   // Prompt events
   'prompt-response': (response: PromptResponsePayload) => void
+  // Host key verification events
+  'hostkey:verify-response': (data: {
+    action: 'trusted' | 'accept' | 'reject'
+  }) => void
 }

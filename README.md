@@ -85,6 +85,94 @@ For server setup instructions, refer to the [WebSSH2 server documentation](https
 - Multi-factor authentication support (when supported by server)
 - Support for credential replay and reauthentication
 
+## Host Key Verification
+
+WebSSH2 Client supports client-side SSH host key verification using a Trust On First Use (TOFU) model. When enabled by the server, the client can independently verify host keys stored in the browser alongside any server-side verification, providing an additional layer of protection against man-in-the-middle attacks.
+
+The server controls whether host key verification is active and whether the client-side store is available. When both are enabled, the client stores trusted host key fingerprints in `localStorage` and checks them on every connection.
+
+### Status Indicators
+
+The status bar displays a shield icon when host key verification is active:
+
+- **ShieldCheck (green)** — The host key is verified and matches a trusted key. The connection is authenticated.
+- **ShieldAlert (amber)** — The host key is not yet stored or could not be verified against a trusted key.
+
+Click the shield icon to open a popover with host key details including the host, port, algorithm, SHA-256 fingerprint, and where the key was verified (server store or client store).
+
+### Trust Prompt
+
+When connecting to an unknown host (no stored key for that host:port and algorithm), a modal appears with:
+
+- The host and port being connected to
+- The key algorithm and SHA-256 fingerprint
+- **Accept** / **Reject** buttons
+- A **"Remember this key (save to browser)"** checkbox (only visible when the client store is enabled)
+
+Accepting the key allows the connection to proceed. Checking the remember option saves the key to the browser so future connections are automatically verified. Rejecting the key closes the connection.
+
+### Mismatch Warning
+
+If a host presents a key that does not match the previously stored fingerprint, a hard-block modal is displayed. The connection is always refused — there is no option to accept the mismatched key.
+
+The modal shows both the expected and received fingerprints for comparison. Guidance is provided based on where the key was stored:
+
+- **Client store** — Remove the old key from Trusted Host Keys in Settings, then reconnect.
+- **Server store** — Contact your administrator to verify the server key has been intentionally changed.
+
+### Trusted Host Keys Settings
+
+When the client-side store is enabled, a **Trusted Host Keys** section appears in the Settings modal (click the gear icon, then expand the "Trusted Host Keys" section).
+
+#### Viewing stored keys
+
+Each stored key is listed by host:port with its algorithm and computed SHA-256 fingerprint.
+
+#### Deleting keys
+
+Click the delete button next to any key entry to remove it. This is how you resolve mismatch warnings for keys stored in the client.
+
+#### Adding keys manually
+
+You can pre-trust a host key by entering:
+
+- **Host** and **Port** of the SSH server
+- **Public key** in OpenSSH format: `algorithm base64key [comment]`
+
+Supported algorithms: `ssh-ed25519`, `ssh-rsa`, `rsa-sha2-256`, `rsa-sha2-512`, `ecdsa-sha2-nistp256`, `ecdsa-sha2-nistp384`, `ecdsa-sha2-nistp521`
+
+#### Export and import
+
+- **Export** downloads all trusted keys as a `webssh2-hostkeys.json` file.
+- **Import** reads a JSON file and merges the keys into the existing store. Duplicate entries are overwritten by the imported data.
+
+This is useful for sharing trusted keys across browsers or backing up your key store.
+
+### localStorage Format
+
+Host keys are stored under the `webssh2.hostkeys` key in `localStorage`. The schema is:
+
+```json
+{
+  "version": 1,
+  "keys": {
+    "example.com:22": {
+      "ssh-ed25519": {
+        "key": "<base64-encoded public key>",
+        "addedAt": "2026-01-15T10:30:00.000Z"
+      }
+    }
+  }
+}
+```
+
+- `version` — Schema version (currently `1`).
+- `keys` — A map keyed by `host:port`. Each value is a map of algorithm names to key entries.
+- `key` — The base64-encoded public key data.
+- `addedAt` — ISO 8601 timestamp of when the key was stored.
+
+The export and import functions use this same format, so exported files can be imported into any other WebSSH2 Client instance.
+
 ## Security and Lint Rules
 
 - No innerHTML: The client never uses `innerHTML` for user content. All text uses `textContent` and safe DOM building helpers.

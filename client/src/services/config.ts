@@ -4,12 +4,18 @@ import {
   coerceAuthMethods,
   allowedAuthMethods
 } from '../stores/config.js'
+import { setHostKeyVerifyConfig } from '../stores/terminal.js'
 import type { SSHAuthMethod } from '../types/config.d'
 
 const debug = createDebug('webssh2-client:server-config')
 
 interface ServerConfigResponse {
   allowedAuthMethods?: unknown
+  hostKeyVerification?: {
+    enabled: boolean
+    clientStoreEnabled: boolean
+    unknownKeyAction: string
+  }
   [key: string]: unknown
 }
 
@@ -68,6 +74,14 @@ export const loadServerAuthMethods =
       ...prev,
       allowedAuthMethods: methods
     }))
+
+    if (payload.hostKeyVerification !== undefined) {
+      setHostKeyVerifyConfig(payload.hostKeyVerification)
+      debug(
+        'Host key verification config received from server',
+        payload.hostKeyVerification
+      )
+    }
 
     debug('Loaded allowed auth methods from server', methods)
     return { ok: true, methods }

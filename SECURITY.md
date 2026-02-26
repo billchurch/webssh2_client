@@ -246,5 +246,5 @@ For more information about detection logic or mitigations, contact the security 
 
 ---
 
-**Last Updated**: January 27, 2026
-**Next Review**: February 27, 2026
+**Last Updated**: February 26, 2026
+**Next Review**: March 26, 2026

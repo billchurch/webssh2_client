@@ -17,8 +17,21 @@ import {
   setHeaderContent,
   setPromptData,
   setConnectionError,
-  setIsConnectionErrorModalOpen
+  setIsConnectionErrorModalOpen,
+  setHostKeyStatus,
+  setHostKeySource,
+  setHostKeyInfo,
+  setHostKeyVerifyConfig,
+  setHostKeyPromptData,
+  setIsHostKeyPromptOpen,
+  setHostKeyMismatchData,
+  setIsHostKeyMismatchOpen,
+  setIsHostKeyRejectedOpen,
+  setHostKeyRejectedReason
 } from '../stores/terminal.js'
+
+// Import host key store
+import * as hostKeyStore from './host-key-store.js'
 
 // Import utilities
 import { credentials, sanitizeClientAuthPayload } from '../stores/config.js'
@@ -432,6 +445,14 @@ export class SocketService {
             setState('allowReplay', Boolean(value))
             break
           }
+          case 'hostKeyVerification': {
+            const hkvConfig = value as PermissionsPayload['hostKeyVerification']
+            if (hkvConfig) {
+              setHostKeyVerifyConfig(hkvConfig)
+              debug('Host key verification config received', hkvConfig)
+            }
+            break
+          }
           default: {
             debug(`Unhandled permission key: ${key}`)
             break
@@ -518,6 +539,14 @@ export class SocketService {
       setIsConnected(false)
       setConnectionStatus(`WEBSOCKET SERVER DISCONNECTED: ${reason}`)
       setConnectionStatusColor('red')
+      // Reset host key state on disconnect
+      setHostKeyStatus('none')
+      setHostKeySource(null)
+      setHostKeyInfo(null)
+      setIsHostKeyPromptOpen(false)
+      setIsHostKeyMismatchOpen(false)
+      setIsHostKeyRejectedOpen(false)
+      setHostKeyRejectedReason(null)
       if (onDisconnectCallback) onDisconnectCallback(reason)
     })
 
@@ -639,6 +668,110 @@ export class SocketService {
       } else {
         promptStore.showPrompt(payload)
       }
+    })
+
+    // Host key verification events
+    socketInstance.on('hostkey:verify', async (data) => {
+      debug('Host key verify request', {
+        host: data.host,
+        port: data.port,
+        algorithm: data.algorithm
+      })
+      const result = hostKeyStore.lookup(
+        data.host,
+        data.port,
+        data.algorithm,
+        data.key
+      )
+
+      if (result.status === 'trusted') {
+        debug('Host key trusted by client store')
+        socketInstance.emit('hostkey:verify-response', { action: 'trusted' })
+        setHostKeyStatus('verified')
+        setHostKeySource('client')
+        setHostKeyInfo({
+          host: data.host,
+          port: data.port,
+          algorithm: data.algorithm,
+          fingerprint: data.fingerprint
+        })
+        return
+      }
+
+      if (result.status === 'mismatch') {
+        debug('Host key mismatch detected by client store')
+        socketInstance.emit('hostkey:verify-response', { action: 'reject' })
+        setHostKeyStatus('mismatch')
+
+        // Compute the stored key's fingerprint for display
+        let storedFingerprint = '(unknown)'
+        try {
+          const keyBytes = Uint8Array.from(atob(result.storedKey), (c) =>
+            c.charCodeAt(0)
+          )
+          const hashBuffer = await crypto.subtle.digest('SHA-256', keyBytes)
+          const hashBase64 = btoa(
+            String.fromCharCode(...new Uint8Array(hashBuffer))
+          )
+          storedFingerprint = `SHA256:${hashBase64}`
+        } catch {
+          debug('Failed to compute stored key fingerprint')
+        }
+
+        setHostKeyMismatchData({
+          host: data.host,
+          port: data.port,
+          algorithm: data.algorithm,
+          fingerprint: data.fingerprint,
+          storedFingerprint,
+          source: 'client'
+        })
+        setIsHostKeyMismatchOpen(true)
+        return
+      }
+
+      // Unknown key - show prompt modal for user decision
+      debug('Host key unknown, prompting user')
+      setHostKeyPromptData(data)
+      setIsHostKeyPromptOpen(true)
+    })
+
+    socketInstance.on('hostkey:verified', (data) => {
+      debug('Host key verified', { source: data.source })
+      setHostKeyStatus('verified')
+      setHostKeySource(data.source)
+      setHostKeyInfo({
+        host: data.host,
+        port: data.port,
+        algorithm: data.algorithm,
+        fingerprint: data.fingerprint
+      })
+    })
+
+    socketInstance.on('hostkey:mismatch', (data) => {
+      debug('Host key mismatch from server', { source: data.source })
+      setHostKeyStatus('mismatch')
+      setHostKeyMismatchData(data)
+      setIsHostKeyMismatchOpen(true)
+    })
+
+    socketInstance.on('hostkey:alert', (data) => {
+      debug('Host key alert', { host: data.host, port: data.port })
+      setHostKeyStatus('alert')
+      setHostKeySource(null)
+      setHostKeyInfo({
+        host: data.host,
+        port: data.port,
+        algorithm: data.algorithm,
+        fingerprint: data.fingerprint
+      })
+    })
+
+    socketInstance.on('hostkey:rejected', (data) => {
+      debug('Host key rejected', { reason: data.reason })
+      setHostKeyStatus('none')
+      setHostKeyRejectedReason(data.reason)
+      setIsHostKeyRejectedOpen(true)
     })
   }
 

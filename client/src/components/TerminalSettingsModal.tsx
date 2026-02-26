@@ -1,7 +1,15 @@
 import type { Component } from 'solid-js'
-import { createSignal, createEffect, Show } from 'solid-js'
+import { createSignal, createEffect, Show, For } from 'solid-js'
 import { Modal } from './Modal'
-import { ChevronDown, ChevronUp } from 'lucide-solid'
+import {
+  ChevronDown,
+  ChevronUp,
+  ShieldCheck,
+  Trash2,
+  Download,
+  Upload,
+  Plus
+} from 'lucide-solid'
 import type { ITerminalOptions } from '@xterm/xterm'
 import { getStoredSettings, saveTerminalSettings } from '../utils/settings.js'
 import { defaultSettings } from '../utils/index.js'
@@ -11,6 +19,8 @@ import type {
   KeyboardCaptureSettings,
   PromptSoundSettings
 } from '../types/config.d'
+import { hostKeyVerifyConfig } from '../stores/terminal'
+import * as hostKeyStore from '../services/host-key-store'
 
 interface TerminalSettingsModalProps {
   isOpen: boolean
@@ -56,6 +66,78 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
   const [clipboardExpanded, setClipboardExpanded] = createSignal(false)
   const [keyboardExpanded, setKeyboardExpanded] = createSignal(false)
   const [soundsExpanded, setSoundsExpanded] = createSignal(false)
+  const [hostKeysExpanded, setHostKeysExpanded] = createSignal(false)
+
+  // Host key management state
+  const [storedKeys, setStoredKeys] = createSignal<
+    [string, Record<string, { key: string; addedAt: string }>][]
+  >([])
+  const [hostKeyFingerprints, setHostKeyFingerprints] = createSignal<
+    Record<string, Record<string, string>>
+  >({})
+  const [addKeyHost, setAddKeyHost] = createSignal('')
+  const [addKeyPort, setAddKeyPort] = createSignal('22')
+  const [addKeyPublicKey, setAddKeyPublicKey] = createSignal('')
+  const [addKeyError, setAddKeyError] = createSignal<string | null>(null)
+  const [importError, setImportError] = createSignal<string | null>(null)
+  let importFileInput: HTMLInputElement | undefined
+
+  /**
+   * Compute a SHA-256 fingerprint from a base64-encoded public key.
+   */
+  async function computeFingerprint(base64Key: string): Promise<string> {
+    const bytes = Uint8Array.from(atob(base64Key), (c) => c.charCodeAt(0))
+    const hashBuffer = await crypto.subtle.digest('SHA-256', bytes)
+    const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)))
+    return `SHA256:${hashBase64}`
+  }
+
+  /**
+   * Refresh fingerprint cache for all stored host keys.
+   */
+  async function refreshFingerprints() {
+    const allKeys = hostKeyStore.getAll()
+    setStoredKeys(Object.entries(allKeys))
+    const fingerprints: Record<string, Record<string, string>> = {}
+
+    // Build a flat list of promises to avoid await-in-loop
+    const tasks: Array<{
+      hostPort: string
+      algo: string
+      promise: Promise<string>
+    }> = []
+
+    for (const [hostPort, algorithms] of Object.entries(allKeys)) {
+      fingerprints[hostPort] = {}
+      for (const [algo, entry] of Object.entries(algorithms)) {
+        tasks.push({
+          hostPort,
+          algo,
+          promise: computeFingerprint(entry.key).catch(
+            () => '(error computing fingerprint)'
+          )
+        })
+      }
+    }
+
+    const results = await Promise.all(tasks.map((t) => t.promise))
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i]
+      const result = results[i]
+      if (task && result !== undefined) {
+        fingerprints[task.hostPort]![task.algo] = result
+      }
+    }
+
+    setHostKeyFingerprints(fingerprints)
+  }
+
+  // Refresh host key fingerprints when section is expanded
+  createEffect(() => {
+    if (hostKeysExpanded()) {
+      refreshFingerprints()
+    }
+  })
 
   // Load current settings when modal opens
   createEffect(() => {
@@ -679,6 +761,229 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                     </button>
                   </div>
                 </label>
+              </Show>
+            </Show>
+
+            {/* Trusted Host Keys Section - only when client store is enabled */}
+            <Show when={hostKeyVerifyConfig()?.clientStoreEnabled}>
+              <div class="col-span-full mb-2 mt-4 border-t pt-2">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  onClick={() => setHostKeysExpanded(!hostKeysExpanded())}
+                  aria-expanded={hostKeysExpanded()}
+                >
+                  <span class="flex items-center gap-1.5">
+                    <ShieldCheck class="size-4" />
+                    Trusted Host Keys
+                  </span>
+                  {hostKeysExpanded() ? (
+                    <ChevronUp class="size-4" />
+                  ) : (
+                    <ChevronDown class="size-4" />
+                  )}
+                </button>
+                <Show when={hostKeysExpanded()}>
+                  <p class="mt-1 text-xs text-slate-600">
+                    Manage SSH host keys stored in this browser
+                  </p>
+                </Show>
+              </div>
+
+              <Show when={hostKeysExpanded()}>
+                {/* List of stored keys */}
+                <div class="col-span-full space-y-2">
+                  <For
+                    each={storedKeys()}
+                    fallback={
+                      <p class="py-2 text-center text-sm text-slate-500">
+                        No stored host keys
+                      </p>
+                    }
+                  >
+                    {([hostPort, algorithms]) => (
+                      <For each={Object.entries(algorithms)}>
+                        {([algo, _entry]) => (
+                          <div class="flex items-center justify-between rounded-md bg-slate-50 p-2">
+                            <div class="min-w-0 flex-1">
+                              <div class="flex items-center gap-2 text-sm">
+                                <span class="font-mono font-medium text-slate-800">
+                                  {hostPort}
+                                </span>
+                                <span class="rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-600">
+                                  {algo}
+                                </span>
+                              </div>
+                              <div class="mt-0.5 truncate font-mono text-xs text-slate-500">
+                                {hostKeyFingerprints()[hostPort]?.[algo] ||
+                                  'Computing...'}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              class="ml-2 shrink-0 rounded p-1 text-red-500 hover:bg-red-50 hover:text-red-700"
+                              onClick={() => {
+                                const parts = hostPort.split(':')
+                                const host = parts
+                                  .slice(0, parts.length - 1)
+                                  .join(':')
+                                const portStr = parts[parts.length - 1] ?? '22'
+                                const port = Number.parseInt(portStr, 10)
+                                hostKeyStore.remove(host, port, algo)
+                                setStoredKeys(
+                                  Object.entries(hostKeyStore.getAll())
+                                )
+                                setHostKeyFingerprints((prev) => {
+                                  const updated = { ...prev }
+                                  if (updated[hostPort]) {
+                                    const algos = { ...updated[hostPort] }
+                                    delete algos[algo]
+                                    if (Object.keys(algos).length === 0) {
+                                      delete updated[hostPort]
+                                    } else {
+                                      updated[hostPort] = algos
+                                    }
+                                  }
+                                  return updated
+                                })
+                              }}
+                              title={`Remove ${algo} key for ${hostPort}`}
+                              aria-label={`Remove ${algo} key for ${hostPort}`}
+                            >
+                              <Trash2 class="size-4" />
+                            </button>
+                          </div>
+                        )}
+                      </For>
+                    )}
+                  </For>
+
+                  {/* Add Key Form */}
+                  <div class="mt-3 rounded-md border border-slate-200 p-3">
+                    <div class="mb-2 text-xs font-semibold text-slate-700">
+                      Add Key Manually
+                    </div>
+                    <div class="space-y-2">
+                      <div class="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Host"
+                          class="block flex-1 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          value={addKeyHost()}
+                          onInput={(e) => setAddKeyHost(e.currentTarget.value)}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Port"
+                          min="1"
+                          max="65535"
+                          class="block w-20 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          value={addKeyPort()}
+                          onInput={(e) => setAddKeyPort(e.currentTarget.value)}
+                        />
+                      </div>
+                      <textarea
+                        placeholder="Public key (e.g., ssh-ed25519 AAAA... comment)"
+                        rows={3}
+                        class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        value={addKeyPublicKey()}
+                        onInput={(e) =>
+                          setAddKeyPublicKey(e.currentTarget.value)
+                        }
+                      />
+                      <Show when={addKeyError()}>
+                        <p class="text-xs text-red-600">{addKeyError()}</p>
+                      </Show>
+                      <button
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                        onClick={() => {
+                          setAddKeyError(null)
+                          const port = Number.parseInt(addKeyPort(), 10) || 22
+                          const result = hostKeyStore.addManualKey(
+                            addKeyHost(),
+                            port,
+                            addKeyPublicKey()
+                          )
+                          if (result.success) {
+                            setAddKeyHost('')
+                            setAddKeyPort('22')
+                            setAddKeyPublicKey('')
+                            refreshFingerprints()
+                          } else {
+                            setAddKeyError(result.error || 'Failed to add key')
+                          }
+                        }}
+                      >
+                        <Plus class="size-3" />
+                        Add Key
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Export / Import buttons */}
+                  <div class="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                      onClick={() => {
+                        const json = hostKeyStore.exportKeys()
+                        const blob = new Blob([json], {
+                          type: 'application/json'
+                        })
+                        const url = URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = 'webssh2-hostkeys.json'
+                        document.body.appendChild(a)
+                        a.click()
+                        document.body.removeChild(a)
+                        URL.revokeObjectURL(url)
+                      }}
+                    >
+                      <Download class="size-3" />
+                      Export Keys
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                      onClick={() => importFileInput?.click()}
+                    >
+                      <Upload class="size-3" />
+                      Import Keys
+                    </button>
+                    <input
+                      ref={importFileInput}
+                      type="file"
+                      accept=".json,application/json"
+                      class="hidden"
+                      onChange={(e) => {
+                        setImportError(null)
+                        const file = e.currentTarget.files?.[0]
+                        if (!file) return
+                        const reader = new FileReader()
+                        reader.onload = () => {
+                          const result = hostKeyStore.importKeys(
+                            reader.result as string
+                          )
+                          if (result.success) {
+                            refreshFingerprints()
+                          } else {
+                            setImportError(
+                              result.error || 'Failed to import keys'
+                            )
+                          }
+                        }
+                        reader.readAsText(file)
+                        // Reset file input so same file can be re-selected
+                        e.currentTarget.value = ''
+                      }}
+                    />
+                  </div>
+                  <Show when={importError()}>
+                    <p class="text-xs text-red-600">{importError()}</p>
+                  </Show>
+                </div>
               </Show>
             </Show>
           </fieldset>
