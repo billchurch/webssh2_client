@@ -3,7 +3,7 @@ import { createStore } from 'solid-js/store'
 import { createSignal } from 'solid-js'
 import createDebug from 'debug'
 import type { ConnectionErrorPayload } from '../types/events.d'
-import type { ConnectionMode } from '../types/config.d'
+import type { ConnectionMode, ProtocolType } from '../types/config.d'
 
 const debug = createDebug('webssh2-client:state-solid')
 
@@ -88,6 +88,9 @@ export const [connectionMode, setConnectionMode] =
   createSignal<ConnectionMode>('full')
 export const [lockedHost, setLockedHost] = createSignal<string | null>(null)
 export const [lockedPort, setLockedPort] = createSignal<number | null>(null)
+
+// Protocol state (ssh or telnet)
+export const [protocol, setProtocol] = createSignal<ProtocolType>('ssh')
 
 // Host key verification state
 export const [hostKeyStatus, setHostKeyStatus] = createSignal<

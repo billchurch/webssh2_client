@@ -57,6 +57,8 @@ import {
   setLockedHost,
   lockedPort,
   setLockedPort,
+  protocol,
+  setProtocol,
   hostKeyPromptData,
   isHostKeyRejectedOpen,
   setIsHostKeyRejectedOpen,
@@ -171,10 +173,15 @@ const App: Component = () => {
       if (initialConfig.lockedPort !== undefined) {
         setLockedPort(initialConfig.lockedPort)
       }
+      if (initialConfig.protocol !== undefined) {
+        setProtocol(initialConfig.protocol)
+      }
 
       // Set session footer
+      const footerProtocol =
+        initialConfig.protocol === 'telnet' ? 'telnet' : 'ssh'
       const footer = initialConfig.ssh.host
-        ? `ssh://${initialConfig.ssh.host}:${initialConfig.ssh.port}`
+        ? `${footerProtocol}://${initialConfig.ssh.host}:${initialConfig.ssh.port}`
         : null
       setSessionFooter(footer)
       setGlobalSessionFooter(footer)
@@ -671,44 +678,51 @@ const App: Component = () => {
         />
       </Show>
 
-      {/* Host Key Verification Modals */}
-      <HostKeyPromptModal
-        onAccept={(remember) => {
-          const data = hostKeyPromptData()
-          if (data) {
+      {/* Host Key Verification Modals (SSH only) */}
+      <Show when={protocol() !== 'telnet'}>
+        <HostKeyPromptModal
+          onAccept={(remember) => {
+            const data = hostKeyPromptData()
+            if (data) {
+              const sock = socket()
+              if (sock) {
+                sock.emit('hostkey:verify-response', { action: 'accept' })
+              }
+              if (remember) {
+                hostKeyStore.store(
+                  data.host,
+                  data.port,
+                  data.algorithm,
+                  data.key
+                )
+              }
+            }
+          }}
+          onReject={() => {
             const sock = socket()
             if (sock) {
-              sock.emit('hostkey:verify-response', { action: 'accept' })
+              sock.emit('hostkey:verify-response', { action: 'reject' })
             }
-            if (remember) {
-              hostKeyStore.store(data.host, data.port, data.algorithm, data.key)
-            }
-          }
-        }}
-        onReject={() => {
-          const sock = socket()
-          if (sock) {
-            sock.emit('hostkey:verify-response', { action: 'reject' })
-          }
-        }}
-      />
+          }}
+        />
 
-      <HostKeyMismatchModal
-        onDismiss={() => {
-          setIsLoginDialogOpen(true)
-        }}
-      />
+        <HostKeyMismatchModal
+          onDismiss={() => {
+            setIsLoginDialogOpen(true)
+          }}
+        />
 
-      <HostKeyRejectedModal
-        isOpen={isHostKeyRejectedOpen()}
-        reason={
-          hostKeyRejectedReason() || 'Connection refused by host key policy'
-        }
-        onDismiss={() => {
-          setIsHostKeyRejectedOpen(false)
-          setIsLoginDialogOpen(true)
-        }}
-      />
+        <HostKeyRejectedModal
+          isOpen={isHostKeyRejectedOpen()}
+          reason={
+            hostKeyRejectedReason() || 'Connection refused by host key policy'
+          }
+          onDismiss={() => {
+            setIsHostKeyRejectedOpen(false)
+            setIsLoginDialogOpen(true)
+          }}
+        />
+      </Show>
 
       {/* Reconnect Button */}
       <Show when={showReconnectButton()}>
@@ -820,8 +834,10 @@ const App: Component = () => {
           </div>
         </Show>
 
-        {/* SFTP File Browser */}
-        <FileBrowser />
+        {/* SFTP File Browser (not available for telnet) */}
+        <Show when={protocol() !== 'telnet'}>
+          <FileBrowser />
+        </Show>
 
         {/* Bottom Bar */}
         <div class="z-[99] flex h-6 shrink-0 items-center border-t border-neutral-200 bg-neutral-800 text-neutral-100">
@@ -843,7 +859,9 @@ const App: Component = () => {
           <div class="inline-block border-l border-neutral-200 px-[10px] text-left">
             {sessionFooter()}
           </div>
-          <HostKeyStatusIndicator />
+          <Show when={protocol() !== 'telnet'}>
+            <HostKeyStatusIndicator />
+          </Show>
           <output
             id="status"
             class={`z-[100] inline-block border-x border-neutral-200 px-[10px] text-left text-white ${(() => {

@@ -8,6 +8,7 @@ import { createFieldValidator, ValidationRules } from '../utils/validation'
 import type { ClientAuthenticatePayload } from '../types/events.d'
 import type { SSHAuthMethod, ConnectionMode } from '../types/config.d'
 import { DEFAULT_AUTH_METHODS } from '../constants.js'
+import { protocol } from '../stores/terminal.js'
 
 const debug = createDebug('webssh2-client:login-modal')
 
@@ -35,11 +36,13 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   createEffect(() => {
     debug('LoginModal isOpen changed:', props.isOpen)
   })
+  const defaultPort = () => (protocol() === 'telnet' ? 23 : 22)
+
   const [formData, setFormData] = createSignal<
     Partial<ClientAuthenticatePayload>
   >({
     host: '',
-    port: 22,
+    port: defaultPort(),
     username: '',
     password: '',
     privateKey: '',
@@ -221,14 +224,17 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     const hasPrivateKey =
       supportsPublicKey() && privateKeyValue.trim().length > 0
 
+    // For telnet, credentials are optional (password is common but not always needed)
     let credentialsValid = true
-    if (supportsPassword() && supportsPublicKey()) {
-      credentialsValid =
-        hasPassword || (hasPrivateKey && privateKeyValidation.isValid())
-    } else if (supportsPassword()) {
-      credentialsValid = hasPassword
-    } else if (supportsPublicKey()) {
-      credentialsValid = hasPrivateKey && privateKeyValidation.isValid()
+    if (protocol() !== 'telnet') {
+      if (supportsPassword() && supportsPublicKey()) {
+        credentialsValid =
+          hasPassword || (hasPrivateKey && privateKeyValidation.isValid())
+      } else if (supportsPassword()) {
+        credentialsValid = hasPassword
+      } else if (supportsPublicKey()) {
+        credentialsValid = hasPrivateKey && privateKeyValidation.isValid()
+      }
     }
 
     return (
@@ -480,7 +486,18 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
       closeOnBackdropClick={false}
     >
       <div class="relative w-80 rounded-md border border-neutral-300 bg-white p-6 text-slate-800 shadow-md sm:w-[28rem]">
-        <h2 class="mb-4 text-lg font-semibold text-slate-900">WebSSH2 Login</h2>
+        <h2 class="mb-4 text-lg font-semibold text-slate-900">
+          {protocol() === 'telnet' ? 'Telnet Login' : 'WebSSH2 Login'}
+        </h2>
+        <Show when={protocol() === 'telnet'}>
+          <div class="mb-4 flex items-center gap-2 rounded-lg border border-yellow-300 bg-yellow-100 p-3 text-sm text-yellow-800">
+            <span class="font-semibold">Warning:</span>
+            <span>
+              Telnet is unencrypted. All data including passwords is transmitted
+              in plaintext.
+            </span>
+          </div>
+        </Show>
         <Show when={props.errorMessage}>
           <div
             class="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700"
@@ -547,11 +564,11 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                 inputmode="numeric"
                 pattern="[0-9]*"
                 class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData().port || '22'}
+                value={formData().port || String(defaultPort())}
                 onInput={(e) =>
                   updateFormData(
                     'port',
-                    Number.parseInt(e.currentTarget.value, 10) || 22
+                    Number.parseInt(e.currentTarget.value, 10) || defaultPort()
                   )
                 }
               />
@@ -616,14 +633,18 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
               }
               if (method === 'publickey') {
                 return (
-                  <>
+                  <Show when={protocol() !== 'telnet'}>
                     {renderOptionsRow(!enforcePrivateKeyOnly())}
                     {renderPrivateKeySection()}
-                  </>
+                  </Show>
                 )
               }
               if (method === 'keyboard-interactive') {
-                return renderKeyboardInteractiveNotice()
+                return (
+                  <Show when={protocol() !== 'telnet'}>
+                    {renderKeyboardInteractiveNotice()}
+                  </Show>
+                )
               }
               return null
             }}
