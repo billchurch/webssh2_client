@@ -672,8 +672,17 @@ export class SocketService {
 
     // Host key verification events
     socketInstance.on('hostkey:verify', async (data) => {
-      debug('Host key verify request', { host: data.host, port: data.port, algorithm: data.algorithm })
-      const result = hostKeyStore.lookup(data.host, data.port, data.algorithm, data.key)
+      debug('Host key verify request', {
+        host: data.host,
+        port: data.port,
+        algorithm: data.algorithm
+      })
+      const result = hostKeyStore.lookup(
+        data.host,
+        data.port,
+        data.algorithm,
+        data.key
+      )
 
       if (result.status === 'trusted') {
         debug('Host key trusted by client store')
@@ -697,9 +706,13 @@ export class SocketService {
         // Compute the stored key's fingerprint for display
         let storedFingerprint = '(unknown)'
         try {
-          const keyBytes = Uint8Array.from(atob(result.storedKey), c => c.charCodeAt(0))
+          const keyBytes = Uint8Array.from(atob(result.storedKey), (c) =>
+            c.charCodeAt(0)
+          )
           const hashBuffer = await crypto.subtle.digest('SHA-256', keyBytes)
-          const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)))
+          const hashBase64 = btoa(
+            String.fromCharCode(...new Uint8Array(hashBuffer))
+          )
           storedFingerprint = `SHA256:${hashBase64}`
         } catch {
           debug('Failed to compute stored key fingerprint')

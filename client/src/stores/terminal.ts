@@ -127,8 +127,9 @@ export const [hostKeyPromptData, setHostKeyPromptData] = createSignal<{
 } | null>(null)
 export const [isHostKeyRejectedOpen, setIsHostKeyRejectedOpen] =
   createSignal(false)
-export const [hostKeyRejectedReason, setHostKeyRejectedReason] =
-  createSignal<string | null>(null)
+export const [hostKeyRejectedReason, setHostKeyRejectedReason] = createSignal<
+  string | null
+>(null)
 
 // Utility functions for state management
 export const toggleBooleanState = <K extends keyof AppState>(

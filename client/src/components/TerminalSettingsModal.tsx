@@ -830,7 +830,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                                 const portStr = parts[parts.length - 1] ?? '22'
                                 const port = Number.parseInt(portStr, 10)
                                 hostKeyStore.remove(host, port, algo)
-                                setStoredKeys(Object.entries(hostKeyStore.getAll()))
+                                setStoredKeys(
+                                  Object.entries(hostKeyStore.getAll())
+                                )
                                 setHostKeyFingerprints((prev) => {
                                   const updated = { ...prev }
                                   if (updated[hostPort]) {

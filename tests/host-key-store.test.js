@@ -44,15 +44,8 @@ if (typeof globalThis.btoa !== 'function') {
 // Import SUT (after shims are in place)
 // ---------------------------------------------------------------------------
 
-const {
-  lookup,
-  store,
-  remove,
-  getAll,
-  exportKeys,
-  importKeys,
-  addManualKey
-} = await import('../client/src/services/host-key-store.ts')
+const { lookup, store, remove, getAll, exportKeys, importKeys, addManualKey } =
+  await import('../client/src/services/host-key-store.ts')
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -151,8 +144,14 @@ describe('host-key-store', () => {
       store('host.example', 22, 'ssh-ed25519', VALID_KEY)
       store('host.example', 22, 'ssh-rsa', VALID_KEY_2)
 
-      assert.equal(lookup('host.example', 22, 'ssh-ed25519', VALID_KEY).status, 'trusted')
-      assert.equal(lookup('host.example', 22, 'ssh-rsa', VALID_KEY_2).status, 'trusted')
+      assert.equal(
+        lookup('host.example', 22, 'ssh-ed25519', VALID_KEY).status,
+        'trusted'
+      )
+      assert.equal(
+        lookup('host.example', 22, 'ssh-rsa', VALID_KEY_2).status,
+        'trusted'
+      )
     })
 
     it('includes addedAt as ISO timestamp', () => {
@@ -184,7 +183,10 @@ describe('host-key-store', () => {
       remove('host.example', 22, 'ssh-ed25519')
 
       assert.equal(lookup('host.example', 22, 'ssh-ed25519').status, 'unknown')
-      assert.equal(lookup('host.example', 22, 'ssh-rsa', VALID_KEY_2).status, 'trusted')
+      assert.equal(
+        lookup('host.example', 22, 'ssh-rsa', VALID_KEY_2).status,
+        'trusted'
+      )
     })
 
     it('is a no-op when host:port does not exist', () => {
@@ -238,8 +240,14 @@ describe('host-key-store', () => {
       const result = importKeys(exported)
       assert.equal(result.success, true)
 
-      assert.equal(lookup('host.example', 22, 'ssh-ed25519', VALID_KEY).status, 'trusted')
-      assert.equal(lookup('host.example', 22, 'ssh-rsa', VALID_KEY_2).status, 'trusted')
+      assert.equal(
+        lookup('host.example', 22, 'ssh-ed25519', VALID_KEY).status,
+        'trusted'
+      )
+      assert.equal(
+        lookup('host.example', 22, 'ssh-rsa', VALID_KEY_2).status,
+        'trusted'
+      )
     })
 
     it('import merges with existing keys', () => {
@@ -258,8 +266,14 @@ describe('host-key-store', () => {
       assert.equal(result.success, true)
 
       // Both keys should exist
-      assert.equal(lookup('host-a.example', 22, 'ssh-ed25519', VALID_KEY).status, 'trusted')
-      assert.equal(lookup('host-b.example', 22, 'ssh-rsa', VALID_KEY_2).status, 'trusted')
+      assert.equal(
+        lookup('host-a.example', 22, 'ssh-ed25519', VALID_KEY).status,
+        'trusted'
+      )
+      assert.equal(
+        lookup('host-b.example', 22, 'ssh-rsa', VALID_KEY_2).status,
+        'trusted'
+      )
     })
 
     it('rejects invalid JSON', () => {
@@ -275,27 +289,34 @@ describe('host-key-store', () => {
     })
 
     it('rejects invalid algorithm names', () => {
-      const result = importKeys(JSON.stringify({
-        version: 1,
-        keys: {
-          'host.example:22': {
-            'invalid-algo': { key: VALID_KEY, addedAt: '2025-01-01T00:00:00.000Z' }
+      const result = importKeys(
+        JSON.stringify({
+          version: 1,
+          keys: {
+            'host.example:22': {
+              'invalid-algo': {
+                key: VALID_KEY,
+                addedAt: '2025-01-01T00:00:00.000Z'
+              }
+            }
           }
-        }
-      }))
+        })
+      )
       assert.equal(result.success, false)
       assert.ok(result.error.includes('Invalid algorithm'))
     })
 
     it('rejects malformed key entries', () => {
-      const result = importKeys(JSON.stringify({
-        version: 1,
-        keys: {
-          'host.example:22': {
-            'ssh-ed25519': { key: 123, addedAt: '2025-01-01T00:00:00.000Z' }
+      const result = importKeys(
+        JSON.stringify({
+          version: 1,
+          keys: {
+            'host.example:22': {
+              'ssh-ed25519': { key: 123, addedAt: '2025-01-01T00:00:00.000Z' }
+            }
           }
-        }
-      }))
+        })
+      )
       assert.equal(result.success, false)
       assert.ok(result.error.includes('Invalid key entry'))
     })
@@ -307,15 +328,25 @@ describe('host-key-store', () => {
 
   describe('addManualKey', () => {
     it('parses valid OpenSSH format "algorithm base64key comment"', () => {
-      const result = addManualKey('host.example', 22, `ssh-ed25519 ${VALID_KEY} user@machine`)
+      const result = addManualKey(
+        'host.example',
+        22,
+        `ssh-ed25519 ${VALID_KEY} user@machine`
+      )
       assert.equal(result.success, true)
-      assert.equal(lookup('host.example', 22, 'ssh-ed25519', VALID_KEY).status, 'trusted')
+      assert.equal(
+        lookup('host.example', 22, 'ssh-ed25519', VALID_KEY).status,
+        'trusted'
+      )
     })
 
     it('parses valid key without comment', () => {
       const result = addManualKey('host.example', 22, `ssh-rsa ${VALID_KEY}`)
       assert.equal(result.success, true)
-      assert.equal(lookup('host.example', 22, 'ssh-rsa', VALID_KEY).status, 'trusted')
+      assert.equal(
+        lookup('host.example', 22, 'ssh-rsa', VALID_KEY).status,
+        'trusted'
+      )
     })
 
     it('rejects too few parts', () => {
@@ -331,7 +362,11 @@ describe('host-key-store', () => {
     })
 
     it('rejects invalid base64', () => {
-      const result = addManualKey('host.example', 22, 'ssh-ed25519 !!!not-base64!!!')
+      const result = addManualKey(
+        'host.example',
+        22,
+        'ssh-ed25519 !!!not-base64!!!'
+      )
       assert.equal(result.success, false)
       assert.ok(result.error.includes('Invalid base64'))
     })
@@ -350,19 +385,32 @@ describe('host-key-store', () => {
     })
 
     it('handles wrong version number', () => {
-      localStorage.setItem('webssh2.hostkeys', JSON.stringify({
-        version: 999,
-        keys: { 'host.example:22': { 'ssh-ed25519': { key: VALID_KEY, addedAt: '2025-01-01T00:00:00.000Z' } } }
-      }))
+      localStorage.setItem(
+        'webssh2.hostkeys',
+        JSON.stringify({
+          version: 999,
+          keys: {
+            'host.example:22': {
+              'ssh-ed25519': {
+                key: VALID_KEY,
+                addedAt: '2025-01-01T00:00:00.000Z'
+              }
+            }
+          }
+        })
+      )
       // Wrong version should reset to empty
       const all = getAll()
       assert.deepEqual(all, {})
     })
 
     it('handles missing keys field', () => {
-      localStorage.setItem('webssh2.hostkeys', JSON.stringify({
-        version: 1
-      }))
+      localStorage.setItem(
+        'webssh2.hostkeys',
+        JSON.stringify({
+          version: 1
+        })
+      )
       // Missing keys field should reset to empty
       const all = getAll()
       assert.deepEqual(all, {})

@@ -24,7 +24,10 @@ export const HostKeyStatusIndicator: Component = () => {
   }
 
   const handleClickOutside = (e: MouseEvent) => {
-    if (containerRef !== undefined && !containerRef.contains(e.target as Node)) {
+    if (
+      containerRef !== undefined &&
+      !containerRef.contains(e.target as Node)
+    ) {
       setIsPopoverOpen(false)
     }
   }
@@ -51,7 +54,10 @@ export const HostKeyStatusIndicator: Component = () => {
 
   return (
     <Show when={hostKeyVerifyConfig()?.enabled && hostKeyStatus() !== 'none'}>
-      <div ref={containerRef} class="relative border-l border-neutral-200 px-[10px]">
+      <div
+        ref={containerRef}
+        class="relative border-l border-neutral-200 px-[10px]"
+      >
         <button
           type="button"
           class="flex items-center justify-center"

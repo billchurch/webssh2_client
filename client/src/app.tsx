@@ -701,7 +701,9 @@ const App: Component = () => {
 
       <HostKeyRejectedModal
         isOpen={isHostKeyRejectedOpen()}
-        reason={hostKeyRejectedReason() || 'Connection refused by host key policy'}
+        reason={
+          hostKeyRejectedReason() || 'Connection refused by host key policy'
+        }
         onDismiss={() => {
           setIsHostKeyRejectedOpen(false)
           setIsLoginDialogOpen(true)

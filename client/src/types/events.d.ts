@@ -173,17 +173,32 @@ export interface ServerToClientEvents {
   prompt: (payload: PromptPayload) => void
   // Host key verification events
   'hostkey:verify': (data: {
-    host: string; port: number; algorithm: string; key: string; fingerprint: string
+    host: string
+    port: number
+    algorithm: string
+    key: string
+    fingerprint: string
   }) => void
   'hostkey:verified': (data: {
-    host: string; port: number; algorithm: string; fingerprint: string; source: 'server' | 'client'
+    host: string
+    port: number
+    algorithm: string
+    fingerprint: string
+    source: 'server' | 'client'
   }) => void
   'hostkey:mismatch': (data: {
-    host: string; port: number; algorithm: string; fingerprint: string;
-    storedFingerprint: string; source: 'server' | 'client'
+    host: string
+    port: number
+    algorithm: string
+    fingerprint: string
+    storedFingerprint: string
+    source: 'server' | 'client'
   }) => void
   'hostkey:alert': (data: {
-    host: string; port: number; algorithm: string; fingerprint: string
+    host: string
+    port: number
+    algorithm: string
+    fingerprint: string
   }) => void
   'hostkey:rejected': (data: { reason: string }) => void
 }
@@ -211,5 +226,7 @@ export interface ClientToServerEvents {
   // Prompt events
   'prompt-response': (response: PromptResponsePayload) => void
   // Host key verification events
-  'hostkey:verify-response': (data: { action: 'trusted' | 'accept' | 'reject' }) => void
+  'hostkey:verify-response': (data: {
+    action: 'trusted' | 'accept' | 'reject'
+  }) => void
 }

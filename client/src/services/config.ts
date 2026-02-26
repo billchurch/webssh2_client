@@ -77,7 +77,10 @@ export const loadServerAuthMethods =
 
     if (payload.hostKeyVerification !== undefined) {
       setHostKeyVerifyConfig(payload.hostKeyVerification)
-      debug('Host key verification config received from server', payload.hostKeyVerification)
+      debug(
+        'Host key verification config received from server',
+        payload.hostKeyVerification
+      )
     }
 
     debug('Loaded allowed auth methods from server', methods)

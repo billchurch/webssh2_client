@@ -12,8 +12,7 @@ await register('./tests/ts-loader.mjs', pathToFileURL('./'))
 
 const { loadServerAuthMethods } =
   await import('../client/src/services/config.ts')
-const { config, setConfig } =
-  await import('../client/src/stores/config.ts')
+const { config, setConfig } = await import('../client/src/stores/config.ts')
 const { hostKeyVerifyConfig, setHostKeyVerifyConfig } =
   await import('../client/src/stores/terminal.ts')
 
