@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.4.0](https://github.com/billchurch/webssh2_client/compare/v3.3.0...v3.4.0) (2026-02-26)
+
+
+### Features
+
+* host key verification UI components ([#92](https://github.com/billchurch/webssh2_client/issues/92)) ([1632eb7](https://github.com/billchurch/webssh2_client/commit/1632eb71f6b9fee02a44566cbe9cc9be51d423c0))
+
 ## [3.3.0](https://github.com/billchurch/webssh2_client/compare/v3.2.2...v3.3.0) (2026-02-09)
 
 
