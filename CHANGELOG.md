@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.5.0](https://github.com/billchurch/webssh2_client/compare/v3.4.1...v3.5.0) (2026-03-05)
+
+
+### Features
+
+* add client-side telnet protocol support ([#96](https://github.com/billchurch/webssh2_client/issues/96)) ([f54e755](https://github.com/billchurch/webssh2_client/commit/f54e75510bb16d6d534f01256ee33bd394589b7d))
+
+
+### Bug Fixes
+
+* **ci:** update trivy-action to v0.34.2 ([aff2f08](https://github.com/billchurch/webssh2_client/commit/aff2f080ea63cc774936c80334602a00ccc82bd3))
+
 ## [3.4.1](https://github.com/billchurch/webssh2_client/compare/v3.4.0...v3.4.1) (2026-02-26)
 
 
