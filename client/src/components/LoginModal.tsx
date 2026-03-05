@@ -8,6 +8,7 @@ import { createFieldValidator, ValidationRules } from '../utils/validation'
 import type { ClientAuthenticatePayload } from '../types/events.d'
 import type { SSHAuthMethod, ConnectionMode } from '../types/config.d'
 import { DEFAULT_AUTH_METHODS } from '../constants.js'
+import { protocol } from '../stores/terminal.js'
 
 const debug = createDebug('webssh2-client:login-modal')
 
@@ -35,11 +36,13 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   createEffect(() => {
     debug('LoginModal isOpen changed:', props.isOpen)
   })
+  const defaultPort = () => (protocol() === 'telnet' ? 23 : 22)
+
   const [formData, setFormData] = createSignal<
     Partial<ClientAuthenticatePayload>
   >({
     host: '',
-    port: 22,
+    port: defaultPort(),
     username: '',
     password: '',
     privateKey: '',
@@ -83,6 +86,18 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     if (props.initialValues) {
       setFormData((prev) => ({ ...prev, ...props.initialValues }))
     }
+  })
+
+  // Sync default port when protocol changes (must run after initialValues effect)
+  createEffect(() => {
+    const port = defaultPort()
+    setFormData((prev) => {
+      // Only update if the port is still at the other protocol's default
+      if (prev.port === 22 || prev.port === 23) {
+        return { ...prev, port }
+      }
+      return prev
+    })
   })
 
   // Auto-focus on the first empty field when modal opens
@@ -221,14 +236,17 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     const hasPrivateKey =
       supportsPublicKey() && privateKeyValue.trim().length > 0
 
+    // For telnet, credentials are optional (password is common but not always needed)
     let credentialsValid = true
-    if (supportsPassword() && supportsPublicKey()) {
-      credentialsValid =
-        hasPassword || (hasPrivateKey && privateKeyValidation.isValid())
-    } else if (supportsPassword()) {
-      credentialsValid = hasPassword
-    } else if (supportsPublicKey()) {
-      credentialsValid = hasPrivateKey && privateKeyValidation.isValid()
+    if (protocol() !== 'telnet') {
+      if (supportsPassword() && supportsPublicKey()) {
+        credentialsValid =
+          hasPassword || (hasPrivateKey && privateKeyValidation.isValid())
+      } else if (supportsPassword()) {
+        credentialsValid = hasPassword
+      } else if (supportsPublicKey()) {
+        credentialsValid = hasPrivateKey && privateKeyValidation.isValid()
+      }
     }
 
     return (
@@ -251,37 +269,37 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     }
   }
 
-  const buildSubmitPayload = (): Partial<ClientAuthenticatePayload> => {
-    const data = formData()
-    const payload: Partial<ClientAuthenticatePayload> = {}
-
-    // Use locked host/port if in host-locked mode, otherwise use form data
+  const buildHostPortPayload = (
+    data: Partial<ClientAuthenticatePayload>
+  ): Partial<Pick<ClientAuthenticatePayload, 'host' | 'port'>> => {
     if (isHostLocked()) {
-      if (props.lockedHost !== undefined) {
-        payload.host = props.lockedHost
-      }
-      if (props.lockedPort !== undefined) {
-        payload.port = props.lockedPort
-      }
-    } else {
-      if (typeof data.host === 'string' && data.host.trim().length > 0) {
-        payload.host = data.host.trim()
-      }
-      if (typeof data.port === 'number') {
-        payload.port = data.port
+      return {
+        ...(props.lockedHost !== undefined && { host: props.lockedHost }),
+        ...(props.lockedPort !== undefined && { port: props.lockedPort })
       }
     }
+    return {
+      ...(typeof data.host === 'string' &&
+        data.host.trim().length > 0 && { host: data.host.trim() }),
+      ...(typeof data.port === 'number' && { port: data.port })
+    }
+  }
 
-    if (typeof data.username === 'string' && data.username.trim().length > 0) {
-      payload.username = data.username.trim()
-    }
+  const buildCredentialPayload = (
+    data: Partial<ClientAuthenticatePayload>
+  ): Partial<
+    Pick<ClientAuthenticatePayload, 'password' | 'privateKey' | 'passphrase'>
+  > => {
+    const result: Partial<
+      Pick<ClientAuthenticatePayload, 'password' | 'privateKey' | 'passphrase'>
+    > = {}
 
     if (
       supportsPassword() &&
       typeof data.password === 'string' &&
       data.password.trim().length > 0
     ) {
-      payload.password = data.password
+      result.password = data.password
     }
 
     if (
@@ -290,13 +308,27 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
       data.privateKey.trim().length > 0 &&
       privateKeyValidation.isValid()
     ) {
-      payload.privateKey = data.privateKey
+      result.privateKey = data.privateKey
       if (
         typeof data.passphrase === 'string' &&
         data.passphrase.trim().length > 0
       ) {
-        payload.passphrase = data.passphrase
+        result.passphrase = data.passphrase
       }
+    }
+
+    return result
+  }
+
+  const buildSubmitPayload = (): Partial<ClientAuthenticatePayload> => {
+    const data = formData()
+    const payload: Partial<ClientAuthenticatePayload> = {
+      ...buildHostPortPayload(data),
+      ...buildCredentialPayload(data)
+    }
+
+    if (typeof data.username === 'string' && data.username.trim().length > 0) {
+      payload.username = data.username.trim()
     }
 
     return payload
@@ -352,12 +384,10 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     <div class={shouldShowPrivateKey() ? '' : 'hidden'}>
       <div class="mt-2 rounded border border-neutral-300 bg-neutral-50 p-3 text-neutral-800">
         <div class="relative">
-          <label for="privateKeyText" class="sr-only">
-            Private Key
-          </label>
           <textarea
             id="privateKeyText"
             name="privateKey"
+            aria-label="Private Key"
             autocomplete="off"
             autocapitalize="off"
             spellcheck={false}
@@ -434,13 +464,11 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
         </div>
 
         <div>
-          <label for="passphraseInput" class="sr-only">
-            Key Passphrase
-          </label>
           <input
             type="password"
             id="passphraseInput"
             name="passphrase"
+            aria-label="Key Passphrase"
             autocomplete="off"
             autocapitalize="off"
             spellcheck={false}
@@ -480,7 +508,18 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
       closeOnBackdropClick={false}
     >
       <div class="relative w-80 rounded-md border border-neutral-300 bg-white p-6 text-slate-800 shadow-md sm:w-[28rem]">
-        <h2 class="mb-4 text-lg font-semibold text-slate-900">WebSSH2 Login</h2>
+        <h2 class="mb-4 text-lg font-semibold text-slate-900">
+          {protocol() === 'telnet' ? 'Telnet Login' : 'WebSSH2 Login'}
+        </h2>
+        <Show when={protocol() === 'telnet'}>
+          <div class="mb-4 flex items-center gap-2 rounded-lg border border-yellow-300 bg-yellow-100 p-3 text-sm text-yellow-800">
+            <span class="font-semibold">Warning:</span>
+            <span>
+              Telnet is unencrypted. All data including passwords is transmitted
+              in plaintext.
+            </span>
+          </div>
+        </Show>
         <Show when={props.errorMessage}>
           <div
             class="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700"
@@ -507,14 +546,12 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
           {/* Host */}
           <Show when={!isHostLocked()}>
             <div>
-              <label for="hostInput" class="sr-only">
-                Host
-              </label>
               <input
                 ref={hostInputRef}
                 type="text"
                 id="hostInput"
                 name="host"
+                aria-label="Host"
                 placeholder="Host"
                 required
                 autocomplete="off"
@@ -531,14 +568,12 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
           {/* Port */}
           <Show when={!isHostLocked()}>
             <div>
-              <label for="portInput" class="sr-only">
-                Port
-              </label>
               <input
                 ref={portInputRef}
                 type="text"
                 id="portInput"
                 name="port"
+                aria-label="Port"
                 placeholder="Port"
                 autocomplete="off"
                 autocapitalize="off"
@@ -547,11 +582,11 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                 inputmode="numeric"
                 pattern="[0-9]*"
                 class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData().port || '22'}
+                value={formData().port || String(defaultPort())}
                 onInput={(e) =>
                   updateFormData(
                     'port',
-                    Number.parseInt(e.currentTarget.value, 10) || 22
+                    Number.parseInt(e.currentTarget.value, 10) || defaultPort()
                   )
                 }
               />
@@ -560,14 +595,12 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
           {/* Username */}
           <div>
-            <label for="usernameInput" class="sr-only">
-              Username
-            </label>
             <input
               ref={usernameInputRef}
               type="text"
               id="usernameInput"
               name="username"
+              aria-label="Username"
               placeholder="Username"
               required
               autocomplete="username"
@@ -585,14 +618,12 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
               if (method === 'password') {
                 return (
                   <div class="relative w-full">
-                    <label for="passwordInput" class="sr-only">
-                      Password
-                    </label>
                     <input
                       ref={passwordInputRef}
                       type="password"
                       id="passwordInput"
                       name="password"
+                      aria-label="Password"
                       placeholder="Password"
                       autocomplete="current-password"
                       autocapitalize="off"
@@ -616,14 +647,18 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
               }
               if (method === 'publickey') {
                 return (
-                  <>
+                  <Show when={protocol() !== 'telnet'}>
                     {renderOptionsRow(!enforcePrivateKeyOnly())}
                     {renderPrivateKeySection()}
-                  </>
+                  </Show>
                 )
               }
               if (method === 'keyboard-interactive') {
-                return renderKeyboardInteractiveNotice()
+                return (
+                  <Show when={protocol() !== 'telnet'}>
+                    {renderKeyboardInteractiveNotice()}
+                  </Show>
+                )
               }
               return null
             }}

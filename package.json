@@ -1,6 +1,6 @@
 {
   "name": "webssh2_client",
-  "version": "3.4.1",
+  "version": "3.5.0-telnet.1",
   "ignore": [
     ".gitignore"
   ],
@@ -99,6 +99,9 @@
     "ignore": [
       "client/public/**/*"
     ]
+  },
+  "overrides": {
+    "serialize-javascript": ">=7.0.3"
   },
   "dependencies": {
     "@xterm/addon-search": "^0.16.0"

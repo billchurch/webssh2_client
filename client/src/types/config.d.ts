@@ -2,6 +2,8 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 export type SSHAuthMethod = 'password' | 'keyboard-interactive' | 'publickey'
 
+export type ProtocolType = 'ssh' | 'telnet'
+
 export interface KeyboardCaptureSettings {
   captureEscape: boolean
   captureCtrlB: boolean
@@ -76,6 +78,8 @@ export interface WebSSH2Config {
   lockedHost?: string
   /** Port that cannot be changed (when connectionMode is 'host-locked') */
   lockedPort?: number
+  /** Connection protocol: 'ssh' (default) or 'telnet' */
+  protocol?: ProtocolType
 }
 
 declare global {

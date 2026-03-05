@@ -1,6 +1,6 @@
 import type { Component } from 'solid-js'
 import { createSignal, Show, onMount, onCleanup } from 'solid-js'
-import { state } from '../stores/terminal.js'
+import { state, protocol } from '../stores/terminal.js'
 import { sftpStore } from '../stores/sftp-store.js'
 import { hasLogData } from '../services/logging.js'
 import { getSearchShortcut } from '../utils/os-detection'
@@ -191,8 +191,8 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
             </button>
           </Show>
 
-          {/* File Browser Button - only show when SFTP is available */}
-          <Show when={sftpStore.isAvailable}>
+          {/* File Browser Button - only show when SFTP is available (not for telnet) */}
+          <Show when={sftpStore.isAvailable && protocol() !== 'telnet'}>
             <button
               type="button"
               class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
