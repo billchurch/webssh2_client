@@ -100,6 +100,9 @@
       "client/public/**/*"
     ]
   },
+  "overrides": {
+    "serialize-javascript": ">=7.0.3"
+  },
   "dependencies": {
     "@xterm/addon-search": "^0.16.0"
   },
