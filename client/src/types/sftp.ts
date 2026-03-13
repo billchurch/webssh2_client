@@ -233,8 +233,8 @@ export interface SftpDownloadChunkResponse {
   readonly transferId: TransferId
   /** 0-based chunk index */
   readonly chunkIndex: number
-  /** Base64 encoded binary data */
-  readonly data: string
+  /** Binary chunk data */
+  readonly data: ArrayBuffer
   /** True for final chunk */
   readonly isLast: boolean
 }

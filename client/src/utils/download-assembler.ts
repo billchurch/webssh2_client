@@ -2,7 +2,7 @@
  * Download Assembler Utility
  *
  * Assembles received chunks into a Blob and triggers browser download.
- * Handles base64 decoding and chunk ordering.
+ * Handles binary chunk ordering and assembly.
  *
  * @module utils/download-assembler
  */
@@ -17,8 +17,8 @@ const debug = createDebug('webssh2-client:download-assembler')
 export interface ReceivedChunk {
   /** 0-based chunk index */
   readonly index: number
-  /** Base64 encoded data */
-  readonly data: string
+  /** Binary data */
+  readonly data: ArrayBuffer | Uint8Array
   /** Whether this is the final chunk */
   readonly isLast: boolean
 }
@@ -43,17 +43,6 @@ export interface DownloadState {
   isCancelled: boolean
 }
 
-/**
- * Convert base64 string to Uint8Array
- */
-function base64ToUint8Array(base64: string): Uint8Array {
-  const binaryString = atob(base64)
-  const bytes = new Uint8Array(binaryString.length)
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.codePointAt(i) ?? 0
-  }
-  return bytes
-}
 
 /**
  * Download Assembler class
@@ -166,7 +155,9 @@ export class DownloadAssembler {
       return false
     }
 
-    const data = base64ToUint8Array(chunk.data)
+    const data = chunk.data instanceof Uint8Array
+      ? chunk.data
+      : new Uint8Array(chunk.data)
     this.chunks.set(chunk.index, data)
     this.state.bytesReceived += data.byteLength
 
