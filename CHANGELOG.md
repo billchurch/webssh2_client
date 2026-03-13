@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.6.0](https://github.com/billchurch/webssh2_client/compare/v3.5.0...v3.6.0) (2026-03-13)
+
+
+### Features
+
+* receive binary SFTP download chunks instead of base64 ([5d0a240](https://github.com/billchurch/webssh2_client/commit/5d0a2408a456ff7f8c3a4e8191d1da72864f5495))
+
 ## [3.5.0](https://github.com/billchurch/webssh2_client/compare/v3.4.1...v3.5.0) (2026-03-05)
 
 ### Features
