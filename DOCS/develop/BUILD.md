@@ -75,7 +75,7 @@ Releases are automated via GitHub Actions with `googleapis/release-please-action
 
 - On pushes to `main`, Release Please will open or update a release PR.
 - When that PR is merged, a new release is created.
-- The release workflow builds the client and server entries and publishes to npm using `NPM_TOKEN`.
+- The release workflow builds the client and server entries and publishes to npm using [OIDC Trusted Publishing](https://docs.npmjs.com/trusted-publishers) with provenance attestation (no long-lived tokens required).
 
 Manual alternative (optional):
 
