@@ -327,8 +327,10 @@ and publishes to npm as `webssh2_client`.
 
 ### Remediation Actions Taken
 
-1. **NPM token rotation**: All npm tokens with CI/publish access
-   were rotated (2026-03-24)
+1. **No long-lived npm tokens to rotate**: Primary publishing
+   uses OIDC trusted publishing with provenance
+   (`npm publish --provenance`), so there are no persistent npm
+   tokens for the worm to exfiltrate from CI
 2. **Trivy action review**: Confirmed pinned SHAs correspond to
    legitimate pre-compromise commits
 3. **npm package audit**: Verified all published versions and
