@@ -381,10 +381,68 @@ Socket:
 - [Aikido — CanisterWorm Gets Teeth: TeamPCP's Kubernetes Wiper
   Targets Iran][aikido-canisterworm-iran]
 
+## Axios npm supply chain attack (March 2026)
+
+As of 2026-03-31, we evaluated the axios npm supply chain attack in which
+a compromised maintainer account was used to publish malicious versions
+containing a cross-platform RAT delivered via a hidden `plain-crypto-js`
+dependency.
+
+### Exposure assessment
+
+| Aspect | Status |
+| --- | --- |
+| Compromised versions | `axios@1.14.1`, `axios@0.30.4` |
+| Our version | `axios@1.13.5` (transitive dev dep via chromedriver) |
+| `plain-crypto-js` in deps | **Not found** |
+| Other compromised packages | **Not found** (`@qqbrowser/openclaw-qbot`, `@shadanai/openclaw`) |
+| Filesystem IOCs | **None found** |
+| Status | **Not compromised** |
+
+### Why we are not affected
+
+- axios is a **transitive dev dependency only** — pulled in by chromedriver
+  for testing, never shipped in production builds
+- Our lockfile pins `axios@1.13.5`, which predates the compromised versions
+  (`1.14.1` and `0.30.4`) published on 2026-03-31
+- The malicious dependency `plain-crypto-js@4.2.1` is not present anywhere
+  in `package-lock.json`
+- No filesystem IOCs were found:
+  - `/Library/Caches/com.apple.act.mond` (macOS) — not present
+  - `/tmp/ld.py` (Linux) — not present
+- The 2-week quarantine policy for new dependency versions would have
+  prevented adoption of the compromised versions even without lockfile
+  pinning
+
+### Indicators of compromise (IOCs)
+
+For reference, the following IOCs were published by Snyk:
+
+**C2 infrastructure:**
+
+- Domain: `sfrclak[.]com:8000` (IP: `142.11.206.73`)
+
+**Filesystem artifacts:**
+
+- macOS: `/Library/Caches/com.apple.act.mond`
+- Windows: `%PROGRAMDATA%\wt.exe`
+- Linux: `/tmp/ld.py`
+
+**Compromised npm packages:**
+
+- `axios@1.14.1`, `axios@0.30.4`
+- `plain-crypto-js@4.2.1` (hidden malicious dependency)
+- `@qqbrowser/openclaw-qbot@0.0.130`
+- `@shadanai/openclaw` (versions `2026.3.31-1`, `2026.3.31-2`)
+
+### References
+
+- [Snyk — Axios npm package compromised in supply chain attack][snyk-axios]
+
 ---
 
-**Last Updated**: March 24, 2026
-**Next Review**: April 24, 2026
+**Last Updated**: March 31, 2026
+**Next Review**: April 30, 2026
 
 [advisories]: https://github.com/billchurch/WebSSH2/security/advisories
 [npm-attack]: https://www.bleepingcomputer.com/news/security/hackers-hijack-npm-packages-with-2-billion-weekly-downloads-in-supply-chain-attack/
@@ -396,3 +454,4 @@ Socket:
 [ars-canisterworm]: https://arstechnica.com/security/2026/03/self-propagating-malware-poisons-open-source-software-and-wipes-iran-based-machines/
 [aikido-canisterworm]: https://www.aikido.dev/blog/teampcp-deploys-worm-npm-trivy-compromise
 [aikido-canisterworm-iran]: https://www.aikido.dev/blog/teampcp-stage-payload-canisterworm-iran
+[snyk-axios]: https://snyk.io/blog/axios-npm-package-compromised-supply-chain-attack-delivers-cross-platform/
