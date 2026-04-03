@@ -7,10 +7,11 @@ import createDebug from 'debug'
 // Import the custom solid-xterm wrapper
 import { XTerm } from '../lib/xterm-solid/components/XTerm'
 import type { TerminalRef, XTermProps } from '../lib/xterm-solid/types'
-import type { Terminal, ITerminalOptions } from '@xterm/xterm'
+import type { Terminal, ITerminalOptions, ITheme } from '@xterm/xterm'
 
 // Import existing functionality
 import { validateNumber, defaultSettings } from '../utils/index.js'
+import { resolveTheme } from '../utils/themes.js'
 import {
   emitData,
   setTerminalDimensions,
@@ -30,6 +31,13 @@ import { ClipboardCompatibility } from '../utils/clipboard-compatibility'
 import { playBellSound } from '../utils/bell-sound.js'
 
 const debug = createDebug('webssh2-client:terminal-component')
+
+function syncContainerBackground(bg?: string): void {
+  const el = document.getElementById('terminal-app')
+  if (el) {
+    el.style.backgroundColor = bg || ''
+  }
+}
 
 // Reactive terminal actions interface
 export interface TerminalActions {
@@ -141,10 +149,20 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
         storedSettings.lineHeight ??
         terminalConfig.lineHeight ??
         defaultSettings.lineHeight,
+      theme: resolveTheme(
+        String(
+          storedSettings.themeName ??
+            terminalConfig.themeName ??
+            defaultSettings.themeName
+        ),
+        (storedSettings.customTheme ??
+          terminalConfig.customTheme ??
+          null) as ITheme | null
+      ),
       allowProposedApi: true // Required for SearchAddon decorations
     }
 
-    debug('getTerminalOptions', mergedOptions)
+    syncContainerBackground(mergedOptions.theme?.background)
     return mergedOptions
   }
 
@@ -285,7 +303,7 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
         if (!currentRef?.terminal) return
 
         // Apply validated settings
-        const validatedSettings = {
+        const validatedSettings: Partial<ITerminalOptions> = {
           cursorBlink: options.cursorBlink ?? defaultSettings.cursorBlink,
           scrollback: validateNumber(
             options.scrollback ?? defaultSettings.scrollback,
@@ -308,6 +326,11 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
           fontFamily: String(options.fontFamily ?? defaultSettings.fontFamily),
           letterSpacing: options.letterSpacing ?? defaultSettings.letterSpacing,
           lineHeight: options.lineHeight ?? defaultSettings.lineHeight
+        }
+
+        if (options.theme) {
+          validatedSettings.theme = options.theme
+          syncContainerBackground(options.theme.background)
         }
 
         Object.assign(currentRef.terminal.options, validatedSettings)
@@ -558,6 +581,11 @@ export class SolidTerminalManager {
       fontFamily: String(options.fontFamily ?? defaultSettings.fontFamily),
       letterSpacing: options.letterSpacing ?? defaultSettings.letterSpacing,
       lineHeight: options.lineHeight ?? defaultSettings.lineHeight
+    }
+
+    if (options.theme) {
+      terminalSettings.theme = options.theme
+      syncContainerBackground(options.theme.background)
     }
 
     Object.assign(this.terminalRef!.terminal!.options, terminalSettings)

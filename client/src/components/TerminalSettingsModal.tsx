@@ -10,10 +10,15 @@ import {
   Upload,
   Plus
 } from 'lucide-solid'
-import type { ITerminalOptions } from '@xterm/xterm'
+import type { ITerminalOptions, ITheme } from '@xterm/xterm'
 import { getStoredSettings, saveTerminalSettings } from '../utils/settings.js'
 import { defaultSettings } from '../utils/index.js'
 import { playPromptSound } from '../utils/prompt-sounds.js'
+import {
+  getThemeNames,
+  resolveTheme,
+  validateThemeJson
+} from '../utils/themes.js'
 import type {
   TerminalSettings,
   KeyboardCaptureSettings,
@@ -67,6 +72,15 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
   const [keyboardExpanded, setKeyboardExpanded] = createSignal(false)
   const [soundsExpanded, setSoundsExpanded] = createSignal(false)
   const [hostKeysExpanded, setHostKeysExpanded] = createSignal(false)
+  const [themeExpanded, setThemeExpanded] = createSignal(false)
+  const [selectedTheme, setSelectedTheme] = createSignal('Default')
+  const [customThemeJson, setCustomThemeJson] = createSignal('')
+  const [customThemeError, setCustomThemeError] = createSignal<string | null>(
+    null
+  )
+  const [customThemeParsed, setCustomThemeParsed] = createSignal<ITheme | null>(
+    null
+  )
 
   // Host key management state
   const [storedKeys, setStoredKeys] = createSignal<
@@ -183,6 +197,19 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
             }
           : defaultSettings.promptSounds
       })
+      // Load theme settings
+      const themeName = (stored.themeName as string) || 'Default'
+      setSelectedTheme(themeName)
+      if (themeName === 'custom' && stored.customTheme) {
+        const themeObj = stored.customTheme as ITheme
+        setCustomThemeJson(JSON.stringify(themeObj, null, 2))
+        setCustomThemeParsed(themeObj)
+        setCustomThemeError(null)
+      } else {
+        setCustomThemeJson('')
+        setCustomThemeParsed(null)
+        setCustomThemeError(null)
+      }
     }
   })
 
@@ -196,6 +223,8 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
   const handleSubmit = (e: Event) => {
     e.preventDefault()
     const currentSettings = settings()
+    const themeName = selectedTheme()
+    const customTheme = themeName === 'custom' ? customThemeParsed() : null
 
     // Convert to ITerminalOptions format
     const terminalOptions: Partial<ITerminalOptions> = {
@@ -203,11 +232,16 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
       fontFamily: currentSettings.fontFamily,
       cursorBlink: currentSettings.cursorBlink,
       scrollback: currentSettings.scrollback,
-      tabStopWidth: currentSettings.tabStopWidth
+      tabStopWidth: currentSettings.tabStopWidth,
+      theme: resolveTheme(themeName, customTheme) ?? {}
     }
 
-    // Save settings
-    saveTerminalSettings(currentSettings as unknown as Record<string, unknown>)
+    // Save settings including theme
+    saveTerminalSettings({
+      ...(currentSettings as unknown as Record<string, unknown>),
+      themeName,
+      customTheme
+    })
 
     // Apply to terminal - pass ALL settings including clipboard, keyboard capture, and prompt sounds
     props.onSave({
@@ -366,6 +400,137 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 <option value="none">None</option>
               </select>
             </label>
+
+            {/* Terminal Theme Section Header */}
+            <div class="col-span-full mb-2 mt-4 border-t pt-2">
+              <button
+                type="button"
+                class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => setThemeExpanded(!themeExpanded())}
+                aria-expanded={themeExpanded()}
+              >
+                <span>Terminal Theme</span>
+                {themeExpanded() ? (
+                  <ChevronUp class="size-4" />
+                ) : (
+                  <ChevronDown class="size-4" />
+                )}
+              </button>
+            </div>
+
+            <Show when={themeExpanded()}>
+              {/* Theme Selector */}
+              <label class="contents">
+                <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                  Theme
+                </span>
+                <select
+                  name="themeName"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={selectedTheme()}
+                  onChange={(e) => {
+                    const value = e.currentTarget.value
+                    setSelectedTheme(value)
+                    if (value !== 'custom') {
+                      setCustomThemeError(null)
+                    }
+                  }}
+                >
+                  <For each={getThemeNames()}>
+                    {(name) => <option value={name}>{name}</option>}
+                  </For>
+                  <option value="custom">Custom...</option>
+                </select>
+              </label>
+
+              {/* Color Preview */}
+              {(() => {
+                const previewTheme =
+                  selectedTheme() === 'custom'
+                    ? customThemeParsed()
+                    : resolveTheme(selectedTheme(), null)
+                if (!previewTheme || Object.keys(previewTheme).length === 0)
+                  return null
+                const colors = [
+                  { label: 'bg', value: previewTheme.background },
+                  { label: 'fg', value: previewTheme.foreground },
+                  { label: 'blk', value: previewTheme.black },
+                  { label: 'red', value: previewTheme.red },
+                  { label: 'grn', value: previewTheme.green },
+                  { label: 'yel', value: previewTheme.yellow },
+                  { label: 'blu', value: previewTheme.blue },
+                  { label: 'mag', value: previewTheme.magenta },
+                  { label: 'cyn', value: previewTheme.cyan },
+                  { label: 'wht', value: previewTheme.white }
+                ].filter((c) => c.value)
+                return (
+                  <div class="col-span-full flex flex-wrap gap-1 py-1">
+                    <For each={colors}>
+                      {(c) => (
+                        <div
+                          class="size-6 rounded border border-slate-300"
+                          style={{ 'background-color': c.value }}
+                          title={`${c.label}: ${c.value}`}
+                        />
+                      )}
+                    </For>
+                  </div>
+                )
+              })()}
+
+              {/* Custom Theme JSON */}
+              <Show when={selectedTheme() === 'custom'}>
+                <div class="col-span-full space-y-2">
+                  <p class="text-xs text-slate-600">
+                    Paste a theme JSON (Windows Terminal or xterm.js format).
+                    Find themes at{' '}
+                    <a
+                      href="https://windowsterminalthemes.dev"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-600 underline"
+                    >
+                      windowsterminalthemes.dev
+                    </a>
+                  </p>
+                  <textarea
+                    rows={8}
+                    placeholder='{"background": "#282a36", "foreground": "#f8f8f2", ...}'
+                    class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    value={customThemeJson()}
+                    onInput={(e) => {
+                      const json = e.currentTarget.value
+                      setCustomThemeJson(json)
+                      if (!json.trim()) {
+                        setCustomThemeError(null)
+                        setCustomThemeParsed(null)
+                        return
+                      }
+                      const result = validateThemeJson(json)
+                      if ('error' in result) {
+                        setCustomThemeError(result.error)
+                        setCustomThemeParsed(null)
+                      } else {
+                        setCustomThemeError(null)
+                        setCustomThemeParsed(result.theme)
+                      }
+                    }}
+                  />
+                  <Show when={customThemeError()}>
+                    <p class="text-xs text-red-600">{customThemeError()}</p>
+                  </Show>
+                  <Show
+                    when={
+                      !customThemeError() &&
+                      customThemeParsed() &&
+                      customThemeJson().trim()
+                    }
+                  >
+                    <p class="text-xs text-green-600">Theme is valid</p>
+                  </Show>
+                </div>
+              </Show>
+            </Show>
 
             {/* Clipboard Settings Section Header */}
             <div class="col-span-full mb-2 mt-4 border-t pt-2">

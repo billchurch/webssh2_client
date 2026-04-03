@@ -1,3 +1,5 @@
+import type { ITheme } from '@xterm/xterm'
+
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 export type SSHAuthMethod = 'password' | 'keyboard-interactive' | 'publickey'
@@ -35,6 +37,8 @@ export interface TerminalSettings {
   clipboardEnableKeyboardShortcuts: boolean
   keyboardCapture: KeyboardCaptureSettings
   promptSounds: PromptSoundSettings
+  themeName: string
+  customTheme: ITheme | null
 }
 
 export interface WebSocketConfig {
