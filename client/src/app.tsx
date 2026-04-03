@@ -598,7 +598,10 @@ const App: Component = () => {
   }
 
   return (
-    <div class="flex size-full flex-col overflow-hidden bg-black text-neutral-100">
+    <div
+      id="terminal-app"
+      class="flex size-full flex-col overflow-hidden bg-black text-neutral-100"
+    >
       {/* Modals */}
       {(() => {
         // Build LoginModal props, conditionally including locked values
