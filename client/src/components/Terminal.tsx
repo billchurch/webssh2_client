@@ -7,7 +7,7 @@ import createDebug from 'debug'
 // Import the custom solid-xterm wrapper
 import { XTerm } from '../lib/xterm-solid/components/XTerm'
 import type { TerminalRef, XTermProps } from '../lib/xterm-solid/types'
-import type { Terminal, ITerminalOptions } from '@xterm/xterm'
+import type { Terminal, ITerminalOptions, ITheme } from '@xterm/xterm'
 
 // Import existing functionality
 import { validateNumber, defaultSettings } from '../utils/index.js'
@@ -17,7 +17,12 @@ import {
   terminalDimensions
 } from '../services/socket.js'
 import { getStoredSettings } from '../utils/settings.js'
-import type { WebSSH2Config, TerminalSettings } from '../types/config.d'
+import { resolveTheme, getAvailableThemes } from '../utils/themes.js'
+import type {
+  WebSSH2Config,
+  TerminalSettings,
+  ClientThemingConfig
+} from '../types/config.d'
 
 // Import clipboard functionality
 import {
@@ -38,7 +43,13 @@ export interface TerminalActions {
   resize: () => { cols: number; rows: number } | null
   focus: () => void
   getDimensions: () => { cols: number; rows: number }
-  applySettings: (options: Partial<ITerminalOptions>) => void
+  applySettings: (
+    options: Partial<ITerminalOptions> & {
+      themeName?: string
+      customTheme?: ITheme | null
+    }
+  ) => void
+  getCurrentThemeBackground: () => string | undefined
   getTerminal: () => Terminal | null
   clipboard: {
     copy: () => Promise<boolean>
@@ -83,6 +94,52 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
   const [searchAddon, setSearchAddon] = createSignal<SearchAddon>()
   const [clipboardIntegration, setClipboardIntegration] =
     createSignal<TerminalClipboardIntegration>()
+  // Tracks the most recently applied terminal theme background. Drives the
+  // outer container background via a CSS variable when theming is enabled.
+  const [currentThemeBackground, setCurrentThemeBackground] = createSignal<
+    string | undefined
+  >(undefined)
+  // Outer wrapper element — the surface that shows behind/around the xterm
+  // canvas during resizes. We set its CSS variable imperatively so we never
+  // touch the DOM when theming is disabled.
+  let containerEl: HTMLDivElement | undefined
+
+  // Sync the resolved theme background to the wrapping container element via
+  // a CSS custom property. ALL CALLERS MUST GATE THIS ON
+  // `props.config.theming?.enabled === true`.
+  const syncContainerBackground = (bg: string | undefined): void => {
+    setCurrentThemeBackground(bg)
+    if (containerEl === undefined) {
+      return
+    }
+    if (bg === undefined || bg === '') {
+      containerEl.style.removeProperty('--webssh2-terminal-bg')
+      return
+    }
+    containerEl.style.setProperty('--webssh2-terminal-bg', bg)
+  }
+
+  // Resolve a theme by name + optional custom against the configured catalog.
+  // Returns `null` when theming is disabled (caller should noop in that case).
+  const resolveThemeForApply = (
+    themeName: string | undefined,
+    customTheme: ITheme | null | undefined
+  ): ITheme | null => {
+    const theming = props.config.theming
+    if (theming?.enabled !== true) {
+      return null
+    }
+    const requestedName = themeName ?? 'Default'
+    const requestedCustom = customTheme ?? null
+    // Stale localStorage protection: 'custom' without a custom theme ->
+    // fall back to 'Default' rather than passing null through.
+    const safeName =
+      requestedName === 'custom' && requestedCustom === null
+        ? 'Default'
+        : requestedName
+    const available = getAvailableThemes(theming as ClientThemingConfig)
+    return resolveTheme(safeName, requestedCustom, available)
+  }
 
   // Check clipboard compatibility on mount
   onMount(async () => {
@@ -280,12 +337,17 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
           }
         }
       },
-      applySettings: (options: Partial<ITerminalOptions>) => {
+      applySettings: (
+        options: Partial<ITerminalOptions> & {
+          themeName?: string
+          customTheme?: ITheme | null
+        }
+      ) => {
         const currentRef = terminalRef()
         if (!currentRef?.terminal) return
 
         // Apply validated settings
-        const validatedSettings = {
+        const validatedSettings: Partial<ITerminalOptions> = {
           cursorBlink: options.cursorBlink ?? defaultSettings.cursorBlink,
           scrollback: validateNumber(
             options.scrollback ?? defaultSettings.scrollback,
@@ -310,9 +372,30 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
           lineHeight: options.lineHeight ?? defaultSettings.lineHeight
         }
 
+        // Re-resolve theme when caller supplies themeName/customTheme. This
+        // is the path that runs after the settings modal Save. Gated on
+        // theming.enabled so a runtime-disabled deployment never applies a
+        // theme that may have been set in a prior session (disable-after-paste
+        // race protection).
+        if (props.config.theming?.enabled === true) {
+          const hasThemeRequest =
+            options.themeName !== undefined || options.customTheme !== undefined
+          if (hasThemeRequest) {
+            const resolved = resolveThemeForApply(
+              options.themeName,
+              options.customTheme
+            )
+            if (resolved !== null) {
+              validatedSettings.theme = resolved
+              syncContainerBackground(resolved.background)
+            }
+          }
+        }
+
         Object.assign(currentRef.terminal.options, validatedSettings)
         terminalActions.resize()
       },
+      getCurrentThemeBackground: () => currentThemeBackground(),
       getTerminal: () => terminalRef()?.terminal || null,
       search: {
         findNext: (term: string, options = {}) => {
@@ -386,6 +469,27 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
       }
     }
 
+    // Apply any persisted theme from prior sessions. Gated on theming.enabled
+    // so disabling the feature server-side stops applying stored themes on
+    // next reload, even if localStorage still holds a theme name.
+    if (props.config.theming?.enabled === true) {
+      const stored = storedSettings as Partial<TerminalSettings>
+      const storedThemeName =
+        stored.themeName !== undefined && stored.themeName !== ''
+          ? stored.themeName
+          : (props.config.theming.defaultTheme ?? 'Default')
+      const storedCustomTheme =
+        stored.customTheme === undefined ? null : stored.customTheme
+      const initialTheme = resolveThemeForApply(
+        storedThemeName,
+        storedCustomTheme
+      )
+      if (initialTheme !== null) {
+        Object.assign(terminal.options, { theme: initialTheme })
+        syncContainerBackground(initialTheme.background)
+      }
+    }
+
     // Notify parent with reactive actions
     if (props.onTerminalMounted) {
       props.onTerminalMounted(terminalActions)
@@ -437,6 +541,20 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
   // Terminal settings
   const terminalOptions = getTerminalOptions()
 
+  const themingEnabled = props.config.theming?.enabled === true
+
+  // The wrapper background uses the CSS custom property only when theming is
+  // enabled; otherwise it inherits its parent's background as before. This
+  // makes the resize/overscroll edges match the terminal palette without
+  // touching the DOM when the feature is off.
+  const wrapperStyle: Record<string, string> = {
+    width: '100%',
+    height: '100%'
+  }
+  if (themingEnabled) {
+    wrapperStyle['background'] = 'var(--webssh2-terminal-bg, transparent)'
+  }
+
   const xtermProps: XTermProps = {
     options: terminalOptions,
     addons: [], // We load FitAddon directly in handleTerminalMount
@@ -452,7 +570,16 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
     autoFocus: true
   }
 
-  return <XTerm {...xtermProps} />
+  return (
+    <div
+      ref={(el) => {
+        containerEl = el
+      }}
+      style={wrapperStyle}
+    >
+      <XTerm {...xtermProps} />
+    </div>
+  )
 }
 
 // Helper functions for external access (maintaining compatibility)
