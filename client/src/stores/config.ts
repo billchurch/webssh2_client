@@ -3,7 +3,11 @@ import { createSignal, createMemo, createRoot } from 'solid-js'
 import createDebug from 'debug'
 import { isObject, mergeDeep } from '../utils/index.js'
 import { DEFAULT_AUTH_METHODS } from '../constants.js'
-import type { SSHAuthMethod, WebSSH2Config } from '../types/config.d'
+import type {
+  ClientThemingConfig,
+  SSHAuthMethod,
+  WebSSH2Config
+} from '../types/config.d'
 import type { ClientAuthenticatePayload } from '../types/events.d'
 
 const debug = createDebug('webssh2-client:config-store')
@@ -295,7 +299,7 @@ export function initializeConfig() {
       isObject(candidate) &&
       (candidate['enabled'] === true || candidate['enabled'] === false)
     ) {
-      sanitizedConfig.theming = candidate as WebSSH2Config['theming']
+      sanitizedConfig.theming = candidate as unknown as ClientThemingConfig
     }
   }
 
