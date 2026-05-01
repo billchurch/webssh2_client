@@ -10,16 +10,20 @@ import {
   Upload,
   Plus
 } from 'lucide-solid'
-import type { ITerminalOptions } from '@xterm/xterm'
+import type { ITerminalOptions, ITheme } from '@xterm/xterm'
 import { getStoredSettings, saveTerminalSettings } from '../utils/settings.js'
 import { defaultSettings } from '../utils/index.js'
 import { playPromptSound } from '../utils/prompt-sounds.js'
+import { getAvailableThemes, validateThemeJson } from '../utils/themes.js'
 import type {
   TerminalSettings,
   KeyboardCaptureSettings,
-  PromptSoundSettings
+  PromptSoundSettings,
+  ClientThemingConfig,
+  ClientThemingEnabled
 } from '../types/config.d'
 import { hostKeyVerifyConfig } from '../stores/terminal'
+import { config as clientConfig } from '../stores/config.js'
 import * as hostKeyStore from '../services/host-key-store'
 
 interface TerminalSettingsModalProps {
@@ -42,6 +46,29 @@ interface TerminalSettingsForm {
   clipboardEnableKeyboardShortcuts: boolean
   keyboardCapture: KeyboardCaptureSettings
   promptSounds: PromptSoundSettings
+  themeName: string
+  customThemeJson: string
+  customTheme: ITheme | null
+}
+
+const themingFromConfig = (): ClientThemingConfig | undefined =>
+  clientConfig().theming
+
+const isThemingEnabled = (
+  cfg: ClientThemingConfig | undefined
+): cfg is ClientThemingEnabled => cfg !== undefined && cfg.enabled === true
+
+const themeOptionTitle = (license?: string, source?: string): string => {
+  if (license !== undefined && source !== undefined) {
+    return `${license} — ${source}`
+  }
+  if (license !== undefined) {
+    return license
+  }
+  if (source !== undefined) {
+    return source
+  }
+  return ''
 }
 
 export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
@@ -60,13 +87,18 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
     clipboardEnableKeyboardShortcuts:
       defaultSettings.clipboardEnableKeyboardShortcuts,
     keyboardCapture: defaultSettings.keyboardCapture,
-    promptSounds: defaultSettings.promptSounds
+    promptSounds: defaultSettings.promptSounds,
+    themeName: defaultSettings.themeName ?? 'Default',
+    customThemeJson: '',
+    customTheme: defaultSettings.customTheme ?? null
   })
 
   const [clipboardExpanded, setClipboardExpanded] = createSignal(false)
   const [keyboardExpanded, setKeyboardExpanded] = createSignal(false)
   const [soundsExpanded, setSoundsExpanded] = createSignal(false)
   const [hostKeysExpanded, setHostKeysExpanded] = createSignal(false)
+  const [themeExpanded, setThemeExpanded] = createSignal(false)
+  const [themeJsonError, setThemeJsonError] = createSignal<string | null>(null)
 
   // Host key management state
   const [storedKeys, setStoredKeys] = createSignal<
@@ -143,6 +175,21 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
   createEffect(() => {
     if (props.isOpen) {
       const stored = getStoredSettings() as Partial<TerminalSettings>
+      const theming = themingFromConfig()
+      const fallbackName = isThemingEnabled(theming)
+        ? theming.defaultTheme
+        : 'Default'
+      const resolvedThemeName =
+        stored.themeName !== undefined && stored.themeName !== ''
+          ? stored.themeName
+          : fallbackName
+      const resolvedCustomTheme =
+        stored.customTheme === undefined ? null : stored.customTheme
+      const resolvedCustomJson =
+        resolvedThemeName === 'custom' && resolvedCustomTheme !== null
+          ? JSON.stringify(resolvedCustomTheme, null, 2)
+          : ''
+      setThemeJsonError(null)
       setSettings({
         fontSize: stored.fontSize || defaultSettings.fontSize,
         fontFamily: stored.fontFamily || defaultSettings.fontFamily,
@@ -181,7 +228,10 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   defaultSettings.promptSounds.severities.success
               }
             }
-          : defaultSettings.promptSounds
+          : defaultSettings.promptSounds,
+        themeName: resolvedThemeName,
+        customThemeJson: resolvedCustomJson,
+        customTheme: resolvedCustomTheme
       })
     }
   })
@@ -206,8 +256,25 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
       tabStopWidth: currentSettings.tabStopWidth
     }
 
+    // Theme: if user picked "custom" but we have no validated theme,
+    // fall back to Default to avoid persisting a broken state.
+    const submittedThemeName =
+      currentSettings.themeName === 'custom' &&
+      currentSettings.customTheme === null
+        ? 'Default'
+        : currentSettings.themeName
+    const submittedCustomTheme =
+      submittedThemeName === 'custom' ? currentSettings.customTheme : null
+
     // Save settings
-    saveTerminalSettings(currentSettings as unknown as Record<string, unknown>)
+    const persisted = {
+      ...currentSettings,
+      themeName: submittedThemeName,
+      customTheme: submittedCustomTheme
+    }
+    // customThemeJson is UI-only state, drop before persisting.
+    const { customThemeJson: _customThemeJson, ...persistable } = persisted
+    saveTerminalSettings(persistable as unknown as Record<string, unknown>)
 
     // Apply to terminal - pass ALL settings including clipboard, keyboard capture, and prompt sounds
     props.onSave({
@@ -218,7 +285,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
       clipboardEnableKeyboardShortcuts:
         currentSettings.clipboardEnableKeyboardShortcuts,
       keyboardCapture: currentSettings.keyboardCapture,
-      promptSounds: currentSettings.promptSounds
+      promptSounds: currentSettings.promptSounds,
+      themeName: submittedThemeName,
+      customTheme: submittedCustomTheme
     } as Partial<ITerminalOptions> & Partial<TerminalSettings>)
     props.onClose()
   }
@@ -366,6 +435,122 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 <option value="none">None</option>
               </select>
             </label>
+
+            {/* Terminal Theme Section - gated on server theming.enabled */}
+            <Show when={clientConfig().theming?.enabled === true}>
+              <div class="col-span-full mb-2 mt-4 border-t pt-2">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  onClick={() => setThemeExpanded(!themeExpanded())}
+                  aria-expanded={themeExpanded()}
+                >
+                  <span>Terminal Theme</span>
+                  {themeExpanded() ? (
+                    <ChevronUp class="size-4" />
+                  ) : (
+                    <ChevronDown class="size-4" />
+                  )}
+                </button>
+                <Show when={themeExpanded()}>
+                  <p class="mt-1 text-xs text-slate-600">
+                    Choose a built-in palette. Changes apply on Save.
+                  </p>
+                </Show>
+              </div>
+
+              <Show when={themeExpanded()}>
+                {/* Theme Picker */}
+                <label class="contents">
+                  <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                    Theme
+                  </span>
+                  <select
+                    name="themeName"
+                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={settings().themeName}
+                    onChange={(e) => {
+                      // Local state only — never live-apply.
+                      updateSetting('themeName', e.currentTarget.value)
+                    }}
+                  >
+                    <For
+                      each={
+                        isThemingEnabled(themingFromConfig())
+                          ? getAvailableThemes(
+                              themingFromConfig() as ClientThemingConfig
+                            )
+                          : []
+                      }
+                    >
+                      {(t) => (
+                        <option
+                          value={t.name}
+                          title={themeOptionTitle(t.license, t.source)}
+                        >
+                          {t.name}
+                        </option>
+                      )}
+                    </For>
+                    <Show
+                      when={
+                        isThemingEnabled(themingFromConfig()) &&
+                        (themingFromConfig() as ClientThemingEnabled)
+                          .allowCustom === true
+                      }
+                    >
+                      <option value="custom">Custom…</option>
+                    </Show>
+                  </select>
+                </label>
+
+                {/* Custom theme JSON — only when allowCustom and picker is custom */}
+                <Show
+                  when={
+                    isThemingEnabled(themingFromConfig()) &&
+                    (themingFromConfig() as ClientThemingEnabled)
+                      .allowCustom === true &&
+                    settings().themeName === 'custom'
+                  }
+                >
+                  <label class="contents">
+                    <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                      Custom JSON
+                    </span>
+                    <div class="flex flex-col gap-1">
+                      <textarea
+                        name="customThemeJson"
+                        rows={6}
+                        placeholder='{"background":"#1a1b26","foreground":"#c0caf5"}'
+                        class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={settings().customThemeJson}
+                        onInput={(e) => {
+                          // Local state only — never live-apply.
+                          const text = e.currentTarget.value
+                          updateSetting('customThemeJson', text)
+                          if (text.trim() === '') {
+                            setThemeJsonError(null)
+                            updateSetting('customTheme', null)
+                            return
+                          }
+                          const result = validateThemeJson(text)
+                          if (result.ok) {
+                            setThemeJsonError(null)
+                            updateSetting('customTheme', result.value)
+                          } else {
+                            setThemeJsonError(result.error)
+                            updateSetting('customTheme', null)
+                          }
+                        }}
+                      />
+                      <Show when={themeJsonError() !== null}>
+                        <p class="text-xs text-red-600">{themeJsonError()}</p>
+                      </Show>
+                    </div>
+                  </label>
+                </Show>
+              </Show>
+            </Show>
 
             {/* Clipboard Settings Section Header */}
             <div class="col-span-full mb-2 mt-4 border-t pt-2">
