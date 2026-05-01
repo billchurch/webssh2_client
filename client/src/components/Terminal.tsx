@@ -575,6 +575,7 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
       ref={(el) => {
         containerEl = el
       }}
+      data-testid="terminal-wrapper"
       style={wrapperStyle}
     >
       <XTerm {...xtermProps} />
