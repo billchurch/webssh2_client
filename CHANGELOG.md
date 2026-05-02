@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.7.0](https://github.com/billchurch/webssh2_client/compare/v3.6.0...v3.7.0) (2026-05-02)
+
+
+### Features
+
+* **theming:** opt-in terminal themes — picker, custom paste, header modes ([#100](https://github.com/billchurch/webssh2_client/issues/100)) ([7597e44](https://github.com/billchurch/webssh2_client/commit/7597e44dbd68fe36f25f40a861994abc55b317a3))
+
 ## [3.6.0](https://github.com/billchurch/webssh2_client/compare/v3.5.0...v3.6.0) (2026-03-13)
 
 
