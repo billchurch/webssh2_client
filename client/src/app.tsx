@@ -1,5 +1,12 @@
 import type { Component } from 'solid-js'
-import { createSignal, onMount, onCleanup, Show, createEffect } from 'solid-js'
+import {
+  createSignal,
+  onMount,
+  onCleanup,
+  Show,
+  createEffect,
+  createMemo
+} from 'solid-js'
 import createDebug from 'debug'
 
 // Import existing utilities and types
@@ -132,6 +139,34 @@ const App: Component = () => {
   // Debug effect for login dialog state
   createEffect(() => {
     debug('LoginDialog state changed:', isLoginDialogOpen())
+  })
+
+  // Resolves the effective background for the header bar.
+  //
+  // - When theming is disabled, return undefined so the existing header.background
+  //   (PR-99-pre behavior) is used unchanged.
+  // - When theming is enabled and headerBackground is 'followTerminal', return
+  //   the currently-resolved terminal theme background (falling back to the
+  //   configured header.background when the theme does not declare one).
+  // - For 'independent' / 'locked' modes, return undefined (no override).
+  const headerBackground = createMemo<string | undefined>(() => {
+    const cfg = config()
+    if (cfg === undefined) {
+      return undefined
+    }
+    const theming = cfg.theming
+    if (theming?.enabled !== true) {
+      return undefined
+    }
+    if (theming.headerBackground !== 'followTerminal') {
+      return undefined
+    }
+    const actions = terminalActions()
+    const themeBg = actions?.getCurrentThemeBackground()
+    if (themeBg !== undefined && themeBg !== '') {
+      return themeBg
+    }
+    return cfg.header.background
   })
 
   onMount(async () => {
@@ -779,6 +814,15 @@ const App: Component = () => {
             })()}
             style={(() => {
               const header = headerContent()!
+              const themedBg = headerBackground()
+
+              // Theming-enabled override: when headerBackground mode resolves
+              // to a color (followTerminal mode), inline-style it so it wins
+              // over any Tailwind background class. Preserves PR-99-pre paths
+              // entirely when theming is disabled or in independent/locked mode.
+              if (themedBg !== undefined && themedBg !== '') {
+                return { 'background-color': themedBg }
+              }
 
               // New headerStyle with Tailwind classes - no inline styles needed
               if (header.fullStyle && header.styleIsTailwind) {

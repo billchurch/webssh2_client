@@ -1,8 +1,30 @@
+import type { ITheme } from '@xterm/xterm'
+
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 export type SSHAuthMethod = 'password' | 'keyboard-interactive' | 'publickey'
 
 export type ProtocolType = 'ssh' | 'telnet'
+
+export interface ClientThemingDisabled {
+  enabled: false
+}
+
+export interface ClientThemingEnabled {
+  enabled: true
+  allowCustom: boolean
+  themes: string[] | null
+  additionalThemes: {
+    name: string
+    colors: Record<string, string>
+    license?: string
+    source?: string
+  }[]
+  defaultTheme: string
+  headerBackground: 'independent' | 'followTerminal' | 'locked'
+}
+
+export type ClientThemingConfig = ClientThemingDisabled | ClientThemingEnabled
 
 export interface KeyboardCaptureSettings {
   captureEscape: boolean
@@ -35,6 +57,8 @@ export interface TerminalSettings {
   clipboardEnableKeyboardShortcuts: boolean
   keyboardCapture: KeyboardCaptureSettings
   promptSounds: PromptSoundSettings
+  themeName?: string
+  customTheme?: ITheme | null
 }
 
 export interface WebSocketConfig {
@@ -80,6 +104,7 @@ export interface WebSSH2Config {
   lockedPort?: number
   /** Connection protocol: 'ssh' (default) or 'telnet' */
   protocol?: ProtocolType
+  theming?: ClientThemingConfig
 }
 
 declare global {

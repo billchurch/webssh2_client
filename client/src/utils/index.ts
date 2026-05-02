@@ -44,7 +44,9 @@ export const defaultSettings: TerminalSettings = {
       error: true,
       success: true
     }
-  }
+  },
+  themeName: 'Default',
+  customTheme: null
 }
 
 export function validateNumber(

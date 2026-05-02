@@ -1,9 +1,13 @@
 // client/src/js/stores/config.ts
 import { createSignal, createMemo, createRoot } from 'solid-js'
 import createDebug from 'debug'
-import { mergeDeep } from '../utils/index.js'
+import { isObject, mergeDeep } from '../utils/index.js'
 import { DEFAULT_AUTH_METHODS } from '../constants.js'
-import type { SSHAuthMethod, WebSSH2Config } from '../types/config.d'
+import type {
+  ClientThemingConfig,
+  SSHAuthMethod,
+  WebSSH2Config
+} from '../types/config.d'
 import type { ClientAuthenticatePayload } from '../types/events.d'
 
 const debug = createDebug('webssh2-client:config-store')
@@ -57,7 +61,8 @@ const defaultConfig: WebSSH2Config = {
   },
   allowedAuthMethods: [...DEFAULT_AUTH_METHODS],
   autoConnect: false,
-  logLevel: 'info'
+  logLevel: 'info',
+  theming: { enabled: false }
 }
 
 // Reactive config store
@@ -277,9 +282,25 @@ export function initializeConfig() {
     windowConfig as Record<string, unknown>
   ) as WebSSH2Config
 
-  const sanitizedConfig = {
+  const sanitizedConfig: WebSSH2Config = {
     ...initialConfig,
-    allowedAuthMethods: coerceAuthMethods(initialConfig.allowedAuthMethods)
+    allowedAuthMethods: coerceAuthMethods(initialConfig.allowedAuthMethods),
+    theming: { enabled: false }
+  }
+
+  // theming is a discriminated union — replace, do not merge
+  if (
+    isObject(windowConfig) &&
+    'theming' in windowConfig &&
+    windowConfig['theming'] !== undefined
+  ) {
+    const candidate = windowConfig['theming']
+    if (
+      isObject(candidate) &&
+      (candidate['enabled'] === true || candidate['enabled'] === false)
+    ) {
+      sanitizedConfig.theming = candidate as unknown as ClientThemingConfig
+    }
   }
 
   setConfig(sanitizedConfig)
