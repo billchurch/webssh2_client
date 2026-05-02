@@ -13,6 +13,10 @@ WebSSH2 Client is an HTML5 web-based terminal emulator and SSH client component.
 
 This package contains only the browser-side client component of WebSSH2. It requires a compatible WebSSH2 server to function. The server component is available at [webssh2 server](https://github.com/billchurch/webssh2). This package is intended for advanced users who want to customize or integrate the client component independently.
 
+## Sponsors
+
+WebSSH2 development is supported by [Tailwind Resource Group](https://tailwindrg.com), an engineering-led IT services firm specializing in application delivery, zero trust security, and identity for federal and commercial customers.
+
 ## Requirements
 
 - Modern web browser with JavaScript enabled
