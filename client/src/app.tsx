@@ -69,7 +69,8 @@ import {
   hostKeyPromptData,
   isHostKeyRejectedOpen,
   setIsHostKeyRejectedOpen,
-  hostKeyRejectedReason
+  hostKeyRejectedReason,
+  setHeaderContent
 } from './stores/terminal.js'
 
 // Import components
@@ -336,6 +337,12 @@ const App: Component = () => {
 
   // Socket event handlers
   const onConnect = () => {
+     const cfg = config()
+     if (cfg?.header) {
+      setHeaderContent({ 
+         text: cfg.header.text ?? "",
+         background: cfg.header.background || 'transparent'})
+     }
     setShowReconnectButton(false)
     setIsErrorDialogOpen(false)
     setState('sessionLogEnable', false)
