@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.7.1](https://github.com/billchurch/webssh2_client/compare/v3.7.0...v3.7.1) (2026-05-21)
+
+
+### Bug Fixes
+
+* header customization when available in config ([#103](https://github.com/billchurch/webssh2_client/issues/103)) ([1cafe3d](https://github.com/billchurch/webssh2_client/commit/1cafe3ddcce01f46004fea644d173258d18c234f))
+
 ## [3.7.0](https://github.com/billchurch/webssh2_client/compare/v3.6.0...v3.7.0) (2026-05-02)
 
 
