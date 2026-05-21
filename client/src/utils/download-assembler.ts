@@ -43,7 +43,6 @@ export interface DownloadState {
   isCancelled: boolean
 }
 
-
 /**
  * Download Assembler class
  *
@@ -155,9 +154,8 @@ export class DownloadAssembler {
       return false
     }
 
-    const data = chunk.data instanceof Uint8Array
-      ? chunk.data
-      : new Uint8Array(chunk.data)
+    const data =
+      chunk.data instanceof Uint8Array ? chunk.data : new Uint8Array(chunk.data)
     this.chunks.set(chunk.index, data)
     this.state.bytesReceived += data.byteLength
 
