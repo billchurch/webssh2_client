@@ -69,7 +69,8 @@ import {
   hostKeyPromptData,
   isHostKeyRejectedOpen,
   setIsHostKeyRejectedOpen,
-  hostKeyRejectedReason
+  hostKeyRejectedReason,
+  setHeaderContent
 } from './stores/terminal.js'
 
 // Import components
@@ -120,6 +121,7 @@ import { getSearchShortcut, matchesShortcut } from './utils/os-detection'
 import { shouldCaptureKey } from './utils/keyboard-capture'
 import { getStoredSettings } from './utils/settings'
 import { defaultSettings } from './utils/index'
+import { resolveHeaderFromConfig } from './utils/header.js'
 
 // Import CSS
 import './app.css'
@@ -220,6 +222,18 @@ const App: Component = () => {
         : null
       setSessionFooter(footer)
       setGlobalSessionFooter(footer)
+
+      // Resolve header from injected server config BEFORE socket init so that
+      // any queued or subsequent socket 'header'/'headerBackground'/'headerStyle'
+      // events extend this seed rather than race against it. The guard ensures
+      // we only seed once — socket events update the signal in services/socket.ts
+      // from there.
+      if (headerContent() == null) {
+        const resolved = resolveHeaderFromConfig(config())
+        if (resolved != null) {
+          setHeaderContent(resolved)
+        }
+      }
 
       // Initialize socket service
       socketService.initSocket(

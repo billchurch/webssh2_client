@@ -303,13 +303,13 @@ self-replicating worm ("CanisterWorm") through npm packages.
 This repository uses `aquasecurity/trivy-action` in CI (`ci.yml`)
 and publishes to npm as `webssh2_client`.
 
-| Aspect | Status |
-| --- | --- |
-| Trivy action pinning | Pinned to commit SHA `97e0b387...` (v0.34.2) |
-| Compromised packages in deps | **None found** |
-| Filesystem IOCs | **None found** |
-| Unexpected npm versions | **None** — all published versions match expected release history |
-| Status | **Not compromised** |
+| Aspect                       | Status                                                           |
+| ---------------------------- | ---------------------------------------------------------------- |
+| Trivy action pinning         | Pinned to commit SHA `97e0b387...` (v0.34.2)                     |
+| Compromised packages in deps | **None found**                                                   |
+| Filesystem IOCs              | **None found**                                                   |
+| Unexpected npm versions      | **None** — all published versions match expected release history |
+| Status                       | **Not compromised**                                              |
 
 ### Why We Are Not Affected
 
@@ -390,14 +390,14 @@ dependency.
 
 ### Exposure assessment
 
-| Aspect | Status |
-| --- | --- |
-| Compromised versions | `axios@1.14.1`, `axios@0.30.4` |
-| Our version | `axios@1.13.5` (transitive dev dep via chromedriver) |
-| `plain-crypto-js` in deps | **Not found** |
+| Aspect                     | Status                                                           |
+| -------------------------- | ---------------------------------------------------------------- |
+| Compromised versions       | `axios@1.14.1`, `axios@0.30.4`                                   |
+| Our version                | `axios@1.13.5` (transitive dev dep via chromedriver)             |
+| `plain-crypto-js` in deps  | **Not found**                                                    |
 | Other compromised packages | **Not found** (`@qqbrowser/openclaw-qbot`, `@shadanai/openclaw`) |
-| Filesystem IOCs | **None found** |
-| Status | **Not compromised** |
+| Filesystem IOCs            | **None found**                                                   |
+| Status                     | **Not compromised**                                              |
 
 ### Why we are not affected
 
