@@ -810,61 +810,22 @@ const App: Component = () => {
         {/* Header */}
         <Show when={headerContent()}>
           <div
-            class={(() => {
-              const header = headerContent()!
-
-              // New headerStyle approach (full styling)
-              if (header.fullStyle && header.styleIsTailwind) {
-                return `z-[99] w-full shrink-0 border-b border-neutral-200 text-center text-white ${header.fullStyle}`
-              }
-
-              // Backward compatibility: headerBackground approach
-              if (header.backgroundIsTailwind && header.background) {
-                return `z-[99] h-6 w-full shrink-0 border-b border-neutral-200 text-center leading-6 text-white ${header.background}`
-              }
-
-              // Default fallback
-              return 'z-[99] h-6 w-full shrink-0 border-b border-neutral-200 bg-black text-center leading-6 text-white'
-            })()}
+            class="z-[99] h-6 w-full shrink-0 border-b border-neutral-200 text-center leading-6 text-white"
             style={(() => {
               const header = headerContent()!
               const themedBg = headerBackground()
 
               // Theming-enabled override: when headerBackground mode resolves
-              // to a color (followTerminal mode), inline-style it so it wins
-              // over any Tailwind background class. Preserves PR-99-pre paths
-              // entirely when theming is disabled or in independent/locked mode.
+              // to a color (followTerminal mode), inline-style it so it wins.
               if (themedBg !== undefined && themedBg !== '') {
                 return { 'background-color': themedBg }
               }
 
-              // New headerStyle with Tailwind classes - no inline styles needed
-              if (header.fullStyle && header.styleIsTailwind) {
-                return {}
+              if (header.background !== undefined) {
+                return { 'background-color': header.background }
               }
 
-              // New headerStyle approach with CSS fallback
-              if (header.fullStyle && !header.styleIsTailwind) {
-                // Parse CSS properties from fullStyle (basic implementation)
-                const styles: Record<string, string> = {}
-                if (header.fullStyle.includes('background')) {
-                  // Simple regex to extract background-color or background
-                  const bgMatch = /background(?:-color)?:\s*([^;]+)/i.exec(
-                    header.fullStyle
-                  )
-                  if (bgMatch?.[1]) {
-                    styles['background-color'] = bgMatch[1].trim()
-                  }
-                }
-                return styles
-              }
-
-              // Backward compatibility: headerBackground CSS approach
-              if (!header.backgroundIsTailwind && header.background) {
-                return { 'background-color': header.background || '#000' }
-              }
-
-              return {}
+              return { 'background-color': '#000' }
             })()}
           >
             {headerContent()?.text}
