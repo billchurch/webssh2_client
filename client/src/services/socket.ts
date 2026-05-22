@@ -58,6 +58,7 @@ import type { WebSSH2Config } from '../types/config.d'
 
 // Import prompt store
 import { promptStore } from '../stores/prompt-store.js'
+import { dispatchHeaderUpdate } from '../utils/header-dispatch.js'
 // import type { ElementId } from '../../types/dom.d'
 
 declare global {
@@ -587,83 +588,17 @@ export class SocketService {
           this.updateStatusElement(String(value), 'green')
           break
         case 'header':
-          // Use reactive header state
-          if (typeof value === 'object' && value !== null) {
-            const headerData = value as { text: string; background?: string }
-            setHeaderContent({
-              text: headerData.text,
-              background: headerData.background || 'transparent'
-            })
-          } else {
-            setHeaderContent({
-              text: String(value),
-              background: 'transparent'
-            })
-          }
-          break
         case 'headerBackground': {
-          // Handle background color updates separately (backward compatibility)
-          const currentHeader = headerContent()
-          const bgValue = String(value)
-
-          // Check if it's a Tailwind class (starts with 'bg-' or contains gradient patterns)
-          const isTailwindClass =
-            bgValue.startsWith('bg-') ||
-            bgValue.includes('gradient') ||
-            bgValue.includes('from-') ||
-            bgValue.includes('to-')
-
-          if (currentHeader) {
-            setHeaderContent({
-              ...currentHeader,
-              background: bgValue,
-              backgroundIsTailwind: isTailwindClass
-            })
+          const result = dispatchHeaderUpdate(element, value, headerContent())
+          if (result.kind === 'update') {
+            setHeaderContent(result.next)
           } else {
-            // If no header exists yet, create one with just the background
-            setHeaderContent({
-              text: '',
-              background: bgValue,
-              backgroundIsTailwind: isTailwindClass
-            })
+            debug(`Rejected ${element} update: %O`, value)
           }
           break
         }
-        case 'headerStyle': {
-          // Handle full header styling (new enhanced approach)
-          const currentHeader = headerContent()
-          const styleValue = String(value)
-
-          // Detect if this contains Tailwind classes
-          const isTailwindStyle =
-            styleValue.includes('bg-') ||
-            styleValue.includes('text-') ||
-            styleValue.includes('font-') ||
-            styleValue.includes('border-') ||
-            styleValue.includes('shadow-') ||
-            styleValue.includes('animate-') ||
-            styleValue.includes('gradient') ||
-            styleValue.includes('from-') ||
-            styleValue.includes('to-') ||
-            styleValue.includes('via-')
-
-          if (currentHeader) {
-            setHeaderContent({
-              ...currentHeader,
-              fullStyle: styleValue,
-              styleIsTailwind: isTailwindStyle
-            })
-          } else {
-            // If no header exists yet, create one with the full style
-            // Note: Server should send header text separately via 'header' event
-            setHeaderContent({
-              text: '',
-              fullStyle: styleValue,
-              styleIsTailwind: isTailwindStyle
-            })
-          }
-          break
-        }
+        // 'headerStyle' is no longer a recognized element (#102). It falls
+        // through to the default branch's debug log.
         default:
           // Unknown elements - log for debugging
           debug(`Unknown element update: ${element}`, value)
