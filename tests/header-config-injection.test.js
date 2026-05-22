@@ -8,6 +8,9 @@ await register('./tests/ts-loader.mjs', pathToFileURL('./'))
 const { resolveHeaderFromConfig, validateHeaderBackground } =
   await import('../client/src/utils/header.ts')
 
+const { dispatchHeaderUpdate } =
+  await import('../client/src/utils/header-dispatch.ts')
+
 describe('resolveHeaderFromConfig', () => {
   it('returns null when config is undefined', () => {
     assert.strictEqual(resolveHeaderFromConfig(undefined), null)
@@ -118,6 +121,133 @@ describe('validateHeaderBackground', () => {
     assert.strictEqual(
       validateHeaderBackground('javascript:alert(1)'),
       null
+    )
+  })
+})
+
+describe('dispatchHeaderUpdate — headerBackground element', () => {
+  it('returns update with valid hex color', () => {
+    const result = dispatchHeaderUpdate('headerBackground', '#ff00aa', null)
+    assert.deepStrictEqual(result, {
+      kind: 'update',
+      next: { text: '', background: '#ff00aa' }
+    })
+  })
+
+  it('returns update with named color, preserves existing text', () => {
+    const result = dispatchHeaderUpdate('headerBackground', 'red', {
+      text: 'keep'
+    })
+    assert.deepStrictEqual(result, {
+      kind: 'update',
+      next: { text: 'keep', background: 'red' }
+    })
+  })
+
+  it('returns noop for Tailwind clickjacking payload', () => {
+    const result = dispatchHeaderUpdate(
+      'headerBackground',
+      'fixed inset-0 z-50 bg-black',
+      { text: 'keep' }
+    )
+    assert.deepStrictEqual(result, { kind: 'noop' })
+  })
+
+  it('returns noop for CSS injection payload', () => {
+    const result = dispatchHeaderUpdate(
+      'headerBackground',
+      "background: red url('//evil/x')",
+      null
+    )
+    assert.deepStrictEqual(result, { kind: 'noop' })
+  })
+
+  it('returns noop for non-string value', () => {
+    assert.deepStrictEqual(
+      dispatchHeaderUpdate('headerBackground', 42, null),
+      { kind: 'noop' }
+    )
+    assert.deepStrictEqual(
+      dispatchHeaderUpdate('headerBackground', undefined, null),
+      { kind: 'noop' }
+    )
+  })
+})
+
+describe('dispatchHeaderUpdate — header element', () => {
+  it('returns update with valid object payload', () => {
+    const result = dispatchHeaderUpdate(
+      'header',
+      { text: 'P', background: '#ff00aa' },
+      null
+    )
+    assert.deepStrictEqual(result, {
+      kind: 'update',
+      next: { text: 'P', background: '#ff00aa' }
+    })
+  })
+
+  it('omits background when payload background is Tailwind', () => {
+    const result = dispatchHeaderUpdate(
+      'header',
+      { text: 'P', background: 'fixed inset-0 z-50 bg-black' },
+      null
+    )
+    assert.deepStrictEqual(result, {
+      kind: 'update',
+      next: { text: 'P' }
+    })
+  })
+
+  it('omits background when payload background is CSS injection', () => {
+    const result = dispatchHeaderUpdate(
+      'header',
+      { text: 'P', background: "background: red url('//evil/x')" },
+      null
+    )
+    assert.deepStrictEqual(result, {
+      kind: 'update',
+      next: { text: 'P' }
+    })
+  })
+
+  it('accepts string payload (text-only)', () => {
+    const result = dispatchHeaderUpdate('header', 'just text', null)
+    assert.deepStrictEqual(result, {
+      kind: 'update',
+      next: { text: 'just text' }
+    })
+  })
+
+  it('coerces non-string text in object payload to empty string', () => {
+    const result = dispatchHeaderUpdate(
+      'header',
+      { text: 42, background: 'red' },
+      null
+    )
+    assert.deepStrictEqual(result, {
+      kind: 'update',
+      next: { text: '', background: 'red' }
+    })
+  })
+})
+
+describe('dispatchHeaderUpdate — headerStyle and unknown elements', () => {
+  it('returns noop for headerStyle element (any payload)', () => {
+    assert.deepStrictEqual(
+      dispatchHeaderUpdate('headerStyle', 'fixed inset-0 z-50 bg-black', null),
+      { kind: 'noop' }
+    )
+    assert.deepStrictEqual(
+      dispatchHeaderUpdate('headerStyle', { fullStyle: 'x' }, null),
+      { kind: 'noop' }
+    )
+  })
+
+  it('returns noop for unknown elements', () => {
+    assert.deepStrictEqual(
+      dispatchHeaderUpdate('whatever', 'x', null),
+      { kind: 'noop' }
     )
   })
 })
