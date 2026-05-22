@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url'
 
 await register('./tests/ts-loader.mjs', pathToFileURL('./'))
 
-const { resolveHeaderFromConfig } =
+const { resolveHeaderFromConfig, validateHeaderBackground } =
   await import('../client/src/utils/header.ts')
 
 describe('resolveHeaderFromConfig', () => {
@@ -74,5 +74,50 @@ describe('resolveHeaderFromConfig', () => {
       header: { text: 'foo', background: 'javascript:alert(1)' }
     })
     assert.deepStrictEqual(result, { text: 'foo', background: '#000' })
+  })
+})
+
+describe('validateHeaderBackground', () => {
+  it('returns null for non-string input', () => {
+    assert.strictEqual(validateHeaderBackground(undefined), null)
+    assert.strictEqual(validateHeaderBackground(null), null)
+    assert.strictEqual(validateHeaderBackground(42), null)
+    assert.strictEqual(validateHeaderBackground({}), null)
+  })
+
+  it('accepts hex colors', () => {
+    assert.strictEqual(validateHeaderBackground('#ff00aa'), '#ff00aa')
+  })
+
+  it('accepts named colors', () => {
+    assert.strictEqual(validateHeaderBackground('red'), 'red')
+  })
+
+  it('accepts rgb function notation', () => {
+    assert.strictEqual(
+      validateHeaderBackground('rgb(0, 0, 0)'),
+      'rgb(0, 0, 0)'
+    )
+  })
+
+  it('rejects Tailwind class strings', () => {
+    assert.strictEqual(
+      validateHeaderBackground('fixed inset-0 z-50 bg-black'),
+      null
+    )
+  })
+
+  it('rejects CSS injection payloads with semicolons', () => {
+    assert.strictEqual(
+      validateHeaderBackground("background: red url('//evil/x')"),
+      null
+    )
+  })
+
+  it('rejects javascript: protocol', () => {
+    assert.strictEqual(
+      validateHeaderBackground('javascript:alert(1)'),
+      null
+    )
   })
 })
