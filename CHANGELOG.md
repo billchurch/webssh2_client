@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.0.0](https://github.com/billchurch/webssh2_client/compare/v3.7.1...v4.0.0) (2026-05-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **security:** The `headerStyle` URL parameter and its companion `fullStyle`/`styleIsTailwind`/`backgroundIsTailwind` signal fields no longer exist. The `'headerStyle'` updateUI element is no longer recognized. Solid background colors continue to work via `headerBackground`; for gradients/animations, use the terminal theming feature.
+
+### Bug Fixes
+
+* **security:** remove unsafe headerStyle/Tailwind injection paths ([#102](https://github.com/billchurch/webssh2_client/issues/102)) ([15b79d1](https://github.com/billchurch/webssh2_client/commit/15b79d1aaae29cb311fd57ff9c7f4fb3cb221779))
+
 ## [3.7.1](https://github.com/billchurch/webssh2_client/compare/v3.7.0...v3.7.1) (2026-05-21)
 
 
