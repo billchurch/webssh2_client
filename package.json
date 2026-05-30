@@ -101,7 +101,9 @@
     ]
   },
   "overrides": {
-    "serialize-javascript": ">=7.0.3"
+    "serialize-javascript": ">=7.0.3",
+    "tmp": ">=0.2.6",
+    "axios": ">=1.16.1"
   },
   "dependencies": {
     "@xterm/addon-search": "^0.16.0"
