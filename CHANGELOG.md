@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.0.1](https://github.com/billchurch/webssh2_client/compare/v4.0.0...v4.0.1) (2026-05-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** The 'headerStyle' updateUI element is no longer recognized. Payloads sent to it are silently ignored. The 'header' and 'headerBackground' elements validate their background field as a CSS color and reject (signal unchanged) on failure.
+
+### chore
+
+* release 4.0.1 ([7b882ee](https://github.com/billchurch/webssh2_client/commit/7b882ee643ba8307370e3b0b9d993b005d28fa11))
+
+
+### Bug Fixes
+
+* **deps:** override tmp and axios for dev-only CVEs ([#107](https://github.com/billchurch/webssh2_client/issues/107)) ([69071ed](https://github.com/billchurch/webssh2_client/commit/69071eda6e5cd9885cad3c5fb9be97d55ff1119b))
+
 ## [4.0.0](https://github.com/billchurch/webssh2_client/compare/v3.7.1...v4.0.0) (2026-05-24)
 
 
