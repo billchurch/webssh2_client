@@ -55,7 +55,7 @@ jobs:
           npm pkg set dependencies.webssh2_client="^${{ steps.get-version.outputs.version }}"
           
           # Run npm install to update package-lock.json
-          npm install
+          npm install --ignore-scripts
 
       - name: Check for changes
         id: check-changes

@@ -14,8 +14,12 @@ const packageJson = JSON.parse(fs.readFileSync('../../package.json', 'utf-8'))
 // Get git commit hash
 const commitHash = execSync('git rev-parse --short HEAD').toString().trim()
 
+// Commit date, not build time: keeps the build reproducible so the
+// published bundle can be byte-compared against a rebuild of the tag.
+const commitDate = execSync('git log -1 --format=%cI').toString().trim()
+
 // Generate banner string
-const bannerString = `Version ${packageJson.version} - ${new Date().toISOString()} - ${commitHash}`
+const bannerString = `Version ${packageJson.version} - ${commitDate} - ${commitHash}`
 
 // Custom plugin to inject banner into files
 function bannerPlugin() {

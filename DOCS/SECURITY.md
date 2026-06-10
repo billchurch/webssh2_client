@@ -48,6 +48,45 @@ The client is kept compatible with a strict policy:
   - CI-amenable rules enforce safe patterns and flag risky constructs.
 - Tests: JSDOM-based tests focus on XSS and DOM safety.
 
+## Release Artifact Integrity
+
+The npm package ships a pre-built browser bundle (`client/public/**`) that is
+not committed to git, so its integrity rests on the release pipeline. The
+following controls apply (red-team review 2026-06-10, SC2/SC4):
+
+- **No lifecycle scripts at build time:** CI and the release build both
+  install with `npm ci --ignore-scripts`, so no transitive dependency can run
+  code on the build runner and tamper with the bundle before it is published.
+- **npm provenance:** Releases are published with
+  `npm publish --provenance` via OIDC (no long-lived npm tokens). Consumers
+  can verify with:
+
+```bash
+npm audit signatures
+```
+
+- **Published checksums:** Each GitHub release attaches `checksums.txt`
+  (SHA-256 of `client-public.zip` and every file in `client/public/`) and
+  repeats the hashes in the release notes. To verify an npm-installed copy
+  against the GitHub release:
+
+```bash
+cd node_modules/webssh2_client/client
+curl -fsSL "https://github.com/billchurch/webssh2_client/releases/download/<tag>/checksums.txt" \
+  | grep '^[0-9a-f]*  public/' | sha256sum -c -
+```
+
+A mismatch means the npm artifact and the GitHub release disagree — treat
+as a compromise indicator until explained. Note that release assets and
+notes are mutable by anyone with repo write access; the tamper-evident
+anchor is npm provenance, and the checksums exist to make cross-channel
+comparison practical.
+
+- **Reproducible banner:** The bundle banner embeds the git commit date
+  (not the build time), so rebuilding the same tag yields comparable output.
+- **`.npmrc`:** Intentionally committed and limited to `sign-git-tag=true`.
+  Never add registry tokens to it; publishing uses OIDC.
+
 ## Operational Guidance
 
 - HTTPS recommended: Use `wss:` in production.
