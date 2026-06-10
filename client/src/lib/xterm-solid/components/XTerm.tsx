@@ -1,5 +1,6 @@
 import { createSignal, createEffect, onCleanup } from 'solid-js'
 import { Terminal } from '@xterm/xterm'
+import type { ITerminalAddon } from '@xterm/xterm'
 import type { XTermProps, TerminalRef, XTermEventHandlers } from '../types'
 import { AddonManager } from '../utils/addon-manager'
 import { EventManager } from '../utils/event-manager'
@@ -14,7 +15,15 @@ const loadDefaultStyles = () => {
 }
 
 // Fallback SearchAddon for when the global one is not available
-class FallbackSearchAddon {
+class FallbackSearchAddon implements ITerminalAddon {
+  activate(): void {
+    /* no-op */
+  }
+
+  dispose(): void {
+    /* no-op */
+  }
+
   findNext() {
     return false
   }
@@ -22,6 +31,12 @@ class FallbackSearchAddon {
   findPrevious() {
     return false
   }
+}
+
+// Typed view of optionally-present xterm addons exposed on the global scope
+// (populated by the host bundle). Avoids `as any` member access.
+const addonGlobals = globalThis as typeof globalThis & {
+  SearchAddon?: new (...args: unknown[]) => ITerminalAddon
 }
 
 /**
@@ -97,8 +112,7 @@ export function XTerm(props: XTermProps) {
     },
     findNext: (term: string) => {
       const searchAddon = addonManager?.getAddon(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any).SearchAddon || FallbackSearchAddon
+        addonGlobals.SearchAddon ?? FallbackSearchAddon
       )
       if (searchAddon && 'findNext' in searchAddon) {
         return (searchAddon as { findNext(term: string): boolean }).findNext(
@@ -109,8 +123,7 @@ export function XTerm(props: XTermProps) {
     },
     findPrevious: (term: string) => {
       const searchAddon = addonManager?.getAddon(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any).SearchAddon || FallbackSearchAddon
+        addonGlobals.SearchAddon ?? FallbackSearchAddon
       )
       if (searchAddon && 'findPrevious' in searchAddon) {
         return (

@@ -10,6 +10,13 @@ import type { AddonDefinition, XTermEventHandlers, TerminalRef } from '../types'
 import { AddonManager } from '../utils/addon-manager'
 import { EventManager } from '../utils/event-manager'
 
+// Typed view of optionally-present xterm addons exposed on the global scope
+// (populated by the host bundle). Avoids `as any` member access.
+const addonGlobals = globalThis as typeof globalThis & {
+  FitAddon?: new (...args: unknown[]) => ITerminalAddon
+  SearchAddon?: new (...args: unknown[]) => ITerminalAddon
+}
+
 export interface UseXTermOptions {
   options?: ITerminalOptions & ITerminalInitOnlyOptions
   addons?: AddonDefinition[]
@@ -77,10 +84,19 @@ export function useXTerm(options: UseXTermOptions = {}) {
     fit: () => {
       const fitAddon = addonManager?.getAddon(
         // Dynamic import for better tree shaking
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any).FitAddon ||
-          class FitAddon {
-            fit() {}
+        addonGlobals.FitAddon ??
+          class FitAddon implements ITerminalAddon {
+            activate(): void {
+              /* no-op */
+            }
+
+            dispose(): void {
+              /* no-op */
+            }
+
+            fit(): void {
+              /* no-op */
+            }
           }
       )
       if (fitAddon && 'fit' in fitAddon) {
@@ -89,9 +105,16 @@ export function useXTerm(options: UseXTermOptions = {}) {
     },
     findNext: (term: string) => {
       const searchAddon = addonManager?.getAddon(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any).SearchAddon ||
-          class SearchAddon {
+        addonGlobals.SearchAddon ??
+          class SearchAddon implements ITerminalAddon {
+            activate(): void {
+              /* no-op */
+            }
+
+            dispose(): void {
+              /* no-op */
+            }
+
             findNext() {
               return false
             }
@@ -106,9 +129,16 @@ export function useXTerm(options: UseXTermOptions = {}) {
     },
     findPrevious: (term: string) => {
       const searchAddon = addonManager?.getAddon(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any).SearchAddon ||
-          class SearchAddon {
+        addonGlobals.SearchAddon ??
+          class SearchAddon implements ITerminalAddon {
+            activate(): void {
+              /* no-op */
+            }
+
+            dispose(): void {
+              /* no-op */
+            }
+
             findPrevious() {
               return false
             }
