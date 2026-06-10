@@ -7,9 +7,10 @@
     <title>WebSSH2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <script>
-      window.webssh2Config = <%= htmlWebpackPlugin.options.webssh2Config %>;
-    </script>
+    <!-- CSP-compatible config injection point: inert JSON data block read by the app -->
+    <script type="application/json" id="webssh2-config">null</script>
+    <!-- Legacy config injection point: superseded by the JSON block above; kept for older gateways -->
+    <script>window.webssh2Config = null;</script>
   </head>
   <body class="h-dvh overflow-hidden bg-black text-neutral-100">
     <dialog id="loginDialog" class="modal">

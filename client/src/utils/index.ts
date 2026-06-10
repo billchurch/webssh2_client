@@ -13,6 +13,8 @@ import {
   validateLogLevel
 } from './input-validator.js'
 
+import { readInjectedConfig } from './injected-config.js'
+
 import type { TerminalSettings, WebSSH2Config } from '../types/config.d'
 import type { ClientAuthenticatePayload } from '../types/events.d'
 
@@ -130,7 +132,7 @@ export function initializeConfig(): WebSSH2Config {
     autoConnect: false,
     logLevel: 'info'
   }
-  const userConfig = (window as Window).webssh2Config || {}
+  const userConfig: Partial<WebSSH2Config> = readInjectedConfig() ?? {}
   const config = mergeDeep(
     defaultConfig,
     userConfig as Partial<WebSSH2Config>
@@ -242,7 +244,7 @@ export function getCredentials(
   formData: Record<string, unknown> | null = null,
   terminalDimensions: { cols?: number; rows?: number } = {}
 ): ClientAuthenticatePayload {
-  const cfg = (window as Window).webssh2Config || {}
+  const cfg: Partial<WebSSH2Config> = readInjectedConfig() ?? {}
   const urlParams = getUrlParams()
 
   const fd = formData as Record<string, unknown> | null

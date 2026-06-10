@@ -10,12 +10,22 @@ This document summarizes the client-side security measures in this repository an
 
 ## Content Security Policy (CSP)
 
-The app serves a strict CSP via `client/src/js/csp-config.ts`:
+The client does not serve a CSP itself — the `Content-Security-Policy`
+response header is owned by the webssh2 gateway that serves these assets.
+The client is kept compatible with a strict policy:
 
-- `script-src 'self'`: Disallows inline scripts. Our HTML contains no inline scripts.
-- `style-src 'self' 'unsafe-inline'`: Allows inline styles required by xterm DOM renderer and small style updates (e.g., banner color). No untrusted CSS is injected.
-- `connect-src 'self' ws: wss:`: Allows WebSocket traffic to the current host. In production, consider pinning the exact origin and path (e.g., only `/ssh/socket.io`).
-- Other directives: Disallow frames/objects; set safe defaults for fonts, images, referrer policy, and permissions policy.
+- `script-src 'self'` compatible: Runtime config is injected by the gateway
+  into an inert `<script type="application/json" id="webssh2-config">` data
+  block, read by `client/src/utils/injected-config.ts`. A legacy inline
+  `window.webssh2Config = null;` script remains for older gateways; under a
+  strict policy it is blocked harmlessly and the JSON block takes over. No
+  `eval()` or string-based timers are used.
+- `style-src 'self' 'unsafe-inline'` required: xterm.js sets inline style
+  attributes, so inline styles must be allowed. No untrusted CSS is injected.
+- `connect-src`: Should be pinned to the gateway origin (e.g., only
+  `/ssh/socket.io`) to limit exfiltration channels.
+- Other directives (frames/objects/fonts/images, report-only rollout) are a
+  gateway concern.
 
 ## xterm.js Considerations
 

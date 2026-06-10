@@ -3,6 +3,7 @@ import { createSignal, createMemo, createRoot } from 'solid-js'
 import createDebug from 'debug'
 import maskObject from 'jsmasker'
 import { isObject, mergeDeep } from '../utils/index.js'
+import { readInjectedConfig } from '../utils/injected-config.js'
 import { DEFAULT_AUTH_METHODS } from '../constants.js'
 import type {
   ClientThemingConfig,
@@ -305,11 +306,9 @@ export const configWithUrlOverrides = () => {
   return mergedConfig
 }
 
-// Initialize configuration from window object and URL
+// Initialize configuration from injected config (JSON block or window) and URL
 export function initializeConfig() {
-  const rawWindowConfig = (window as unknown as Record<string, unknown>)[
-    'webssh2Config'
-  ]
+  const rawWindowConfig: unknown = readInjectedConfig()
   const windowConfig: Record<string, unknown> = isObject(rawWindowConfig)
     ? rawWindowConfig
     : {}
