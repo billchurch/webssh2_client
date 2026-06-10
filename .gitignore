@@ -53,7 +53,8 @@ Thumbs.db
 *.temp
 
 # Runtime configuration
-.npmrc
+# NOTE: .npmrc is intentionally tracked (tag-signing config only).
+# Never put registry tokens in it - publishing uses OIDC provenance.
 .yarnrc
 
 # Optional npm cache directory

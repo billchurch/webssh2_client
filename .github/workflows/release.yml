@@ -40,7 +40,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build client
         run: npm run build
@@ -75,12 +75,37 @@ jobs:
           zip -r ../../client-public.zip .
           cd -
 
+      - name: Generate checksums
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          {
+            echo "# webssh2_client ${TAG_NAME} SHA-256 checksums"
+            sha256sum client-public.zip
+            cd client && find public -type f | LC_ALL=C sort | xargs sha256sum
+          } > checksums.txt
+          cat checksums.txt
+          {
+            echo '## Artifact checksums (SHA-256)'
+            echo ''
+            echo 'Per-file hashes of the shipped browser bundle. Verify against'
+            echo 'the npm-installed package or the attached zip; see SECURITY'
+            echo 'docs ("Release artifact integrity") for how.'
+            echo ''
+            echo '```text'
+            cat checksums.txt
+            echo '```'
+          } > checksums-notes.md
+
       - name: Attach assets to release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
           files: |
             client-public.zip
+            checksums.txt
+          append_body: true
+          body_path: checksums-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
