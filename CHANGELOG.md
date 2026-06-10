@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.1.0](https://github.com/billchurch/webssh2_client/compare/v5.0.0...v5.1.0) (2026-06-10)
+
+
+### Features
+
+* **security:** attest release artifacts with sigstore provenance ([#128](https://github.com/billchurch/webssh2_client/issues/128)) ([554d1c6](https://github.com/billchurch/webssh2_client/commit/554d1c63253d5fa86d129efe5efea01fbc988fda))
+
+
+### Bug Fixes
+
+* **security:** harden release pipeline integrity (SC2/SC3/SC4) ([#126](https://github.com/billchurch/webssh2_client/issues/126)) ([788ff65](https://github.com/billchurch/webssh2_client/commit/788ff65a86ed386909ba083e2648707eb62241d7))
+
 ## [5.0.0](https://github.com/billchurch/webssh2_client/compare/v4.0.1...v5.0.0) (2026-06-10)
 
 
