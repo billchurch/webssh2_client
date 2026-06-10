@@ -74,17 +74,20 @@ function htmlTemplatePlugin() {
         `<!-- Version ${bannerString} -->`
       )
 
-      const webssh2Config = isDevelopment
-        ? JSON.stringify({
-            socket: { url: 'http://localhost:2222', path: '/ssh/socket.io' },
-            ssh: { port: 22 }
-          })
-        : 'null'
+      // In development, inject dev config into the JSON data block so the
+      // CSP-compatible read path is exercised. In production both injection
+      // points keep their `null` placeholders for the gateway to replace.
+      if (isDevelopment) {
+        const webssh2Config = JSON.stringify({
+          socket: { url: 'http://localhost:2222', path: '/ssh/socket.io' },
+          ssh: { port: 22 }
+        })
 
-      html = html.replace(
-        'window.webssh2Config = <%= htmlWebpackPlugin.options.webssh2Config %>;',
-        `window.webssh2Config = ${webssh2Config};`
-      )
+        html = html.replace(
+          '<script type="application/json" id="webssh2-config">null</script>',
+          `<script type="application/json" id="webssh2-config">${webssh2Config}</script>`
+        )
+      }
 
       return html
     }

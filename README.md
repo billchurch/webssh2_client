@@ -283,7 +283,19 @@ localStorage.setItem('webssh2.settings.global', JSON.stringify(settings))
 
 ### Configuration Object
 
-You can configure the client by setting `window.webssh2Config`:
+The preferred, CSP-compatible way to configure the client is the inert JSON
+data block in the served HTML, which the app reads at startup:
+
+```html
+<script type="application/json" id="webssh2-config">
+  { "socket": { "path": "/ssh/socket.io" }, "ssh": { "port": 22 } }
+</script>
+```
+
+Setting `window.webssh2Config` from an inline script is still supported for
+backward compatibility, but a strict `script-src` CSP will block inline
+scripts, so new integrations should use the JSON block. When both are
+present, the JSON block wins:
 
 ```javascript
 window.webssh2Config = {
