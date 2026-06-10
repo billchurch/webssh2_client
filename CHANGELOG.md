@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.0.0](https://github.com/billchurch/webssh2_client/compare/v4.0.1...v5.0.0) (2026-06-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* webssh2.bundle.js and webssh2.css no longer exist; consumers referencing those paths must read the references from client.htm instead. Requires a coordinated webssh2 release.
+
+### Features
+
+* adopt content-hashed output filenames for immutable caching ([#110](https://github.com/billchurch/webssh2_client/issues/110)) ([8025f5f](https://github.com/billchurch/webssh2_client/commit/8025f5f4e0623896aabfbc4a65e70319fd29bcfc))
+
+
+### Bug Fixes
+
+* **deps:** move @xterm/addon-search to devDependencies ([#115](https://github.com/billchurch/webssh2_client/issues/115)) ([#121](https://github.com/billchurch/webssh2_client/issues/121)) ([204120a](https://github.com/billchurch/webssh2_client/commit/204120aa84212c228a2f2966755259699cf71582))
+* **security:** CSP readiness for runtime config injection ([#125](https://github.com/billchurch/webssh2_client/issues/125)) ([4edf679](https://github.com/billchurch/webssh2_client/commit/4edf679b826b2ab94a29e5034c2acbe110e31552)), closes [#117](https://github.com/billchurch/webssh2_client/issues/117)
+* **security:** mask credentials in authenticate() debug logging ([#120](https://github.com/billchurch/webssh2_client/issues/120)) ([2088004](https://github.com/billchurch/webssh2_client/commit/2088004e8f15f246a2e069ed4a33c476c2e5d594)), closes [#112](https://github.com/billchurch/webssh2_client/issues/112)
+* **sftp:** sanitize download filenames and bound assembler memory ([#122](https://github.com/billchurch/webssh2_client/issues/122)) ([2e278e5](https://github.com/billchurch/webssh2_client/commit/2e278e5c41efc6e468de0e22722ad43a15cdb875))
+
 ## [4.0.1](https://github.com/billchurch/webssh2_client/compare/v4.0.0...v4.0.1) (2026-05-30)
 
 
