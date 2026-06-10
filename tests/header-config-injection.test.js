@@ -97,10 +97,7 @@ describe('validateHeaderBackground', () => {
   })
 
   it('accepts rgb function notation', () => {
-    assert.strictEqual(
-      validateHeaderBackground('rgb(0, 0, 0)'),
-      'rgb(0, 0, 0)'
-    )
+    assert.strictEqual(validateHeaderBackground('rgb(0, 0, 0)'), 'rgb(0, 0, 0)')
   })
 
   it('rejects Tailwind class strings', () => {
@@ -118,10 +115,7 @@ describe('validateHeaderBackground', () => {
   })
 
   it('rejects javascript: protocol', () => {
-    assert.strictEqual(
-      validateHeaderBackground('javascript:alert(1)'),
-      null
-    )
+    assert.strictEqual(validateHeaderBackground('javascript:alert(1)'), null)
   })
 })
 
@@ -163,10 +157,9 @@ describe('dispatchHeaderUpdate — headerBackground element', () => {
   })
 
   it('returns noop for non-string value', () => {
-    assert.deepStrictEqual(
-      dispatchHeaderUpdate('headerBackground', 42, null),
-      { kind: 'noop' }
-    )
+    assert.deepStrictEqual(dispatchHeaderUpdate('headerBackground', 42, null), {
+      kind: 'noop'
+    })
     assert.deepStrictEqual(
       dispatchHeaderUpdate('headerBackground', undefined, null),
       { kind: 'noop' }
@@ -245,9 +238,8 @@ describe('dispatchHeaderUpdate — headerStyle and unknown elements', () => {
   })
 
   it('returns noop for unknown elements', () => {
-    assert.deepStrictEqual(
-      dispatchHeaderUpdate('whatever', 'x', null),
-      { kind: 'noop' }
-    )
+    assert.deepStrictEqual(dispatchHeaderUpdate('whatever', 'x', null), {
+      kind: 'noop'
+    })
   })
 })
