@@ -12,7 +12,10 @@ import createDebug from 'debug'
 
 import { socket as getSocket } from './socket.js'
 import { FileChunker, DEFAULT_CHUNK_SIZE } from '../utils/file-chunker.js'
-import { createDownloadAssembler } from '../utils/download-assembler.js'
+import {
+  createDownloadAssembler,
+  computeDownloadByteLimit
+} from '../utils/download-assembler.js'
 import type { DownloadAssembler } from '../utils/download-assembler.js'
 import {
   type TransferId,
@@ -66,9 +69,24 @@ const pendingRequests = new Map<string, PendingRequest<unknown>>()
 /** FIFO queue for pending upload-ready responses (server-generated transfer IDs) */
 const pendingUploadReady: Array<PendingRequest<SftpUploadReadyResponse>> = []
 
+interface PendingDownloadReady extends PendingRequest<SftpDownloadReadyResponse> {
+  /** Basename of the path the user requested, used to verify the server echo */
+  requestedFileName?: string
+}
+
 /** FIFO queue for pending download-ready responses (server-generated transfer IDs) */
-const pendingDownloadReady: Array<PendingRequest<SftpDownloadReadyResponse>> =
-  []
+const pendingDownloadReady: PendingDownloadReady[] = []
+
+/** Server-advertised max file size in bytes (from SftpStatusResponse) */
+let serverMaxFileSize: number | null = null
+
+/**
+ * Record the server's advertised transfer limits so downloads can be
+ * bounded client-side
+ */
+export function setServerMaxFileSize(maxFileSize: number | null): void {
+  serverMaxFileSize = maxFileSize
+}
 
 /** Default request timeout (30 seconds) */
 const REQUEST_TIMEOUT = 30000
@@ -343,19 +361,33 @@ function rejectPendingRequest(key: string, error: Error): void {
 function handleDownloadReady(response: SftpDownloadReadyResponse): void {
   // Use FIFO queue (server generates transferId)
   const pending = pendingDownloadReady.shift()
+  let fileName = response.fileName
   if (pending) {
     clearTimeout(pending.timeoutId)
     pending.resolve(response)
+    // The user-clicked name is authoritative; flag a server echo that differs
+    if (
+      pending.requestedFileName &&
+      pending.requestedFileName !== response.fileName
+    ) {
+      debug(
+        'Download fileName mismatch: requested %o, server sent %o — using requested name',
+        pending.requestedFileName,
+        response.fileName
+      )
+      fileName = pending.requestedFileName
+    }
   } else {
     debug('No pending download-ready request for', response.transferId)
   }
 
-  // Create assembler for this download
+  // Create assembler for this download (sanitizes fileName, bounds memory)
   const assembler = createDownloadAssembler(
     response.transferId,
-    response.fileName,
+    fileName,
     response.fileSize,
-    response.mimeType
+    response.mimeType,
+    computeDownloadByteLimit(response.fileSize, serverMaxFileSize)
   )
   activeAssemblers.set(response.transferId, assembler)
 }
@@ -367,11 +399,19 @@ function handleDownloadChunk(response: SftpDownloadChunkResponse): void {
     return
   }
 
-  assembler.addChunk({
-    index: response.chunkIndex,
-    data: response.data,
-    isLast: response.isLast
-  })
+  try {
+    assembler.addChunk({
+      index: response.chunkIndex,
+      data: response.data,
+      isLast: response.isLast
+    })
+  } catch (err) {
+    abortDownload(
+      response.transferId,
+      err instanceof Error ? err : new Error('Download aborted')
+    )
+    return
+  }
 
   // Update transfer state
   const transfer = activeTransfers.get(response.transferId)
@@ -388,6 +428,33 @@ function handleDownloadChunk(response: SftpDownloadChunkResponse): void {
       debug('Error triggering download', err)
     }
   }
+}
+
+/**
+ * Abort a download that violated client-side bounds: mark the transfer
+ * failed, tell the gateway to stop streaming, release buffered chunks,
+ * and reject any promises waiting on the transfer.
+ */
+function abortDownload(transferId: TransferId, error: Error): void {
+  debug('Aborting download', transferId, error.message)
+
+  const transfer = activeTransfers.get(transferId)
+  if (transfer) {
+    transfer.status = 'failed'
+    transfer.error = error.message
+  }
+
+  const socketInstance = getSocket()
+  if (socketInstance) {
+    socketInstance.emit('sftp-download-cancel', { transferId })
+  }
+
+  const assembler = activeAssemblers.get(transferId)
+  if (assembler) {
+    assembler.cancel()
+  }
+
+  rejectAllForTransfer(transferId, error)
 }
 
 function handleProgress(response: SftpProgressResponse): void {
@@ -828,6 +895,9 @@ export async function downloadFile(
   // Build request without transferId (server will generate it)
   const startRequest = { remotePath }
 
+  // Basename the user actually asked for — authoritative over the server echo
+  const requestedFileName = remotePath.split(/[/\\]/).pop() ?? ''
+
   // Use FIFO queue for download-ready (server generates transferId)
   const readyPromise = new Promise<SftpDownloadReadyResponse>(
     (resolve, reject) => {
@@ -839,7 +909,8 @@ export async function downloadFile(
       pendingDownloadReady.push({
         resolve: resolve as (value: unknown) => void,
         reject,
-        timeoutId
+        timeoutId,
+        requestedFileName
       })
     }
   )
@@ -861,7 +932,7 @@ export async function downloadFile(
     id: transferId,
     direction: 'download',
     remotePath,
-    fileName: readyResponse.fileName,
+    fileName: requestedFileName || readyResponse.fileName,
     totalBytes: readyResponse.fileSize,
     bytesTransferred: 0,
     percentComplete: 0,
