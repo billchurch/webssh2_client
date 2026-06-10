@@ -1,6 +1,7 @@
 // client/src/js/stores/config.ts
 import { createSignal, createMemo, createRoot } from 'solid-js'
 import createDebug from 'debug'
+import maskObject from 'jsmasker'
 import { isObject, mergeDeep } from '../utils/index.js'
 import { DEFAULT_AUTH_METHODS } from '../constants.js'
 import type {
@@ -129,6 +130,15 @@ export const sanitizeClientAuthPayload = <
 
   return sanitized
 }
+
+// Sanitization alone leaves credentials for allowed auth methods in
+// cleartext — never log its output directly (issue #112)
+export const sanitizeClientAuthPayloadForLogging = <
+  T extends Partial<ClientAuthenticatePayload>
+>(
+  payload: T
+): Partial<ClientAuthenticatePayload> =>
+  maskObject(sanitizeClientAuthPayload(payload))
 
 // URL parameters signal
 export const [urlParams, setUrlParams] = createSignal<URLSearchParams>(
