@@ -14,7 +14,8 @@ import createDebug from 'debug'
 import {
   sftpService,
   initializeSftpListeners,
-  cleanupSftpListeners
+  cleanupSftpListeners,
+  setServerMaxFileSize
 } from '../services/sftp-service.js'
 import {
   type SftpFileEntry,
@@ -194,6 +195,7 @@ function createSftpStoreInternal() {
         isAvailable: status.enabled,
         serverConfig: status.config ?? null
       })
+      setServerMaxFileSize(status.config?.maxFileSize ?? null)
     },
 
     // Panel controls
