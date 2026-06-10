@@ -35,7 +35,11 @@ import {
 import * as hostKeyStore from './host-key-store.js'
 
 // Import utilities
-import { credentials, sanitizeClientAuthPayload } from '../stores/config.js'
+import {
+  credentials,
+  sanitizeClientAuthPayload,
+  sanitizeClientAuthPayloadForLogging
+} from '../stores/config.js'
 import { createDebouncedResizeEmitter } from '../utils/terminalResize.js'
 import {
   RESIZE_DEBOUNCE_DELAY,
@@ -359,9 +363,9 @@ export class SocketService {
       username: authCredentials.username,
       hasSocket: !!socket(),
       effectiveFormData: effectiveFormData
-        ? sanitizeClientAuthPayload(effectiveFormData)
+        ? sanitizeClientAuthPayloadForLogging(effectiveFormData)
         : null,
-      baseCredentials: sanitizeClientAuthPayload(baseCredentials)
+      baseCredentials: sanitizeClientAuthPayloadForLogging(baseCredentials)
     })
 
     const currentSocket = socket()
