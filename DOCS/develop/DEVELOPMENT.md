@@ -149,7 +149,7 @@ npm run build:server # Node entrypoints to JS
 
 Artifacts:
 
-- Client: `client/public/{webssh2.bundle.js, webssh2.css, client.htm}`
+- Client: `client/public/{webssh2-<hash>.js, webssh2-<hash>.css, xterm-<hash>.css, client.htm}`
 - Node: root `index.js`, `client/index.js` (compiled from TypeScript)
 
 ## Type Checking and Linting

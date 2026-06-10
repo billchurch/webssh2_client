@@ -46,7 +46,7 @@ Ensure your SSH or GPG key is set up for git commit signing and added to your gi
    npm run build
    ```
 
-   This runs Vite in production mode and outputs to `client/public/` (e.g., `webssh2.bundle.js`, `webssh2.css`, `client.htm`).
+   This runs Vite in production mode and outputs to `client/public/` (e.g., `webssh2-<hash>.js`, `webssh2-<hash>.css`, `xterm-<hash>.css`, `client.htm`).
 
 5. Type-check (recommended):
 

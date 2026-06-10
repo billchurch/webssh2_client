@@ -118,27 +118,32 @@ export default defineConfig(({ mode }) => {
           main: 'index.html'
         },
         output: {
+          hashCharacters: 'hex',
           entryFileNames: (chunkInfo) => {
             return chunkInfo.name === 'main'
-              ? 'webssh2.bundle.js'
-              : '[name].bundle.js'
+              ? 'webssh2-[hash].js'
+              : '[name]-[hash].js'
           },
           chunkFileNames: '[name]-[hash].js',
           assetFileNames: (assetInfo) => {
+            // favicon.ico keeps a stable name (server contract; see #109)
+            if (assetInfo.name === 'favicon.ico') {
+              return 'favicon.ico'
+            }
             if (
               assetInfo.name === 'style.css' ||
               assetInfo.name === 'index.css'
             ) {
-              return 'webssh2.css'
+              return 'webssh2-[hash].css'
             }
             if (
               assetInfo.name &&
               assetInfo.name.startsWith('main') &&
               assetInfo.name.endsWith('.css')
             ) {
-              return 'webssh2.css'
+              return 'webssh2-[hash].css'
             }
-            return '[name][extname]'
+            return '[name]-[hash][extname]'
           }
         }
       },

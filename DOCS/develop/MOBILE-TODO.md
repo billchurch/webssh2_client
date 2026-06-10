@@ -40,7 +40,7 @@ Goal: Provide an optional, compact keypad for modifier/special keys.
   - `<meta name="apple-mobile-web-app-title" content="WebSSH2">`
   - Apple touch icons (180x180).
 - Service Worker (later milestone):
-  - Online‑first; cache static assets (`webssh2.bundle.js`, `webssh2.css`, `client.htm`, icons).
+  - Online‑first; cache static assets (`webssh2-<hash>.js`, `webssh2-<hash>.css`, `client.htm`, icons).
   - No offline for terminal sessions; show friendly offline page for the shell UI only.
   - Consider Workbox (vite-plugin-pwa) with explicit CSP.
 - Install prompts:
