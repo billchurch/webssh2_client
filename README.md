@@ -225,12 +225,12 @@ For gradients, animation, or layout customization beyond a solid background colo
 
 The `headerStyle` URL parameter and `header.color` POST field were removed in [issue #102](https://github.com/billchurch/webssh2_client/issues/102). Both are now silently ignored. To replace them:
 
-| Old usage | Replacement |
-| --- | --- |
-| Solid background color (`headerStyle=bg-red-600`) | `?headerBackground=#dc2626` or `WEBSSH2_HEADER_BACKGROUND` |
-| Custom text (`headerStyle=...` with no color intent) | `?header=Production` or `WEBSSH2_HEADER_TEXT` |
-| Gradients / animation / advanced layout | Terminal theming |
-| `header.color` POST field | `header.background` POST (validated CSS color) |
+| Old usage                                            | Replacement                                                |
+| ---------------------------------------------------- | ---------------------------------------------------------- |
+| Solid background color (`headerStyle=bg-red-600`)    | `?headerBackground=#dc2626` or `WEBSSH2_HEADER_BACKGROUND` |
+| Custom text (`headerStyle=...` with no color intent) | `?header=Production` or `WEBSSH2_HEADER_TEXT`              |
+| Gradients / animation / advanced layout              | Terminal theming                                           |
+| `header.color` POST field                            | `header.background` POST (validated CSS color)             |
 
 These parameters were non-functional in shipped releases prior to [`webssh2#519`](https://github.com/billchurch/webssh2/pull/519), so this change has no behavior impact on production deployments that already relied on what was rendered.
 
