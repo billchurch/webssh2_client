@@ -105,11 +105,11 @@ export const SpecialKeysPanel: Component<SpecialKeysPanelProps> = (props) => {
                         <button
                           type="button"
                           class={`rounded px-1 py-1.5 font-mono text-xs transition-colors ${
-                            key.browserReserved
+                            key.browserReserved === true
                               ? 'border border-dashed border-amber-700 bg-neutral-700 text-amber-400 hover:bg-neutral-600'
                               : 'bg-neutral-700 text-neutral-200 hover:bg-neutral-600'
                           }`}
-                          title={`${key.description}${key.browserReserved ? ' (browser-reserved)' : ''}`}
+                          title={`${key.description}${key.browserReserved === true ? ' (browser-reserved)' : ''}`}
                           onClick={() => handleSendKey(key.sequence)}
                         >
                           {key.label}

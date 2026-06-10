@@ -60,7 +60,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
   // Reactive private key validation
   const privateKeyValidation = usePrivateKeyValidation(
-    () => formData().privateKey || ''
+    () => formData().privateKey ?? ''
   )
 
   // Field validators for other fields
@@ -73,11 +73,11 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     ) {
       return props.lockedHost
     }
-    return formData().host || ''
+    return formData().host ?? ''
   }, [ValidationRules.required(), ValidationRules.hostname()])
 
   const usernameValidator = createFieldValidator(
-    () => formData().username || '',
+    () => formData().username ?? '',
     [ValidationRules.required()]
   )
 
@@ -110,14 +110,17 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
         // Priority order: host → port → username → password
         // Skip host/port if they're locked
-        if (!hostLocked && (!data.host || data.host.trim() === '')) {
+        if (!hostLocked && (data.host == null || data.host.trim() === '')) {
           hostInputRef?.focus()
           debug('Auto-focused host field')
-        } else if (!hostLocked && (!data.port || data.port === 0)) {
+        } else if (
+          !hostLocked &&
+          (data.port == null || data.port === 0 || Number.isNaN(data.port))
+        ) {
           // Port is unlikely to be empty since default is 22, but check if it's actually empty/0
           portInputRef?.focus()
           debug('Auto-focused port field')
-        } else if (!data.username || data.username.trim() === '') {
+        } else if (data.username == null || data.username.trim() === '') {
           usernameInputRef?.focus()
           debug('Auto-focused username field')
         } else if (supportsPassword()) {
@@ -146,7 +149,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   }
 
   const allowedMethods = createMemo(() =>
-    props.allowedAuthMethods && props.allowedAuthMethods.length > 0
+    props.allowedAuthMethods.length > 0
       ? props.allowedAuthMethods
       : DEFAULT_AUTH_METHODS
   )
@@ -175,13 +178,15 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   const effectiveHost = createMemo(() =>
     isHostLocked() && props.lockedHost !== undefined
       ? props.lockedHost
-      : formData().host || ''
+      : (formData().host ?? '')
   )
-  const effectivePort = createMemo(() =>
-    isHostLocked() && props.lockedPort !== undefined
-      ? props.lockedPort
-      : formData().port || 22
-  )
+  const effectivePort = createMemo(() => {
+    if (isHostLocked() && props.lockedPort !== undefined) {
+      return props.lockedPort
+    }
+    const port = formData().port
+    return port != null && port !== 0 && !Number.isNaN(port) ? port : 22
+  })
 
   createEffect(() => {
     if (!supportsPublicKey()) {
@@ -396,20 +401,22 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
             class="mb-2 block w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             classList={{
               'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400':
-                !formData().privateKey,
+                formData().privateKey == null || formData().privateKey === '',
               'border-red-500 bg-red-50 text-slate-900 placeholder:text-slate-400':
-                Boolean(
-                  formData().privateKey && !privateKeyValidation.isValid()
-                ),
+                formData().privateKey != null &&
+                formData().privateKey !== '' &&
+                !privateKeyValidation.isValid(),
               'border-green-500 bg-green-50 text-slate-900 placeholder:text-slate-400':
-                Boolean(formData().privateKey && privateKeyValidation.isValid())
+                formData().privateKey != null &&
+                formData().privateKey !== '' &&
+                privateKeyValidation.isValid()
             }}
-            value={formData().privateKey || ''}
+            value={formData().privateKey ?? ''}
             onInput={(e) => updateFormData('privateKey', e.currentTarget.value)}
           ></textarea>
 
           {/* Validation status indicator */}
-          {formData().privateKey && (
+          {formData().privateKey != null && formData().privateKey !== '' && (
             <div class="absolute right-2 top-2">
               {privateKeyValidation.isValid() ? (
                 <span
@@ -428,25 +435,30 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
         </div>
 
         {/* Validation error message */}
-        {formData().privateKey && !privateKeyValidation.isValid() && (
-          <div class="mb-2 text-sm">
-            <p class="text-red-600">{privateKeyValidation.error()}</p>
-            {privateKeyValidation.suggestion() && (
-              <p class="mt-1 text-gray-600">
-                {privateKeyValidation.suggestion()}
-              </p>
-            )}
-          </div>
-        )}
+        {formData().privateKey != null &&
+          formData().privateKey !== '' &&
+          !privateKeyValidation.isValid() && (
+            <div class="mb-2 text-sm">
+              <p class="text-red-600">{privateKeyValidation.error()}</p>
+              {privateKeyValidation.suggestion() != null &&
+                privateKeyValidation.suggestion() !== '' && (
+                  <p class="mt-1 text-gray-600">
+                    {privateKeyValidation.suggestion()}
+                  </p>
+                )}
+            </div>
+          )}
 
         {/* Key format badge */}
-        {formData().privateKey && privateKeyValidation.isValid() && (
-          <div class="mb-2">
-            <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-              {privateKeyValidation.format()} format detected
-            </span>
-          </div>
-        )}
+        {formData().privateKey != null &&
+          formData().privateKey !== '' &&
+          privateKeyValidation.isValid() && (
+            <div class="mb-2">
+              <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                {privateKeyValidation.format()} format detected
+              </span>
+            </div>
+          )}
 
         <div class="mb-2">
           <input
@@ -475,7 +487,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
             enterkeyhint="go"
             placeholder="Key password (if encrypted)"
             class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={formData().passphrase || ''}
+            value={formData().passphrase ?? ''}
             onInput={(e) => updateFormData('passphrase', e.currentTarget.value)}
           />
         </div>
@@ -559,7 +571,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                 spellcheck={false}
                 enterkeyhint="next"
                 class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData().host || ''}
+                value={formData().host ?? ''}
                 onInput={(e) => updateFormData('host', e.currentTarget.value)}
               />
             </div>
@@ -582,7 +594,12 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                 inputmode="numeric"
                 pattern="[0-9]*"
                 class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData().port || String(defaultPort())}
+                value={(() => {
+                  const port = formData().port
+                  return port != null && port !== 0 && !Number.isNaN(port)
+                    ? port
+                    : String(defaultPort())
+                })()}
                 onInput={(e) =>
                   updateFormData(
                     'port',
@@ -608,7 +625,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
               spellcheck={false}
               enterkeyhint="next"
               class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData().username || ''}
+              value={formData().username ?? ''}
               onInput={(e) => updateFormData('username', e.currentTarget.value)}
             />
           </div>
@@ -630,7 +647,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                       spellcheck={false}
                       enterkeyhint="go"
                       class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={formData().password || ''}
+                      value={formData().password ?? ''}
                       onInput={(e) =>
                         updateFormData('password', e.currentTarget.value)
                       }

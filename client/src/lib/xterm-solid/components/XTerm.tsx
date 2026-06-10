@@ -65,8 +65,8 @@ export function XTerm(props: XTermProps) {
   const [terminal, setTerminal] = createSignal<Terminal>()
   const [containerRef, setContainerRef] = createSignal<HTMLDivElement>()
 
-  let addonManager: AddonManager
-  let eventManager: EventManager
+  let addonManager: AddonManager | undefined
+  let eventManager: EventManager | undefined
   let mountCleanup: (() => void) | undefined
 
   // Create terminal reference for imperative access
@@ -94,10 +94,9 @@ export function XTerm(props: XTermProps) {
     // Addon-specific methods (available only if addons are loaded)
     fit: () => {
       // Try to get FitAddon from our addon manager
-      const addons = addonManager?.getAllAddons() || []
+      const addons = addonManager?.getAllAddons() ?? []
       const fitAddon = addons.find(
         (addon) =>
-          addon &&
           addon.constructor.name === 'FitAddon' &&
           typeof (addon as unknown as Record<string, unknown>)['fit'] ===
             'function'
@@ -193,7 +192,7 @@ export function XTerm(props: XTermProps) {
     }
 
     // Auto-focus if requested
-    if (props.autoFocus) {
+    if (props.autoFocus === true) {
       // Use requestAnimationFrame to ensure terminal is fully initialized
       requestAnimationFrame(() => term.focus())
     }
@@ -204,7 +203,7 @@ export function XTerm(props: XTermProps) {
   // Update event handlers when props change
   createEffect((prevHandlers) => {
     const term = terminal()
-    if (!term || !eventManager) return undefined
+    if (term == null || eventManager == null) return undefined
 
     const currentHandlers: XTermEventHandlers = {}
     if (props.onBell) currentHandlers.onBell = props.onBell
@@ -249,10 +248,10 @@ export function XTerm(props: XTermProps) {
     }
 
     // Cleanup managers
-    if (eventManager) {
+    if (eventManager != null) {
       eventManager.dispose()
     }
-    if (addonManager) {
+    if (addonManager != null) {
       addonManager.dispose()
     }
 
@@ -265,7 +264,9 @@ export function XTerm(props: XTermProps) {
   return (
     <div
       ref={setContainerRef}
-      class={props.class || 'size-full'}
+      class={
+        props.class != null && props.class !== '' ? props.class : 'size-full'
+      }
       style={props.style}
     />
   )

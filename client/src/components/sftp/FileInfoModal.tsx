@@ -163,7 +163,10 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
               </dt>
             </div>
             <dd class="text-right font-mono text-neutral-100">
-              {props.entry?.permissions || '--'}
+              {props.entry?.permissions != null &&
+              props.entry.permissions !== ''
+                ? props.entry.permissions
+                : '--'}
             </dd>
 
             {/* Owner */}
@@ -174,7 +177,9 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
               </dt>
             </div>
             <dd class="text-right text-neutral-100">
-              {props.entry?.owner || '--'}
+              {props.entry?.owner != null && props.entry.owner !== ''
+                ? props.entry.owner
+                : '--'}
             </dd>
 
             {/* Group */}
@@ -185,7 +190,9 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
               </dt>
             </div>
             <dd class="text-right text-neutral-100">
-              {props.entry?.group || '--'}
+              {props.entry?.group != null && props.entry.group !== ''
+                ? props.entry.group
+                : '--'}
             </dd>
           </dl>
         </div>

@@ -191,11 +191,29 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
           : ''
       setThemeJsonError(null)
       setSettings({
-        fontSize: stored.fontSize || defaultSettings.fontSize,
-        fontFamily: stored.fontFamily || defaultSettings.fontFamily,
+        fontSize:
+          stored.fontSize != null &&
+          stored.fontSize !== 0 &&
+          !Number.isNaN(stored.fontSize)
+            ? stored.fontSize
+            : defaultSettings.fontSize,
+        fontFamily:
+          stored.fontFamily != null && stored.fontFamily !== ''
+            ? stored.fontFamily
+            : defaultSettings.fontFamily,
         cursorBlink: stored.cursorBlink ?? defaultSettings.cursorBlink,
-        scrollback: stored.scrollback || defaultSettings.scrollback,
-        tabStopWidth: stored.tabStopWidth || defaultSettings.tabStopWidth,
+        scrollback:
+          stored.scrollback != null &&
+          stored.scrollback !== 0 &&
+          !Number.isNaN(stored.scrollback)
+            ? stored.scrollback
+            : defaultSettings.scrollback,
+        tabStopWidth:
+          stored.tabStopWidth != null &&
+          stored.tabStopWidth !== 0 &&
+          !Number.isNaN(stored.tabStopWidth)
+            ? stored.tabStopWidth
+            : defaultSettings.tabStopWidth,
         bellStyle: (stored.bellStyle as 'sound' | 'none') || 'none',
         clipboardAutoSelectToCopy:
           stored.clipboardAutoSelectToCopy ??
@@ -1000,8 +1018,14 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                                 </span>
                               </div>
                               <div class="mt-0.5 truncate font-mono text-xs text-slate-500">
-                                {hostKeyFingerprints()[hostPort]?.[algo] ||
-                                  'Computing...'}
+                                {(() => {
+                                  const fingerprint =
+                                    hostKeyFingerprints()[hostPort]?.[algo]
+                                  return fingerprint != null &&
+                                    fingerprint !== ''
+                                    ? fingerprint
+                                    : 'Computing...'
+                                })()}
                               </div>
                             </div>
                             <button
@@ -1096,7 +1120,11 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                             setAddKeyPublicKey('')
                             refreshFingerprints()
                           } else {
-                            setAddKeyError(result.error || 'Failed to add key')
+                            setAddKeyError(
+                              result.error != null && result.error !== ''
+                                ? result.error
+                                : 'Failed to add key'
+                            )
                           }
                         }}
                       >
@@ -1155,7 +1183,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                             refreshFingerprints()
                           } else {
                             setImportError(
-                              result.error || 'Failed to import keys'
+                              result.error != null && result.error !== ''
+                                ? result.error
+                                : 'Failed to import keys'
                             )
                           }
                         }

@@ -23,7 +23,7 @@ export const UploadDropzone: Component<UploadDropzoneProps> = (props) => {
   const handleDragEnter = (e: DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (props.disabled) return
+    if (props.disabled === true) return
 
     setDragCounter((c) => c + 1)
     if (e.dataTransfer?.items && e.dataTransfer.items.length > 0) {
@@ -54,7 +54,7 @@ export const UploadDropzone: Component<UploadDropzoneProps> = (props) => {
     setIsDragOver(false)
     setDragCounter(0)
 
-    if (props.disabled) return
+    if (props.disabled === true) return
 
     const files = e.dataTransfer?.files
     if (files && files.length > 0) {

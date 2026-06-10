@@ -27,7 +27,7 @@ export const MAX_LENGTHS = {
  * Validates and sanitizes a hostname
  */
 export function validateHost(host: unknown): string | null {
-  if (!host || typeof host !== 'string') return null
+  if (typeof host !== 'string' || host === '') return null
 
   let value = host
   // Remove any protocol prefixes
@@ -68,7 +68,7 @@ export function validatePort(port: unknown): number | null {
 
 /** Validates and sanitizes a username */
 export function validateUsername(username: unknown): string | null {
-  if (!username || typeof username !== 'string') return null
+  if (typeof username !== 'string' || username === '') return null
   const value = username.trim()
   if (value.length === 0 || value.length > MAX_LENGTHS.username) {
     debug('Invalid username length:', value.length)
@@ -97,7 +97,7 @@ export function validateText(
   text: unknown,
   maxLength: number = MAX_LENGTHS.header
 ): string {
-  if (!text || typeof text !== 'string') return ''
+  if (typeof text !== 'string' || text === '') return ''
   let value = text
   if (value.length > maxLength) {
     debug('Text truncated from', value.length, 'to', maxLength)
@@ -108,7 +108,7 @@ export function validateText(
 
 /** Validates a color value */
 export function validateColor(color: unknown): string | null {
-  if (!color || typeof color !== 'string') return null
+  if (typeof color !== 'string' || color === '') return null
   const value = color.trim()
   if (value.length > MAX_LENGTHS.headerbackground) return null
   const hexRegex = /^#([0-9a-fA-F]{3}){1,2}$/
@@ -127,7 +127,7 @@ export function validateColor(color: unknown): string | null {
 
 /** Validates terminal type */
 export function validateTerminalType(term: unknown): string | null {
-  if (!term || typeof term !== 'string') return null
+  if (typeof term !== 'string' || term === '') return null
   const value = term.trim()
   if (value.length === 0 || value.length > MAX_LENGTHS.sshterm) return null
   const validTermTypes = [
@@ -156,7 +156,7 @@ export function validateTerminalType(term: unknown): string | null {
 
 /** Validates log level */
 export function validateLogLevel(level: unknown): string | null {
-  if (!level || typeof level !== 'string') return null
+  if (typeof level !== 'string' || level === '') return null
   const value = level.trim().toLowerCase()
   const validLevels = ['error', 'warn', 'info', 'debug', 'trace', 'silent']
   if (validLevels.includes(value)) return value
@@ -176,49 +176,66 @@ export function validateUrlParameters(params: URLSearchParams) {
     logLevel: null as string | null
   }
   const host = params.get('host')
-  if (host) validated.host = validateHost(host)
+  if (host != null && host !== '') validated.host = validateHost(host)
   const port = params.get('port')
-  if (port) {
+  if (port != null && port !== '') {
     const validPort = validatePort(port)
-    if (validPort) validated.port = validPort
+    // validatePort only returns numbers in 1-65535, so a null check suffices
+    if (validPort != null) validated.port = validPort
   }
   const username = params.get('username')
-  if (username) validated.username = validateUsername(username)
+  if (username != null && username !== '') {
+    validated.username = validateUsername(username)
+  }
   const password = params.get('password')
-  if (password) validated.password = validatePassword(password)
+  if (password != null && password !== '') {
+    validated.password = validatePassword(password)
+  }
   const header = params.get('header')
-  if (header) validated.header.text = validateText(header)
+  if (header != null && header !== '')
+    validated.header.text = validateText(header)
   const headerBg = params.get('headerbackground')
-  if (headerBg) validated.header.background = validateColor(headerBg)
+  if (headerBg != null && headerBg !== '') {
+    validated.header.background = validateColor(headerBg)
+  }
   const term = params.get('sshterm')
-  if (term) validated.sshterm = validateTerminalType(term)
+  if (term != null && term !== '')
+    validated.sshterm = validateTerminalType(term)
   const logLevel = params.get('logLevel')
-  if (logLevel) validated.logLevel = validateLogLevel(logLevel)
+  if (logLevel != null && logLevel !== '') {
+    validated.logLevel = validateLogLevel(logLevel)
+  }
   debug('Validated URL parameters:', validated)
   return validated
 }
 
 /** Validates form data before submission */
 export function validateFormData(formData: unknown) {
-  if (!formData || typeof formData !== 'object') return null
+  if (formData == null || typeof formData !== 'object') return null
   const fd = formData as Record<string, unknown>
   const validated: Record<string, unknown> = {}
 
-  if (!fd['host'] || !validateHost(fd['host'])) {
+  // validateHost returns null for every non-string or empty input, so a
+  // single null check covers the previous missing-value short-circuit
+  const validHost = validateHost(fd['host'])
+  if (validHost == null) {
     debug('Invalid or missing host')
     return null
   }
-  validated['host'] = validateHost(fd['host'])
+  validated['host'] = validHost
 
-  if (!fd['username'] || !validateUsername(fd['username'])) {
+  // validateUsername likewise returns null for non-string or empty input
+  const validUsername = validateUsername(fd['username'])
+  if (validUsername == null) {
     debug('Invalid or missing username')
     return null
   }
-  validated['username'] = validateUsername(fd['username'])
+  validated['username'] = validUsername
 
   if (fd['port'] !== undefined) {
     const port = validatePort(fd['port'])
-    if (!port) {
+    // validatePort only returns numbers in 1-65535, so a null check suffices
+    if (port == null) {
       debug('Invalid port')
       return null
     }
@@ -227,22 +244,25 @@ export function validateFormData(formData: unknown) {
     validated['port'] = 22
   }
 
-  if (fd['password']) validated['password'] = validatePassword(fd['password'])
-  if (fd['privateKey']) {
-    const pk = String(fd['privateKey'])
-    if (pk.length > MAX_LENGTHS.privateKey) {
+  const passwordValue = fd['password']
+  if (typeof passwordValue === 'string' && passwordValue !== '') {
+    validated['password'] = validatePassword(passwordValue)
+  }
+  const privateKeyValue = fd['privateKey']
+  if (typeof privateKeyValue === 'string' && privateKeyValue !== '') {
+    if (privateKeyValue.length > MAX_LENGTHS.privateKey) {
       debug('Private key too large')
       return null
     }
-    validated['privateKey'] = pk
+    validated['privateKey'] = privateKeyValue
   }
-  if (fd['passphrase']) {
-    const pp = String(fd['passphrase'])
-    if (pp.length > MAX_LENGTHS.passphrase) {
+  const passphraseValue = fd['passphrase']
+  if (typeof passphraseValue === 'string' && passphraseValue !== '') {
+    if (passphraseValue.length > MAX_LENGTHS.passphrase) {
       debug('Passphrase too long')
       return null
     }
-    validated['passphrase'] = pp
+    validated['passphrase'] = passphraseValue
   }
   return validated
 }

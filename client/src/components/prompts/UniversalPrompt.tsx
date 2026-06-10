@@ -97,7 +97,7 @@ export const UniversalPrompt: Component<UniversalPromptProps> = (props) => {
   const handleFormSubmit = (e: Event) => {
     e.preventDefault()
     // Find the default button or first primary button
-    const defaultButton = props.prompt.buttons?.find((b) => b.default)
+    const defaultButton = props.prompt.buttons?.find((b) => b.default === true)
     const primaryButton = props.prompt.buttons?.find(
       (b) => b.variant === 'primary'
     )
@@ -209,15 +209,15 @@ export const UniversalPrompt: Component<UniversalPromptProps> = (props) => {
             <For each={buttons()}>
               {(button) => (
                 <button
-                  type={button.default ? 'submit' : 'button'}
+                  type={button.default === true ? 'submit' : 'button'}
                   onClick={
-                    button.default
+                    button.default === true
                       ? undefined
                       : () => handleButtonClick(button.action)
                   }
                   class={`inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${getButtonVariantClasses(button.variant)}`}
                   autofocus={
-                    button.default &&
+                    button.default === true &&
                     (props.prompt.inputs === undefined ||
                       props.prompt.inputs.length === 0)
                   }

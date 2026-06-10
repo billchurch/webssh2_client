@@ -252,7 +252,7 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
 
     // Fit terminal after mount with multiple attempts for proper sizing
     const fitTerminal = () => {
-      if (fitAddonInstance && ref.terminal) {
+      if (ref.terminal) {
         fitAddonInstance.fit()
         const dims = { cols: ref.terminal.cols, rows: ref.terminal.rows }
         debug('Terminal fitted, dimensions:', dims.cols, 'x', dims.rows)
@@ -325,7 +325,7 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
           if (clipboard && term) {
             const manager = clipboard.getClipboardManager()
             const text = await manager.readText()
-            if (text) {
+            if (text != null && text !== '') {
               term.paste(text)
             }
           }
@@ -562,7 +562,10 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
     onTitleChange: handleTitleChange,
     onBell: playBellSound,
     onMount: handleTerminalMount,
-    class: props.class || 'terminal-container',
+    class:
+      props.class != null && props.class !== ''
+        ? props.class
+        : 'terminal-container',
     style: {
       width: '100%',
       height: '100%'

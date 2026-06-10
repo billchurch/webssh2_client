@@ -140,7 +140,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
           disabled={props.loading}
         >
           <RefreshCw
-            class={`size-4 ${props.loading ? 'animate-spin' : ''}`}
+            class={`size-4 ${props.loading === true ? 'animate-spin' : ''}`}
             aria-hidden="true"
           />
         </button>
@@ -149,14 +149,20 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
         <button
           type="button"
           class={`rounded p-1.5 hover:bg-neutral-700 ${
-            props.showHidden
+            props.showHidden === true
               ? 'text-blue-400'
               : 'text-neutral-400 hover:text-white'
           }`}
           onClick={props.onToggleHidden}
-          title={props.showHidden ? 'Hide hidden files' : 'Show hidden files'}
+          title={
+            props.showHidden === true
+              ? 'Hide hidden files'
+              : 'Show hidden files'
+          }
           aria-label={
-            props.showHidden ? 'Hide hidden files' : 'Show hidden files'
+            props.showHidden === true
+              ? 'Hide hidden files'
+              : 'Show hidden files'
           }
           aria-pressed={props.showHidden}
         >

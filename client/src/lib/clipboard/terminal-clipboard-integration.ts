@@ -138,7 +138,11 @@ export class TerminalClipboardIntegration {
     this.mouseUpHandler = async () => {
       setTimeout(async () => {
         const selection = this.terminal?.getSelection()
-        if (selection && selection !== lastSelection) {
+        if (
+          selection != null &&
+          selection !== '' &&
+          selection !== lastSelection
+        ) {
           lastSelection = selection
           debug(
             'Auto-copying selection to clipboard:',
@@ -177,7 +181,7 @@ export class TerminalClipboardIntegration {
         e.preventDefault()
         debug('Middle-click paste triggered')
         const text = await this.clipboardManager.readText()
-        if (text && this.terminal) {
+        if (text != null && text !== '' && this.terminal) {
           const preview =
             text.substring(0, 50) + (text.length > 50 ? '...' : '')
           debug('Pasting from clipboard:', preview)
@@ -241,7 +245,7 @@ export class TerminalClipboardIntegration {
 
     debug('Keyboard shortcut paste triggered')
     const text = await this.clipboardManager.readText()
-    if (text) {
+    if (text != null && text !== '') {
       const preview = text.substring(0, 50) + (text.length > 50 ? '...' : '')
       debug('Keyboard paste, text:', preview)
       this.terminal.paste(text)

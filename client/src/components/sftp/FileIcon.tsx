@@ -35,7 +35,8 @@ interface FileIconProps {
  * Get the appropriate icon component based on file type and extension
  */
 export const FileIcon: Component<FileIconProps> = (props) => {
-  const iconClass = () => props.class || 'size-4'
+  const iconClass = () =>
+    props.class != null && props.class !== '' ? props.class : 'size-4'
 
   // Directory
   if (props.entry.type === 'directory') {

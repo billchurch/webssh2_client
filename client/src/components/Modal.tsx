@@ -43,12 +43,12 @@ export const Modal: Component<ModalProps> = (props) => {
 
         // Focus trap - focus on first focusable element using another requestAnimationFrame for proper timing
         requestAnimationFrame(() => {
-          if (dialogRef) {
+          if (dialogRef != null) {
             const focusableElements = dialogRef.querySelectorAll(
               'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
             )
-            const firstElement = focusableElements[0] as HTMLElement
-            if (firstElement) {
+            const firstElement = focusableElements[0] as HTMLElement | undefined
+            if (firstElement != null) {
               firstElement.focus()
             }
           }
@@ -105,7 +105,7 @@ export const Modal: Component<ModalProps> = (props) => {
       <Show when={props.isOpen}>
         <dialog
           ref={dialogRef}
-          class={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 ${props.class || ''}`}
+          class={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 ${props.class ?? ''}`}
           onClick={handleDialogClick}
           aria-modal="true"
         >
@@ -182,9 +182,7 @@ export const PromptModal: Component<PromptModalProps> = (props) => {
 
   // Initialize responses array when prompts change
   createEffect(() => {
-    if (props.prompts) {
-      setResponses(new Array(props.prompts.length).fill(''))
-    }
+    setResponses(new Array(props.prompts.length).fill(''))
   })
 
   const handleInputChange = (index: number, value: string) => {
@@ -229,7 +227,7 @@ export const PromptModal: Component<PromptModalProps> = (props) => {
                       id={inputId}
                       type={prompt.echo ? 'text' : 'password'}
                       class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={responses()[index()] || ''}
+                      value={responses()[index()] ?? ''}
                       onInput={(e) =>
                         handleInputChange(index(), e.currentTarget.value)
                       }

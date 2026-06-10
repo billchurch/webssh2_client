@@ -24,10 +24,13 @@ export class ClipboardManager {
   }
 
   isSupported(): boolean {
-    return !!(
-      navigator.clipboard &&
-      typeof navigator.clipboard.readText === 'function' &&
-      typeof navigator.clipboard.writeText === 'function'
+    // navigator.clipboard is typed as non-nullable in lib.dom, but is absent
+    // at runtime in insecure contexts and older browsers.
+    const clipboard = navigator.clipboard as Clipboard | undefined
+    return (
+      clipboard != null &&
+      typeof clipboard.readText === 'function' &&
+      typeof clipboard.writeText === 'function'
     )
   }
 

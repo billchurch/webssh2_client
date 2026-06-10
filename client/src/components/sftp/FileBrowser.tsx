@@ -79,7 +79,7 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
   // Error display with auto-clear
   createEffect(() => {
     const error = sftpStore.error
-    if (error) {
+    if (error != null && error !== '') {
       const timeout = setTimeout(() => {
         sftpStore.clearError()
       }, 5000)
@@ -92,7 +92,7 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
     <Show when={sftpStore.isOpen}>
       <div
         class={`flex h-72 shrink-0 flex-col overflow-hidden border-t border-neutral-600 bg-neutral-900 ${
-          props.class || ''
+          props.class ?? ''
         }`}
       >
         {/* Toolbar */}

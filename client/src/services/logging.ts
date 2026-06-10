@@ -48,7 +48,7 @@ class LoggingServiceImpl implements LoggingService {
   addToLog(data: string): void {
     if (!state.sessionLogEnable) return
 
-    let sessionLog = window.localStorage.getItem(LOG_KEY) || ''
+    let sessionLog = window.localStorage.getItem(LOG_KEY) ?? ''
     const isNewLog = sessionLog === ''
 
     sessionLog += data
@@ -70,7 +70,7 @@ class LoggingServiceImpl implements LoggingService {
     const logStartMessage = `Log Start for ${footer} - ${formatDate(new Date())}\r\n\r\n`
 
     // Add start message to log
-    let sessionLog = window.localStorage.getItem(LOG_KEY) || ''
+    let sessionLog = window.localStorage.getItem(LOG_KEY) ?? ''
     sessionLog += logStartMessage
     window.localStorage.setItem(LOG_KEY, sessionLog)
     window.localStorage.setItem(LOG_DATE_KEY, new Date().toISOString())
@@ -83,12 +83,13 @@ class LoggingServiceImpl implements LoggingService {
     setState('sessionLogEnable', false)
 
     // Add end message if we have log data
-    const hasLogData = !!window.localStorage.getItem(LOG_KEY)
+    const storedLog = window.localStorage.getItem(LOG_KEY)
+    const hasLogData = storedLog != null && storedLog !== ''
     if (hasLogData) {
       const footer = sessionFooter ?? ''
       const logEndMessage = `\r\n\r\nLog End for ${footer} - ${formatDate(new Date())}\r\n`
 
-      let sessionLog = window.localStorage.getItem(LOG_KEY) || ''
+      let sessionLog = window.localStorage.getItem(LOG_KEY) ?? ''
       sessionLog += logEndMessage
       window.localStorage.setItem(LOG_KEY, sessionLog)
 
@@ -98,7 +99,7 @@ class LoggingServiceImpl implements LoggingService {
 
   clearLog(): void {
     const sessionLog = window.localStorage.getItem(LOG_KEY)
-    if (!sessionLog) {
+    if (sessionLog == null || sessionLog === '') {
       debug('No session log found to clear')
       return
     }
@@ -114,8 +115,7 @@ class LoggingServiceImpl implements LoggingService {
 
   downloadLog(): void {
     const sessionLog = window.localStorage.getItem(LOG_KEY)
-    const hasLogData = !!sessionLog
-    if (!sessionLog || !hasLogData) {
+    if (sessionLog == null || sessionLog === '') {
       debug('No log data available for download')
       return
     }
@@ -160,7 +160,12 @@ class LoggingServiceImpl implements LoggingService {
     const savedLog = window.localStorage.getItem(LOG_KEY)
     const savedDate = window.localStorage.getItem(LOG_DATE_KEY)
 
-    if (savedLog && savedDate) {
+    if (
+      savedLog != null &&
+      savedLog !== '' &&
+      savedDate != null &&
+      savedDate !== ''
+    ) {
       const restoreLog = window.confirm(
         `A saved session log from ${new Date(savedDate).toLocaleString()} was found. Would you like to download it?`
       )

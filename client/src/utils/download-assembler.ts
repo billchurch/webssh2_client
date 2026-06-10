@@ -384,7 +384,7 @@ export function createDownloadAssembler(
     transferId,
     fileName,
     fileSize,
-    mimeType || 'application/octet-stream',
+    mimeType != null && mimeType !== '' ? mimeType : 'application/octet-stream',
     maxBytes
   )
 }
