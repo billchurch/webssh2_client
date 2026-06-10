@@ -183,7 +183,7 @@ export function useXTerm(options: UseXTermOptions = {}) {
     currentTerminalRef = createTerminalRef(term)
 
     // Auto-focus if requested
-    if (options.autoFocus) {
+    if (options.autoFocus === true) {
       setTimeout(() => term.focus(), 0)
     }
 

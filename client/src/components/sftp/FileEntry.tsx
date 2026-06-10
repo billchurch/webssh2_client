@@ -48,7 +48,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
   return (
     <div
       class={`flex cursor-pointer items-center gap-2 px-2 py-1 text-sm hover:bg-neutral-700 ${
-        props.selected ? 'bg-blue-900/50' : ''
+        props.selected === true ? 'bg-blue-900/50' : ''
       }`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}

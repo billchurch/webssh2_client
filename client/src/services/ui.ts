@@ -18,7 +18,10 @@ export const updateElement = (
       ? { text: content.text, background: content.background }
       : { text: content, background: color }
 
-  const sanitizedColor = background ? sanitizeColor(background) : undefined
+  const sanitizedColor =
+    background != null && background !== ''
+      ? sanitizeColor(background)
+      : undefined
 
   debug('updateElement', { elementName, text, sanitizedColor })
 
@@ -26,14 +29,16 @@ export const updateElement = (
     case 'status':
       // Use socket-service status signals
       setConnectionStatus(text)
-      if (sanitizedColor) {
+      if (sanitizedColor != null && sanitizedColor !== '') {
         setConnectionStatusColor(sanitizedColor)
       }
       break
     case 'header':
       setHeaderContent({
         text,
-        ...(sanitizedColor && { background: sanitizedColor })
+        ...(sanitizedColor != null && sanitizedColor !== ''
+          ? { background: sanitizedColor }
+          : {})
       })
       break
     case 'footer':

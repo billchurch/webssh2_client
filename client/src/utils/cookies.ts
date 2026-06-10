@@ -13,7 +13,7 @@ export function getBasicAuthCookie(): string | null {
   const cookies = document.cookie.split(';')
   for (let i = 0; i < cookies.length; i++) {
     let cookie = cookies[i]
-    if (cookie) {
+    if (cookie != null && cookie !== '') {
       while (cookie.charAt(0) === ' ') {
         cookie = cookie.substring(1)
       }

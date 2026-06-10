@@ -65,7 +65,7 @@ export function validateNumber(
 type Obj = Record<string, unknown>
 
 export function isObject(item: unknown): item is Record<string, unknown> {
-  return !!item && typeof item === 'object' && !Array.isArray(item)
+  return item !== null && typeof item === 'object' && !Array.isArray(item)
 }
 
 export function mergeDeep<T, U extends Record<string, unknown>>(
@@ -225,7 +225,7 @@ export function populateFormFromUrl(config: WebSSH2Config): WebSSH2Config {
 
   // Enable autoConnect if host is provided in URL
   const urlHost = searchParams.get('host')
-  if (urlHost && result.ssh) {
+  if (urlHost != null && urlHost !== '') {
     result.autoConnect = true
     debug('populateFormFromUrl: autoConnect enabled due to URL host parameter')
   }
@@ -247,11 +247,22 @@ export function getCredentials(
 
   const fd = formData as Record<string, unknown> | null
 
-  const portValue =
-    (fd?.['port'] as number | string | undefined) ||
-    urlParams.get('port') ||
-    (cfg.ssh?.port as number | undefined) ||
-    '22'
+  const fdPort = fd?.['port'] as number | string | undefined
+  const urlPort = urlParams.get('port')
+  const cfgPort = cfg.ssh?.port as number | undefined
+  let portValue: number | string = '22'
+  if (
+    fdPort != null &&
+    fdPort !== '' &&
+    fdPort !== 0 &&
+    (typeof fdPort === 'string' || !Number.isNaN(fdPort))
+  ) {
+    portValue = fdPort
+  } else if (urlPort != null && urlPort !== '') {
+    portValue = urlPort
+  } else if (cfgPort != null && cfgPort !== 0 && !Number.isNaN(cfgPort)) {
+    portValue = cfgPort
+  }
 
   let port = parseInt(String(portValue), 10)
   if (Number.isNaN(port) || port < 1 || port > 65535) {
@@ -259,47 +270,74 @@ export function getCredentials(
     port = 22
   }
 
+  const fdHost = fd?.['host'] as string | undefined
+  const urlHost = urlParams.get('host')
+  const cfgHost = cfg.ssh?.host as string | undefined
+  let host = ''
+  if (fdHost != null && fdHost !== '') host = fdHost
+  else if (urlHost != null && urlHost !== '') host = urlHost
+  else if (cfgHost != null && cfgHost !== '') host = cfgHost
+
+  const fdUsername = fd?.['username'] as string | undefined
+  const urlUsername = urlParams.get('username')
+  const cfgUsername = cfg.ssh?.username as string | undefined
+  let username = ''
+  if (fdUsername != null && fdUsername !== '') username = fdUsername
+  else if (urlUsername != null && urlUsername !== '') username = urlUsername
+  else if (cfgUsername != null && cfgUsername !== '') username = cfgUsername
+
+  const fdPassword = fd?.['password'] as string | undefined
+  const urlPassword = urlParams.get('password')
+  const cfgPassword = cfg.ssh?.password as string | undefined
+  let password = ''
+  if (fdPassword != null && fdPassword !== '') password = fdPassword
+  else if (urlPassword != null && urlPassword !== '') password = urlPassword
+  else if (cfgPassword != null && cfgPassword !== '') password = cfgPassword
+
+  const fdTerm = fd?.['term'] as string | undefined
+  const urlTerm = urlParams.get('sshterm')
+  const cfgTerm = cfg.ssh?.sshterm as string | undefined
+  let term = 'xterm-color'
+  if (fdTerm != null && fdTerm !== '') term = fdTerm
+  else if (urlTerm != null && urlTerm !== '') term = urlTerm
+  else if (cfgTerm != null && cfgTerm !== '') term = cfgTerm
+
   const mergedConfig: ClientAuthenticatePayload = {
-    host:
-      (fd?.['host'] as string | undefined) ||
-      urlParams.get('host') ||
-      (cfg.ssh?.host as string | undefined) ||
-      '',
+    host,
     port,
-    username:
-      (fd?.['username'] as string | undefined) ||
-      urlParams.get('username') ||
-      (cfg.ssh?.username as string | undefined) ||
-      '',
-    password:
-      (fd?.['password'] as string | undefined) ||
-      urlParams.get('password') ||
-      (cfg.ssh?.password as string | undefined) ||
-      '',
-    term:
-      (fd?.['term'] as string | undefined) ||
-      urlParams.get('sshterm') ||
-      (cfg.ssh?.sshterm as string | undefined) ||
-      'xterm-color'
+    username,
+    password,
+    term
   }
 
-  const privateKey =
-    (fd?.['privateKey'] as string | undefined) ||
-    urlParams.get('privateKey') ||
-    (cfg.ssh?.privateKey as string | undefined) ||
-    ''
-  if (privateKey) {
+  const fdPrivateKey = fd?.['privateKey'] as string | undefined
+  const urlPrivateKey = urlParams.get('privateKey')
+  const cfgPrivateKey = cfg.ssh?.privateKey as string | undefined
+  let privateKey = ''
+  if (fdPrivateKey != null && fdPrivateKey !== '') privateKey = fdPrivateKey
+  else if (urlPrivateKey != null && urlPrivateKey !== '')
+    privateKey = urlPrivateKey
+  else if (cfgPrivateKey != null && cfgPrivateKey !== '')
+    privateKey = cfgPrivateKey
+
+  if (privateKey !== '') {
     mergedConfig.privateKey = privateKey
-    const passphrase =
-      (fd?.['passphrase'] as string | undefined) ||
-      urlParams.get('passphrase') ||
-      (cfg.ssh?.passphrase as string | undefined) ||
-      ''
-    if (passphrase) mergedConfig.passphrase = passphrase
+    const fdPassphrase = fd?.['passphrase'] as string | undefined
+    const urlPassphrase = urlParams.get('passphrase')
+    const cfgPassphrase = cfg.ssh?.passphrase as string | undefined
+    let passphrase = ''
+    if (fdPassphrase != null && fdPassphrase !== '') passphrase = fdPassphrase
+    else if (urlPassphrase != null && urlPassphrase !== '')
+      passphrase = urlPassphrase
+    else if (cfgPassphrase != null && cfgPassphrase !== '')
+      passphrase = cfgPassphrase
+    if (passphrase !== '') mergedConfig.passphrase = passphrase
   }
 
-  if (terminalDimensions.cols) mergedConfig.cols = terminalDimensions.cols
-  if (terminalDimensions.rows) mergedConfig.rows = terminalDimensions.rows
+  if (terminalDimensions.cols != null && terminalDimensions.cols !== 0)
+    mergedConfig.cols = terminalDimensions.cols
+  if (terminalDimensions.rows != null && terminalDimensions.rows !== 0)
+    mergedConfig.rows = terminalDimensions.rows
 
   const maskedContent = maskObject(mergedConfig)
   debug('getCredentials: mergedConfig:', maskedContent)
@@ -399,8 +437,9 @@ export function validatePrivateKeyDeep(
   ]
   for (const { type, re } of patterns) {
     const m = text.match(re)
-    if (m && m.groups && m.groups['body']) {
-      blocks.push({ type, body: m.groups['body'] })
+    const matchedBody = m?.groups?.['body']
+    if (matchedBody != null && matchedBody !== '') {
+      blocks.push({ type, body: matchedBody })
       break
     }
   }
@@ -416,7 +455,7 @@ export function validatePrivateKeyDeep(
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
     } else if (
       typeof globalThis !== 'undefined' &&
-      (globalThis as Record<string, unknown>)['Buffer']
+      (globalThis as Record<string, unknown>)['Buffer'] != null
     ) {
       const B = (
         globalThis as unknown as {

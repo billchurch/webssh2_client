@@ -326,8 +326,9 @@ export class SocketService {
   }
 
   private getWebSocketUrl(): string {
-    if (config?.socket?.url) {
-      const url = new URL(config.socket.url)
+    const configuredUrl = config?.socket?.url
+    if (configuredUrl != null && configuredUrl !== '') {
+      const url = new URL(configuredUrl)
       url.protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       return url.toString()
     }
@@ -369,14 +370,21 @@ export class SocketService {
     })
 
     const currentSocket = socket()
-    if (authCredentials.host && authCredentials.username && currentSocket) {
+    if (
+      authCredentials.host != null &&
+      authCredentials.host !== '' &&
+      authCredentials.username != null &&
+      authCredentials.username !== '' &&
+      currentSocket
+    ) {
       currentSocket.emit('authenticate', authCredentials)
       setConnectionStatus('Authenticating...')
       setConnectionStatusColor('orange')
     } else {
       debug('Authentication failed - missing requirements', {
-        host: !!authCredentials.host,
-        username: !!authCredentials.username,
+        host: authCredentials.host != null && authCredentials.host !== '',
+        username:
+          authCredentials.username != null && authCredentials.username !== '',
         socket: !!currentSocket
       })
       if (onDisconnectCallback) {
@@ -417,15 +425,19 @@ export class SocketService {
         case 'auth_result':
           this.handleAuthResult({
             success: Boolean(data.success),
-            ...(data.message && { message: data.message })
+            ...(data.message != null && data.message !== ''
+              ? { message: data.message }
+              : {})
           })
           break
         case 'keyboard-interactive':
-          if ('prompts' in data && data.prompts) {
+          if (data.prompts != null) {
             this.handleKeyboardInteractive({
-              prompts: data.prompts as Array<{ prompt: string; echo: boolean }>,
-              ...('name' in data && data.name
-                ? { name: data.name as string }
+              prompts: data.prompts,
+              ...('name' in data &&
+              typeof data.name === 'string' &&
+              data.name !== ''
+                ? { name: data.name }
                 : {})
             })
           }
@@ -752,7 +764,10 @@ export class SocketService {
     debug('Keyboard interactive authentication', data)
     // Use the reactive prompt modal
     setPromptData({
-      title: data.name || 'Authentication Required',
+      title:
+        data.name != null && data.name !== ''
+          ? data.name
+          : 'Authentication Required',
       prompts: data.prompts
     })
   }

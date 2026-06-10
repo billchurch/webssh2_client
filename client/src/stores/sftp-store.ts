@@ -547,7 +547,7 @@ function createSftpStoreInternal() {
     ) {
       setState('transfers', (transfer) => transfer.id === transferId, {
         status,
-        ...(error && { error }),
+        ...(error != null && error !== '' ? { error } : {}),
         ...(status === 'completed' && { percentComplete: 100 })
       })
     },

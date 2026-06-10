@@ -177,7 +177,7 @@ export const configWithUrlOverrides = () => {
   const passphrase = params.get('passphrase')
   const sshterm = params.get('sshterm')
 
-  const parsedPort = port ? parseInt(port, 10) : NaN
+  const parsedPort = port != null && port !== '' ? parseInt(port, 10) : NaN
   const sanitizedPort = Number.isNaN(parsedPort) ? 22 : parsedPort
 
   const passwordTrimmed = typeof password === 'string' ? password.trim() : ''
@@ -185,20 +185,20 @@ export const configWithUrlOverrides = () => {
     typeof privateKey === 'string' ? privateKey.trim() : ''
 
   if (
-    host ||
-    port ||
-    username ||
-    (passwordAllowed && passwordTrimmed) ||
-    (publicKeyAllowed && privateKeyTrimmed) ||
-    (publicKeyAllowed && passphrase) ||
-    sshterm
+    (host != null && host !== '') ||
+    (port != null && port !== '') ||
+    (username != null && username !== '') ||
+    (passwordAllowed && passwordTrimmed !== '') ||
+    (publicKeyAllowed && privateKeyTrimmed !== '') ||
+    (publicKeyAllowed && passphrase != null && passphrase !== '') ||
+    (sshterm != null && sshterm !== '')
   ) {
     const sshOverrides: WebSSH2Config['ssh'] = {
-      host: host || null,
+      host: host != null && host !== '' ? host : null,
       port: sanitizedPort,
-      username: username || null,
+      username: username != null && username !== '' ? username : null,
       password: passwordAllowed && passwordTrimmed ? passwordTrimmed : null,
-      sshterm: sshterm || 'xterm-color'
+      sshterm: sshterm != null && sshterm !== '' ? sshterm : 'xterm-color'
     }
 
     if (!passwordAllowed && passwordTrimmed) {
@@ -207,7 +207,7 @@ export const configWithUrlOverrides = () => {
 
     if (publicKeyAllowed && privateKeyTrimmed) {
       sshOverrides.privateKey = privateKeyTrimmed
-      if (passphrase) {
+      if (passphrase != null && passphrase !== '') {
         sshOverrides.passphrase = passphrase
       }
     } else if (privateKeyTrimmed) {
@@ -220,19 +220,33 @@ export const configWithUrlOverrides = () => {
   const hasAllowedPassword = passwordAllowed && passwordTrimmed.length > 0
   const hasAllowedPrivateKey = publicKeyAllowed && privateKeyTrimmed.length > 0
 
-  if (host && (hasAllowedPassword || hasAllowedPrivateKey)) {
+  if (
+    host != null &&
+    host !== '' &&
+    (hasAllowedPassword || hasAllowedPrivateKey)
+  ) {
     urlOverrides.autoConnect = true
     debug('Auto-connect enabled: host and allowed credentials provided via URL')
-  } else if (host && !password && !privateKey) {
+  } else if (
+    host != null &&
+    host !== '' &&
+    (password == null || password === '') &&
+    (privateKey == null || privateKey === '')
+  ) {
     debug(
       'Auto-connect disabled: host provided but missing credentials (password or privateKey)'
     )
-  } else if (host && (password || privateKey)) {
+  } else if (
+    host != null &&
+    host !== '' &&
+    ((password != null && password !== '') ||
+      (privateKey != null && privateKey !== ''))
+  ) {
     debug(
       'Auto-connect disabled: credentials provided but blocked by server policy',
       {
-        passwordProvided: !!password,
-        privateKeyProvided: !!privateKey
+        passwordProvided: password != null && password !== '',
+        privateKeyProvided: privateKey != null && privateKey !== ''
       }
     )
   }
@@ -240,22 +254,28 @@ export const configWithUrlOverrides = () => {
   const mergedConfig = mergeDeep(baseConfig, urlOverrides) as WebSSH2Config
   const baseAuthPayload: Partial<ClientAuthenticatePayload> = {}
 
-  if (mergedConfig.ssh.host) {
+  if (mergedConfig.ssh.host != null && mergedConfig.ssh.host !== '') {
     baseAuthPayload.host = mergedConfig.ssh.host
   }
   if (typeof mergedConfig.ssh.port === 'number') {
     baseAuthPayload.port = mergedConfig.ssh.port
   }
-  if (mergedConfig.ssh.username) {
+  if (mergedConfig.ssh.username != null && mergedConfig.ssh.username !== '') {
     baseAuthPayload.username = mergedConfig.ssh.username
   }
-  if (mergedConfig.ssh.password) {
+  if (mergedConfig.ssh.password != null && mergedConfig.ssh.password !== '') {
     baseAuthPayload.password = mergedConfig.ssh.password
   }
-  if (mergedConfig.ssh.privateKey) {
+  if (
+    mergedConfig.ssh.privateKey != null &&
+    mergedConfig.ssh.privateKey !== ''
+  ) {
     baseAuthPayload.privateKey = mergedConfig.ssh.privateKey
   }
-  if (mergedConfig.ssh.passphrase) {
+  if (
+    mergedConfig.ssh.passphrase != null &&
+    mergedConfig.ssh.passphrase !== ''
+  ) {
     baseAuthPayload.passphrase = mergedConfig.ssh.passphrase
   }
 
@@ -269,9 +289,11 @@ export const configWithUrlOverrides = () => {
   }
 
   if (
-    urlOverrides.autoConnect &&
-    !sanitizedMergedAuth.password &&
-    !sanitizedMergedAuth.privateKey
+    urlOverrides.autoConnect === true &&
+    (sanitizedMergedAuth.password == null ||
+      sanitizedMergedAuth.password === '') &&
+    (sanitizedMergedAuth.privateKey == null ||
+      sanitizedMergedAuth.privateKey === '')
   ) {
     debug(
       'Auto-connect disabled: sanitized credentials removed disallowed values'
@@ -285,12 +307,13 @@ export const configWithUrlOverrides = () => {
 
 // Initialize configuration from window object and URL
 export function initializeConfig() {
-  const windowConfig =
-    (window as unknown as Record<string, unknown>)['webssh2Config'] || {}
-  const initialConfig = mergeDeep(
-    defaultConfig,
-    windowConfig as Record<string, unknown>
-  ) as WebSSH2Config
+  const rawWindowConfig = (window as unknown as Record<string, unknown>)[
+    'webssh2Config'
+  ]
+  const windowConfig: Record<string, unknown> = isObject(rawWindowConfig)
+    ? rawWindowConfig
+    : {}
+  const initialConfig = mergeDeep(defaultConfig, windowConfig) as WebSSH2Config
 
   const sanitizedConfig: WebSSH2Config = {
     ...initialConfig,
@@ -336,12 +359,12 @@ export const credentials = createRoot(() =>
     }
 
     return {
-      host: cfg.ssh?.host || '',
+      host: cfg.ssh?.host ?? '',
       port,
-      username: cfg.ssh?.username || '',
-      password: cfg.ssh?.password || '',
-      privateKey: cfg.ssh?.privateKey || '',
-      passphrase: cfg.ssh?.passphrase || '',
+      username: cfg.ssh?.username ?? '',
+      password: cfg.ssh?.password ?? '',
+      privateKey: cfg.ssh?.privateKey ?? '',
+      passphrase: cfg.ssh?.passphrase ?? '',
       term: cfg.ssh?.sshterm || 'xterm-color'
     }
   })

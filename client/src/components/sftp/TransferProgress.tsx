@@ -48,7 +48,9 @@ export const TransferProgress: Component<TransferProgressProps> = (props) => {
       case 'completed':
         return 'Complete'
       case 'failed':
-        return props.transfer.error || 'Failed'
+        return props.transfer.error != null && props.transfer.error !== ''
+          ? props.transfer.error
+          : 'Failed'
       case 'cancelled':
         return 'Cancelled'
       case 'paused':

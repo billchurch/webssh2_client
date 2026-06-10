@@ -189,7 +189,7 @@ const App: Component = () => {
       onCleanup(() => cleanupUrlListener())
 
       const basicAuthCookie = getBasicAuthCookie()
-      if (basicAuthCookie) {
+      if (basicAuthCookie != null && basicAuthCookie !== '') {
         // Note: Basic auth cookie handling may need to be integrated with reactive config
         setState('isBasicAuthCookiePresent', true)
       } else {
@@ -217,9 +217,10 @@ const App: Component = () => {
       // Set session footer
       const footerProtocol =
         initialConfig.protocol === 'telnet' ? 'telnet' : 'ssh'
-      const footer = initialConfig.ssh.host
-        ? `${footerProtocol}://${initialConfig.ssh.host}:${initialConfig.ssh.port}`
-        : null
+      const footer =
+        initialConfig.ssh.host != null && initialConfig.ssh.host !== ''
+          ? `${footerProtocol}://${initialConfig.ssh.host}:${initialConfig.ssh.port}`
+          : null
       setSessionFooter(footer)
       setGlobalSessionFooter(footer)
 
@@ -261,8 +262,11 @@ const App: Component = () => {
       const hasSessionLog = globalThis.localStorage.getItem(
         'webssh2_session_log'
       )
-      setState('loggedData', !!hasSessionLog)
-      debug('Initialized loggedData state:', !!hasSessionLog)
+      setState('loggedData', hasSessionLog != null && hasSessionLog !== '')
+      debug(
+        'Initialized loggedData state:',
+        hasSessionLog != null && hasSessionLog !== ''
+      )
 
       // Initialize connection
       initializeConnection(initialConfig)
@@ -496,7 +500,7 @@ const App: Component = () => {
         )
       }
 
-      if (Object.keys(clipboardSettings).length > 0 && actions.clipboard) {
+      if (Object.keys(clipboardSettings).length > 0) {
         debug('Updating clipboard settings:', clipboardSettings)
         actions.clipboard.updateSettings(clipboardSettings)
       } else {
@@ -630,9 +634,13 @@ const App: Component = () => {
     try {
       if (currentConfig.autoConnect) {
         const loginInfo: Partial<ClientAuthenticatePayload> = {}
-        if (currentConfig.ssh.host) loginInfo.host = currentConfig.ssh.host
+        if (currentConfig.ssh.host != null && currentConfig.ssh.host !== '')
+          loginInfo.host = currentConfig.ssh.host
         loginInfo.port = currentConfig.ssh.port
-        if (currentConfig.ssh.username)
+        if (
+          currentConfig.ssh.username != null &&
+          currentConfig.ssh.username !== ''
+        )
           loginInfo.username = currentConfig.ssh.username
         connectToServer(loginInfo)
       } else {
@@ -663,11 +671,14 @@ const App: Component = () => {
           initialValues: config()
             ? (Object.fromEntries(
                 Object.entries({
-                  ...(config()!.ssh.host && { host: config()!.ssh.host }),
+                  ...(config()!.ssh.host != null && config()!.ssh.host !== ''
+                    ? { host: config()!.ssh.host }
+                    : {}),
                   ...(config()!.ssh.port && { port: config()!.ssh.port }),
-                  ...(config()!.ssh.username && {
-                    username: config()!.ssh.username
-                  })
+                  ...(config()!.ssh.username != null &&
+                  config()!.ssh.username !== ''
+                    ? { username: config()!.ssh.username }
+                    : {})
                 }).filter(([_, value]) => value != null)
               ) as Partial<ClientAuthenticatePayload>)
             : undefined,
@@ -692,7 +703,11 @@ const App: Component = () => {
       <ErrorModal
         isOpen={isErrorDialogOpen()}
         onClose={() => setIsErrorDialogOpen(false)}
-        message={errorMessage() || 'An error occurred'}
+        message={
+          errorMessage() != null && errorMessage() !== ''
+            ? errorMessage()!
+            : 'An error occurred'
+        }
       />
 
       <ConnectionErrorModal
@@ -721,7 +736,11 @@ const App: Component = () => {
         <PromptModal
           isOpen={!!promptData()}
           onClose={() => setPromptData(null)}
-          title={promptData()?.title || 'Authentication Required'}
+          title={
+            promptData()?.title != null && promptData()?.title !== ''
+              ? promptData()!.title!
+              : 'Authentication Required'
+          }
           prompts={promptData()?.prompts || []}
           onSubmit={handlePromptSubmit}
         />
@@ -764,7 +783,9 @@ const App: Component = () => {
         <HostKeyRejectedModal
           isOpen={isHostKeyRejectedOpen()}
           reason={
-            hostKeyRejectedReason() || 'Connection refused by host key policy'
+            hostKeyRejectedReason() != null && hostKeyRejectedReason() !== ''
+              ? hostKeyRejectedReason()!
+              : 'Connection refused by host key policy'
           }
           onDismiss={() => {
             setIsHostKeyRejectedOpen(false)

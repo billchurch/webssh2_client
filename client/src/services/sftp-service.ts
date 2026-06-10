@@ -367,7 +367,8 @@ function handleDownloadReady(response: SftpDownloadReadyResponse): void {
     pending.resolve(response)
     // The user-clicked name is authoritative; flag a server echo that differs
     if (
-      pending.requestedFileName &&
+      pending.requestedFileName != null &&
+      pending.requestedFileName !== '' &&
       pending.requestedFileName !== response.fileName
     ) {
       debug(
@@ -516,7 +517,7 @@ function handleError(response: SftpErrorResponse): void {
 
   // Reject operation-specific requests by path if provided
   let pathMatchFound = false
-  if (response.path) {
+  if (response.path != null && response.path !== '') {
     // Try to find and reject by exact path match
     const listKey = `list:${response.path}`
     const statKey = `stat:${response.path}`
@@ -540,7 +541,7 @@ function handleError(response: SftpErrorResponse): void {
   // or no path provided, use operation-based prefix matching
   if (!pathMatchFound && response.operation) {
     const prefix = getOperationPrefix(response.operation)
-    if (prefix) {
+    if (prefix != null) {
       rejectPendingByPrefix(prefix, error)
     }
   }
@@ -635,7 +636,7 @@ export async function listDirectory(
   socketInstance.emit('sftp-list', request)
 
   const response = await responsePromise
-  if (response.error) {
+  if (response.error != null && response.error !== '') {
     throw new Error(response.error)
   }
 
@@ -665,8 +666,12 @@ export async function stat(path: string): Promise<SftpFileEntry> {
   socketInstance.emit('sftp-stat', request)
 
   const response = await responsePromise
-  if (response.error || !response.entry) {
-    throw new Error(response.error || 'File not found')
+  if ((response.error != null && response.error !== '') || !response.entry) {
+    throw new Error(
+      response.error != null && response.error !== ''
+        ? response.error
+        : 'File not found'
+    )
   }
 
   return response.entry
@@ -693,7 +698,11 @@ export async function mkdir(path: string, mode?: number): Promise<void> {
 
   const response = await responsePromise
   if (!response.success) {
-    throw new Error(response.error || 'Failed to create directory')
+    throw new Error(
+      response.error != null && response.error !== ''
+        ? response.error
+        : 'Failed to create directory'
+    )
   }
 }
 
@@ -721,7 +730,11 @@ export async function deleteFile(
 
   const response = await responsePromise
   if (!response.success) {
-    throw new Error(response.error || 'Failed to delete')
+    throw new Error(
+      response.error != null && response.error !== ''
+        ? response.error
+        : 'Failed to delete'
+    )
   }
 }
 

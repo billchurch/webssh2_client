@@ -52,7 +52,7 @@ export type LookupResult =
 function loadStore(): StoreData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) {
+    if (raw == null || raw === '') {
       return { version: 1, keys: {} }
     }
     const parsed = JSON.parse(raw) as unknown
@@ -192,7 +192,7 @@ export function remove(host: string, port: number, algorithm?: string): void {
     return
   }
 
-  if (algorithm) {
+  if (algorithm != null && algorithm !== '') {
     delete data.keys[hostPortKey][algorithm]
     // Clean up empty host entries
     if (Object.keys(data.keys[hostPortKey]).length === 0) {
@@ -206,7 +206,7 @@ export function remove(host: string, port: number, algorithm?: string): void {
   debug(
     'Removed key(s) for %s%s',
     hostPortKey,
-    algorithm ? ` algorithm ${algorithm}` : ''
+    algorithm != null && algorithm !== '' ? ` algorithm ${algorithm}` : ''
   )
 }
 

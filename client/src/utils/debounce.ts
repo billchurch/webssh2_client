@@ -17,7 +17,7 @@ export const createDebouncer = <T extends (...args: any[]) => any>(
   let timeoutId: ReturnType<typeof setTimeout> | null = null
 
   return ((...args: Parameters<T>) => {
-    if (timeoutId) {
+    if (timeoutId !== null) {
       clearTimeout(timeoutId)
     }
 
@@ -42,7 +42,7 @@ export const createCancellableDebouncer = <T extends (...args: any[]) => any>(
   let timeoutId: ReturnType<typeof setTimeout> | null = null
 
   const debounced = ((...args: Parameters<T>) => {
-    if (timeoutId) {
+    if (timeoutId !== null) {
       clearTimeout(timeoutId)
     }
 
@@ -53,7 +53,7 @@ export const createCancellableDebouncer = <T extends (...args: any[]) => any>(
   }) as T
 
   const cancel = () => {
-    if (timeoutId) {
+    if (timeoutId !== null) {
       clearTimeout(timeoutId)
       timeoutId = null
     }

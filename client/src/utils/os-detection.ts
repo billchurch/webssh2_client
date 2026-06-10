@@ -7,7 +7,7 @@ export interface KeyboardShortcut {
 }
 
 const getOS = (): OSType => {
-  if (typeof window === 'undefined' || !window.navigator) {
+  if (typeof window === 'undefined' || window.navigator == null) {
     return 'Unknown'
   }
 

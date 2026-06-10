@@ -1,9 +1,12 @@
 export class ClipboardCompatibility {
   static isSupported(): boolean {
-    return !!(
-      navigator.clipboard &&
-      typeof navigator.clipboard.readText === 'function' &&
-      typeof navigator.clipboard.writeText === 'function'
+    // navigator.clipboard is typed as always present, but is undefined at
+    // runtime in insecure contexts and older browsers.
+    const clipboard: Clipboard | undefined = navigator.clipboard
+    return (
+      clipboard != null &&
+      typeof clipboard.readText === 'function' &&
+      typeof clipboard.writeText === 'function'
     )
   }
 

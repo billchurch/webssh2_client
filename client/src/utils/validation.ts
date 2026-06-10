@@ -61,12 +61,18 @@ export const ValidationRules = {
   }),
 
   minLength: (min: number, message?: string): ValidationRule<string> => ({
-    message: message || `Must be at least ${min} characters`,
+    message:
+      message != null && message !== ''
+        ? message
+        : `Must be at least ${min} characters`,
     validate: (value) => value.length >= min
   }),
 
   maxLength: (max: number, message?: string): ValidationRule<string> => ({
-    message: message || `Must be no more than ${max} characters`,
+    message:
+      message != null && message !== ''
+        ? message
+        : `Must be no more than ${max} characters`,
     validate: (value) => value.length <= max
   }),
 
@@ -219,7 +225,7 @@ export function createAsyncValidator<T>(
     return new Promise((resolve) => {
       setIsValidating(true)
 
-      if (timeoutId) {
+      if (timeoutId !== undefined) {
         clearTimeout(timeoutId)
       }
 
@@ -248,7 +254,7 @@ export function createAsyncValidator<T>(
     isValidating,
     validate,
     reset: () => {
-      if (timeoutId) {
+      if (timeoutId !== undefined) {
         clearTimeout(timeoutId)
       }
       setValidation({ isValid: true })

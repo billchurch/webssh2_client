@@ -156,7 +156,7 @@ export const TerminalSearch: Component<TerminalSearchProps> = (props) => {
   // Set up search results listener
   createEffect(() => {
     const actions = props.terminalActions
-    if (actions && actions.search.onSearchResults) {
+    if (actions) {
       // Clean up previous listener
       if (searchResultsCleanup) {
         searchResultsCleanup()
@@ -190,7 +190,7 @@ export const TerminalSearch: Component<TerminalSearchProps> = (props) => {
   return (
     <Show when={isSearchVisible()}>
       <div
-        class={`absolute right-2 top-2 z-50 flex items-center gap-1 rounded-lg border border-neutral-300 bg-white p-2 shadow-lg ${props.class || ''}`}
+        class={`absolute right-2 top-2 z-50 flex items-center gap-1 rounded-lg border border-neutral-300 bg-white p-2 shadow-lg ${props.class ?? ''}`}
         onKeyDown={handleKeyDown}
       >
         <form onSubmit={handleSearchSubmit} class="contents">

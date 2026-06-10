@@ -133,8 +133,11 @@ export function shouldCaptureKey(
   }
 
   // Check custom capture keys
-  if (settings.customCaptureKeys && settings.customCaptureKeys.length > 0) {
-    for (const keyString of settings.customCaptureKeys) {
+  // Settings may originate from stored/external config where the array is
+  // absent despite the type, so keep a defensive runtime check.
+  const customCaptureKeys: string[] | undefined = settings.customCaptureKeys
+  if (customCaptureKeys != null && customCaptureKeys.length > 0) {
+    for (const keyString of customCaptureKeys) {
       const parsed = parseKeyString(keyString)
       if (parsed && matchesKeyString(event, parsed)) {
         debug(`Capturing custom key "${keyString}" for terminal`)
