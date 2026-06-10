@@ -79,8 +79,18 @@ curl -fsSL "https://github.com/billchurch/webssh2_client/releases/download/<tag>
 A mismatch means the npm artifact and the GitHub release disagree — treat
 as a compromise indicator until explained. Note that release assets and
 notes are mutable by anyone with repo write access; the tamper-evident
-anchor is npm provenance, and the checksums exist to make cross-channel
-comparison practical.
+anchors are npm provenance and the artifact attestations below — the
+checksums exist to make cross-channel comparison practical.
+
+- **Artifact attestations:** `client-public.zip` and `checksums.txt` are
+  signed with sigstore via `actions/attest-build-provenance`, recording in
+  a public transparency log which workflow and commit produced them. This
+  makes the checksum file itself tamper-evident. Verify with:
+
+```bash
+gh attestation verify checksums.txt --repo billchurch/webssh2_client
+gh attestation verify client-public.zip --repo billchurch/webssh2_client
+```
 
 - **Reproducible banner:** The bundle banner embeds the git commit date
   (not the build time), so rebuilding the same tag yields comparable output.
