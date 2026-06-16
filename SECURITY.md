@@ -483,9 +483,45 @@ to disk with executable permissions without integrity verification when
 - [#132](https://github.com/billchurch/webssh2_client/issues/132) tracks
   migrating the build to Vite 8 (Rolldown + Oxc + Lightning CSS), which removes
   esbuild from the dependency tree entirely and lets this override be removed.
-- Other, unrelated advisories reported by `npm audit` (in `vite`, `ws`,
-  `form-data`, `engine.io-client`) are outside the scope of this esbuild
-  assessment and are tracked separately.
+- Other advisories reported by `npm audit` at the same time (in `vite`, `ws`,
+  `form-data`, `engine.io-client`, `js-yaml`, `@babel/core`) were resolved in
+  the same change — see the dependency sweep below.
+
+---
+
+## npm audit dependency advisory sweep (June 2026)
+
+As of 2026-06-16, alongside the esbuild override above, we cleared the remaining
+advisories surfaced by `npm audit`. All had in-range fixes (no breaking major
+bumps), applied via `npm audit fix`.
+
+### Resolved advisories
+
+| Package | Severity | Advisory | Resolved version |
+| --- | --- | --- | --- |
+| `ws` | HIGH | Memory-exhaustion DoS ([GHSA-96hv-2xvq-fx4p](https://github.com/advisories/GHSA-96hv-2xvq-fx4p)) | 8.21.0 |
+| `engine.io-client` | HIGH | Depends on vulnerable `ws` | 6.6.6 |
+| `form-data` | HIGH | CRLF injection via unescaped field names ([GHSA-hmw2-7cc7-3qxx](https://github.com/advisories/GHSA-hmw2-7cc7-3qxx)) | 4.0.6 |
+| `vite` | HIGH | `server.fs.deny` bypass + launch-editor NTLM disclosure ([GHSA-fx2h-pf6j-xcff](https://github.com/advisories/GHSA-fx2h-pf6j-xcff), [GHSA-v6wh-96g9-6wx3](https://github.com/advisories/GHSA-v6wh-96g9-6wx3)) | 7.3.5 |
+| `js-yaml` | MODERATE | Quadratic-complexity DoS in merge keys ([GHSA-h67p-54hq-rp68](https://github.com/advisories/GHSA-h67p-54hq-rp68)) | 4.2.0 |
+| `@babel/core` | LOW | Arbitrary file read via sourceMappingURL ([GHSA-4x5r-pxfx-6jf8](https://github.com/advisories/GHSA-4x5r-pxfx-6jf8)) | 7.29.7 |
+
+### Exposure context
+
+- All six are **dev / build-time or transitive** dependencies. `vite` is the
+  only direct dependency (dev); the rest are transitive (`ws`,
+  `engine.io-client` via the Socket.IO toolchain; `form-data`, `js-yaml`,
+  `@babel/core` via build/test tooling). None ship in the browser bundle.
+- The `vite` advisories (`server.fs.deny` bypass, launch-editor NTLM disclosure)
+  affect the local dev server on Windows; they do not affect the published
+  client artifact.
+
+### Action taken
+
+- Ran `npm audit fix` (no `--force`); only `package-lock.json` changed.
+- Verified: `npm audit` reports **0 vulnerabilities**, the production build
+  (`npm run build`) succeeds, and the full test suite passes (328 tests, 0
+  failures).
 
 ---
 
