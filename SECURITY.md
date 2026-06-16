@@ -441,8 +441,56 @@ For reference, the following IOCs were published by Snyk:
 
 ---
 
-**Last Updated**: March 31, 2026
-**Next Review**: April 30, 2026
+## esbuild RCE via Deno module (GHSA-gv7w-rqvm-qjhr)
+
+As of 2026-06-16, we evaluated GHSA-gv7w-rqvm-qjhr, a remote code execution
+flaw in esbuild's Deno module (`lib/deno/mod.ts`) that writes native binaries
+to disk with executable permissions without integrity verification when
+`NPM_CONFIG_REGISTRY` is attacker-controlled.
+
+### esbuild Exposure Assessment
+
+| Field | Value |
+| --- | --- |
+| Severity | High (CVSS 8.1) |
+| Affected versions | 0.17.0 - < 0.28.1 |
+| Our version | esbuild@0.28.1 (was 0.27.3) |
+| Dependency path | dev-only: `vite` → esbuild |
+| Status | **Patched** - pinned to 0.28.1 via `overrides` |
+
+### Exposure context
+
+- esbuild is a **dev-only** build dependency (via `vite`). It is not part of
+  the shipped browser bundle and is never present at runtime.
+- The vulnerable code is in esbuild's **Deno** module. WebSSH2 Client builds
+  under **Node.js**, where esbuild's install path validates a SHA-256 hash, and
+  the client uses no Deno (no `deno.json`, no Deno imports), so the affected
+  code path was never reachable. We were therefore not exploitable even before
+  the patch.
+
+### Action taken
+
+- Added `overrides.esbuild: "^0.28.1"`, forcing esbuild 0.28.1 (the fixed
+  release) under the current `vite@7.3.x` toolchain.
+- Verified: `npm ls esbuild` resolves to 0.28.1, the production build
+  (`npm run build`) succeeds, and `npm audit` no longer reports
+  GHSA-gv7w-rqvm-qjhr against esbuild.
+- esbuild 0.28.1 was published 2026-06-11, within the 2-week quarantine window;
+  the quarantine exception for HIGH-severity advisories was applied.
+
+### Follow-up
+
+- [#132](https://github.com/billchurch/webssh2_client/issues/132) tracks
+  migrating the build to Vite 8 (Rolldown + Oxc + Lightning CSS), which removes
+  esbuild from the dependency tree entirely and lets this override be removed.
+- Other, unrelated advisories reported by `npm audit` (in `vite`, `ws`,
+  `form-data`, `engine.io-client`) are outside the scope of this esbuild
+  assessment and are tracked separately.
+
+---
+
+**Last Updated**: June 16, 2026
+**Next Review**: September 16, 2026
 
 [advisories]: https://github.com/billchurch/WebSSH2/security/advisories
 [npm-attack]: https://www.bleepingcomputer.com/news/security/hackers-hijack-npm-packages-with-2-billion-weekly-downloads-in-supply-chain-attack/
