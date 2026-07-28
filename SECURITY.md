@@ -441,8 +441,92 @@ For reference, the following IOCs were published by Snyk:
 
 ---
 
-**Last Updated**: March 31, 2026
-**Next Review**: April 30, 2026
+## esbuild RCE via Deno module (GHSA-gv7w-rqvm-qjhr)
+
+As of 2026-06-16, we evaluated GHSA-gv7w-rqvm-qjhr, a remote code execution
+flaw in esbuild's Deno module (`lib/deno/mod.ts`) that writes native binaries
+to disk with executable permissions without integrity verification when
+`NPM_CONFIG_REGISTRY` is attacker-controlled.
+
+### esbuild Exposure Assessment
+
+| Field | Value |
+| --- | --- |
+| Severity | High (CVSS 8.1) |
+| Affected versions | 0.17.0 - < 0.28.1 |
+| Our version | esbuild@0.28.1 (was 0.27.3) |
+| Dependency path | dev-only: `vite` → esbuild |
+| Status | **Patched** - pinned to 0.28.1 via `overrides` |
+
+### Exposure context
+
+- esbuild is a **dev-only** build dependency (via `vite`). It is not part of
+  the shipped browser bundle and is never present at runtime.
+- The vulnerable code is in esbuild's **Deno** module. WebSSH2 Client builds
+  under **Node.js**, where esbuild's install path validates a SHA-256 hash, and
+  the client uses no Deno (no `deno.json`, no Deno imports), so the affected
+  code path was never reachable. We were therefore not exploitable even before
+  the patch.
+
+### Action taken
+
+- Added `overrides.esbuild: "^0.28.1"`, forcing esbuild 0.28.1 (the fixed
+  release) under the current `vite@7.3.x` toolchain.
+- Verified: `npm ls esbuild` resolves to 0.28.1, the production build
+  (`npm run build`) succeeds, and `npm audit` no longer reports
+  GHSA-gv7w-rqvm-qjhr against esbuild.
+- esbuild 0.28.1 was published 2026-06-11, within the 2-week quarantine window;
+  the quarantine exception for HIGH-severity advisories was applied.
+
+### Follow-up
+
+- [#132](https://github.com/billchurch/webssh2_client/issues/132) tracks
+  migrating the build to Vite 8 (Rolldown + Oxc + Lightning CSS), which removes
+  esbuild from the dependency tree entirely and lets this override be removed.
+- Other advisories reported by `npm audit` at the same time (in `vite`, `ws`,
+  `form-data`, `engine.io-client`, `js-yaml`, `@babel/core`) were resolved in
+  the same change — see the dependency sweep below.
+
+---
+
+## npm audit dependency advisory sweep (June 2026)
+
+As of 2026-06-16, alongside the esbuild override above, we cleared the remaining
+advisories surfaced by `npm audit`. All had in-range fixes (no breaking major
+bumps), applied via `npm audit fix`.
+
+### Resolved advisories
+
+| Package | Severity | Advisory | Resolved version |
+| --- | --- | --- | --- |
+| `ws` | HIGH | Memory-exhaustion DoS ([GHSA-96hv-2xvq-fx4p](https://github.com/advisories/GHSA-96hv-2xvq-fx4p)) | 8.21.0 |
+| `engine.io-client` | HIGH | Depends on vulnerable `ws` | 6.6.6 |
+| `form-data` | HIGH | CRLF injection via unescaped field names ([GHSA-hmw2-7cc7-3qxx](https://github.com/advisories/GHSA-hmw2-7cc7-3qxx)) | 4.0.6 |
+| `vite` | HIGH | `server.fs.deny` bypass + launch-editor NTLM disclosure ([GHSA-fx2h-pf6j-xcff](https://github.com/advisories/GHSA-fx2h-pf6j-xcff), [GHSA-v6wh-96g9-6wx3](https://github.com/advisories/GHSA-v6wh-96g9-6wx3)) | 7.3.5 |
+| `js-yaml` | MODERATE | Quadratic-complexity DoS in merge keys ([GHSA-h67p-54hq-rp68](https://github.com/advisories/GHSA-h67p-54hq-rp68)) | 4.2.0 |
+| `@babel/core` | LOW | Arbitrary file read via sourceMappingURL ([GHSA-4x5r-pxfx-6jf8](https://github.com/advisories/GHSA-4x5r-pxfx-6jf8)) | 7.29.7 |
+
+### Exposure context
+
+- All six are **dev / build-time or transitive** dependencies. `vite` is the
+  only direct dependency (dev); the rest are transitive (`ws`,
+  `engine.io-client` via the Socket.IO toolchain; `form-data`, `js-yaml`,
+  `@babel/core` via build/test tooling). None ship in the browser bundle.
+- The `vite` advisories (`server.fs.deny` bypass, launch-editor NTLM disclosure)
+  affect the local dev server on Windows; they do not affect the published
+  client artifact.
+
+### Action taken
+
+- Ran `npm audit fix` (no `--force`); only `package-lock.json` changed.
+- Verified: `npm audit` reports **0 vulnerabilities**, the production build
+  (`npm run build`) succeeds, and the full test suite passes (328 tests, 0
+  failures).
+
+---
+
+**Last Updated**: June 16, 2026
+**Next Review**: September 16, 2026
 
 [advisories]: https://github.com/billchurch/WebSSH2/security/advisories
 [npm-attack]: https://www.bleepingcomputer.com/news/security/hackers-hijack-npm-packages-with-2-billion-weekly-downloads-in-supply-chain-attack/

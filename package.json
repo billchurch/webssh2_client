@@ -104,7 +104,8 @@
   "overrides": {
     "serialize-javascript": ">=7.0.3",
     "tmp": ">=0.2.6",
-    "axios": ">=1.16.1"
+    "axios": ">=1.16.1",
+    "esbuild": "^0.28.1"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.53.3"
