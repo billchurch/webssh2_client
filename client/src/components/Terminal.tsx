@@ -18,6 +18,10 @@ import {
 } from '../services/socket.js'
 import { getStoredSettings } from '../utils/settings.js'
 import { resolveTheme, getAvailableThemes } from '../utils/themes.js'
+import {
+  handleShiftEnterKeyEvent,
+  resolveShiftEnterNewline
+} from '../utils/shift-enter.js'
 import type {
   WebSSH2Config,
   TerminalSettings,
@@ -249,6 +253,22 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
     )
     clipboardInstance.attach(terminal)
     setClipboardIntegration(clipboardInstance)
+
+    // Config-gated Shift+Enter → ESC+CR remap (billchurch/webssh2#497).
+    // The effective setting is read at event time so a settings-modal
+    // save applies immediately without re-attaching the handler.
+    terminal.attachCustomKeyEventHandler((event) =>
+      handleShiftEnterKeyEvent(event, {
+        isEnabled: () => {
+          const stored = getStoredSettings() as Partial<TerminalSettings>
+          return resolveShiftEnterNewline(
+            stored.shiftEnterNewline,
+            props.config.terminal.shiftEnterNewline
+          )
+        },
+        emit: emitData
+      })
+    )
 
     // Fit terminal after mount with multiple attempts for proper sizing
     const fitTerminal = () => {
