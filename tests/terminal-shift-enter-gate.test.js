@@ -32,3 +32,31 @@ describe('Terminal.tsx — Shift+Enter remap wiring', () => {
     assert.match(TERMINAL_SOURCE, /props\.config\.terminal\.shiftEnterNewline/)
   })
 })
+
+const MODAL_SOURCE = await readFile(
+  new URL(
+    '../client/src/components/TerminalSettingsModal.tsx',
+    import.meta.url
+  ),
+  'utf8'
+)
+
+describe('TerminalSettingsModal.tsx — Shift+Enter setting', () => {
+  it('renders a shiftEnterNewline control', () => {
+    assert.match(MODAL_SOURCE, /name="shiftEnterNewline"/)
+  })
+
+  it('falls back to the injected config value when nothing is stored', () => {
+    assert.match(
+      MODAL_SOURCE,
+      /stored\.shiftEnterNewline\s*\?\?\s*clientConfig\(\)\.terminal\.shiftEnterNewline/
+    )
+  })
+
+  it('passes the setting to onSave', () => {
+    assert.match(
+      MODAL_SOURCE,
+      /shiftEnterNewline:\s*currentSettings\.shiftEnterNewline/
+    )
+  })
+})
