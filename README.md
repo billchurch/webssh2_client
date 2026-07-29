@@ -75,6 +75,10 @@ For server setup instructions, refer to the [WebSSH2 server documentation](https
   - Browser compatibility detection with fallback mechanisms
   - Visual feedback with toast notifications
   - All features can be toggled in Terminal Settings
+- **Shift+Enter Newline (opt-in):**
+  - Remaps Shift+Enter to send `ESC`+`CR` instead of `CR`
+  - Lets TUIs like Claude Code distinguish "insert newline" from "submit"
+  - Toggle in Terminal Settings, or enabled deployment-wide from the server config
 - Customizable terminal settings:
   - Font size and family
   - Color schemes
@@ -280,6 +284,29 @@ settings.clipboardEnableKeyboardShortcuts = true // Enable shortcuts
 // Save settings
 localStorage.setItem('webssh2.settings.global', JSON.stringify(settings))
 ```
+
+### Shift+Enter Newline
+
+In classic VT100/xterm emulation, Shift+Enter and Enter both send `CR`
+(`\r`), so terminal applications cannot tell them apart. When the
+**Shift+Enter Newline** setting is enabled, the client instead sends
+`ESC`+`CR` (`\x1b\r`) for Shift+Enter, which Claude Code and most
+readline-style TUIs treat as "insert newline" rather than "submit". See
+[webssh2#497](https://github.com/billchurch/webssh2/issues/497).
+
+- **Default: disabled.** The remap only applies to keys typed in the
+  terminal itself; UI shortcuts such as Shift+Enter in the search bar are
+  unaffected.
+- Toggle it per browser in **Terminal Settings → Keyboard Capture
+  Settings → Shift+Enter Newline**, stored in localStorage under
+  `webssh2.settings.global` as `shiftEnterNewline` (boolean).
+- A deployment default can be delivered by the server via the injected
+  configuration (`terminal.shiftEnterNewline`, set through the webssh2
+  server option `options.terminal.shiftEnterNewline` or the
+  `WEBSSH2_TERMINAL_SHIFT_ENTER_NEWLINE` environment variable).
+- Precedence: explicit user setting → server-injected default → disabled.
+- This is an interim shim until a stable xterm.js release ships Kitty
+  keyboard protocol support, at which point the real fix lands upstream.
 
 ### Configuration Object
 
