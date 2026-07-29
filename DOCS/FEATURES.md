@@ -52,6 +52,16 @@ The terminal settings dialog offers the following customization options:
    - Options: Sound / None
    - Configures the audible bell behavior in the terminal.
 
+7. **Shift+Enter Newline** (Keyboard Capture Settings section)
+   - Options: Enabled (sends ESC+CR) / Disabled (sends CR)
+   - Default: Disabled
+   - When enabled, Shift+Enter sends `ESC`+`CR` instead of `CR`, letting
+     TUIs like Claude Code distinguish "insert newline" from "submit"
+     ([webssh2#497](https://github.com/billchurch/webssh2/issues/497)).
+   - The server can set a deployment-wide default via its
+     `options.terminal.shiftEnterNewline` option; an explicit choice made
+     here overrides it.
+
 ### Applying Settings
 
 After adjusting your preferences:
