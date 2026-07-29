@@ -38,6 +38,7 @@ export const defaultSettings: TerminalSettings = {
     captureCtrlB: false,
     customCaptureKeys: []
   },
+  shiftEnterNewline: false,
   promptSounds: {
     enabled: false,
     severities: {

@@ -109,3 +109,5 @@ client/public
 
 .playwright-mcp/
 tsconfig.tsbuildinfo
+
+.worktrees/

@@ -56,6 +56,8 @@ export interface TerminalSettings {
   clipboardEnableMiddleClickPaste: boolean
   clipboardEnableKeyboardShortcuts: boolean
   keyboardCapture: KeyboardCaptureSettings
+  /** Remap Shift+Enter to ESC+CR (newline in Claude Code-style TUIs) */
+  shiftEnterNewline: boolean
   promptSounds: PromptSoundSettings
   themeName?: string
   customTheme?: ITheme | null

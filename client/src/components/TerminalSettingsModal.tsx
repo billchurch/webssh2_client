@@ -45,6 +45,7 @@ interface TerminalSettingsForm {
   clipboardEnableMiddleClickPaste: boolean
   clipboardEnableKeyboardShortcuts: boolean
   keyboardCapture: KeyboardCaptureSettings
+  shiftEnterNewline: boolean
   promptSounds: PromptSoundSettings
   themeName: string
   customThemeJson: string
@@ -87,6 +88,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
     clipboardEnableKeyboardShortcuts:
       defaultSettings.clipboardEnableKeyboardShortcuts,
     keyboardCapture: defaultSettings.keyboardCapture,
+    shiftEnterNewline: defaultSettings.shiftEnterNewline,
     promptSounds: defaultSettings.promptSounds,
     themeName: defaultSettings.themeName ?? 'Default',
     customThemeJson: '',
@@ -226,6 +228,8 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
           defaultSettings.clipboardEnableKeyboardShortcuts,
         keyboardCapture:
           stored.keyboardCapture || defaultSettings.keyboardCapture,
+        shiftEnterNewline:
+          stored.shiftEnterNewline ?? clientConfig().terminal.shiftEnterNewline,
         promptSounds: stored.promptSounds
           ? {
               enabled:
@@ -303,6 +307,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
       clipboardEnableKeyboardShortcuts:
         currentSettings.clipboardEnableKeyboardShortcuts,
       keyboardCapture: currentSettings.keyboardCapture,
+      shiftEnterNewline: currentSettings.shiftEnterNewline,
       promptSounds: currentSettings.promptSounds,
       themeName: submittedThemeName,
       customTheme: submittedCustomTheme
@@ -708,6 +713,28 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 >
                   <option value="true">Enabled (fixes vi Escape issue)</option>
                   <option value="false">Disabled (default)</option>
+                </select>
+              </label>
+
+              {/* Shift+Enter newline (billchurch/webssh2#497) */}
+              <label class="contents">
+                <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                  Shift+Enter Newline
+                </span>
+                <select
+                  name="shiftEnterNewline"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={settings().shiftEnterNewline ? 'true' : 'false'}
+                  onChange={(e) =>
+                    updateSetting(
+                      'shiftEnterNewline',
+                      e.currentTarget.value === 'true'
+                    )
+                  }
+                  title="Send ESC+CR instead of CR for Shift+Enter (inserts a newline in Claude Code and similar TUIs)"
+                >
+                  <option value="true">Enabled (sends ESC+CR)</option>
+                  <option value="false">Disabled (sends CR)</option>
                 </select>
               </label>
 

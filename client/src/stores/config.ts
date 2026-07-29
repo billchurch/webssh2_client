@@ -47,6 +47,7 @@ const defaultConfig: WebSSH2Config = {
       captureCtrlB: false,
       customCaptureKeys: []
     },
+    shiftEnterNewline: false,
     promptSounds: {
       enabled: false,
       severities: {
