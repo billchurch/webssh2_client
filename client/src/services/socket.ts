@@ -41,6 +41,8 @@ import {
   sanitizeClientAuthPayloadForLogging
 } from '../stores/config.js'
 import { createDebouncedResizeEmitter } from '../utils/terminalResize.js'
+import { readInjectedConfig } from '../utils/injected-config.js'
+import { resolveTransports } from '../utils/transports.js'
 import {
   RESIZE_DEBOUNCE_DELAY,
   DEFAULT_TERMINAL_COLS,
@@ -201,12 +203,16 @@ export class SocketService {
       query[key] = value
     }
 
+    const transports = resolveTransports(
+      readInjectedConfig()?.socket?.transports
+    )
+
     const newSocket = io(socketUrl, {
       path: socketPath,
       withCredentials: true,
       reconnection: false,
       timeout: 20000,
-      transports: ['websocket', 'polling'],
+      transports,
       query
     }) as Socket<ServerToClientEvents, ClientToServerEvents>
 

@@ -66,6 +66,8 @@ export interface TerminalSettings {
 export interface WebSocketConfig {
   url: string | null
   path: string
+  /** Gateway-forced Socket.IO transport order (#131); omitted = client default */
+  transports?: string[]
 }
 
 export interface SSHConfigInput {
