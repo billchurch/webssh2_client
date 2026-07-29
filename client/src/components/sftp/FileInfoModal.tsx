@@ -57,7 +57,6 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
   }
 
   const handleDelete = () => {
-    // eslint-disable-next-line no-restricted-globals, no-alert
     if (props.entry && window.confirm(`Delete "${props.entry.name}"?`)) {
       props.onDelete()
       props.onClose()

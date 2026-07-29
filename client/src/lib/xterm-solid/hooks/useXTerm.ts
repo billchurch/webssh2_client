@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import { createSignal, onCleanup } from 'solid-js'
 import { Terminal } from '@xterm/xterm'
 import type {

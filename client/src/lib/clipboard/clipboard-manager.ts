@@ -6,7 +6,6 @@ export interface ClipboardPermissionStatus {
 }
 
 export class ClipboardManager {
-  // eslint-disable-next-line no-use-before-define
   private static instance: ClipboardManager | null = null
 
   private permissionCache: ClipboardPermissionStatus | null = null

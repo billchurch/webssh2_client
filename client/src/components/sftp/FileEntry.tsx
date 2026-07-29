@@ -118,7 +118,6 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
             class="rounded p-1 text-neutral-400 hover:bg-red-600 hover:text-white"
             onClick={(e) => {
               e.stopPropagation()
-              // eslint-disable-next-line no-restricted-globals, no-alert
               if (window.confirm(`Delete "${props.entry.name}"?`)) {
                 props.onDelete?.()
               }

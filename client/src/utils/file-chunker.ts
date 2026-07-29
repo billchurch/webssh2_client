@@ -80,7 +80,6 @@ export async function* chunkFile(
   while (offset < file.size) {
     const end = Math.min(offset + chunkSize, file.size)
     const blob = file.slice(offset, end)
-    // eslint-disable-next-line no-await-in-loop
     const buffer = await blob.arrayBuffer()
     const base64Data = arrayBufferToBase64(buffer)
 
