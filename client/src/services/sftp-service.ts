@@ -816,7 +816,6 @@ export async function uploadFile(
     activeChunkers.set(transferId, chunker)
 
     // Send chunks - sequential awaits are intentional for flow control
-    // eslint-disable-next-line no-await-in-loop
     let chunk = await chunker.nextChunk()
     while (chunk) {
       const chunkRequest: SftpUploadChunkRequest = {
@@ -831,7 +830,6 @@ export async function uploadFile(
         `upload-ack:${transferId}:${chunk.index}`
       )
       socketInstance.emit('sftp-upload-chunk', chunkRequest)
-      // eslint-disable-next-line no-await-in-loop
       const ackResponse = await ackPromise
 
       // Update progress from ack response (don't wait for sftp-progress events)
@@ -865,7 +863,6 @@ export async function uploadFile(
         })
       }
 
-      // eslint-disable-next-line no-await-in-loop
       chunk = await chunker.nextChunk()
     }
 

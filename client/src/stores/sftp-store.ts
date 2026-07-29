@@ -106,7 +106,7 @@ function createSftpStoreInternal() {
       if (a.type === 'directory' && b.type !== 'directory') return -1
       if (a.type !== 'directory' && b.type === 'directory') return 1
 
-      let comparison = 0
+      let comparison: number
       switch (state.sortBy) {
         case 'name':
           comparison = a.name.localeCompare(b.name)
@@ -340,7 +340,6 @@ function createSftpStoreInternal() {
         for (const path of paths) {
           const entry = state.entries.find((e) => e.path === path)
           if (entry) {
-            // eslint-disable-next-line no-await-in-loop
             await sftpService.deleteFile(path, entry.type === 'directory')
           }
         }
@@ -438,7 +437,6 @@ function createSftpStoreInternal() {
     async uploadFiles(files: File[]) {
       // Sequential upload is intentional - upload one at a time
       for (const file of files) {
-        // eslint-disable-next-line no-await-in-loop
         await this.uploadFile(file)
       }
     },

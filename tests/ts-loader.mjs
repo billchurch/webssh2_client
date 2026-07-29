@@ -32,7 +32,11 @@ export async function load(url, context, defaultLoad) {
       },
       fileName: url
     })
-    return { format: 'module', source: transpiled.outputText, shortCircuit: true }
+    return {
+      format: 'module',
+      source: transpiled.outputText,
+      shortCircuit: true
+    }
   }
   return defaultLoad(url, context, defaultLoad)
 }

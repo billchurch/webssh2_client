@@ -41,13 +41,9 @@ describe('Accessibility - Terminal UI', () => {
   after(() => {
     dom?.window.close()
     // Best-effort cleanup of globals
-    // eslint-disable-next-line no-undef
     delete global.window
-    // eslint-disable-next-line no-undef
     delete global.document
-    // eslint-disable-next-line no-undef
     delete global.HTMLElement
-    // eslint-disable-next-line no-undef
     delete global.Node
   })
 
