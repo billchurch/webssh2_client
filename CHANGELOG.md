@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.2.0](https://github.com/billchurch/webssh2_client/compare/v5.1.0...v5.2.0) (2026-07-29)
+
+
+### Features
+
+* **lint:** migrate to ESLint 10 flat config, clear brace-expansion audit chain ([#136](https://github.com/billchurch/webssh2_client/issues/136)) ([9455f29](https://github.com/billchurch/webssh2_client/commit/9455f29d43596dcf2aed65ed7186cb5f84431c10))
+* **terminal:** config-gated Shift+Enter → ESC+CR remap ([#134](https://github.com/billchurch/webssh2_client/issues/134)) ([3a910c7](https://github.com/billchurch/webssh2_client/commit/3a910c78192a7f92c7f3a115b430fbef0e31c9c5))
+
+
+### Bug Fixes
+
+* **ci:** repair checksum generation, move actions to node24, add asset backfill ([#129](https://github.com/billchurch/webssh2_client/issues/129)) ([6faea1b](https://github.com/billchurch/webssh2_client/commit/6faea1b31826ab3d8b04ea76266c83f462425066))
+* **deps:** clear all client npm audit advisories (esbuild GHSA-gv7w + audit fix) ([#133](https://github.com/billchurch/webssh2_client/issues/133)) ([8bada51](https://github.com/billchurch/webssh2_client/commit/8bada51668e7f7166e1774f4ae2e0874fac4a595))
+
 ## [5.1.0](https://github.com/billchurch/webssh2_client/compare/v5.0.0...v5.1.0) (2026-06-10)
 
 
