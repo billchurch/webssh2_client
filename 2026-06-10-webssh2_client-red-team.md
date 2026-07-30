@@ -5,20 +5,21 @@
 **Out of scope:** `webssh2` gateway server, `webssh2_cli`
 **Lenses:** Security, Availability, Supply-chain/Build, Performance
 
-## Disposition (last updated 2026-06-10)
+## Disposition (last updated 2026-07-30)
 
 Reviewed with the maintainer. Tracking state at a glance:
 
-| ID                         | Severity   | Tracking                                                                                                                           | Status                                                                                                  |
-| -------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| S1                         | HIGH       | [#112](https://github.com/billchurch/webssh2_client/issues/112) + [PR #120](https://github.com/billchurch/webssh2_client/pull/120) | **Fixed** — masking helper + regression tests (PR #120, merged 2026-06-10)                              |
-| S2                         | MEDIUM→LOW | [#113](https://github.com/billchurch/webssh2_client/issues/113) + [PR #122](https://github.com/billchurch/webssh2_client/pull/122) | **Fixed** — filename sanitized + requested-name authoritative (assumed merged to main)                  |
-| A1                         | MEDIUM     | [#114](https://github.com/billchurch/webssh2_client/issues/114) + [PR #122](https://github.com/billchurch/webssh2_client/pull/122) | **Fixed** — byte limit + chunk-index bounds, abort surfaces as failed transfer (assumed merged to main) |
-| SC1                        | ~~HIGH~~   | [#115](https://github.com/billchurch/webssh2_client/issues/115)                                                                    | **Fixed** — `@xterm/addon-search` moved to devDependencies (assumed merged to main)                     |
-| SC5                        | MEDIUM     | [#117](https://github.com/billchurch/webssh2_client/issues/117)                                                                    | Open — client-side prereqs (CSP header = gateway work)                                                  |
-| SC6                        | LOW        | [#116](https://github.com/billchurch/webssh2_client/issues/116)                                                                    | Open                                                                                                    |
-| SC7                        | LOW        | [#118](https://github.com/billchurch/webssh2_client/issues/118) + [PR #119](https://github.com/billchurch/webssh2_client/pull/119) | **Merged** — `no-unsafe-*` shipped (PR #119, merged 2026-06-10); SBE ratchet → #118                     |
-| S3, S4, A2–A4, SC2–SC4, P1 | MED–LOW    | —                                                                                                                                  | Tabled, documented below, no issue yet                                                                  |
+| ID                          | Severity   | Tracking                                                                                                                           | Status                                                                                                                        |
+| --------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| S1                          | HIGH       | [#112](https://github.com/billchurch/webssh2_client/issues/112) + [PR #120](https://github.com/billchurch/webssh2_client/pull/120) | **Fixed** — masking helper + regression tests (PR #120, merged 2026-06-10)                                                    |
+| S2                          | MEDIUM→LOW | [#113](https://github.com/billchurch/webssh2_client/issues/113) + [PR #122](https://github.com/billchurch/webssh2_client/pull/122) | **Fixed** — filename sanitized + requested-name authoritative (assumed merged to main)                                        |
+| A1                          | MEDIUM     | [#114](https://github.com/billchurch/webssh2_client/issues/114) + [PR #122](https://github.com/billchurch/webssh2_client/pull/122) | **Fixed** — byte limit + chunk-index bounds, abort surfaces as failed transfer (assumed merged to main)                       |
+| SC1                         | ~~HIGH~~   | [#115](https://github.com/billchurch/webssh2_client/issues/115)                                                                    | **Fixed** — `@xterm/addon-search` moved to devDependencies (assumed merged to main)                                           |
+| SC5                         | MEDIUM     | [#117](https://github.com/billchurch/webssh2_client/issues/117) + [PR #125](https://github.com/billchurch/webssh2_client/pull/125) | **Fixed** — JSON config block + dead `csp-config.ts` ref fixed (merged 2026-06-10); gateway CSP header shipped in webssh2#546 |
+| SC6                         | LOW        | [#116](https://github.com/billchurch/webssh2_client/issues/116) + [PR #124](https://github.com/billchurch/webssh2_client/pull/124) | **Fixed** — action version comments pinned to exact released versions (merged 2026-06-10)                                     |
+| SC7                         | LOW        | [#118](https://github.com/billchurch/webssh2_client/issues/118) + [PR #119](https://github.com/billchurch/webssh2_client/pull/119) | **Merged** — `no-unsafe-*` shipped (PR #119, merged 2026-06-10); SBE ratchet → #118                                           |
+| A4                          | LOW        | [#143](https://github.com/billchurch/webssh2_client/issues/143) + [PR #144](https://github.com/billchurch/webssh2_client/pull/144) | **Fixed** — orphaned `@rollup/rollup-linux-x64-gnu` optionalDependency removed (rollup left the tree with Vite 8)             |
+| S3, S4, A2, A3, SC2–SC4, P1 | MED–LOW    | —                                                                                                                                  | Tabled, documented below, no issue yet                                                                                        |
 
 Notes on the contextualised items:
 
@@ -361,6 +362,10 @@ object-src 'none'; base-uri 'none'; frame-ancestors 'none'`. Verify xterm/Solid 
 under it (they should, no `unsafe-eval` needed). Remove or fix the `csp-config.ts`
 reference in `security.md`.
 
+**Status:** Resolved 2026-06-10 (#117, PR #125) — JSON config block adopted and
+the dead `csp-config.ts` reference fixed. The deferred gateway-side CSP header
+shipped separately in billchurch/webssh2#546 (closed 2026-06-17).
+
 ### SC6. GitHub Actions pinned to SHAs but with imprecise version comments (LOW) — [#116](https://github.com/billchurch/webssh2_client/issues/116)
 
 **Files:** `.github/workflows/ci.yml`, `release.yml`, `update-webssh2-dependency.yml`
@@ -371,6 +376,9 @@ comments are bare majors (`# v5`, `# v4`, `# v3`) instead of exact patch version
 
 **Fix:** Use exact released versions in comments and verify each SHA against the
 action's releases page when updating.
+
+**Status:** Resolved 2026-06-10 (#116, PR #124) — action version comments pinned
+to exact released versions.
 
 ### SC7. TypeScript `no-unsafe-*` / `strict-boolean-expressions` not enabled (LOW)
 
