@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.3.0](https://github.com/billchurch/webssh2_client/compare/v5.2.0...v5.3.0) (2026-07-30)
+
+
+### Features
+
+* honor gateway-injected Socket.IO transports ([#131](https://github.com/billchurch/webssh2_client/issues/131)) ([#138](https://github.com/billchurch/webssh2_client/issues/138)) ([968e28c](https://github.com/billchurch/webssh2_client/commit/968e28cad7c7fdc0f49b85c743870a8af7015207))
+
 ## [5.2.0](https://github.com/billchurch/webssh2_client/compare/v5.1.0...v5.2.0) (2026-07-29)
 
 
