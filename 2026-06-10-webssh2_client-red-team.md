@@ -263,6 +263,10 @@ covers Linux x64. Build fragility, not security.
 the lockfile; if a CI arch needs a guaranteed binary, pin it to the exact resolved
 rollup version and bump both together.
 
+**Status:** Resolved 2026-07-30 (#143) — the `optionalDependencies` block was
+removed. Rollup left the dependency tree entirely with the Vite 8 / Rolldown
+migration (#140), so no replacement pin is needed.
+
 ---
 
 ## Supply-chain / Build
@@ -451,7 +455,7 @@ direction so re-sort happens only when inputs change.
 | SC5 | Supply-chain | MEDIUM     | Filed [#117](https://github.com/billchurch/webssh2_client/issues/117) — fix stale `csp-config.ts` ref + `webssh2Config` CSP-readiness (header = gateway work)                                                                                                                           |
 | S6  | Security     | LOW        | Open — optional client-side fingerprint recompute                                                                                                                                                                                                                                       |
 | A3  | Availability | LOW        | Open — surface failed-integrity downloads to user                                                                                                                                                                                                                                       |
-| A4  | Availability | LOW        | Open — drop manual rollup native-binary pin                                                                                                                                                                                                                                             |
+| A4  | Availability | LOW        | Resolved (#143) — orphaned optionalDependencies entry removed                                                                                                                                                                                                                           |
 | SC6 | Supply-chain | LOW        | Filed [#116](https://github.com/billchurch/webssh2_client/issues/116) — exact-version comments on SHA-pinned actions                                                                                                                                                                    |
 | SC7 | Supply-chain | LOW        | Merged [PR #119](https://github.com/billchurch/webssh2_client/pull/119) — type-aware lint + `no-unsafe-*` at error, 10 fixed; SBE ratchet → [#118](https://github.com/billchurch/webssh2_client/issues/118)                                                                             |
 | P1  | Performance  | LOW        | Open — memoize sorted directory listing                                                                                                                                                                                                                                                 |

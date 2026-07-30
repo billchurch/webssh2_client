@@ -106,8 +106,5 @@
     "tmp": ">=0.2.6",
     "axios": ">=1.16.1",
     "chromedriver": "148.0.2"
-  },
-  "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.53.3"
   }
 }
