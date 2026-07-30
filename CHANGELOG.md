@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.4.0](https://github.com/billchurch/webssh2_client/compare/v5.3.0...v5.4.0) (2026-07-30)
+
+
+### chore
+
+* force release 5.4.0 ([#141](https://github.com/billchurch/webssh2_client/issues/141)) ([48c345e](https://github.com/billchurch/webssh2_client/commit/48c345ed16e2a01069859bc7ebe8f157fe8fb9de))
+
 ## [5.3.0](https://github.com/billchurch/webssh2_client/compare/v5.2.0...v5.3.0) (2026-07-30)
 
 
