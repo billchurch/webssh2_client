@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.4.2](https://github.com/billchurch/webssh2_client/compare/v5.4.1...v5.4.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* **sftp:** surface pre-transfer server rejections on queued transfers ([#148](https://github.com/billchurch/webssh2_client/issues/148)) ([5eaba7d](https://github.com/billchurch/webssh2_client/commit/5eaba7dc51c41d72cdb21a1fcc66790310e1fa2c)), closes [#147](https://github.com/billchurch/webssh2_client/issues/147)
+
 ## [5.4.1](https://github.com/billchurch/webssh2_client/compare/v5.4.0...v5.4.1) (2026-07-30)
 
 
