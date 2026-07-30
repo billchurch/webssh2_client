@@ -156,7 +156,8 @@ export default defineConfig(({ mode }) => {
       // Vite 8 default minifier (Oxc) in prod, off in dev.
       // NOTE: Oxc performs dead-code/unused elimination (the old
       // terserOptions disabled it). Gate on the functional smoke test;
-      // `minify: 'terser'` is the escape hatch if behavior is lost.
+      // `minify: 'terser'` is the escape hatch if behavior is lost (requires
+      // reinstalling terser as devDependency; Vite 8 optional-peers it).
       minify: !isDevelopment,
 
       cssMinify: !isDevelopment,
