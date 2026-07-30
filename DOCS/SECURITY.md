@@ -93,7 +93,11 @@ gh attestation verify client-public.zip --repo billchurch/webssh2_client
 ```
 
 - **Reproducible banner:** The bundle banner embeds the git commit date
-  (not the build time), so rebuilding the same tag yields comparable output.
+  (not the build time), so rebuilding the same tag with the pinned toolchain
+  (`npm ci`) yields byte-for-byte identical output. **Note:** As of v5.4.0, the
+  toolchain migrated to Vite 8 with Rolldown and Oxc, so hashes are not comparable
+  across the 5.3.x → 5.4.0 boundary. Within a given version, rebuild verification
+  proceeds by comparing checksums of `webssh2-*.js` and `webssh2-*.css`.
 - **`.npmrc`:** Intentionally committed and limited to `sign-git-tag=true`.
   Never add registry tokens to it; publishing uses OIDC.
 

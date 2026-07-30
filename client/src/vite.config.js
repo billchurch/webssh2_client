@@ -120,7 +120,8 @@ export default defineConfig(({ mode }) => {
       outDir: '../public',
       emptyOutDir: true,
 
-      rollupOptions: {
+      // Vite 8: Rolldown replaces Rollup
+      rolldownOptions: {
         input: {
           main: 'index.html'
         },
@@ -133,21 +134,18 @@ export default defineConfig(({ mode }) => {
           },
           chunkFileNames: '[name]-[hash].js',
           assetFileNames: (assetInfo) => {
-            // favicon.ico keeps a stable name (server contract; see #109)
-            if (assetInfo.name === 'favicon.ico') {
+            // Rolldown follows Rollup's `names` array API; keep `name`
+            // as fallback for compatibility. favicon.ico keeps a stable
+            // name (server contract; see #109).
+            const assetName =
+              assetInfo.names?.[0] ?? assetInfo.name ?? ''
+            if (assetName === 'favicon.ico') {
               return 'favicon.ico'
             }
-            if (
-              assetInfo.name === 'style.css' ||
-              assetInfo.name === 'index.css'
-            ) {
+            if (assetName === 'style.css' || assetName === 'index.css') {
               return 'webssh2-[hash].css'
             }
-            if (
-              assetInfo.name &&
-              assetInfo.name.startsWith('main') &&
-              assetInfo.name.endsWith('.css')
-            ) {
+            if (assetName.startsWith('main') && assetName.endsWith('.css')) {
               return 'webssh2-[hash].css'
             }
             return '[name]-[hash][extname]'
@@ -155,32 +153,17 @@ export default defineConfig(({ mode }) => {
         }
       },
 
-      // Production optimizations
-      minify: !isDevelopment ? 'terser' : false,
-      terserOptions: !isDevelopment
-        ? {
-            format: {
-              comments: false
-            },
-            compress: {
-              drop_console: false,
-              drop_debugger: false,
-              passes: 1,
-              dead_code: false,
-              unused: false
-            },
-            mangle: {
-              properties: false
-            }
-          }
-        : undefined,
+      // Vite 8 default minifier (Oxc) in prod, off in dev.
+      // NOTE: Oxc performs dead-code/unused elimination (the old
+      // terserOptions disabled it). Gate on the functional smoke test;
+      // `minify: 'terser'` is the escape hatch if behavior is lost (requires
+      // reinstalling terser as devDependency; Vite 8 optional-peers it).
+      minify: !isDevelopment,
 
       cssMinify: !isDevelopment,
 
-      // Performance hints
       chunkSizeWarningLimit: 500,
 
-      // Source maps
       sourcemap: isDevelopment ? 'inline' : false
     },
 
