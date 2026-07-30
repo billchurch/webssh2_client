@@ -504,15 +504,29 @@ function handleError(response: SftpErrorResponse): void {
   const error = new Error(response.message)
 
   // Update transfer status if applicable
+  let transferMatched = false
   if (response.transferId) {
     const transfer = activeTransfers.get(response.transferId)
     if (transfer) {
+      transferMatched = true
       transfer.status = 'failed'
       transfer.error = response.message
     }
 
     // Reject any pending promises for this transfer
     rejectAllForTransfer(response.transferId, error)
+  }
+
+  // Pre-transfer rejection (e.g. blocked extension): the server refused the
+  // upload/download before sending a ready response, so the transfer was
+  // never registered in activeTransfers and the awaiting promise lives in
+  // the FIFO ready queue, not in pendingRequests
+  if (
+    !transferMatched &&
+    (response.operation === 'upload' || response.operation === 'download') &&
+    rejectPendingReady(response.operation, error)
+  ) {
+    return
   }
 
   // Reject operation-specific requests by path if provided
@@ -545,6 +559,28 @@ function handleError(response: SftpErrorResponse): void {
       rejectPendingByPrefix(prefix, error)
     }
   }
+}
+
+/**
+ * Reject the oldest queued upload/download ready promise. The server
+ * responds to start requests in order, so the FIFO head is the request
+ * this error belongs to — mirroring how the success path consumes the
+ * queue in the sftp-upload-ready / sftp-download-ready handlers.
+ */
+function rejectPendingReady(
+  operation: 'upload' | 'download',
+  error: Error
+): boolean {
+  const pending =
+    operation === 'upload'
+      ? pendingUploadReady.shift()
+      : pendingDownloadReady.shift()
+  if (!pending) {
+    return false
+  }
+  clearTimeout(pending.timeoutId)
+  pending.reject(error)
+  return true
 }
 
 /**

@@ -6,6 +6,16 @@ export async function resolve(specifier, context, defaultResolve) {
     const url = new URL(specifier, context.parentURL)
     return { shortCircuit: true, url: url.href }
   }
+  // Extensionless relative imports (Vite resolves these; Node does not)
+  if (specifier.startsWith('.') && !/\.[a-z]+$/i.test(specifier)) {
+    const tsCandidate = new URL(`${specifier}.ts`, context.parentURL)
+    try {
+      await readFile(tsCandidate)
+      return { shortCircuit: true, url: tsCandidate.href }
+    } catch {
+      // fall back to default resolution
+    }
+  }
   if (specifier.endsWith('.js')) {
     const tsCandidate = new URL(
       specifier.replace(/\.js$/, '.ts'),
