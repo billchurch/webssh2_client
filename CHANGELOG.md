@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.4.1](https://github.com/billchurch/webssh2_client/compare/v5.4.0...v5.4.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deps:** remove orphaned @rollup/rollup-linux-x64-gnu optionalDependency ([#144](https://github.com/billchurch/webssh2_client/issues/144)) ([d725621](https://github.com/billchurch/webssh2_client/commit/d7256210bc9dce289ceb4b50ce29ff862c849896)), closes [#143](https://github.com/billchurch/webssh2_client/issues/143)
+
 ## [5.4.0](https://github.com/billchurch/webssh2_client/compare/v5.3.0...v5.4.0) (2026-07-30)
 
 
