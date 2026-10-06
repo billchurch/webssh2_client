@@ -290,7 +290,7 @@ export const AlgorithmDebugInfo: Component<AlgorithmDebugInfoProps> = (
                 <div class="text-xs font-medium text-slate-500">
                   Error Details
                 </div>
-                <p class="mt-1 wrap-break-word font-mono text-xs text-red-400">
+                <p class="mt-1 font-mono text-xs wrap-break-word text-red-400">
                   {props.errorDetails}
                 </p>
               </div>

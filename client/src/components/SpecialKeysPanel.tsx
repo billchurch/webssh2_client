@@ -50,7 +50,7 @@ export const SpecialKeysPanel: Component<SpecialKeysPanelProps> = (props) => {
 
   return (
     <div
-      class={`absolute right-0 top-0 z-40 flex h-full w-64 flex-col border-l border-neutral-600 bg-neutral-800 transition-transform duration-200 ${
+      class={`absolute top-0 right-0 z-40 flex h-full w-64 flex-col border-l border-neutral-600 bg-neutral-800 transition-transform duration-200 ${
         isSpecialKeysOpen() ? 'translate-x-0' : 'translate-x-full'
       }`}
       aria-hidden={!isSpecialKeysOpen()}
@@ -86,7 +86,7 @@ export const SpecialKeysPanel: Component<SpecialKeysPanelProps> = (props) => {
               <div class="mb-2">
                 <button
                   type="button"
-                  class="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-xs font-medium uppercase tracking-wide text-neutral-400 hover:bg-neutral-700 hover:text-neutral-300"
+                  class="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-xs font-medium tracking-wide text-neutral-400 uppercase hover:bg-neutral-700 hover:text-neutral-300"
                   onClick={() => toggleCategory(category.name)}
                   aria-expanded={!isCollapsed()}
                 >
