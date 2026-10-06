@@ -4,5 +4,6 @@
   "semi": false,
   "singleQuote": true,
   "trailingComma": "none",
+  "tailwindStylesheet": "./client/src/app.css",
   "plugins": ["prettier-plugin-tailwindcss"]
 }
