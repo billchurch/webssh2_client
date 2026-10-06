@@ -44,7 +44,9 @@ jobs:
         run: node --test
 
       - name: Security audit
-        run: npm audit --audit-level=high
+        # Fails on any HIGH/CRITICAL advisory in production deps, and on
+        # dev-only ones not accepted in .audit-allowlist.json (see SECURITY.md)
+        run: node scripts/audit-gate.mjs
 
       - name: Trivy vulnerability scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0

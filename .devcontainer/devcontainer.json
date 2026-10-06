@@ -27,7 +27,6 @@
         "ms-vscode-remote.remote-containers",
         "oderwat.indent-rainbow",
         "rvest.vs-code-prettier-eslint",
-        "stylelint.vscode-stylelint",
         "vivaxy.vscode-conventional-commits",
         "github.vscode-github-actions"
       ]

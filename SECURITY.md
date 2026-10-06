@@ -560,8 +560,8 @@ production dependency tree or the published browser bundle.
   2026-10-20.
 - **axios**: the previous override `>=1.16.1` was an open range, which does
   not pin a vetted version; it is now an exact pin.
-- All other packages are dev / test tooling (`jsdom`, `stylelint`,
-  `html-validate`, `vite`, `@axe-core/cli`).
+- All other packages are dev / test tooling (`jsdom`, `html-validate`,
+  `vite`, and the since-removed `stylelint` and `@axe-core/cli`).
 
 ### Quarantine exceptions
 
@@ -573,17 +573,39 @@ production dependency tree or the published browser bundle.
 
 The lockfile was otherwise regenerated with `npm install --before=2026-09-22`.
 
-### Outstanding (no upstream fix)
+### Dependency chains with no upstream fix
 
-These dev-only chains have no patched release and still fail
-`npm audit --audit-level=high`. Tracked separately:
+Three dev-only chains had no patched release:
 
 - `@axe-core/cli` → `chromedriver` → `extract-zip`, `proxy-agent` →
-  `basic-ftp` (HIGH)
-- `braces` / `micromatch` (all versions flagged) → `tailwindcss@3`,
-  `stylelint`, `eslint-plugin-tailwindcss`, `chokidar` (HIGH)
-- `postcss-selector-parser` < 7.1.6 via `tailwindcss@3` → `postcss-nested`
-  (MODERATE)
+  `basic-ftp` (HIGH). **Removed**: `@axe-core/cli` and the `chromedriver`
+  override were dropped. In-test axe checks still run through `jest-axe`;
+  live-page scans use the axe DevTools browser extension.
+- `stylelint` → `micromatch` / `fast-glob` / `globby` → `braces` (HIGH, all
+  `stylelint` versions including 17.16.0). **Removed**: `stylelint` only
+  linted `client/src/app.css`. Its one project-specific rule (no
+  `outline: none` / `outline: 0`) is now `tests/css-outline-guard.test.js`.
+- `tailwindcss@3` / `eslint-plugin-tailwindcss@3` → `micromatch` /
+  `fast-glob` / `chokidar` → `braces`
+  ([GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
+  HIGH), plus `postcss-selector-parser` < 7.1.6 (MODERATE). **Accepted
+  until 2026-11-06**: build-time only, and every glob pattern is
+  first-party config. Cleared by the Tailwind 4 migration (`tailwindcss@4`
+  and `eslint-plugin-tailwindcss@4` do not depend on `braces`).
+
+### CI audit gate
+
+`npm audit --audit-level=high` cannot pass while an advisory with no fix
+exists anywhere in the tree, so CI now runs `scripts/audit-gate.mjs`
+(also `npm run security:audit`):
+
+- Any HIGH or CRITICAL advisory in the **production** tree fails the build.
+  No exceptions.
+- Any HIGH or CRITICAL **dev-only** advisory fails the build unless its GHSA
+  id is listed in `.audit-allowlist.json` with a `reviewBy` date that has
+  not passed. Expired entries fail the build, forcing a re-review.
+- Each allowlist entry must have an assessment in this file. Entries that
+  are no longer reported are flagged for removal.
 
 ---
 
