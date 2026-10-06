@@ -202,7 +202,7 @@ export const TerminalSearch: Component<TerminalSearchProps> = (props) => {
               value={searchTerm()}
               onInput={handleSearchInput}
               placeholder="Search terminal..."
-              class="w-48 rounded border border-neutral-300 bg-white py-1 pl-8 pr-3 text-sm text-neutral-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              class="w-48 rounded-sm border border-neutral-300 bg-white py-1 pl-8 pr-3 text-sm text-neutral-900 focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
             />
           </div>
         </form>
@@ -223,7 +223,7 @@ export const TerminalSearch: Component<TerminalSearchProps> = (props) => {
             type="button"
             onClick={handleFindPrevious}
             disabled={!searchTerm().trim()}
-            class="rounded p-1 text-neutral-600 hover:bg-neutral-100 disabled:opacity-50"
+            class="rounded-sm p-1 text-neutral-600 hover:bg-neutral-100 disabled:opacity-50"
             title="Previous match (Shift+Enter)"
           >
             <ChevronUp class="size-4" />
@@ -233,7 +233,7 @@ export const TerminalSearch: Component<TerminalSearchProps> = (props) => {
             type="button"
             onClick={handleFindNext}
             disabled={!searchTerm().trim()}
-            class="rounded p-1 text-neutral-600 hover:bg-neutral-100 disabled:opacity-50"
+            class="rounded-sm p-1 text-neutral-600 hover:bg-neutral-100 disabled:opacity-50"
             title="Next match (Enter)"
           >
             <ChevronDown class="size-4" />
@@ -246,7 +246,7 @@ export const TerminalSearch: Component<TerminalSearchProps> = (props) => {
           <button
             type="button"
             onClick={toggleCaseSensitive}
-            class="rounded p-1 text-neutral-600 hover:bg-neutral-100"
+            class="rounded-sm p-1 text-neutral-600 hover:bg-neutral-100"
             title="Match case"
           >
             {searchOptions().caseSensitive ? (
@@ -260,7 +260,7 @@ export const TerminalSearch: Component<TerminalSearchProps> = (props) => {
           <button
             type="button"
             onClick={toggleWholeWord}
-            class="rounded px-2 py-1 font-mono text-xs text-neutral-600 hover:bg-neutral-100"
+            class="rounded-sm px-2 py-1 font-mono text-xs text-neutral-600 hover:bg-neutral-100"
             classList={{
               'bg-blue-100 text-blue-600': searchOptions().wholeWord
             }}
@@ -272,7 +272,7 @@ export const TerminalSearch: Component<TerminalSearchProps> = (props) => {
           <button
             type="button"
             onClick={toggleRegex}
-            class="rounded p-1 text-neutral-600 hover:bg-neutral-100"
+            class="rounded-sm p-1 text-neutral-600 hover:bg-neutral-100"
             classList={{
               'bg-blue-100 text-blue-600': searchOptions().regex
             }}
@@ -287,7 +287,7 @@ export const TerminalSearch: Component<TerminalSearchProps> = (props) => {
         <button
           type="button"
           onClick={handleCloseSearch}
-          class="rounded p-1 text-neutral-600 hover:bg-neutral-100"
+          class="rounded-sm p-1 text-neutral-600 hover:bg-neutral-100"
           title="Close search (Escape)"
         >
           <X class="size-4" />

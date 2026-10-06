@@ -78,7 +78,7 @@ export const ConnectionErrorModal: Component<ConnectionErrorModalProps> = (
     >
       <Show when={error() !== null}>
         <div
-          class={`relative w-80 rounded-lg border border-slate-600 bg-slate-900 p-6 text-slate-100 shadow-xl sm:w-[28rem] ${hasDebugInfo() ? 'md:w-[36rem]' : ''}`}
+          class={`relative w-80 rounded-lg border border-slate-600 bg-slate-900 p-6 text-slate-100 shadow-xl sm:w-md ${hasDebugInfo() ? 'md:w-xl' : ''}`}
           role="alertdialog"
           aria-labelledby="connection-error-title"
           aria-describedby="connection-error-message"
@@ -97,7 +97,7 @@ export const ConnectionErrorModal: Component<ConnectionErrorModalProps> = (
           {/* Error message */}
           <p
             id="connection-error-message"
-            class="mb-4 break-words text-center text-slate-300"
+            class="mb-4 wrap-break-word text-center text-slate-300"
           >
             {error()!.message}
           </p>
@@ -141,7 +141,7 @@ export const ConnectionErrorModal: Component<ConnectionErrorModalProps> = (
             <Show when={error()!.canRetry}>
               <button
                 type="button"
-                class="inline-flex items-center justify-center gap-2 rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+                class="inline-flex items-center justify-center gap-2 rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-cyan-700 focus:outline-hidden focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-900"
                 onClick={props.onRetry}
                 autofocus
               >
@@ -151,7 +151,7 @@ export const ConnectionErrorModal: Component<ConnectionErrorModalProps> = (
             </Show>
             <button
               type="button"
-              class="inline-flex items-center justify-center gap-2 rounded-md border border-slate-500 bg-transparent px-4 py-2 text-sm font-medium text-slate-300 shadow-sm hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+              class="inline-flex items-center justify-center gap-2 rounded-md border border-slate-500 bg-transparent px-4 py-2 text-sm font-medium text-slate-300 shadow-xs hover:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-900"
               onClick={props.onClose}
             >
               <X class="size-4" />

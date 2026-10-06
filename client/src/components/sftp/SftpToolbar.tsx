@@ -77,7 +77,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
         {/* Back button */}
         <button
           type="button"
-          class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-50"
+          class="rounded-sm p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-50"
           onClick={props.onNavigateUp}
           title="Go up"
           aria-label="Go to parent directory"
@@ -89,7 +89,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
         {/* Home button */}
         <button
           type="button"
-          class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-50"
+          class="rounded-sm p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-50"
           onClick={() => props.onNavigate('~')}
           title="Home"
           aria-label="Go to home directory"
@@ -103,7 +103,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
           when={isEditingPath()}
           fallback={
             <div
-              class="flex-1 cursor-text truncate rounded bg-neutral-900 px-2 py-1 text-sm text-neutral-300 hover:bg-neutral-800"
+              class="flex-1 cursor-text truncate rounded-sm bg-neutral-900 px-2 py-1 text-sm text-neutral-300 hover:bg-neutral-800"
               onClick={startEditingPath}
               onKeyDown={(e) => e.key === 'Enter' && startEditingPath()}
               title="Click to edit path"
@@ -117,7 +117,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
         >
           <input
             type="text"
-            class="flex-1 rounded border border-blue-500 bg-neutral-900 px-2 py-1 text-sm text-neutral-200 focus:outline-none"
+            class="flex-1 rounded-sm border border-blue-500 bg-neutral-900 px-2 py-1 text-sm text-neutral-200 focus:outline-hidden"
             value={editedPath()}
             onInput={(e) => setEditedPath(e.currentTarget.value)}
             onKeyDown={(e) => {
@@ -133,7 +133,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
         {/* Refresh button */}
         <button
           type="button"
-          class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-50"
+          class="rounded-sm p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-50"
           onClick={props.onRefresh}
           title="Refresh"
           aria-label="Refresh directory listing"
@@ -180,7 +180,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
         {/* New folder button */}
         <button
           type="button"
-          class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white"
+          class="rounded-sm p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white"
           onClick={() => {
             const willShow = !showNewFolderInput()
             setShowNewFolderInput(willShow)
@@ -199,7 +199,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
         {/* Upload button */}
         <button
           type="button"
-          class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white"
+          class="rounded-sm p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white"
           onClick={props.onUpload}
           title="Upload files"
           aria-label="Upload files"
@@ -213,7 +213,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
         {/* Close button */}
         <button
           type="button"
-          class="rounded p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white"
+          class="rounded-sm p-1.5 text-neutral-400 hover:bg-neutral-700 hover:text-white"
           onClick={props.onClose}
           title="Close file browser"
           aria-label="Close file browser"
@@ -236,7 +236,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
             ref={newFolderInputRef}
             id="new-folder-name"
             type="text"
-            class="flex-1 rounded border border-neutral-600 bg-neutral-900 px-2 py-1 text-sm text-neutral-200 focus:border-blue-500 focus:outline-none"
+            class="flex-1 rounded-sm border border-neutral-600 bg-neutral-900 px-2 py-1 text-sm text-neutral-200 focus:border-blue-500 focus:outline-hidden"
             placeholder="Folder name"
             value={newFolderName()}
             onInput={(e) => setNewFolderName(e.currentTarget.value)}
@@ -251,7 +251,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
           </span>
           <button
             type="button"
-            class="rounded bg-blue-600 px-2 py-1 text-sm text-white hover:bg-blue-700"
+            class="rounded-sm bg-blue-600 px-2 py-1 text-sm text-white hover:bg-blue-700"
             onClick={handleNewFolder}
             aria-label="Create folder"
           >
@@ -259,7 +259,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
           </button>
           <button
             type="button"
-            class="rounded bg-neutral-700 px-2 py-1 text-sm text-neutral-300 hover:bg-neutral-600"
+            class="rounded-sm bg-neutral-700 px-2 py-1 text-sm text-neutral-300 hover:bg-neutral-600"
             onClick={() => setShowNewFolderInput(false)}
             aria-label="Cancel folder creation"
           >

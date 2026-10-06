@@ -90,7 +90,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
         type="button"
         aria-controls="dropupContent"
         aria-expanded={isOpen()}
-        class="inline-flex select-none items-center gap-1 rounded p-1 text-neutral-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="inline-flex select-none items-center gap-1 rounded-sm p-1 text-neutral-100 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
         onClick={toggleMenu}
         onMouseEnter={openMenu}
       >
@@ -100,14 +100,14 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
       <Show when={isOpen()}>
         <div
           ref={menuRef}
-          class="absolute bottom-full left-0 z-[101] min-w-56 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 text-base text-neutral-700 shadow-md"
+          class="absolute bottom-full left-0 z-101 min-w-56 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 text-base text-neutral-700 shadow-md"
           role="menu"
           aria-orientation="vertical"
         >
           {/* Search Button */}
           <button
             type="button"
-            class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+            class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-hidden"
             onClick={handleMenuItemClick(props.onSearch || (() => {}))}
             role="menuitem"
             title={`Search terminal (${getSearchShortcut().displayText})`}
@@ -120,7 +120,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
           <Show when={hasLogData()}>
             <button
               type="button"
-              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-hidden"
               onClick={handleMenuItemClick(props.onClearLog || (() => {}))}
               role="menuitem"
             >
@@ -132,7 +132,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
           <Show when={state.sessionLogEnable}>
             <button
               type="button"
-              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-hidden"
               onClick={handleMenuItemClick(props.onStopLog || (() => {}))}
               role="menuitem"
             >
@@ -145,7 +145,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
           <Show when={!state.sessionLogEnable}>
             <button
               type="button"
-              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-hidden"
               onClick={handleMenuItemClick(props.onStartLog || (() => {}))}
               role="menuitem"
             >
@@ -157,7 +157,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
           <Show when={hasLogData()}>
             <button
               type="button"
-              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-hidden"
               onClick={handleMenuItemClick(props.onDownloadLog || (() => {}))}
               role="menuitem"
             >
@@ -169,7 +169,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
           <Show when={state.allowReplay}>
             <button
               type="button"
-              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-hidden"
               onClick={handleMenuItemClick(
                 props.onReplayCredentials || (() => {})
               )}
@@ -183,7 +183,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
           <Show when={state.allowReauth}>
             <button
               type="button"
-              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-hidden"
               onClick={handleMenuItemClick(props.onReauth || (() => {}))}
               role="menuitem"
             >
@@ -195,7 +195,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
           <Show when={sftpStore.isAvailable && protocol() !== 'telnet'}>
             <button
               type="button"
-              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+              class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-hidden"
               onClick={handleMenuItemClick(props.onFileBrowser || (() => {}))}
               role="menuitem"
               title="Open SFTP file browser"
@@ -207,7 +207,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
           {/* Special Keys Button */}
           <button
             type="button"
-            class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+            class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-hidden"
             onClick={handleMenuItemClick(props.onSpecialKeys || (() => {}))}
             role="menuitem"
             title="Open special keys panel"
@@ -218,7 +218,7 @@ export const MenuDropdown: Component<MenuDropdownProps> = (props) => {
           {/* Terminal Settings Button */}
           <button
             type="button"
-            class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-none"
+            class="inline-flex w-full items-center gap-3 whitespace-nowrap px-4 py-3 text-left hover:bg-neutral-200 focus:bg-neutral-200 focus:outline-hidden"
             onClick={handleMenuItemClick(
               props.onTerminalSettings || (() => {})
             )}

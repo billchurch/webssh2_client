@@ -1,7 +1,9 @@
 /* Tailwind CSS entry */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+
+/* Scan component sources explicitly; client/public is git-ignored build output. */
+@source './';
 
 /* Search highlighting styles - Border-only approach for better accessibility */
 
