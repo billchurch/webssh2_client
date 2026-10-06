@@ -6,7 +6,8 @@
  *    No exceptions.
  * 2. Full tree: any HIGH or CRITICAL advisory fails unless its GHSA id is
  *    listed in `.audit-allowlist.json` with a `reviewBy` date that has not
- *    passed. Expired entries fail, forcing a re-review.
+ *    passed. Expired entries fail, forcing a re-review. A missing, malformed
+ *    or more-than-90-days-out `reviewBy` also fails (fail closed).
  *
  * Allowlisted advisories must be dev-only, have no upstream fix, and be
  * assessed in SECURITY.md. Stale entries (no longer reported) are flagged
@@ -56,6 +57,25 @@ function loadAllowlist() {
 
 const failures = []
 const today = new Date().toISOString().slice(0, 10)
+const MAX_REVIEW_DAYS = 90
+const latestReviewBy = new Date(Date.now() + MAX_REVIEW_DAYS * 86_400_000)
+  .toISOString()
+  .slice(0, 10)
+
+/**
+ * Fail closed: a missing, malformed, impossible (e.g. 2026-02-30) or
+ * too-distant reviewBy must never count as an acceptance.
+ */
+function isValidReviewBy(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false
+  }
+  const parsed = new Date(`${value}T00:00:00Z`)
+  if (Number.isNaN(parsed.getTime())) {
+    return false
+  }
+  return parsed.toISOString().slice(0, 10) === value && value <= latestReviewBy
+}
 
 const prod = blockingAdvisories(runAudit(['--omit=dev']))
 for (const [id, adv] of prod) {
@@ -72,6 +92,11 @@ for (const [id, adv] of all) {
   if (entry === undefined) {
     failures.push(
       `dev: ${adv.severity} ${adv.pkg} ${id} — ${adv.title} (not allowlisted)`
+    )
+  } else if (!isValidReviewBy(entry.reviewBy)) {
+    failures.push(
+      `dev: ${id} allowlist entry has an invalid reviewBy (${String(entry.reviewBy)}); ` +
+        `use a real YYYY-MM-DD date at most ${MAX_REVIEW_DAYS} days out`
     )
   } else if (entry.reviewBy < today) {
     failures.push(
