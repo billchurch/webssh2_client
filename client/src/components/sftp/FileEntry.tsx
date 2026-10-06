@@ -83,7 +83,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
       </Show>
 
       {/* Modified date */}
-      <span class="hidden shrink-0 whitespace-nowrap text-right text-neutral-400 sm:block sm:w-44 lg:w-48">
+      <span class="hidden shrink-0 text-right whitespace-nowrap text-neutral-400 sm:block sm:w-44 lg:w-48">
         {formatDate(props.entry.modifiedAt)}
       </span>
 

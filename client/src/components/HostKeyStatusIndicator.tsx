@@ -81,11 +81,11 @@ export const HostKeyStatusIndicator: Component = () => {
         {/* Popover */}
         <Show when={isPopoverOpen() && hostKeyInfo()}>
           <div
-            class="absolute bottom-full right-0 z-200 mb-2 w-72 rounded-lg border border-slate-600 bg-slate-900 p-3 text-sm text-slate-100 shadow-xl"
+            class="absolute right-0 bottom-full z-200 mb-2 w-72 rounded-lg border border-slate-600 bg-slate-900 p-3 text-sm text-slate-100 shadow-xl"
             role="dialog"
             aria-label="Host key details"
           >
-            <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <div class="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
               Host Key Details
             </div>
             <div class="space-y-1.5">
@@ -103,7 +103,7 @@ export const HostKeyStatusIndicator: Component = () => {
               </div>
               <div>
                 <span class="text-slate-500">Fingerprint</span>
-                <div class="mt-0.5 break-all font-mono text-xs text-slate-300">
+                <div class="mt-0.5 font-mono text-xs break-all text-slate-300">
                   {hostKeyInfo()!.fingerprint}
                 </div>
               </div>

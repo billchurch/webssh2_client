@@ -91,7 +91,7 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
           </h2>
           <button
             type="button"
-            class="rounded-sm p-1 text-neutral-400 hover:bg-neutral-700 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            class="rounded-sm p-1 text-neutral-400 hover:bg-neutral-700 hover:text-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
             onClick={props.onClose}
             aria-label="Close dialog"
           >
@@ -200,7 +200,7 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
         <div class="flex justify-end gap-2 border-t border-neutral-700 px-4 py-3">
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-neutral-800"
+            class="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-neutral-800 focus:outline-hidden"
             onClick={handleDelete}
             aria-label={`Delete ${props.entry?.name}`}
           >
@@ -209,7 +209,7 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
           </button>
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800"
+            class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800 focus:outline-hidden"
             onClick={handleDownload}
             aria-label={`Download ${props.entry?.name}`}
           >

@@ -194,7 +194,7 @@ export const UniversalPrompt: Component<UniversalPromptProps> = (props) => {
                         autofocus={
                           props.prompt.autoFocus !== false && index() === 0
                         }
-                        class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                         aria-required={input.required}
                       />
                     </div>
@@ -215,7 +215,7 @@ export const UniversalPrompt: Component<UniversalPromptProps> = (props) => {
                       ? undefined
                       : () => handleButtonClick(button.action)
                   }
-                  class={`inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium transition-colors focus:outline-hidden focus:ring-2 focus:ring-offset-2 ${getButtonVariantClasses(button.variant)}`}
+                  class={`inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-hidden ${getButtonVariantClasses(button.variant)}`}
                   autofocus={
                     button.default === true &&
                     (props.prompt.inputs === undefined ||

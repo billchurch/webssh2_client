@@ -798,7 +798,7 @@ const App: Component = () => {
       <Show when={showReconnectButton()}>
         <button
           type="button"
-          class="fixed left-1/2 top-1/2 z-1001 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-blue-600 px-5 py-2 text-sm text-white shadow-sm hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          class="fixed top-1/2 left-1/2 z-1001 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-blue-600 px-5 py-2 text-sm text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden"
           onClick={handleReconnect}
         >
           Reconnect
