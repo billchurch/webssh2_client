@@ -104,7 +104,7 @@ export const SpecialKeysPanel: Component<SpecialKeysPanelProps> = (props) => {
                       {(key) => (
                         <button
                           type="button"
-                          class={`rounded px-1 py-1.5 font-mono text-xs transition-colors ${
+                          class={`rounded-sm px-1 py-1.5 font-mono text-xs transition-colors ${
                             key.browserReserved === true
                               ? 'border border-dashed border-amber-700 bg-neutral-700 text-amber-400 hover:bg-neutral-600'
                               : 'bg-neutral-700 text-neutral-200 hover:bg-neutral-600'

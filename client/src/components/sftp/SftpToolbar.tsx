@@ -148,7 +148,7 @@ export const SftpToolbar: Component<SftpToolbarProps> = (props) => {
         {/* Toggle hidden files */}
         <button
           type="button"
-          class={`rounded p-1.5 hover:bg-neutral-700 ${
+          class={`rounded-sm p-1.5 hover:bg-neutral-700 ${
             props.showHidden === true
               ? 'text-blue-400'
               : 'text-neutral-400 hover:text-white'
