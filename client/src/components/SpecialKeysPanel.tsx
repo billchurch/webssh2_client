@@ -65,7 +65,7 @@ export const SpecialKeysPanel: Component<SpecialKeysPanelProps> = (props) => {
         </div>
         <button
           type="button"
-          class="rounded p-1 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100"
+          class="rounded-sm p-1 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100"
           onClick={() => {
             setIsSpecialKeysOpen(false)
             props.onSendKey()
@@ -86,7 +86,7 @@ export const SpecialKeysPanel: Component<SpecialKeysPanelProps> = (props) => {
               <div class="mb-2">
                 <button
                   type="button"
-                  class="flex w-full items-center justify-between rounded px-2 py-1.5 text-xs font-medium uppercase tracking-wide text-neutral-400 hover:bg-neutral-700 hover:text-neutral-300"
+                  class="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-xs font-medium uppercase tracking-wide text-neutral-400 hover:bg-neutral-700 hover:text-neutral-300"
                   onClick={() => toggleCategory(category.name)}
                   aria-expanded={!isCollapsed()}
                 >

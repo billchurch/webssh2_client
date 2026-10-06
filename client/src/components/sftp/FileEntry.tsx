@@ -101,7 +101,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
         >
           <button
             type="button"
-            class="rounded p-1 text-neutral-400 hover:bg-neutral-600 hover:text-white"
+            class="rounded-sm p-1 text-neutral-400 hover:bg-neutral-600 hover:text-white"
             onClick={(e) => {
               e.stopPropagation()
               props.onDownload?.()
@@ -115,7 +115,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
         <Show when={props.onDelete}>
           <button
             type="button"
-            class="rounded p-1 text-neutral-400 hover:bg-red-600 hover:text-white"
+            class="rounded-sm p-1 text-neutral-400 hover:bg-red-600 hover:text-white"
             onClick={(e) => {
               e.stopPropagation()
               if (window.confirm(`Delete "${props.entry.name}"?`)) {

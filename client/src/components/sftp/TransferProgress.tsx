@@ -69,7 +69,7 @@ export const TransferProgress: Component<TransferProgressProps> = (props) => {
 
   return (
     <div
-      class="rounded border border-neutral-700 bg-neutral-800 p-2"
+      class="rounded-sm border border-neutral-700 bg-neutral-800 p-2"
       role="listitem"
       aria-label={`${props.transfer.direction === 'upload' ? 'Uploading' : 'Downloading'} ${props.transfer.fileName}, ${props.transfer.percentComplete}% complete`}
     >
@@ -101,7 +101,7 @@ export const TransferProgress: Component<TransferProgressProps> = (props) => {
         >
           <button
             type="button"
-            class="rounded p-1 text-neutral-400 hover:bg-neutral-600 hover:text-white"
+            class="rounded-sm p-1 text-neutral-400 hover:bg-neutral-600 hover:text-white"
             onClick={() => props.onCancel?.(props.transfer.id)}
             title="Cancel"
             aria-label={`Cancel ${props.transfer.direction} of ${props.transfer.fileName}`}

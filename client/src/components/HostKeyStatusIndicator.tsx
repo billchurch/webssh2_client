@@ -81,7 +81,7 @@ export const HostKeyStatusIndicator: Component = () => {
         {/* Popover */}
         <Show when={isPopoverOpen() && hostKeyInfo()}>
           <div
-            class="absolute bottom-full right-0 z-[200] mb-2 w-72 rounded-lg border border-slate-600 bg-slate-900 p-3 text-sm text-slate-100 shadow-xl"
+            class="absolute bottom-full right-0 z-200 mb-2 w-72 rounded-lg border border-slate-600 bg-slate-900 p-3 text-sm text-slate-100 shadow-xl"
             role="dialog"
             aria-label="Host key details"
           >

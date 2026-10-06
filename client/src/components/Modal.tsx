@@ -156,7 +156,7 @@ export const ErrorModal: Component<ErrorModalProps> = (props) => {
         <div class="flex justify-end">
           <button
             type="button"
-            class="inline-flex items-center justify-center rounded-md border border-transparent bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            class="inline-flex items-center justify-center rounded-md border border-transparent bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
             onClick={props.onClose}
             autofocus
           >
@@ -226,7 +226,7 @@ export const PromptModal: Component<PromptModalProps> = (props) => {
                     <input
                       id={inputId}
                       type={prompt.echo ? 'text' : 'password'}
-                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                       value={responses()[index()] ?? ''}
                       onInput={(e) =>
                         handleInputChange(index(), e.currentTarget.value)
@@ -242,14 +242,14 @@ export const PromptModal: Component<PromptModalProps> = (props) => {
           <div class="flex justify-end gap-2">
             <button
               type="button"
-              class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+              class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
               onClick={props.onClose}
             >
               Cancel
             </button>
             <button
               type="submit"
-              class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Submit
             </button>

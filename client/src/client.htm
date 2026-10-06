@@ -18,28 +18,28 @@
         <h2 class="text-lg font-semibold text-slate-900 mb-2">WebSSH2 Login</h2>
         <form id="loginForm" class="space-y-3">
           <label for="hostInput" class="sr-only">Host</label>
-          <input type="text" id="hostInput" name="host" placeholder="Host" required autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <input type="text" id="hostInput" name="host" placeholder="Host" required autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <label for="portInput" class="sr-only">Port</label>
-          <input type="text" id="portInput" name="port" placeholder="Port" value="22" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" inputmode="numeric" pattern="[0-9]*" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <input type="text" id="portInput" name="port" placeholder="Port" value="22" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" inputmode="numeric" pattern="[0-9]*" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <label for="usernameInput" class="sr-only">Username</label>
-          <input type="text" id="usernameInput" name="username" placeholder="Username" required autocomplete="username" autocapitalize="off" spellcheck="false" enterkeyhint="next" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <input type="text" id="usernameInput" name="username" placeholder="Username" required autocomplete="username" autocapitalize="off" spellcheck="false" enterkeyhint="next" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
           <!-- Password section - always visible -->
           <div class="password-wrapper relative w-full">
             <label for="passwordInput" class="sr-only">Password</label>
-            <input type="password" id="passwordInput" name="password" placeholder="Password" autocomplete="current-password" autocapitalize="off" spellcheck="false" enterkeyhint="go" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <input type="password" id="passwordInput" name="password" placeholder="Password" autocomplete="current-password" autocapitalize="off" spellcheck="false" enterkeyhint="go" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <span id="capsLockIcon" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">⇪</span>
           </div>
 
           <!-- Options row: Add SSH Key + Options -->
           <div class="flex items-center justify-between gap-2">
             <div class="private-key-toggle">
-              <button type="button" id="privateKeyToggle" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
+              <button type="button" id="privateKeyToggle" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-xs">
                 <i data-icon="key" class="icon-fw"></i> Add SSH Key
               </button>
             </div>
             <div>
-              <button type="button" id="loginSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm" aria-label="Options" title="Options">
+              <button type="button" id="loginSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-xs" aria-label="Options" title="Options">
                 <i data-icon="settings" class="icon-fw"></i> Options
               </button>
             </div>
@@ -50,21 +50,21 @@
             <div class="private-key-input">
               <label for="privateKeyText" class="sr-only">Private Key</label>
               <textarea id="privateKeyText" name="privateKey" autocomplete="off" autocapitalize="off" spellcheck="false"
-                placeholder="Paste your private key here" rows="3" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                placeholder="Paste your private key here" rows="3" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
               <div class="file-upload">
                 <input type="file" id="privateKeyFile">
-                <label for="privateKeyFile" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-sm">
+                <label for="privateKeyFile" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-600 text-white hover:bg-slate-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none shadow-xs">
                   <i data-icon="upload" class="icon-fw"></i> Upload Key File
                 </label>
               </div>
               <label for="passphraseInput" class="sr-only">Key Passphrase</label>
               <input type="password" id="passphraseInput" name="passphrase" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go"
-                placeholder="Key password (if encrypted)" class="optional block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                placeholder="Key password (if encrypted)" class="optional block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
           </div>
 
           <div class="login-buttons mt-2">
-            <button type="submit" class="inline-flex w-full items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Connect</button>
+            <button type="submit" class="inline-flex w-full items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Connect</button>
           </div>
         </form>
       </div>
@@ -82,7 +82,7 @@
     <h2 id="promptMessage">Authentication Required</h2>
     <form>
       <div id="promptInputContainer" class="mb-4 space-y-2"></div>
-      <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Submit</button>
+      <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Submit</button>
     </form>
   </div>
 </dialog>
@@ -93,38 +93,38 @@
           <fieldset class="grid grid-cols-1 sm:grid-cols-[auto,1fr] gap-x-4 gap-y-3 items-center">
             <legend class="sr-only">Terminal Options</legend>
             <label for="fontSize" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Font Size</label>
-            <input type="number" id="fontSize" name="fontSize" min="8" max="72" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <input type="number" id="fontSize" name="fontSize" min="8" max="72" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
             <label for="fontFamily" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Font Family</label>
-            <input type="text" id="fontFamily" name="fontFamily" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <input type="text" id="fontFamily" name="fontFamily" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
             <label for="cursorBlink" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Cursor Blink</label>
-            <select id="cursorBlink" name="cursorBlink" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <select id="cursorBlink" name="cursorBlink" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="true">On</option>
               <option value="false">Off</option>
             </select>
 
             <label for="scrollback" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Scrollback</label>
-            <input type="number" id="scrollback" name="scrollback" min="1" max="200000" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <input type="number" id="scrollback" name="scrollback" min="1" max="200000" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
             <label for="tabStopWidth" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Tab Stop Width</label>
-            <input type="number" id="tabStopWidth" name="tabStopWidth" min="1" max="100" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <input type="number" id="tabStopWidth" name="tabStopWidth" min="1" max="100" required autocapitalize="off" spellcheck="false" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-400 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
             <label for="bellStyle" class="text-sm font-medium text-slate-700 sm:text-right pr-3 whitespace-nowrap">Bell Style</label>
-            <select id="bellStyle" name="bellStyle" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <select id="bellStyle" name="bellStyle" class="block w-full rounded-md border border-slate-300 bg-white text-slate-900 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="sound">Sound</option>
               <option value="none">None</option>
             </select>
           </fieldset>
           <div class="flex gap-2 pt-4 justify-end">
-            <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Save</button>
-            <button type="button" id="closeterminalSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none">Cancel</button>
+            <button type="submit" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none">Save</button>
+            <button type="button" id="closeterminalSettingsBtn" class="inline-flex items-center justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium bg-slate-700 text-white hover:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:pointer-events-none">Cancel</button>
           </div>
         </form>
       </div>
     </dialog>
     <div id="backdrop" class="backdrop hidden"></div>
-    <button type="button" id="reconnectButton" class="hidden fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Reconnect</button>
+    <button type="button" id="reconnectButton" class="hidden fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded-sm shadow-sm focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Reconnect</button>
     <div class="box">
       <div id="header" class="hidden w-full text-center z-[99] h-6 leading-6 bg-green-600 text-white border-b border-neutral-200 shrink-0"></div>
       <div id="terminalContainer" class="terminal hidden flex-1 min-h-0 w-[calc(100%-1px)] max-w-[100vw] mx-auto p-[2px] pb-[env(safe-area-inset-bottom)] overscroll-contain touch-pan-y overflow-hidden"></div>
