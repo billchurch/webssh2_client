@@ -103,7 +103,10 @@
   },
   "overrides": {
     "tmp": ">=0.2.6",
-    "axios": ">=1.16.1",
-    "chromedriver": "148.0.2"
+    "axios": "1.20.0",
+    "chromedriver": "148.0.2",
+    "seroval": "1.6.7",
+    "seroval-plugins": "1.6.7",
+    "ip-address": "10.7.2"
   }
 }
