@@ -604,6 +604,9 @@ exists anywhere in the tree, so CI now runs `scripts/audit-gate.mjs`
 - Any HIGH or CRITICAL **dev-only** advisory fails the build unless its GHSA
   id is listed in `.audit-allowlist.json` with a `reviewBy` date that has
   not passed. Expired entries fail the build, forcing a re-review.
+- A missing, malformed or impossible `reviewBy`, or one more than 90 days
+  out, also fails the build: the gate fails closed rather than accepting
+  an advisory indefinitely.
 - Each allowlist entry must have an assessment in this file. Entries that
   are no longer reported are flagged for removal.
 
