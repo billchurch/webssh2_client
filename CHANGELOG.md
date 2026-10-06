@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.4.3](https://github.com/billchurch/webssh2_client/compare/v5.4.2...v5.4.3) (2026-10-06)
+
+
+### Bug Fixes
+
+* **ci:** make audit gate fail closed on invalid allowlist reviewBy ([#152](https://github.com/billchurch/webssh2_client/issues/152)) ([22809ab](https://github.com/billchurch/webssh2_client/commit/22809ab599011f8cad3134acc43be2ea14bf85e1))
+* **deps:** remediate advisories, drop axe CLI and stylelint, gate audit ([#150](https://github.com/billchurch/webssh2_client/issues/150)) ([4a09fa2](https://github.com/billchurch/webssh2_client/commit/4a09fa27d4d5c068586d4b52abfa38fdaa42649c))
+
 ## [5.4.2](https://github.com/billchurch/webssh2_client/compare/v5.4.1...v5.4.2) (2026-07-30)
 
 
