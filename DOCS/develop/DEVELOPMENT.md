@@ -171,13 +171,11 @@ Run these quick checks before merging UI changes. See ACCESSIBILITY.md for deepe
 Tools
 
 - HTML lint: `npm run lint:html`
-- CSS lint: `npm run lint:css`
-- Node a11y smoke: `node --test tests/a11y-terminal.test.js`
-- Axe CLI (dev server must be running):
-  - `npm run dev` in one terminal
-  - `npm run a11y:axe` (or `npm run a11y:axe:bin`)
-  - If permission denied: `chmod +x node_modules/.bin/axe`
-  - If ChromeDriver missing: `npm i -g browser-driver-manager && npx browser-driver-manager install chrome`
+- CSS focus-outline guard: `node --test tests/css-outline-guard.test.js`
+- Node a11y smoke (jest-axe + JSDOM): `node --test tests/a11y-terminal.test.js`
+- Live-page axe scan (dev server must be running): use the axe DevTools
+  browser extension or Lighthouse's accessibility audit against
+  `http://localhost:3000`
 
 Checklist
 
@@ -207,6 +205,6 @@ Checklist
 Quick Runbook
 
 1. Start dev server: `npm run dev`
-2. Lint: `npm run lint:html && npm run lint:css`
-3. Node test: `node --test tests/a11y-terminal.test.js`
-4. Axe scan: `npm run a11y:axe`
+2. Lint: `npm run lint:html`
+3. Node tests: `node --test tests/a11y-terminal.test.js tests/css-outline-guard.test.js`
+4. Axe scan: axe DevTools extension or Lighthouse against the dev server

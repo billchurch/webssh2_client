@@ -73,7 +73,7 @@ Code Search Heuristics to Flag
 Tooling and Automation
 
 - ESLint: keep current setup; ensure rules continue to forbid unsanitized DOM sinks (`innerHTML` etc.). For a11y patterns not covered by ESLint, rely on runtime checks.
-- Axe: run `@axe-core/cli` against built `client/public/client.htm` (served at `http://localhost:3000`) or use `jest-axe` with JSDOM in Node tests.
+- Axe: use `jest-axe` with JSDOM in Node tests; for live pages, run the axe DevTools browser extension against the dev server (`http://localhost:3000`). `@axe-core/cli` was removed because its ChromeDriver dependency chain carries unpatched advisories.
 - Pa11y/Lighthouse: optional for end-to-end checks against the dev server.
 
 Node Test Example (JSDOM + axe)
@@ -144,7 +144,7 @@ Severity
 
 Configs to Add (if needed)
 
-- Dev deps: `@axe-core/cli` and/or `jest-axe`, `pa11y` (optional).
+- Dev deps: `jest-axe`, `pa11y` (optional).
 - ESLint: keep current DOM sink bans; optionally add checks for `tabindex` > 0 in custom rules/tests.
 - Tests: add at least one axe-based Node test for dialogs and terminal page.
 
@@ -152,7 +152,7 @@ Runbook
 
 - Dev server: `npm run dev` (http://localhost:3000)
 - Build: `npm run build` (outputs to `client/public/`)
-- Quick axe (CLI): `npx axe http://localhost:3000/client.htm` or the dev page
+- Quick axe: axe DevTools browser extension against `http://localhost:3000/client.htm` or the dev page
 - Node tests: `node --test tests/*.test.js`
 
 Notes for This Repo

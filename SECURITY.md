@@ -525,8 +525,92 @@ bumps), applied via `npm audit fix`.
 
 ---
 
-**Last Updated**: June 16, 2026
-**Next Review**: September 16, 2026
+## npm audit dependency advisory sweep (October 2026)
+
+As of 2026-10-06, `npm audit` reported 30 advisories (2 CRITICAL, 24 HIGH,
+4 MODERATE). `npm audit --omit=dev` reported **0**: nothing affects the
+production dependency tree or the published browser bundle.
+
+### Resolved advisories
+
+| Package | Severity | Advisory | Resolved version | Published |
+| --- | --- | --- | --- | --- |
+| `seroval` (via `solid-js`) | CRITICAL | `fromJSON()` thenable assimilation ([GHSA-p6vx-979v-rg4c](https://github.com/advisories/GHSA-p6vx-979v-rg4c)); TypedArray memory exhaustion ([GHSA-jp82-f5mq-hwhp](https://github.com/advisories/GHSA-jp82-f5mq-hwhp)) | 1.6.7 (override) | 2026-09-08 |
+| `axios` | HIGH | Multiple ReDoS / prototype-pollution / SSRF advisories (1.0.0 – 1.19.0) | 1.20.0 (override) | 2026-08-26 |
+| `fast-uri` | HIGH | Host confusion / SSRF advisories (3.0.0 – 3.1.7) | 3.1.8 | 2026-09-15 |
+| `js-yaml` | HIGH | `!!omap` and merge-key CPU DoS ([GHSA-5p4m-2wfm-xmqj](https://github.com/advisories/GHSA-5p4m-2wfm-xmqj), [GHSA-2883-xcg3-v3hh](https://github.com/advisories/GHSA-2883-xcg3-v3hh)) | 4.3.2 | 2026-08-26 |
+| `nanoid` | HIGH | Infinite loop with zero-size custom generator ([GHSA-2v37-7h3g-55p8](https://github.com/advisories/GHSA-2v37-7h3g-55p8)) | 3.3.19 | 2026-09-10 |
+| `brace-expansion` | HIGH | Recursion / quadratic-time DoS ([GHSA-qhr7-859c-m2p7](https://github.com/advisories/GHSA-qhr7-859c-m2p7)) | 5.0.12 | 2026-09-14 |
+| `undici` | HIGH | WebSocket / TLS / cache advisories (7.0.0 – 7.29.0) | 7.30.0 ⚠️ | 2026-09-25 |
+| `source-map-js` | HIGH | Indexed source-map DoS ([GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)) | 1.2.2 ⚠️ | 2026-09-30 |
+| `ip-address` | MODERATE | Subnet / link-local classification SSRF advisories | 10.7.2 (override) | 2026-09-15 |
+| `colord` | MODERATE | Slow rejection of oversized color strings ([GHSA-2wm5-q62r-hmrv](https://github.com/advisories/GHSA-2wm5-q62r-hmrv)) | 2.10.0 | 2026-08-20 |
+
+⚠️ = adopted under the HIGH-CVE exception to the 14-day quarantine.
+
+### Exposure context
+
+- **seroval / solid-js**: the CRITICAL rating is inherited from `seroval`,
+  whose `fromJSON()` deserializer is used only by Solid's server-side
+  rendering. This client is a browser-only SPA, never calls `fromJSON()`, and
+  `seroval` is absent from the built bundle. Not exploitable. `solid-js` stays
+  at 1.9.14 because 1.9.16 (which requires `seroval ~1.6.8`) was published
+  2026-10-06; `seroval` / `seroval-plugins` are overridden to 1.6.7 (same
+  maintainer, ≥ 14 days old) instead. Revisit `solid-js` 1.9.16 after
+  2026-10-20.
+- **axios**: the previous override `>=1.16.1` was an open range, which does
+  not pin a vetted version; it is now an exact pin.
+- All other packages are dev / test tooling (`jsdom`, `html-validate`,
+  `vite`, and the since-removed `stylelint` and `@axe-core/cli`).
+
+### Quarantine exceptions
+
+- `undici@7.30.0`: published by the same GitHub Actions OIDC trusted
+  publisher as 7.29.0, with SLSA provenance; no install scripts.
+- `source-map-js@1.2.2`: same publisher as 1.2.1 (`7rulnik`); tarball diff
+  reviewed — offset bounds and string-building fix only, no new imports,
+  network calls, or lifecycle scripts.
+
+The lockfile was otherwise regenerated with `npm install --before=2026-09-22`.
+
+### Dependency chains with no upstream fix
+
+Three dev-only chains had no patched release:
+
+- `@axe-core/cli` → `chromedriver` → `extract-zip`, `proxy-agent` →
+  `basic-ftp` (HIGH). **Removed**: `@axe-core/cli` and the `chromedriver`
+  override were dropped. In-test axe checks still run through `jest-axe`;
+  live-page scans use the axe DevTools browser extension.
+- `stylelint` → `micromatch` / `fast-glob` / `globby` → `braces` (HIGH, all
+  `stylelint` versions including 17.16.0). **Removed**: `stylelint` only
+  linted `client/src/app.css`. Its one project-specific rule (no
+  `outline: none` / `outline: 0`) is now `tests/css-outline-guard.test.js`.
+- `tailwindcss@3` / `eslint-plugin-tailwindcss@3` → `micromatch` /
+  `fast-glob` / `chokidar` → `braces`
+  ([GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
+  HIGH), plus `postcss-selector-parser` < 7.1.6 (MODERATE). **Accepted
+  until 2026-11-06**: build-time only, and every glob pattern is
+  first-party config. Cleared by the Tailwind 4 migration (`tailwindcss@4`
+  and `eslint-plugin-tailwindcss@4` do not depend on `braces`).
+
+### CI audit gate
+
+`npm audit --audit-level=high` cannot pass while an advisory with no fix
+exists anywhere in the tree, so CI now runs `scripts/audit-gate.mjs`
+(also `npm run security:audit`):
+
+- Any HIGH or CRITICAL advisory in the **production** tree fails the build.
+  No exceptions.
+- Any HIGH or CRITICAL **dev-only** advisory fails the build unless its GHSA
+  id is listed in `.audit-allowlist.json` with a `reviewBy` date that has
+  not passed. Expired entries fail the build, forcing a re-review.
+- Each allowlist entry must have an assessment in this file. Entries that
+  are no longer reported are flagged for removal.
+
+---
+
+**Last Updated**: October 6, 2026
+**Next Review**: January 6, 2027
 
 [advisories]: https://github.com/billchurch/WebSSH2/security/advisories
 [npm-attack]: https://www.bleepingcomputer.com/news/security/hackers-hijack-npm-packages-with-2-billion-weekly-downloads-in-supply-chain-attack/
