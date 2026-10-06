@@ -187,7 +187,11 @@ export default [
     rules: {
       'tailwindcss/classnames-order': 'warn',
       'tailwindcss/no-contradicting-classname': 'error',
-      'tailwindcss/no-custom-classname': 'warn',
+      // animate-slide-in/out are plain CSS classes in app.css, not utilities.
+      'tailwindcss/no-custom-classname': [
+        'warn',
+        { whitelist: ['animate-slide-in', 'animate-slide-out'] }
+      ],
       'tailwindcss/no-unnecessary-arbitrary-value': 'warn'
     }
   },
