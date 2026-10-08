@@ -155,7 +155,7 @@ const ConfigSuggestion: Component<ConfigSuggestionProps> = (props) => {
 
         <Show when={hasPreset()}>
           <div class="mb-2">
-            <code class="rounded bg-slate-800 px-2 py-1 font-mono text-xs text-cyan-300">
+            <code class="rounded-sm bg-slate-800 px-2 py-1 font-mono text-xs text-cyan-300">
               WEBSSH2_SSH_ALGORITHMS_PRESET={props.analysis.suggestedPreset}
             </code>
           </div>
@@ -170,7 +170,7 @@ const ConfigSuggestion: Component<ConfigSuggestionProps> = (props) => {
             <For each={props.analysis.suggestedEnvVars}>
               {(envVar) => (
                 <li>
-                  <code class="rounded bg-slate-800 px-2 py-1 font-mono text-xs text-cyan-300">
+                  <code class="rounded-sm bg-slate-800 px-2 py-1 font-mono text-xs text-cyan-300">
                     {envVar}
                   </code>
                 </li>
@@ -290,7 +290,7 @@ export const AlgorithmDebugInfo: Component<AlgorithmDebugInfoProps> = (
                 <div class="text-xs font-medium text-slate-500">
                   Error Details
                 </div>
-                <p class="mt-1 break-words font-mono text-xs text-red-400">
+                <p class="mt-1 font-mono text-xs wrap-break-word text-red-400">
                   {props.errorDetails}
                 </p>
               </div>

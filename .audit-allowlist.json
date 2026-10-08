@@ -1,13 +1,4 @@
 {
   "$comment": "Dev-only HIGH/CRITICAL advisories with no upstream fix, accepted until reviewBy. Each entry must be assessed in SECURITY.md. Read by scripts/audit-gate.mjs.",
-  "advisories": [
-    {
-      "id": "GHSA-vfj7-8cjw-p6xm",
-      "package": "braces",
-      "severity": "high",
-      "path": "tailwindcss@3 / eslint-plugin-tailwindcss@3 -> micromatch / fast-glob / chokidar -> braces",
-      "reason": "No patched braces release. Build-time only; glob patterns are first-party config. Cleared by the Tailwind 4 migration.",
-      "reviewBy": "2026-11-06"
-    }
-  ]
+  "advisories": []
 }

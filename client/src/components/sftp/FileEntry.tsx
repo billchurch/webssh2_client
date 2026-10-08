@@ -83,7 +83,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
       </Show>
 
       {/* Modified date */}
-      <span class="hidden shrink-0 whitespace-nowrap text-right text-neutral-400 sm:block sm:w-44 lg:w-48">
+      <span class="hidden shrink-0 text-right whitespace-nowrap text-neutral-400 sm:block sm:w-44 lg:w-48">
         {formatDate(props.entry.modifiedAt)}
       </span>
 
@@ -101,7 +101,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
         >
           <button
             type="button"
-            class="rounded p-1 text-neutral-400 hover:bg-neutral-600 hover:text-white"
+            class="rounded-sm p-1 text-neutral-400 hover:bg-neutral-600 hover:text-white"
             onClick={(e) => {
               e.stopPropagation()
               props.onDownload?.()
@@ -115,7 +115,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
         <Show when={props.onDelete}>
           <button
             type="button"
-            class="rounded p-1 text-neutral-400 hover:bg-red-600 hover:text-white"
+            class="rounded-sm p-1 text-neutral-400 hover:bg-red-600 hover:text-white"
             onClick={(e) => {
               e.stopPropagation()
               if (window.confirm(`Delete "${props.entry.name}"?`)) {

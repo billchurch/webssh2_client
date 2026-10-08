@@ -575,7 +575,8 @@ The lockfile was otherwise regenerated with `npm install --before=2026-09-22`.
 
 ### Dependency chains with no upstream fix
 
-Three dev-only chains had no patched release:
+Three dev-only chains had no patched release. All three are now removed or
+resolved:
 
 - `@axe-core/cli` → `chromedriver` → `extract-zip`, `proxy-agent` →
   `basic-ftp` (HIGH). **Removed**: `@axe-core/cli` and the `chromedriver`
@@ -588,10 +589,13 @@ Three dev-only chains had no patched release:
 - `tailwindcss@3` / `eslint-plugin-tailwindcss@3` → `micromatch` /
   `fast-glob` / `chokidar` → `braces`
   ([GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
-  HIGH), plus `postcss-selector-parser` < 7.1.6 (MODERATE). **Accepted
-  until 2026-11-06**: build-time only, and every glob pattern is
-  first-party config. Cleared by the Tailwind 4 migration (`tailwindcss@4`
-  and `eslint-plugin-tailwindcss@4` do not depend on `braces`).
+  HIGH), plus `postcss-selector-parser` < 7.1.6 (MODERATE). **Resolved
+  2026-10-06** by the Tailwind CSS 4 migration: `tailwindcss@4.3.3`,
+  `@tailwindcss/vite@4.3.3` and `eslint-plugin-tailwindcss@4.4.0` (all
+  published before the 2026-09-22 quarantine cutoff) depend on none of
+  `braces`, `micromatch`, `fast-glob` or `chokidar`. `autoprefixer` and the
+  PostCSS config were removed. The allowlist entry was deleted, and
+  `.audit-allowlist.json` is now empty.
 
 ### CI audit gate
 
@@ -609,6 +613,8 @@ exists anywhere in the tree, so CI now runs `scripts/audit-gate.mjs`
   an advisory indefinitely.
 - Each allowlist entry must have an assessment in this file. Entries that
   are no longer reported are flagged for removal.
+
+As of the Tailwind 4 migration, the allowlist is empty.
 
 ---
 

@@ -43,7 +43,7 @@ export const HostKeyPromptModal: Component<HostKeyPromptModalProps> = (
     >
       <Show when={hostKeyPromptData()}>
         <div
-          class="relative w-80 rounded-lg border border-amber-400 bg-slate-900 p-6 text-slate-100 shadow-xl sm:w-[28rem]"
+          class="relative w-80 rounded-lg border border-amber-400 bg-slate-900 p-6 text-slate-100 shadow-xl sm:w-md"
           role="alertdialog"
           aria-labelledby="host-key-prompt-title"
           aria-describedby="host-key-prompt-description"
@@ -78,7 +78,7 @@ export const HostKeyPromptModal: Component<HostKeyPromptModalProps> = (
               {hostKeyPromptData()!.algorithm}
             </div>
             <div class="mb-1 text-xs text-slate-500">SHA-256 Fingerprint</div>
-            <div class="break-all font-mono text-sm text-slate-300">
+            <div class="font-mono text-sm break-all text-slate-300">
               {hostKeyPromptData()!.fingerprint}
             </div>
           </div>
@@ -98,7 +98,7 @@ export const HostKeyPromptModal: Component<HostKeyPromptModalProps> = (
                 type="checkbox"
                 checked={rememberKey()}
                 onChange={(e) => setRememberKey(e.currentTarget.checked)}
-                class="size-4 rounded border-slate-500 bg-slate-700 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-900"
+                class="size-4 rounded-sm border-slate-500 bg-slate-700 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-900"
               />
               Remember this key (save to browser)
             </label>
@@ -108,14 +108,14 @@ export const HostKeyPromptModal: Component<HostKeyPromptModalProps> = (
           <div class="flex justify-center gap-3">
             <button
               type="button"
-              class="inline-flex items-center justify-center rounded-md border border-slate-500 bg-transparent px-4 py-2 text-sm font-medium text-slate-300 shadow-sm hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+              class="inline-flex items-center justify-center rounded-md border border-slate-500 bg-transparent px-4 py-2 text-sm font-medium text-slate-300 shadow-xs hover:bg-slate-800 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-900 focus:outline-hidden"
               onClick={handleReject}
             >
               Reject
             </button>
             <button
               type="button"
-              class="inline-flex items-center justify-center rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+              class="inline-flex items-center justify-center rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-cyan-700 focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-900 focus:outline-hidden"
               onClick={handleAccept}
               autofocus
             >

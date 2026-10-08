@@ -89,11 +89,7 @@ export default [
     }
   },
   {
-    files: [
-      '**/tailwind.config.js',
-      '**/postcss.config.js',
-      '**/vite.config.js'
-    ],
+    files: ['**/vite.config.js'],
     rules: {
       'n/no-unpublished-import': 'off',
       'n/no-unpublished-require': 'off'
@@ -173,34 +169,29 @@ export default [
   {
     // tailwindcss/* rules are scoped to the SolidJS component tree rather
     // than every .ts/.tsx in the repo: the rules inspect JSX className
-    // usage against client/src/tailwind.config.js, and running them against
-    // non-UI files (client/index.ts, root index.ts, .d.ts files) has no
-    // effect other than forcing an unnecessary tailwind config resolution.
+    // usage against the Tailwind v4 CSS entry (client/src/app.css), and
+    // running them against non-UI files (client/index.ts, root index.ts,
+    // .d.ts files) has no effect other than forcing an unnecessary
+    // tailwind config resolution.
     files: ['client/src/**/*.ts', 'client/src/**/*.tsx'],
     plugins: {
       tailwindcss: tailwindcssPlugin
     },
     settings: {
       tailwindcss: {
-        // Must be an absolute path: the plugin's config loader derives a
-        // node-resolution root from path.dirname(config), which silently
-        // fails to locate the tailwindcss package when given a cwd-relative
-        // path (surfaces as "Could not resolve tailwindcss").
-        config: `${projectRoot}client/src/tailwind.config.js`,
-        cssFiles: ['client/src/css/**/*.css', '!**/node_modules']
+        // Tailwind v4 has no JS config; the plugin compiles the CSS entry.
+        // Absolute path so resolution does not depend on the process cwd.
+        cssConfigPath: `${projectRoot}client/src/app.css`
       }
     },
     rules: {
-      // eslint-plugin-tailwindcss@3.18.3 (the latest release supporting
-      // Tailwind v3, which this project is pinned to — v4 of the plugin
-      // requires tailwindcss ^4.0.0) still calls the removed
-      // context.getSourceCode() API in classnames-order, which throws under
-      // ESLint 10. No ESLint-10-compatible 3.x release exists upstream.
-      // Disabled until the plugin ships a fix or this project moves to
-      // Tailwind v4.
-      'tailwindcss/classnames-order': 'off',
+      'tailwindcss/classnames-order': 'warn',
       'tailwindcss/no-contradicting-classname': 'error',
-      'tailwindcss/no-custom-classname': 'warn',
+      // animate-slide-in/out are plain CSS classes in app.css, not utilities.
+      'tailwindcss/no-custom-classname': [
+        'warn',
+        { whitelist: ['animate-slide-in', 'animate-slide-out'] }
+      ],
       'tailwindcss/no-unnecessary-arbitrary-value': 'warn'
     }
   },

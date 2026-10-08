@@ -798,7 +798,7 @@ const App: Component = () => {
       <Show when={showReconnectButton()}>
         <button
           type="button"
-          class="fixed left-1/2 top-1/2 z-[1001] -translate-x-1/2 -translate-y-1/2 rounded bg-blue-600 px-5 py-2 text-sm text-white shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          class="fixed top-1/2 left-1/2 z-1001 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-blue-600 px-5 py-2 text-sm text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden"
           onClick={handleReconnect}
         >
           Reconnect
@@ -831,7 +831,7 @@ const App: Component = () => {
         {/* Header */}
         <Show when={headerContent()}>
           <div
-            class="z-[99] h-6 w-full shrink-0 border-b border-neutral-200 text-center leading-6 text-white"
+            class="z-99 h-6 w-full shrink-0 border-b border-neutral-200 text-center leading-6 text-white"
             style={(() => {
               const header = headerContent()!
               const themedBg = headerBackground()
@@ -880,7 +880,7 @@ const App: Component = () => {
         </Show>
 
         {/* Bottom Bar */}
-        <div class="z-[99] flex h-6 shrink-0 items-center border-t border-neutral-200 bg-neutral-800 text-neutral-100">
+        <div class="z-99 flex h-6 shrink-0 items-center border-t border-neutral-200 bg-neutral-800 text-neutral-100">
           {/* Menu */}
           <MenuDropdown
             onStartLog={handleStartLog}
@@ -904,7 +904,7 @@ const App: Component = () => {
           </Show>
           <output
             id="status"
-            class={`z-[100] inline-block border-x border-neutral-200 px-[10px] text-left text-white ${(() => {
+            class={`z-100 inline-block border-x border-neutral-200 px-[10px] text-left text-white ${(() => {
               const color = connectionStatusColor()
               if (color === 'green') return 'bg-green-700'
               if (color === 'red') return 'bg-red-700'

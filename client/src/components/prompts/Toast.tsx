@@ -125,7 +125,7 @@ export const Toast: Component<ToastProps> = (props) => {
       <p class="flex-1 text-sm">{props.toast.message ?? props.toast.title}</p>
       <button
         onClick={handleDismissClick}
-        class="rounded p-1 transition-colors hover:bg-black/10"
+        class="rounded-sm p-1 transition-colors hover:bg-black/10"
         aria-label="Dismiss notification"
         type="button"
       >
