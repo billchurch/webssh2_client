@@ -19,8 +19,14 @@ const srcDir = path.resolve(
 const appCss = fs.readFileSync(path.join(srcDir, 'app.css'), 'utf8')
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.htm', '.html']
-const COLOR_CLASS =
-  /\b(?:bg|text|border|ring|from|to|via|divide|outline|placeholder|fill|stroke|accent|caret|decoration|shadow)-([a-z]+-(?:50|[1-9]00|950))\b/g
+const PALETTE =
+  'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
+// Any <utility>-<palette>-<shade> (bg-, border-t-, ring-offset-, ...). The
+// lookbehind skips `--color-<name>-<shade>` definitions; black/white have no shade.
+const COLOR_CLASS = new RegExp(
+  `(?<![\\w-])[a-z]+(?:-[a-z]+)*?-((?:${PALETTE})-(?:50|[1-9]00|950))(?![\\w-])`,
+  'g'
+)
 const THEME_COLOR =
   /--color-([a-z]+-(?:50|[1-9]00|950))\s*:\s*#[0-9a-f]{6}\s*;/g
 
@@ -62,11 +68,14 @@ describe('CSS palette parity guard', () => {
 
   it('detects color classes', () => {
     const found = usedColors(
-      'hover:bg-blue-600 text-slate-900/50 ring-cyan-950 text-sm bg-black'
+      'hover:bg-blue-600 text-slate-900/50 ring-cyan-950 text-sm bg-black ' +
+        'border-t-red-500 ring-offset-neutral-800 --color-zinc-100: #fff'
     )
     assert.deepStrictEqual([...found].sort(), [
       'blue-600',
       'cyan-950',
+      'neutral-800',
+      'red-500',
       'slate-900'
     ])
   })
