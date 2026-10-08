@@ -684,7 +684,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
           {!supportsPublicKey() && renderOptionsRow(false)}
 
           {/* Submit button */}
-          <div class="mt-4">
+          <div>
             <button
               type="submit"
               disabled={!isFormValid()}
