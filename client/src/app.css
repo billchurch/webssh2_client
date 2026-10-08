@@ -2,8 +2,12 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 
-/* Scan component sources explicitly; client/public is git-ignored build output. */
+/*
+ * Scan component sources explicitly; client/public is git-ignored build output.
+ * client.htm is an unused legacy template (index.html is the real entry).
+ */
 @source './';
+@source not './client.htm';
 
 /*
  * Tailwind 3 parity. Tailwind 4 changed these defaults; keep the v3 look.
