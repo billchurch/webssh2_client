@@ -1095,7 +1095,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   </For>
 
                   {/* Add Key Form */}
-                  <div class="mt-3 rounded-md border border-slate-200 p-3">
+                  <div class="rounded-md border border-slate-200 p-3">
                     <div class="mb-2 text-xs font-semibold text-slate-700">
                       Add Key Manually
                     </div>
@@ -1162,7 +1162,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   </div>
 
                   {/* Export / Import buttons */}
-                  <div class="mt-3 flex gap-2">
+                  <div class="flex gap-2">
                     <button
                       type="button"
                       class="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-hidden"
