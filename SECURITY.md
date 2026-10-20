@@ -645,6 +645,42 @@ As of the Tailwind 4 migration, the allowlist is empty.
 
 ---
 
+## Vite launch-editor advisories (October 2026)
+
+As of 2026-10-20, `npm audit` reported three HIGH advisories against `vite`
+`>=8.0.0 <=8.1.5`, all in its bundled `launch-editor` (used by the dev
+server's "open in editor" endpoint):
+[GHSA-587h-7wmj-h5pm](https://github.com/advisories/GHSA-587h-7wmj-h5pm),
+[GHSA-698v-4r3x-3vcv](https://github.com/advisories/GHSA-698v-4r3x-3vcv),
+[GHSA-r825-w8mm-5pxw](https://github.com/advisories/GHSA-r825-w8mm-5pxw).
+
+| Field | Value |
+| --- | --- |
+| Severity | HIGH |
+| Affected versions | `vite` 8.0.0 – 8.1.5 |
+| Our version | `vite@8.1.6` (was 8.1.5) |
+| Dependency path | dev-only: direct `devDependency` |
+| Status | **Patched** |
+
+### Exposure context
+
+- `vite` and `launch-editor` are dev-only. They run in the local dev server
+  and are not part of the published browser bundle, so the shipped client
+  was never affected.
+
+### Action taken
+
+- Bumped `vite` to 8.1.6, the first fixed release (changelog: "update
+  launch-editor to v2.14.2"). Only the `vite` entry changed in
+  `package-lock.json`; no other packages moved.
+- Verified legitimacy: 8.1.6 was published 2026-10-06 by the same GitHub
+  Actions OIDC trusted publisher as 8.1.5, with SLSA provenance, and matches
+  the `v8.1.6` release tag in `vitejs/vite`.
+- Verified: `scripts/audit-gate.mjs` passes, `npm run check:all` passes and
+  the production build (`npm run build`) succeeds.
+
+---
+
 **Last Updated**: October 20, 2026
 **Next Review**: January 6, 2027
 
