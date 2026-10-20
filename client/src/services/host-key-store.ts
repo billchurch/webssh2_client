@@ -159,22 +159,96 @@ function isValidBase64(str: string): boolean {
 }
 
 const MAX_HOST_LENGTH = 253
-// Hostname, IPv4 address or bare IPv6 address (with optional zone id).
-// Underscores are accepted because the store also holds TOFU pins for
-// whatever host name the user connected to.
-const HOSTNAME_PATTERN = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/
-const IPV6_PATTERN = /^[0-9A-Fa-f:.]+(?:%[A-Za-z0-9_.-]+)?$/
+// One DNS label. Underscores are accepted because the store also holds TOFU
+// pins for whatever host name the user connected to.
+const HOSTNAME_LABEL_PATTERN =
+  /^[A-Za-z0-9_](?:[A-Za-z0-9_-]{0,61}[A-Za-z0-9_])?$/
+const IPV4_OCTET_PATTERN = /^(?:0|[1-9][0-9]{0,2})$/
+const IPV6_GROUP_PATTERN = /^[0-9A-Fa-f]{1,4}$/
+const IPV6_ZONE_PATTERN = /^[A-Za-z0-9_.-]+$/
 const PORT_PATTERN = /^[1-9][0-9]{0,4}$/
 
+function isValidIPv4(host: string): boolean {
+  const octets = host.split('.')
+  return (
+    octets.length === 4 &&
+    octets.every((o) => IPV4_OCTET_PATTERN.test(o) && Number(o) <= 255)
+  )
+}
+
+/**
+ * Count the 16-bit groups in one side of an IPv6 address, or return -1 if
+ * the side is malformed. An IPv4 suffix counts as two groups.
+ */
+function countIPv6Groups(part: string, allowIPv4Tail: boolean): number {
+  if (part === '') return 0
+  const groups = part.split(':')
+  let count = 0
+  for (const [i, group] of groups.entries()) {
+    if (allowIPv4Tail && i === groups.length - 1 && group.includes('.')) {
+      if (!isValidIPv4(group)) return -1
+      count += 2
+    } else if (IPV6_GROUP_PATTERN.test(group)) {
+      count += 1
+    } else {
+      return -1
+    }
+  }
+  return count
+}
+
+/**
+ * Validate an IPv6 address with an optional zone id (fe80::1%eth0).
+ * The unspecified address "::" is rejected: it is not a host to connect to.
+ */
+function isValidIPv6(address: string): boolean {
+  const zoneSep = address.indexOf('%')
+  const ip = zoneSep === -1 ? address : address.slice(0, zoneSep)
+  if (zoneSep !== -1 && !IPV6_ZONE_PATTERN.test(address.slice(zoneSep + 1))) {
+    return false
+  }
+
+  const halves = ip.split('::')
+  if (halves.length > 2) return false
+  if (halves.length === 1) {
+    return countIPv6Groups(ip, true) === 8
+  }
+
+  const [head = '', tail = ''] = halves
+  const headCount = countIPv6Groups(head, false)
+  const tailCount = countIPv6Groups(tail, true)
+  if (headCount < 0 || tailCount < 0) return false
+  const total = headCount + tailCount
+  // "::" stands for at least one zero group
+  return total > 0 && total <= 7
+}
+
+function isValidHostname(host: string): boolean {
+  const labels = host.split('.')
+  if (!labels.every((label) => HOSTNAME_LABEL_PATTERN.test(label))) {
+    return false
+  }
+  // An all-numeric name is a (possibly malformed) IPv4 address
+  if (labels.every((label) => /^[0-9]+$/.test(label))) {
+    return isValidIPv4(host)
+  }
+  return true
+}
+
+/**
+ * Validate a host: a DNS hostname, an IPv4 address, or an IPv6 address
+ * (bare or in brackets).
+ */
 function isValidHost(host: string): boolean {
   if (host.length === 0 || host.length > MAX_HOST_LENGTH) return false
   if (isForbiddenKey(host)) return false
-  if (host.includes(':')) {
-    const bare =
-      host.startsWith('[') && host.endsWith(']') ? host.slice(1, -1) : host
-    return bare.includes(':') && IPV6_PATTERN.test(bare)
+  if (host.startsWith('[') && host.endsWith(']')) {
+    return isValidIPv6(host.slice(1, -1))
   }
-  return HOSTNAME_PATTERN.test(host)
+  if (host.includes(':')) {
+    return isValidIPv6(host)
+  }
+  return isValidHostname(host)
 }
 
 function isValidPort(port: number): boolean {

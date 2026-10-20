@@ -246,6 +246,8 @@ describe('host-key-store', () => {
         store('__proto__', 22, 'ssh-ed25519', VALID_KEY).success,
         false
       )
+      assert.equal(store('a..b', 22, 'ssh-ed25519', VALID_KEY).success, false)
+      assert.equal(store('::', 22, 'ssh-ed25519', VALID_KEY).success, false)
       assert.equal(
         store('host.example', 0, 'ssh-ed25519', VALID_KEY).success,
         false
@@ -443,7 +445,32 @@ describe('host-key-store', () => {
         'host.example:-1',
         'bad host:22',
         'host/evil:22',
-        `${'a'.repeat(254)}:22`
+        `${'a'.repeat(254)}:22`,
+        // Malformed hostnames
+        'a..b:22',
+        '.host.example:22',
+        'host.example.:22',
+        '-host.example:22',
+        'host-.example:22',
+        `${'a'.repeat(64)}.example:22`,
+        // Malformed IPv4
+        '256.0.0.1:22',
+        '192.0.2:22',
+        '192.0.2.1.5:22',
+        '192.0.02.1:22',
+        // Malformed or unspecified IPv6
+        ':::22',
+        '::::22',
+        '1:::2:22',
+        '1::2::3:22',
+        '12345::1:22',
+        'g::1:22',
+        '1:2:3:4:5:6:7:8:9:22',
+        '1:2:3:4:5:6:7:8::22',
+        '::1%:22',
+        '[]:22',
+        '[::1:22',
+        '[a..b]:22'
       ]
       for (const hostPort of bad) {
         const result = importKeys(
@@ -470,11 +497,32 @@ describe('host-key-store', () => {
           },
           '2001:db8::1:22': {
             'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          },
+          '[2001:db8::2]:2222': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          },
+          '::1:22': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          },
+          '1:2:3:4:5:6:7:8:22': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          },
+          '::ffff:192.0.2.1:22': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          },
+          'fe80::1%eth0:22': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          },
+          'build_box.internal-net.example:22': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          },
+          'localhost:22': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
           }
         })
       )
       assert.equal(result.success, true)
-      assert.equal(result.added, 3)
+      assert.equal(result.added, 10)
       assert.equal(
         lookup('2001:db8::1', 22, 'ssh-ed25519', VALID_KEY).status,
         'trusted'
