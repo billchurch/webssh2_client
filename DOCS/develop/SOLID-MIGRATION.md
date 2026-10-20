@@ -6,6 +6,10 @@
 
 The webssh2_client codebase is well-positioned for migration to SolidJS. The current vanilla TypeScript/JavaScript architecture with modular design, clean separation of concerns, and existing Vite build system creates an excellent foundation for a SolidJS migration. API contracts can be fully preserved, and the UI can maintain visual consistency while gaining reactive state management benefits.
 
+## Status update (2026-10-20, #164)
+
+The legacy config path is gone. `initializeConfig()`, `populateFormFromUrl()` and `getCredentials()` were deleted from `client/src/utils/index.ts`, and `client/src/services/ui.ts` was deleted. `client/src/stores/config.ts` is now the only place that reads injected config and URL parameters. The rest of this document is a historical log; dated **Removed (#164)** notes mark the places that mention the deleted code.
+
 ## Current Architecture Analysis
 
 ### Codebase Structure
@@ -281,11 +285,13 @@ The webssh2_client project is well-suited for SolidJS migration, with some impor
 - ✅ **Caps lock detection**: Implemented in `LoginModal.tsx` with `capsLockActive` signal
 - ✅ **Form handling**: `formSubmit()` and `fillLoginForm()` replaced with controlled components
 - ✅ **Element management**: `updateElement()` migrated to `services/ui-service.ts` with reactive signals
+  - **Removed (#164, 2026-10-20):** `services/ui.ts` (formerly `ui-service.ts`) had no importers and was deleted.
 - ✅ **Setup functions**: All `setup*` functions removed (private key, menu, caps lock)
 
 **Technical Architecture Changes**:
 
 - ✅ **services/ui-service.ts**: Reactive replacement for imperative `updateElement()` function
+  - **Removed (#164, 2026-10-20):** `services/ui.ts` (formerly `ui-service.ts`) had no importers and was deleted.
 - ✅ **State integration**: Uses existing `connectionStatus`, `headerContent`, `sessionFooter` signals
 - ✅ **Component migration**: All UI logic moved to proper SolidJS components
 - ✅ **File status**: `dom.ts` marked as legacy with comprehensive migration documentation
@@ -959,6 +965,7 @@ Successfully completed the migration of the largest remaining piece of imperativ
 #### Phase 3: Element Management Migration ✅
 
 - **Created services/ui-service.ts**: Modern reactive replacement for imperative `updateElement()` function
+  - **Removed (#164, 2026-10-20):** `services/ui.ts` (formerly `ui-service.ts`) had no importers and was deleted.
 - **Integrated existing signals**: Leveraged `connectionStatus`, `connectionStatusColor`, `headerContent`, `sessionFooter`
 - **Backward compatibility**: Re-exported `updateElement` function to maintain API compatibility
 - **Reactive updates**: All status, header, and footer updates now use SolidJS signals instead of direct DOM manipulation
@@ -1003,6 +1010,8 @@ export const updateElement = (
   }
 }
 ```
+
+**Removed (#164, 2026-10-20):** `services/ui.ts` (formerly `ui-service.ts`) had no importers and was deleted.
 
 #### Component Integration
 
@@ -1377,6 +1386,7 @@ export class SolidTerminalManager {
 4. **`client/src/js/socket.ts`** (~200 lines)
    - **Replaced by**: `services/socket-service.ts`
    - **Usage**: Only imported by dead files and ui-service.ts (legacy compat)
+     - **Removed (#164, 2026-10-20):** `services/ui.ts` (formerly `ui-service.ts`) was deleted.
    - **Impact**: WebSocket communication fully migrated to SolidJS patterns
 
 5. **`client/src/js/terminal.ts`** (~180 lines)
@@ -1450,6 +1460,7 @@ index-solid.tsx → App.tsx → components/* → services/* → state-solid.ts
 - **state-solid.ts** - Reactive state management with SolidJS stores
 - **components/** - All UI components are SolidJS (LoginModal, Terminal, MenuDropdown, etc.)
 - **services/** - TypeScript services (socket-service, logging-service, ui-service)
+  - **Removed (#164, 2026-10-20):** `services/ui.ts` (formerly `ui-service.ts`) had no importers and was deleted.
 - **xterm-solid/** - Custom SolidJS wrapper for xterm.js
 
 ### ⚠️ **Legacy Code Still Present - Needs Attention**
@@ -1460,6 +1471,7 @@ This file contains several legacy patterns that should be migrated:
 
 - **Browser APIs**: Direct `window.location.search`, `document.cookie` manipulation
 - **Non-reactive functions**: `getCredentials()`, `initializeConfig()`, `populateFormFromUrl()`
+  - **Removed (#164, 2026-10-20):** the legacy `initializeConfig()`, `populateFormFromUrl()` and `getCredentials()` in `utils/index.ts` were deleted. Use `client/src/stores/config.ts`.
 - **Mixed concerns**: Contains validation, config, browser utils all in one file
 - **Used by**: App.tsx, socket-service.ts, multiple components
 
@@ -1503,6 +1515,7 @@ According to the migration document, these files were supposed to be deleted and
   - Automatic config merging with URL overrides using `createMemo`
   - Real-time URL change detection with proper cleanup
   - Auto-connect logic based on URL parameters
+  - **Note (#164, 2026-10-20):** this is now the only URL-parameter auto-connect path; the legacy `populateFormFromUrl()` rule (auto-connect whenever `host` is present) was deleted.
 
 #### 3. **Separated Browser Utilities** ✅
 
@@ -1525,6 +1538,7 @@ According to the migration document, these files were supposed to be deleted and
 let config = initializeConfig()
 config = populateFormFromUrl(config)
 const creds = getCredentials(formData, dims)
+// Removed (#164, 2026-10-20): these legacy utils/index.ts functions no longer exist
 
 // After (Reactive)
 initializeConfig()

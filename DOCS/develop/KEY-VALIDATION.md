@@ -268,36 +268,44 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
 ### 4. Add Validation to Credential Submission
 
-Update `client/src/js/utils.ts` in `getCredentials()`:
+Credentials are built in one place: the `credentials` memo in
+[`client/src/stores/config.ts`](../../client/src/stores/config.ts). It reads
+`configWithUrlOverrides()`, which merges injected config with URL parameters
+and drops credentials for auth methods the server does not allow. Use the
+`validatePrivateKey()` and `validatePrivateKeyDeep()` helpers from
+[`client/src/utils/index.ts`](../../client/src/utils/index.ts) there:
 
 ```typescript
-export function getCredentials(
-  formData: Record<string, unknown> | null = null,
-  terminalDimensions: { cols?: number; rows?: number } = {}
-): ClientAuthenticatePayload {
-  // ... existing code ...
+// client/src/stores/config.ts
+import { validatePrivateKey, validatePrivateKeyDeep } from '../utils/index.js'
 
-  const privateKey = /* ... existing code ... */
+export const credentials = createRoot(() =>
+  createMemo(() => {
+    const cfg = configWithUrlOverrides()
+    // ... existing code ...
 
-  if (privateKey) {
-    // Validate before including in credentials
-    if (!validatePrivateKey(privateKey)) {
-      console.warn('Invalid private key format detected, excluding from credentials')
-      // Optionally: don't include the key, or throw an error
-    } else {
-      const deepValidation = validatePrivateKeyDeep(privateKey)
-      if (!deepValidation) {
-        console.warn('Private key failed deep validation, may not work')
+    let privateKey = cfg.ssh?.privateKey ?? ''
+    if (privateKey !== '') {
+      // Validate before including in credentials
+      if (!validatePrivateKey(privateKey)) {
+        debug('Invalid private key format detected, excluding from credentials')
+        privateKey = ''
       } else {
-        debug(`Private key validated as ${deepValidation.format} format`)
+        const deepValidation = validatePrivateKeyDeep(privateKey)
+        if (deepValidation === null) {
+          debug('Private key failed deep validation, may not work')
+        } else {
+          debug(`Private key validated as ${deepValidation.format} format`)
+        }
       }
-      mergedConfig.privateKey = privateKey
     }
-    // ... passphrase handling ...
-  }
 
-  // ... rest of function ...
-}
+    return {
+      // ... other fields ...
+      privateKey
+    }
+  })
+)
 ```
 
 ## Benefits of SolidJS Approach
@@ -316,7 +324,7 @@ export function getCredentials(
 1. Create the `usePrivateKeyValidation` hook
 2. Add private key rules to `ValidationRules`
 3. Update `LoginModal` to use reactive validation
-4. Add validation logging to `getCredentials()`
+4. Add validation logging to the `credentials` memo in `stores/config.ts`
 5. Test with various key formats and error cases
 6. Add unit tests for validation functions
 
