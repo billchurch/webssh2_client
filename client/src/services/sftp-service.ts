@@ -361,25 +361,32 @@ function rejectPendingRequest(key: string, error: Error): void {
 function handleDownloadReady(response: SftpDownloadReadyResponse): void {
   // Use FIFO queue (server generates transferId)
   const pending = pendingDownloadReady.shift()
+  if (!pending) {
+    // The user did not request this download: create no assembler, so the
+    // file is never saved and later chunks for this transfer are dropped
+    console.warn(
+      'Ignoring unsolicited SFTP download (no pending request):',
+      response.transferId
+    )
+    return
+  }
+
+  clearTimeout(pending.timeoutId)
+  pending.resolve(response)
+
+  // The user-clicked name is authoritative; flag a server echo that differs
   let fileName = response.fileName
-  if (pending) {
-    clearTimeout(pending.timeoutId)
-    pending.resolve(response)
-    // The user-clicked name is authoritative; flag a server echo that differs
-    if (
-      pending.requestedFileName != null &&
-      pending.requestedFileName !== '' &&
-      pending.requestedFileName !== response.fileName
-    ) {
-      debug(
-        'Download fileName mismatch: requested %o, server sent %o — using requested name',
-        pending.requestedFileName,
-        response.fileName
-      )
-      fileName = pending.requestedFileName
-    }
-  } else {
-    debug('No pending download-ready request for', response.transferId)
+  if (
+    pending.requestedFileName != null &&
+    pending.requestedFileName !== '' &&
+    pending.requestedFileName !== response.fileName
+  ) {
+    debug(
+      'Download fileName mismatch: requested %o, server sent %o — using requested name',
+      pending.requestedFileName,
+      response.fileName
+    )
+    fileName = pending.requestedFileName
   }
 
   // Create assembler for this download (sanitizes fileName, bounds memory)
@@ -426,17 +433,28 @@ function handleDownloadChunk(response: SftpDownloadChunkResponse): void {
     try {
       assembler.download()
     } catch (err) {
-      debug('Error triggering download', err)
+      const reason = err instanceof Error ? err.message : String(err)
+      // All chunks have arrived, so there is nothing left to cancel upstream
+      abortDownload(
+        response.transferId,
+        new Error(`Failed to save download: ${reason}`),
+        false
+      )
     }
   }
 }
 
 /**
- * Abort a download that violated client-side bounds: mark the transfer
- * failed, tell the gateway to stop streaming, release buffered chunks,
+ * Abort a download that violated client-side bounds or could not be
+ * saved: mark the transfer failed, tell the gateway to stop streaming
+ * (unless it has already sent everything), release buffered chunks,
  * and reject any promises waiting on the transfer.
  */
-function abortDownload(transferId: TransferId, error: Error): void {
+function abortDownload(
+  transferId: TransferId,
+  error: Error,
+  notifyServer: boolean = true
+): void {
   debug('Aborting download', transferId, error.message)
 
   const transfer = activeTransfers.get(transferId)
@@ -446,7 +464,7 @@ function abortDownload(transferId: TransferId, error: Error): void {
   }
 
   const socketInstance = getSocket()
-  if (socketInstance) {
+  if (notifyServer && socketInstance) {
     socketInstance.emit('sftp-download-cancel', { transferId })
   }
 
@@ -477,7 +495,8 @@ function handleProgress(response: SftpProgressResponse): void {
 
 function handleComplete(response: SftpCompleteResponse): void {
   const transfer = activeTransfers.get(response.transferId)
-  if (transfer) {
+  // A transfer the client already failed (e.g. the save threw) stays failed
+  if (transfer && transfer.status !== 'failed') {
     transfer.status = 'completed'
     transfer.bytesTransferred = response.bytesTransferred
     transfer.percentComplete = 100
