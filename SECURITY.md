@@ -181,23 +181,45 @@ npm run analyze
 
 ## SolidJS / Seroval Vulnerability Assessment
 
-As of 2026-01-27, we evaluated reported vulnerabilities in
-solid-js and its seroval dependency. **WebSSH2 Client is NOT
-affected** by these issues.
+Last reassessed 2026-10-20 (first assessed 2026-01-27). We
+evaluated reported vulnerabilities in solid-js and its seroval
+dependency. **WebSSH2 Client is NOT affected** by these issues.
+
+Current versions: `solid-js` 1.9.16, `seroval` / `seroval-plugins`
+1.6.8. `seroval` is a dependency of `solid-js` itself, not an
+override; solid-js 1.9.16 requires `seroval ~1.6.8`, which is above
+every affected range below.
+
+### October 2026 Seroval advisories (inherited by solid-js)
+
+| Field | Value |
+| --- | --- |
+| Advisories | [GHSA-p6vx-979v-rg4c](https://github.com/advisories/GHSA-p6vx-979v-rg4c) (`fromJSON()` thenable assimilation), [GHSA-jp82-f5mq-hwhp](https://github.com/advisories/GHSA-jp82-f5mq-hwhp) (TypedArray memory exhaustion) |
+| Severity | Critical (`npm audit` also flags `solid-js` 1.9.7 - 1.9.15 through it) |
+| Affected versions | `seroval` <= 1.6.2 |
+| Our version | `seroval` 1.6.8 via `solid-js` 1.9.16 (was 1.6.7 via override on solid-js 1.9.14) |
+| Status | **Not vulnerable** |
+
+Both advisories are in seroval's deserializer, which SolidJS uses only
+for server-side rendering. WebSSH2 Client never calls `fromJSON()`, and
+`seroval` is absent from the built bundle. The 2026-10-06 sweep (below)
+held `solid-js` at 1.9.14 with a `seroval` override until 1.9.16 cleared
+the 14-day quarantine. It did so on 2026-10-20, so the override was
+removed and `solid-js` upgraded.
 
 ### CVE-2026-23737 - Seroval RCE via JSON Deserialization
 
-| Field             | Value              |
-| ----------------- | ------------------ |
-| Severity          | High               |
-| Affected versions | < 1.4.1            |
-| Our version       | 1.5.0              |
-| Status            | **Not vulnerable** |
+| Field | Value |
+| --- | --- |
+| Severity | High |
+| Affected versions | < 1.4.1 |
+| Our version | 1.6.8 |
+| Status | **Not vulnerable** |
 
 The seroval package is used by SolidJS for server-side rendering
 serialization. WebSSH2 Client:
 
-- Uses seroval 1.5.0, which is above the patched version
+- Uses seroval 1.6.8, which is above the patched version
   (1.4.1)
 - Does not use SSR - this is a client-side SPA only
 - Uses Socket.IO native JSON serialization for all
@@ -205,18 +227,18 @@ serialization. WebSSH2 Client:
 
 ### CVE-2025-27109 - SolidJS XSS in JSX Fragments (SSR)
 
-| Field             | Value              |
-| ----------------- | ------------------ |
-| Severity          | Medium (5.1)       |
-| Affected versions | < 1.9.4            |
-| Our version       | 1.9.11             |
-| Status            | **Not vulnerable** |
+| Field | Value |
+| --- | --- |
+| Severity | Medium (5.1) |
+| Affected versions | < 1.9.4 |
+| Our version | 1.9.16 |
+| Status | **Not vulnerable** |
 
 This vulnerability affects the `ssr` function in SolidJS, which
 fails to sanitize JSX expressions in JSX fragments during
 server-side rendering. WebSSH2 Client:
 
-- Uses solid-js 1.9.11, which is above the patched version
+- Uses solid-js 1.9.16, which is above the patched version
   (1.9.4)
 - Is a plain SolidJS SPA - no Solid Start, no server functions,
   no SSR
@@ -228,8 +250,11 @@ server-side rendering. WebSSH2 Client:
 ### Verification Commands
 
 ```bash
-# Check seroval version
-npm ls seroval
+# Check solid-js and seroval versions
+npm ls solid-js seroval
+
+# Verify seroval is not in the built bundle (expect no output)
+npm run build && grep -l -E "seroval|crossSerialize" client/public/*.js
 
 # Verify no innerHTML usage
 grep -r "innerHTML" client/src/
@@ -557,7 +582,9 @@ production dependency tree or the published browser bundle.
   at 1.9.14 because 1.9.16 (which requires `seroval ~1.6.8`) was published
   2026-10-06; `seroval` / `seroval-plugins` are overridden to 1.6.7 (same
   maintainer, ≥ 14 days old) instead. Revisit `solid-js` 1.9.16 after
-  2026-10-20.
+  2026-10-20. **Follow-up (2026-10-20):** upgraded to `solid-js` 1.9.16
+  with `seroval` / `seroval-plugins` 1.6.8 and removed both overrides. See
+  [SolidJS / Seroval Vulnerability Assessment](#solidjs--seroval-vulnerability-assessment).
 - **axios**: the previous override `>=1.16.1` was an open range, which does
   not pin a vetted version; it is now an exact pin.
 - All other packages are dev / test tooling (`jsdom`, `html-validate`,
@@ -612,7 +639,7 @@ exists anywhere in the tree, so CI now runs `scripts/audit-gate.mjs`
 
 ---
 
-**Last Updated**: October 6, 2026
+**Last Updated**: October 20, 2026
 **Next Review**: January 6, 2027
 
 [advisories]: https://github.com/billchurch/WebSSH2/security/advisories
