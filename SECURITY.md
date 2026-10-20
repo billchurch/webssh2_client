@@ -617,7 +617,7 @@ resolved:
   `fast-glob` / `chokidar` → `braces`
   ([GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
   HIGH), plus `postcss-selector-parser` < 7.1.6 (MODERATE). **Resolved
-  2026-10-06** by the Tailwind CSS 4 migration: `tailwindcss@4.3.3`,
+  in 6.0.0** by the Tailwind CSS 4 migration: `tailwindcss@4.3.3`,
   `@tailwindcss/vite@4.3.3` and `eslint-plugin-tailwindcss@4.4.0` (all
   published before the 2026-09-22 quarantine cutoff) depend on none of
   `braces`, `micromatch`, `fast-glob` or `chokidar`. `autoprefixer` and the
