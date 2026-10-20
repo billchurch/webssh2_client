@@ -19,12 +19,15 @@ await register('./tests/ts-loader.mjs', pathToFileURL('./'))
 // ---------------------------------------------------------------------------
 
 const storage = new Map()
+// An Error to throw from every setItem, or a (key) => Error | null function
 let failSetItem = null
 
 const localStorageShim = {
   getItem: (key) => storage.get(key) ?? null,
   setItem: (key, value) => {
-    if (failSetItem) throw failSetItem
+    const error =
+      typeof failSetItem === 'function' ? failSetItem(key) : failSetItem
+    if (error) throw error
     storage.set(key, String(value))
   },
   removeItem: (key) => storage.delete(key),
@@ -64,6 +67,7 @@ const { addToLog, startLogging, stopLogging, downloadLog } =
   await import('../client/src/services/logging.ts')
 
 const LOG_KEY = 'webssh2_session_log'
+const LOG_DATE_KEY = 'webssh2_session_log_date'
 
 const toasts = []
 promptStore.addToast = (payload) => toasts.push(payload)
@@ -117,6 +121,17 @@ describe('session log size cap (issue #157)', () => {
     assert.match(stored, /Log stopped \(size limit reached\)/)
   })
 
+  it('stops when a chunk fills the log exactly to the cap', () => {
+    startLogging()
+    const remaining = MAX_LOG_SIZE - storage.get(LOG_KEY).length
+    addToLog('x'.repeat(remaining))
+
+    assert.equal(state.sessionLogEnable, false)
+    assert.equal(state.loggedData, true)
+    assert.equal(toasts.length, 1)
+    assert.match(toasts[0].message, /limit/)
+  })
+
   it('does not write any chunk once the cap is reached', () => {
     startLogging()
     fillToCap()
@@ -154,6 +169,40 @@ describe('session log storage errors (issue #157)', () => {
     assert.doesNotThrow(() => addToLog('later chunk'))
     assert.equal(toasts.length, 1)
     assert.match(storage.get(LOG_KEY), /before the quota/)
+  })
+
+  it('halts with a toast when the Stop Log end message cannot be stored', () => {
+    startLogging()
+    addToLog('output\r\n')
+    failSetItem = (key) => (key === LOG_KEY ? quotaError() : null)
+
+    assert.doesNotThrow(() => stopLogging())
+    assert.equal(state.sessionLogEnable, false)
+    assert.equal(state.loggedData, true)
+    assert.equal(toasts.length, 1)
+  })
+
+  it('halts with a toast when an active Download Log cannot store the date', () => {
+    startLogging()
+    addToLog('output\r\n')
+    failSetItem = (key) => (key === LOG_DATE_KEY ? quotaError() : null)
+
+    assert.doesNotThrow(() => downloadLog())
+    assert.equal(downloads.length, 1)
+    assert.equal(state.sessionLogEnable, false)
+    assert.equal(state.loggedData, true, 'log kept for another download')
+    assert.equal(toasts.length, 1)
+    assert.match(storage.get(LOG_KEY), /output/)
+  })
+
+  it('keeps a partially started log visible when the date cannot be stored', () => {
+    failSetItem = (key) => (key === LOG_DATE_KEY ? quotaError() : null)
+
+    assert.doesNotThrow(() => startLogging())
+    assert.ok(storage.get(LOG_KEY).length > 0)
+    assert.equal(state.sessionLogEnable, false)
+    assert.equal(state.loggedData, true, 'Download Log / Clear Log shown')
+    assert.equal(toasts.length, 1)
   })
 
   it('does not throw when starting or stopping with storage failing', () => {

@@ -51,6 +51,10 @@ function resetLogBounds(): void {
 function haltLogging(reason: LogHaltReason, markLog = true): void {
   setState('sessionLogEnable', false)
   logFull = true
+  // Keep Download Log / Clear Log visible for whatever did get stored,
+  // even when a later write (such as the date) failed.
+  const storedLog = window.localStorage.getItem(LOG_KEY) ?? ''
+  setState('loggedData', storedLog !== '')
   debug('Session logging halted: %s', reason)
 
   // Mark where the log was cut off. Only for the cap: after a storage
@@ -136,6 +140,10 @@ class LoggingServiceImpl implements LoggingService {
       setState('loggedData', true)
       debug('Started logging session')
     }
+
+    // A log at the cap cannot take any more output, so stop now rather
+    // than on the next chunk.
+    if (logLength >= MAX_LOG_SIZE) haltLogging('limit')
   }
 
   startLogging(): void {
@@ -164,15 +172,21 @@ class LoggingServiceImpl implements LoggingService {
     }
 
     sessionLog += logStartMessage
-    if (
-      !safeSetItem(LOG_KEY, sessionLog) ||
-      !safeSetItem(LOG_DATE_KEY, new Date().toISOString())
-    ) {
+    if (!safeSetItem(LOG_KEY, sessionLog)) {
       haltLogging('storage')
       return
     }
     logLength = sessionLog.length
     setState('loggedData', true)
+
+    if (!safeSetItem(LOG_DATE_KEY, new Date().toISOString())) {
+      haltLogging('storage')
+      return
+    }
+    if (logLength >= MAX_LOG_SIZE) {
+      haltLogging('limit')
+      return
+    }
 
     debug('Log session started')
   }
@@ -193,6 +207,8 @@ class LoggingServiceImpl implements LoggingService {
       if (safeSetItem(LOG_KEY, sessionLog)) {
         logLength = sessionLog.length
         debug('Log session stopped with end message')
+      } else {
+        haltLogging('storage')
       }
     }
   }
@@ -245,8 +261,11 @@ class LoggingServiceImpl implements LoggingService {
         )
       } else {
         // Keep the log in localStorage but update the date
-        safeSetItem(LOG_DATE_KEY, new Date().toISOString())
-        debug('Log kept in localStorage (logging is still active)')
+        if (safeSetItem(LOG_DATE_KEY, new Date().toISOString())) {
+          debug('Log kept in localStorage (logging is still active)')
+        } else {
+          haltLogging('storage')
+        }
       }
     } catch (error) {
       console.error('Failed to download session log:', error)
