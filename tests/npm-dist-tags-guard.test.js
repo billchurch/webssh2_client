@@ -1,7 +1,7 @@
 /**
  * Guards against repo scripts that move npm dist-tags by hand (#155).
  *
- * fix-npm-tags.sh once pointed `latest` at 2.0.0. Releases set `latest`
+ * A removed helper script once pointed `latest` at 2.0.0. Releases set `latest`
  * through `npm publish` in CI, so no tracked file should run
  * `npm dist-tag add`.
  */
@@ -40,13 +40,6 @@ function collectFiles(dir, out = []) {
 }
 
 describe('npm dist-tag guard', () => {
-  it('fix-npm-tags.sh is removed', () => {
-    assert.strictEqual(
-      fs.existsSync(path.join(repoRoot, 'fix-npm-tags.sh')),
-      false
-    )
-  })
-
   it('no script, workflow or package script runs npm dist-tag add', () => {
     const offenders = collectFiles(repoRoot)
       .filter((file) => file !== thisFile)
