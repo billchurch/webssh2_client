@@ -25,8 +25,9 @@ export const MODAL_ANIMATION_DURATION = 200
 export const NOTIFICATION_DISPLAY_DURATION = 3000
 
 // Logging
-export const MAX_LOG_SIZE = 1024 * 1024 * 10 // 10MB max log size
-export const LOG_ROTATION_THRESHOLD = 1024 * 1024 * 8 // Rotate at 8MB
+// Session log cap in characters. Stays under the usual ~5M-character
+// localStorage quota; logging stops (no rotation) when it is reached.
+export const MAX_LOG_SIZE = 1024 * 1024 * 4
 
 // Authentication
 export const DEFAULT_AUTH_METHODS: SSHAuthMethod[] = [

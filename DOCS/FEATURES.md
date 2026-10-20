@@ -94,7 +94,16 @@ WebSSH2 Client supports session logging to help capture terminal output during a
 
 - While logging is enabled, output is appended to `localStorage.webssh2_session_log`.
 - A timestamp is stored in `localStorage.webssh2_session_log_date`.
+- The log stays in `localStorage` (also across browser sessions) until you download it or clear it with Clear Log. It is plain text, so download or clear it on shared computers.
 - On the next connection, if a prior log exists, the client prompts you to download it.
+
+### Size Limit
+
+- The stored log is capped at about 4 MB (4 × 1024 × 1024 characters), below the usual ~5 MB `localStorage` quota.
+- When the log reaches the cap, logging stops: the menu shows “Start Log” again, a line marking where the log was cut off is added, and a notice tells you the log is full and should be downloaded.
+- The same happens if the browser refuses to store more data (for example, when the `localStorage` quota is already used by other data).
+- The log collected up to that point stays available through “Download Log”. Logging can start again after the full log is downloaded or cleared.
+- The log is never rotated: the start of a session is never dropped to make room.
 
 ### Downloading
 
