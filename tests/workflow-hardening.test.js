@@ -12,7 +12,9 @@
 
 import { describe, it } from 'node:test'
 import assert from 'node:assert'
+import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -162,4 +164,67 @@ describe('workflow scanner self-check', () => {
     assert.ok(jobs[0].body.some((l) => /^ {4}permissions:/.test(l)))
     assert.ok(!jobs[1].body.some((l) => /^ {4}permissions:/.test(l)))
   })
+})
+
+describe('update-webssh2-dependency.yml version step', () => {
+  const { lines } = workflows.find(
+    (w) => w.name === 'update-webssh2-dependency.yml'
+  )
+  const idLine = lines.findIndex((line) => /id: get-version\s*$/.test(line))
+  const step = runScriptsOf(lines).find(({ line }) => line > idLine + 1)
+
+  /** Runs the step's own script as a workflow_dispatch with `version`. */
+  function runStep(version) {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wf-version-'))
+    const output = path.join(dir, 'output')
+    fs.writeFileSync(output, '')
+    try {
+      const result = spawnSync('bash', ['-e', '-c', step.script], {
+        cwd: dir,
+        encoding: 'utf8',
+        env: {
+          PATH: process.env.PATH,
+          EVENT_NAME: 'workflow_dispatch',
+          RELEASE_TAG: '',
+          INPUT_VERSION: version,
+          GITHUB_OUTPUT: output
+        }
+      })
+      return { status: result.status, output: fs.readFileSync(output, 'utf8') }
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true })
+    }
+  }
+
+  for (const [input, expected] of [
+    ['5.4.3', '5.4.3'],
+    ['v5.4.3', '5.4.3'],
+    ['6.0.0-alpha.1', '6.0.0-alpha.1'],
+    ['6.0.0-x-y.1', '6.0.0-x-y.1'],
+    ['5.4.3+build.1', '5.4.3+build.1'],
+    ['6.0.0-rc.1+sha-abc123', '6.0.0-rc.1+sha-abc123']
+  ]) {
+    it(`accepts ${input}`, () => {
+      const { status, output } = runStep(input)
+      assert.strictEqual(status, 0)
+      assert.strictEqual(output, `version=${expected}\n`)
+    })
+  }
+
+  for (const input of [
+    'main',
+    '5.4',
+    '5.4.3-',
+    '5.4.3+',
+    '5.4.3-a..b',
+    '1.0.0"; touch pwned; "',
+    '1.0.0 $(id)',
+    '1.0.0\nversion=9.9.9'
+  ]) {
+    it(`rejects ${JSON.stringify(input)}`, () => {
+      const { status, output } = runStep(input)
+      assert.notStrictEqual(status, 0)
+      assert.strictEqual(output, '')
+    })
+  }
 })
