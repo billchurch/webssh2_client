@@ -28,6 +28,9 @@ export const NOTIFICATION_DISPLAY_DURATION = 3000
 // Session log cap in characters. Stays under the usual ~5M-character
 // localStorage quota; logging stops (no rotation) when it is reached.
 export const MAX_LOG_SIZE = 1024 * 1024 * 4
+// Room kept below MAX_LOG_SIZE for the closing lines ("Log End" or the
+// cut-off marker), so the stored log never passes MAX_LOG_SIZE.
+export const LOG_TRAILER_RESERVE = 1024
 
 // Authentication
 export const DEFAULT_AUTH_METHODS: SSHAuthMethod[] = [

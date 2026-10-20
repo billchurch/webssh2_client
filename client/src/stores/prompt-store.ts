@@ -206,13 +206,19 @@ function createPromptStoreInternal() {
     pushToast(payload)
   }
 
+  // Ids of client-raised toasts. Server toasts are evicted before these
+  // when the toast list is full, so a later burst cannot push them out.
+  const localToastIds = new Set<string>()
+
   /**
    * Add a toast raised by the client itself (not by the server). It skips
-   * the rate limit, which guards against server prompt floods, so a burst
-   * of server toasts cannot drop a notice the user must see.
+   * the rate limit, which guards against server prompt floods, and server
+   * toasts are evicted before it, so a burst of server toasts (before or
+   * after it) cannot hide a notice the user must see.
    */
   function addLocalToast(payload: PromptPayload): void {
     debug('addLocalToast', payload.id)
+    localToastIds.add(payload.id)
     pushToast(payload)
   }
 
@@ -222,9 +228,19 @@ function createPromptStoreInternal() {
       playPromptSound(payload.severity)
     }
 
-    // Remove oldest toast if at limit
+    // Remove the oldest server toast if at limit (oldest local toast if
+    // there are only local ones)
     if (state.toasts.length >= MAX_ACTIVE_TOASTS) {
-      setState('toasts', state.toasts.slice(1))
+      const serverIndex = state.toasts.findIndex(
+        (t) => !localToastIds.has(t.id)
+      )
+      const evictIndex = serverIndex === -1 ? 0 : serverIndex
+      const evicted = state.toasts[evictIndex]
+      if (evicted !== undefined) localToastIds.delete(evicted.id)
+      setState(
+        'toasts',
+        state.toasts.filter((_, i) => i !== evictIndex)
+      )
     }
 
     // Add new toast
@@ -240,6 +256,7 @@ function createPromptStoreInternal() {
    */
   function removeToast(id: string): void {
     debug('removeToast', id)
+    localToastIds.delete(id)
     setState(
       'toasts',
       state.toasts.filter((t) => t.id !== id)
@@ -259,6 +276,8 @@ function createPromptStoreInternal() {
     for (const prompt of state.promptQueue) {
       submitResponse({ id: prompt.id, action: 'dismissed' })
     }
+
+    localToastIds.clear()
 
     // Clear all state
     setState({

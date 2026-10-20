@@ -3,7 +3,7 @@ import { createMemo, createRoot } from 'solid-js'
 import createDebug from 'debug'
 import { state, setState } from '../stores/terminal.js'
 import { promptStore } from '../stores/prompt-store.js'
-import { MAX_LOG_SIZE } from '../constants.js'
+import { MAX_LOG_SIZE, LOG_TRAILER_RESERVE } from '../constants.js'
 import { triggerDownload } from '../utils/browser.js'
 import { formatDate } from '../utils/index.js'
 
@@ -16,6 +16,9 @@ const LOG_DATE_KEY = 'webssh2_session_log_date'
 let sessionFooter: string | null = null
 
 type LogHaltReason = 'limit' | 'storage'
+
+// Terminal output stops here; the rest of MAX_LOG_SIZE is for closing lines
+const LOG_CONTENT_LIMIT = MAX_LOG_SIZE - LOG_TRAILER_RESERVE
 
 /**
  * localStorage.setItem that never throws. Returns false when the write
@@ -58,13 +61,15 @@ function haltLogging(reason: LogHaltReason, markLog = true): void {
   debug('Session logging halted: %s', reason)
 
   // Mark where the log was cut off. Only for the cap: after a storage
-  // failure another write would fail too. The marker may pass the cap by a
-  // few bytes, which the headroom under the quota absorbs.
+  // failure another write would fail too. The marker fits in the space
+  // LOG_TRAILER_RESERVE keeps free, so the log stays within MAX_LOG_SIZE.
   if (reason === 'limit' && markLog) {
     const sessionLog = window.localStorage.getItem(LOG_KEY) ?? ''
-    if (sessionLog !== '') {
-      const footer = sessionFooter ?? ''
-      const marker = `\r\n\r\nLog stopped (size limit reached) for ${footer} - ${formatDate(new Date())}\r\n`
+    const marker = `\r\n\r\nLog stopped (size limit reached) - ${formatDate(new Date())}\r\n`
+    if (
+      sessionLog !== '' &&
+      sessionLog.length + marker.length <= MAX_LOG_SIZE
+    ) {
       if (safeSetItem(LOG_KEY, sessionLog + marker)) {
         logLength = sessionLog.length + marker.length
       }
@@ -120,13 +125,21 @@ class LoggingServiceImpl implements LoggingService {
   addToLog(data: string): void {
     if (!state.sessionLogEnable) return
 
-    if (logLength + data.length > MAX_LOG_SIZE) {
+    if (logLength + data.length > LOG_CONTENT_LIMIT) {
       haltLogging('limit')
       return
     }
 
     let sessionLog = window.localStorage.getItem(LOG_KEY) ?? ''
     const isNewLog = sessionLog === ''
+
+    // The counter can be stale when another tab appends to the same log,
+    // so check the cap again against what is actually stored.
+    if (sessionLog.length + data.length > LOG_CONTENT_LIMIT) {
+      logLength = sessionLog.length
+      haltLogging('limit')
+      return
+    }
 
     sessionLog += data
     if (!safeSetItem(LOG_KEY, sessionLog)) {
@@ -143,7 +156,7 @@ class LoggingServiceImpl implements LoggingService {
 
     // A log at the cap cannot take any more output, so stop now rather
     // than on the next chunk.
-    if (logLength >= MAX_LOG_SIZE) haltLogging('limit')
+    if (logLength >= LOG_CONTENT_LIMIT) haltLogging('limit')
   }
 
   startLogging(): void {
@@ -165,7 +178,10 @@ class LoggingServiceImpl implements LoggingService {
     // Mark logging as active first so a refusal below goes through the
     // same halt path (menu back to "Start Log" plus a toast).
     setState('sessionLogEnable', true)
-    if (logFull || sessionLog.length + logStartMessage.length > MAX_LOG_SIZE) {
+    if (
+      logFull ||
+      sessionLog.length + logStartMessage.length > LOG_CONTENT_LIMIT
+    ) {
       // The stored log is already full and already marked as cut off.
       haltLogging('limit', false)
       return
@@ -183,7 +199,7 @@ class LoggingServiceImpl implements LoggingService {
       haltLogging('storage')
       return
     }
-    if (logLength >= MAX_LOG_SIZE) {
+    if (logLength >= LOG_CONTENT_LIMIT) {
       haltLogging('limit')
       return
     }
@@ -203,6 +219,12 @@ class LoggingServiceImpl implements LoggingService {
       const logEndMessage = `\r\n\r\nLog End for ${footer} - ${formatDate(new Date())}\r\n`
 
       let sessionLog = window.localStorage.getItem(LOG_KEY) ?? ''
+      if (sessionLog.length + logEndMessage.length > MAX_LOG_SIZE) {
+        // No room left within the cap; a full log already ends with the
+        // cut-off marker.
+        debug('Log session stopped without end message (log at cap)')
+        return
+      }
       sessionLog += logEndMessage
       if (safeSetItem(LOG_KEY, sessionLog)) {
         logLength = sessionLog.length

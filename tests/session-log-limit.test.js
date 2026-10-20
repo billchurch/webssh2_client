@@ -60,10 +60,11 @@ URL.revokeObjectURL = () => {}
 // Import SUT (after shims are in place)
 // ---------------------------------------------------------------------------
 
-const { MAX_LOG_SIZE } = await import('../client/src/constants.ts')
+const { MAX_LOG_SIZE, LOG_TRAILER_RESERVE } =
+  await import('../client/src/constants.ts')
 const { state, setState } = await import('../client/src/stores/terminal.ts')
 const { promptStore } = await import('../client/src/stores/prompt-store.ts')
-const { addToLog, startLogging, stopLogging, downloadLog } =
+const { addToLog, startLogging, stopLogging, downloadLog, setSessionFooter } =
   await import('../client/src/services/logging.ts')
 
 const LOG_KEY = 'webssh2_session_log'
@@ -117,20 +118,49 @@ describe('session log size cap (issue #157)', () => {
 
     const stored = storage.get(LOG_KEY)
     assert.ok(stored.length > MAX_LOG_SIZE - 256 * 1024, 'log was filled')
-    // Cap plus the short "Log stopped" marker
-    assert.ok(stored.length <= MAX_LOG_SIZE + 256, `stored ${stored.length}`)
+    // The "Log stopped" marker fits inside the cap
+    assert.ok(stored.length <= MAX_LOG_SIZE, `stored ${stored.length}`)
     assert.match(stored, /Log stopped \(size limit reached\)/)
   })
 
   it('stops when a chunk fills the log exactly to the cap', () => {
     startLogging()
-    const remaining = MAX_LOG_SIZE - storage.get(LOG_KEY).length
+    const remaining =
+      MAX_LOG_SIZE - LOG_TRAILER_RESERVE - storage.get(LOG_KEY).length
     addToLog('x'.repeat(remaining))
 
     assert.equal(state.sessionLogEnable, false)
     assert.equal(state.loggedData, true)
     assert.equal(toasts.length, 1)
     assert.match(toasts[0].message, /limit/)
+  })
+
+  it('never stores more than MAX_LOG_SIZE, closing lines included', () => {
+    setSessionFooter('ssh://user@host:22 '.repeat(20))
+    try {
+      startLogging()
+      fillToCap()
+      stopLogging()
+      assert.ok(storage.get(LOG_KEY).length <= MAX_LOG_SIZE)
+    } finally {
+      setSessionFooter(null)
+    }
+  })
+
+  it('checks the stored log, not a stale counter, when another tab appended', () => {
+    startLogging()
+    addToLog('tab A output\r\n')
+
+    // Tab B shares localStorage and grows the log to just under the cap
+    storage.set(LOG_KEY, 'b'.repeat(MAX_LOG_SIZE - 1))
+
+    addToLog('x'.repeat(256 * 1024))
+    assert.equal(state.sessionLogEnable, false)
+    assert.equal(toasts.length, 1)
+    assert.ok(
+      storage.get(LOG_KEY).length <= MAX_LOG_SIZE,
+      `stored ${storage.get(LOG_KEY).length}`
+    )
   })
 
   it('does not write any chunk once the cap is reached', () => {
@@ -272,6 +302,35 @@ describe('stop warning reaches the real prompt store (issue #157)', () => {
       assert.equal(promptStore.isCircuitBreakerTripped(), false)
     } finally {
       promptStore.addLocalToast = (payload) => toasts.push(payload)
+      mock.timers.reset()
+    }
+  })
+
+  it('is not pushed out by server toasts that arrive after the stop', () => {
+    // Start after the earlier burst's rate-limit window so these server
+    // toasts are accepted
+    mock.timers.enable({
+      apis: ['setTimeout', 'Date'],
+      now: Date.now() + 60000
+    })
+    promptStore.addLocalToast = realAddLocalToast
+    try {
+      startLogging()
+      fillToCap()
+      assert.equal(state.sessionLogEnable, false)
+
+      for (let i = 0; i < 5; i++) {
+        promptStore.addToast({ id: `after-${i}`, type: 'toast', title: 'x' })
+      }
+      const ids = promptStore.toasts.map((t) => t.id)
+      assert.ok(ids.includes('after-4'), 'server toasts were accepted')
+      assert.ok(
+        ids.some((id) => id.startsWith('session-log-halted-')),
+        `stop warning still shown: ${ids.join(', ')}`
+      )
+    } finally {
+      promptStore.addLocalToast = (payload) => toasts.push(payload)
+      promptStore.dismissAllPrompts()
       mock.timers.reset()
     }
   })
