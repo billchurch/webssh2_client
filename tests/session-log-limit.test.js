@@ -7,7 +7,7 @@
  * - The log collected so far can still be downloaded after the stop.
  */
 
-import { describe, it, beforeEach } from 'node:test'
+import { describe, it, beforeEach, mock } from 'node:test'
 import assert from 'node:assert/strict'
 import { register } from 'node:module'
 import { pathToFileURL } from 'node:url'
@@ -70,7 +70,8 @@ const LOG_KEY = 'webssh2_session_log'
 const LOG_DATE_KEY = 'webssh2_session_log_date'
 
 const toasts = []
-promptStore.addToast = (payload) => toasts.push(payload)
+const realAddLocalToast = promptStore.addLocalToast
+promptStore.addLocalToast = (payload) => toasts.push(payload)
 
 function quotaError() {
   const error = new Error('The quota has been exceeded.')
@@ -242,5 +243,36 @@ describe('download after the log is stopped (issue #157)', () => {
     addToLog('fresh output')
     assert.match(storage.get(LOG_KEY), /fresh output/)
     assert.equal(toasts.length, 1)
+  })
+})
+
+describe('stop warning reaches the real prompt store (issue #157)', () => {
+  it('is shown even after a burst of server toasts hit the rate limit', () => {
+    mock.timers.enable({ apis: ['setTimeout'] })
+    promptStore.addLocalToast = realAddLocalToast
+    try {
+      // Five server toasts within one second use up the rate limit
+      for (let i = 0; i < 5; i++) {
+        promptStore.addToast({ id: `server-${i}`, type: 'toast', title: 'x' })
+      }
+      promptStore.addToast({ id: 'server-dropped', type: 'toast', title: 'x' })
+      assert.ok(
+        !promptStore.toasts.some((t) => t.id === 'server-dropped'),
+        'rate limit is active'
+      )
+
+      startLogging()
+      fillToCap()
+
+      assert.equal(state.sessionLogEnable, false)
+      const halted = promptStore.toasts.filter((t) =>
+        t.id.startsWith('session-log-halted-')
+      )
+      assert.equal(halted.length, 1)
+      assert.equal(promptStore.isCircuitBreakerTripped(), false)
+    } finally {
+      promptStore.addLocalToast = (payload) => toasts.push(payload)
+      mock.timers.reset()
+    }
   })
 })

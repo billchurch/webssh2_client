@@ -72,7 +72,7 @@ function haltLogging(reason: LogHaltReason, markLog = true): void {
   }
 
   const sizeMb = Math.round(MAX_LOG_SIZE / (1024 * 1024))
-  promptStore.addToast({
+  promptStore.addLocalToast({
     id: `session-log-halted-${Date.now()}`,
     type: 'toast',
     severity: 'warning',

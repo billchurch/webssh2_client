@@ -203,6 +203,20 @@ function createPromptStoreInternal() {
       return
     }
 
+    pushToast(payload)
+  }
+
+  /**
+   * Add a toast raised by the client itself (not by the server). It skips
+   * the rate limit, which guards against server prompt floods, so a burst
+   * of server toasts cannot drop a notice the user must see.
+   */
+  function addLocalToast(payload: PromptPayload): void {
+    debug('addLocalToast', payload.id)
+    pushToast(payload)
+  }
+
+  function pushToast(payload: PromptPayload): void {
     // Play sound if enabled
     if (payload.sound !== false && payload.severity !== undefined) {
       playPromptSound(payload.severity)
@@ -314,6 +328,7 @@ function createPromptStoreInternal() {
     showPrompt,
     dismissPrompt,
     addToast,
+    addLocalToast,
     removeToast,
     dismissAllPrompts,
     resetCircuitBreaker,
