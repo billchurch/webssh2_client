@@ -114,6 +114,35 @@
   }
 }
 
+/*
+ * Tailwind 3 parity for @tailwindcss/forms focus borders. In v3 the plugin's
+ * `textarea:focus`-style rules (specificity 0,1,1) beat plain border-color
+ * utilities such as border-red-500, so a focused field turned blue. v4 moves
+ * them into the base layer, where every utility wins. Restore the border color
+ * at the v3 specificity: above border-*, below focus:border-*.
+ */
+@layer utilities {
+  input:where(
+      [type='text'],
+      :not([type]),
+      [type='email'],
+      [type='url'],
+      [type='password'],
+      [type='number'],
+      [type='date'],
+      [type='datetime-local'],
+      [type='month'],
+      [type='search'],
+      [type='tel'],
+      [type='time'],
+      [type='week']
+    ):focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--color-blue-600);
+  }
+}
+
 /* Search highlighting styles - Border-only approach for better accessibility */
 
 /* Optional: Add subtle glow effects to make borders more prominent */
