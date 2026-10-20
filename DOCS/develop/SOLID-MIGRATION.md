@@ -8,7 +8,7 @@ The webssh2_client codebase is well-positioned for migration to SolidJS. The cur
 
 ## Status update (2026-10-20, #164)
 
-The legacy config path is gone. `initializeConfig()`, `populateFormFromUrl()` and `getCredentials()` were deleted from `client/src/utils/index.ts`, and `client/src/services/ui.ts` was deleted. `client/src/stores/config.ts` is now the only place that reads injected config and URL parameters. The rest of this document is a historical log; dated **Removed (#164)** notes mark the places that mention the deleted code.
+The legacy config path is gone. `initializeConfig()`, `populateFormFromUrl()` and `getCredentials()` were deleted from `client/src/utils/index.ts`, and `client/src/services/ui.ts` was deleted. `client/src/stores/config.ts` is now the only place that merges injected config with URL parameters and decides URL-triggered auto-connect. The rest of this document is a historical log; dated **Removed (#164)** notes mark the places that mention the deleted code.
 
 ## Current Architecture Analysis
 

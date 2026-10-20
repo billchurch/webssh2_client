@@ -38,7 +38,7 @@ The client is kept compatible with a strict policy:
 - Safe DOM APIs: All dynamic UI text uses `textContent`. Icons are sourced from trusted `lucide-static` SVGs only.
 - Event handlers: No inline JavaScript event attributes are used in HTML; handlers are attached via JS.
 - URL parameters: Inputs from URL are validated and sanitized before use.
-- URL parameters are parsed only in [`client/src/stores/config.ts`](../client/src/stores/config.ts) (`configWithUrlOverrides()`). Auto-connect starts only when the URL gives `host` and also a password or private key for an auth method the server allows. A `host` alone, or credentials for a disallowed method, only pre-fills the login form.
+- URL-parameter config merging and URL-triggered auto-connect are handled only in [`client/src/stores/config.ts`](../client/src/stores/config.ts) (`configWithUrlOverrides()`). URL parameters turn auto-connect on only when they give `host` and also a password or private key for an auth method the server allows. If the injected server config already sets `autoConnect: true`, that setting still applies when the URL gives only `host`, or gives credentials for a method the server does not allow.
 
 ## Build/Tooling Safeguards
 
