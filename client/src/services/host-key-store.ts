@@ -47,30 +47,75 @@ export type LookupResult =
   | { status: 'unknown' }
 
 /**
+ * Property names that must never be used as keys, because assigning them on
+ * a plain object can reach or shadow Object.prototype.
+ */
+const FORBIDDEN_KEYS: ReadonlySet<string> = new Set([
+  '__proto__',
+  'constructor',
+  'prototype'
+])
+
+function isForbiddenKey(name: string): boolean {
+  return FORBIDDEN_KEYS.has(name)
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function emptyKeyMap(): KeyMap {
+  return Object.create(null) as KeyMap
+}
+
+function emptyHostKeys(): HostKeys {
+  return Object.create(null) as HostKeys
+}
+
+/**
+ * Copy raw parsed key data into null-prototype maps, dropping entries with
+ * forbidden names or a malformed shape.
+ */
+function sanitizeKeyMap(raw: Record<string, unknown>): KeyMap {
+  const keys = emptyKeyMap()
+  for (const [hostPort, algorithms] of Object.entries(raw)) {
+    if (isForbiddenKey(hostPort) || !isPlainRecord(algorithms)) continue
+    const hostKeys = emptyHostKeys()
+    for (const [algo, entry] of Object.entries(algorithms)) {
+      if (isForbiddenKey(algo) || !isPlainRecord(entry)) continue
+      const { key, addedAt } = entry
+      if (typeof key !== 'string' || typeof addedAt !== 'string') continue
+      hostKeys[algo] = { key, addedAt }
+    }
+    if (Object.keys(hostKeys).length > 0) {
+      keys[hostPort] = hostKeys
+    }
+  }
+  return keys
+}
+
+/**
  * Load the key store from localStorage, returning a valid StoreData.
  */
 function loadStore(): StoreData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw == null || raw === '') {
-      return { version: 1, keys: {} }
+      return { version: 1, keys: emptyKeyMap() }
     }
     const parsed = JSON.parse(raw) as unknown
     if (
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      'version' in parsed &&
-      (parsed as StoreData).version === 1 &&
-      'keys' in parsed &&
-      typeof (parsed as StoreData).keys === 'object'
+      isPlainRecord(parsed) &&
+      parsed['version'] === 1 &&
+      isPlainRecord(parsed['keys'])
     ) {
-      return parsed as StoreData
+      return { version: 1, keys: sanitizeKeyMap(parsed['keys']) }
     }
     debug('Invalid store data format, resetting')
-    return { version: 1, keys: {} }
+    return { version: 1, keys: emptyKeyMap() }
   } catch (err) {
     debug('Failed to load host key store:', err)
-    return { version: 1, keys: {} }
+    return { version: 1, keys: emptyKeyMap() }
   }
 }
 
@@ -113,6 +158,74 @@ function isValidBase64(str: string): boolean {
   }
 }
 
+const MAX_HOST_LENGTH = 253
+// Hostname, IPv4 address or bare IPv6 address (with optional zone id).
+// Underscores are accepted because the store also holds TOFU pins for
+// whatever host name the user connected to.
+const HOSTNAME_PATTERN = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/
+const IPV6_PATTERN = /^[0-9A-Fa-f:.]+(?:%[A-Za-z0-9_.-]+)?$/
+const PORT_PATTERN = /^[1-9][0-9]{0,4}$/
+
+function isValidHost(host: string): boolean {
+  if (host.length === 0 || host.length > MAX_HOST_LENGTH) return false
+  if (isForbiddenKey(host)) return false
+  if (host.includes(':')) {
+    const bare =
+      host.startsWith('[') && host.endsWith(']') ? host.slice(1, -1) : host
+    return bare.includes(':') && IPV6_PATTERN.test(bare)
+  }
+  return HOSTNAME_PATTERN.test(host)
+}
+
+function isValidPort(port: number): boolean {
+  return Number.isInteger(port) && port >= 1 && port <= 65535
+}
+
+/**
+ * Split a "host:port" store key and validate both parts.
+ *
+ * @returns The host and port, or null if the key is not a valid host:port
+ */
+function parseHostPortKey(
+  hostPort: string
+): { host: string; port: number } | null {
+  if (isForbiddenKey(hostPort)) return null
+  const sep = hostPort.lastIndexOf(':')
+  if (sep <= 0) return null
+  const host = hostPort.slice(0, sep)
+  const portStr = hostPort.slice(sep + 1)
+  if (!PORT_PATTERN.test(portStr)) return null
+  const port = Number(portStr)
+  if (!isValidPort(port) || !isValidHost(host)) return null
+  return { host, port }
+}
+
+/**
+ * Validate the parts of a host key before it is written to the store.
+ *
+ * @returns An error message, or null if the key is valid
+ */
+function validateKey(
+  host: string,
+  port: number,
+  algorithm: string,
+  keyData: string
+): string | null {
+  if (!isValidHost(host)) {
+    return `Invalid host "${host}"`
+  }
+  if (!isValidPort(port)) {
+    return `Invalid port "${port}": expected 1-65535`
+  }
+  if (!isValidAlgorithm(algorithm)) {
+    return `Invalid algorithm "${algorithm}". Valid algorithms: ${VALID_ALGORITHMS.join(', ')}`
+  }
+  if (!isValidBase64(keyData)) {
+    return 'Invalid base64 key data'
+  }
+  return null
+}
+
 /**
  * Look up a host key in the store.
  *
@@ -130,9 +243,11 @@ export function lookup(
 ): LookupResult {
   const data = loadStore()
   const key = makeHostPortKey(host, port)
-  const hostKeys = data.keys[key]
+  const entry = Object.hasOwn(data.keys, key)
+    ? data.keys[key]?.[algorithm]
+    : undefined
 
-  if (!hostKeys || !hostKeys[algorithm]) {
+  if (entry === undefined) {
     return { status: 'unknown' }
   }
 
@@ -140,11 +255,11 @@ export function lookup(
     return { status: 'trusted' }
   }
 
-  if (hostKeys[algorithm].key === presentedKey) {
+  if (entry.key === presentedKey) {
     return { status: 'trusted' }
   }
 
-  return { status: 'mismatch', storedKey: hostKeys[algorithm].key }
+  return { status: 'mismatch', storedKey: entry.key }
 }
 
 /**
@@ -154,27 +269,33 @@ export function lookup(
  * @param port - The port number
  * @param algorithm - The SSH key algorithm
  * @param keyData - The base64-encoded public key
+ * @returns Object with success boolean and optional error message
  */
 export function store(
   host: string,
   port: number,
   algorithm: string,
   keyData: string
-): void {
-  const data = loadStore()
-  const hostPortKey = makeHostPortKey(host, port)
-
-  if (!data.keys[hostPortKey]) {
-    data.keys[hostPortKey] = {}
+): { success: boolean; error?: string } {
+  const error = validateKey(host, port, algorithm, keyData)
+  if (error !== null) {
+    debug('Refusing to store key for %s:%s: %s', host, port, error)
+    return { success: false, error }
   }
 
-  data.keys[hostPortKey][algorithm] = {
+  const data = loadStore()
+  const hostPortKey = makeHostPortKey(host, port)
+  const hostKeys = data.keys[hostPortKey] ?? emptyHostKeys()
+
+  hostKeys[algorithm] = {
     key: keyData,
     addedAt: new Date().toISOString()
   }
+  data.keys[hostPortKey] = hostKeys
 
   saveStore(data)
   debug('Stored key for %s algorithm %s', hostPortKey, algorithm)
+  return { success: true }
 }
 
 /**
@@ -187,15 +308,16 @@ export function store(
 export function remove(host: string, port: number, algorithm?: string): void {
   const data = loadStore()
   const hostPortKey = makeHostPortKey(host, port)
+  const hostKeys = data.keys[hostPortKey]
 
-  if (!data.keys[hostPortKey]) {
+  if (!hostKeys) {
     return
   }
 
   if (algorithm != null && algorithm !== '') {
-    delete data.keys[hostPortKey][algorithm]
+    delete hostKeys[algorithm]
     // Clean up empty host entries
-    if (Object.keys(data.keys[hostPortKey]).length === 0) {
+    if (Object.keys(hostKeys).length === 0) {
       delete data.keys[hostPortKey]
     }
   } else {
@@ -216,7 +338,8 @@ export function remove(host: string, port: number, algorithm?: string): void {
  * @returns The full key map { "host:port": { algorithm: { key, addedAt } } }
  */
 export function getAll(): KeyMap {
-  return loadStore().keys
+  // Spread (not Object.assign) so the copy is defined, never [[Set]]
+  return { ...loadStore().keys }
 }
 
 /**
@@ -228,84 +351,254 @@ export function exportKeys(): string {
   return JSON.stringify(loadStore(), null, 2)
 }
 
+export interface ImportEntry {
+  hostPort: string
+  host: string
+  port: number
+  algorithm: string
+  entry: KeyEntry
+}
+
+export interface ImportConflict extends ImportEntry {
+  /** The base64 key currently pinned for this host:port and algorithm */
+  existingKey: string
+}
+
 /**
- * Import keys from a JSON string, merging with existing keys.
- *
- * @param json - JSON string to import
- * @returns Object with success boolean and optional error message
+ * The result of comparing an import file with the current store. Nothing is
+ * written until the plan is passed to applyImport().
  */
-export function importKeys(json: string): { success: boolean; error?: string } {
+export interface ImportPlan {
+  /** Entries for host:port + algorithm pairs not yet pinned */
+  additions: ImportEntry[]
+  /** Entries that would replace a pinned key with a different key */
+  conflicts: ImportConflict[]
+  /** Entries identical to the pinned key */
+  unchanged: number
+}
+
+export interface ImportSummary {
+  added: number
+  skipped: number
+  replaced: number
+}
+
+export interface ImportOptions {
+  /** Replace pinned keys listed in plan.conflicts. Default: false (skip) */
+  replaceConflicts?: boolean
+}
+
+type ParseResult =
+  | { success: true; entries: ImportEntry[] }
+  | { success: false; error: string }
+
+function findForbiddenKey(obj: Record<string, unknown>): string | undefined {
+  return Object.keys(obj).find(isForbiddenKey)
+}
+
+/**
+ * Parse and validate an import file without touching the store.
+ */
+function parseImportEntries(json: string): ParseResult {
+  let parsed: unknown
   try {
-    const parsed = JSON.parse(json) as unknown
-
-    if (typeof parsed !== 'object' || parsed === null) {
-      return { success: false, error: 'Invalid JSON: not an object' }
-    }
-
-    const imported = parsed as Record<string, unknown>
-
-    if (imported['version'] !== 1) {
-      return { success: false, error: 'Unsupported store version' }
-    }
-
-    if (typeof imported['keys'] !== 'object' || imported['keys'] === null) {
-      return { success: false, error: 'Invalid format: missing keys object' }
-    }
-
-    const importedKeys = imported['keys'] as Record<string, unknown>
-
-    // Validate structure before merging
-    for (const [hostPort, algorithms] of Object.entries(importedKeys)) {
-      if (typeof algorithms !== 'object' || algorithms === null) {
-        return {
-          success: false,
-          error: `Invalid entry for ${hostPort}: expected algorithm map`
-        }
-      }
-
-      for (const [algo, entry] of Object.entries(
-        algorithms as Record<string, unknown>
-      )) {
-        if (!isValidAlgorithm(algo)) {
-          return {
-            success: false,
-            error: `Invalid algorithm "${algo}" for ${hostPort}`
-          }
-        }
-
-        const keyEntry = entry as Record<string, unknown>
-        if (
-          typeof keyEntry['key'] !== 'string' ||
-          typeof keyEntry['addedAt'] !== 'string'
-        ) {
-          return {
-            success: false,
-            error: `Invalid key entry for ${hostPort} ${algo}`
-          }
-        }
-      }
-    }
-
-    // Merge with existing store
-    const currentData = loadStore()
-    for (const [hostPort, algorithms] of Object.entries(importedKeys)) {
-      if (!currentData.keys[hostPort]) {
-        currentData.keys[hostPort] = {}
-      }
-      for (const [algo, entry] of Object.entries(
-        algorithms as Record<string, KeyEntry>
-      )) {
-        currentData.keys[hostPort][algo] = entry
-      }
-    }
-
-    saveStore(currentData)
-    debug('Imported keys successfully')
-    return { success: true }
+    parsed = JSON.parse(json) as unknown
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     return { success: false, error: `Failed to parse JSON: ${message}` }
   }
+
+  if (!isPlainRecord(parsed)) {
+    return { success: false, error: 'Invalid JSON: not an object' }
+  }
+
+  const forbiddenTop = findForbiddenKey(parsed)
+  if (forbiddenTop !== undefined) {
+    return { success: false, error: `Invalid property "${forbiddenTop}"` }
+  }
+
+  if (parsed['version'] !== 1) {
+    return { success: false, error: 'Unsupported store version' }
+  }
+
+  const importedKeys = parsed['keys']
+  if (!isPlainRecord(importedKeys)) {
+    return { success: false, error: 'Invalid format: missing keys object' }
+  }
+
+  const entries: ImportEntry[] = []
+  for (const [hostPort, algorithms] of Object.entries(importedKeys)) {
+    const target = parseHostPortKey(hostPort)
+    if (target === null) {
+      return {
+        success: false,
+        error: `Invalid host "${hostPort}": expected host:port with port 1-65535`
+      }
+    }
+
+    if (!isPlainRecord(algorithms)) {
+      return {
+        success: false,
+        error: `Invalid entry for ${hostPort}: expected algorithm map`
+      }
+    }
+
+    for (const [algo, entry] of Object.entries(algorithms)) {
+      if (!isValidAlgorithm(algo)) {
+        return {
+          success: false,
+          error: `Invalid algorithm "${algo}" for ${hostPort}`
+        }
+      }
+
+      if (!isPlainRecord(entry) || findForbiddenKey(entry) !== undefined) {
+        return {
+          success: false,
+          error: `Invalid key entry for ${hostPort} ${algo}`
+        }
+      }
+
+      const { key, addedAt } = entry
+      if (typeof key !== 'string' || typeof addedAt !== 'string') {
+        return {
+          success: false,
+          error: `Invalid key entry for ${hostPort} ${algo}`
+        }
+      }
+
+      if (!isValidBase64(key)) {
+        return {
+          success: false,
+          error: `Invalid base64 key data for ${hostPort} ${algo}`
+        }
+      }
+
+      entries.push({
+        hostPort,
+        host: target.host,
+        port: target.port,
+        algorithm: algo,
+        entry: { key, addedAt }
+      })
+    }
+  }
+
+  return { success: true, entries }
+}
+
+/**
+ * Parse an import file and compare it with the current store.
+ *
+ * Nothing is written. Show plan.conflicts to the user before calling
+ * applyImport() with replaceConflicts: true.
+ *
+ * @param json - JSON string to import
+ * @returns The import plan, or an error message
+ */
+export function previewImport(
+  json: string
+): { success: true; plan: ImportPlan } | { success: false; error: string } {
+  const parsed = parseImportEntries(json)
+  if (!parsed.success) {
+    return parsed
+  }
+
+  const current = loadStore().keys
+  const plan: ImportPlan = { additions: [], conflicts: [], unchanged: 0 }
+  for (const item of parsed.entries) {
+    const existing = current[item.hostPort]?.[item.algorithm]
+    if (existing === undefined) {
+      plan.additions.push(item)
+    } else if (existing.key === item.entry.key) {
+      plan.unchanged++
+    } else {
+      plan.conflicts.push({ ...item, existingKey: existing.key })
+    }
+  }
+  return { success: true, plan }
+}
+
+/**
+ * Write an import plan to the store.
+ *
+ * Additions are written unless the pair was pinned in the meantime. A
+ * conflict is replaced only when replaceConflicts is true and the pinned key
+ * is still the one the plan showed; anything else is skipped, so a pin is
+ * never replaced without the user having seen it.
+ *
+ * @param plan - A plan from previewImport()
+ * @param options - Whether to replace the conflicts listed in the plan
+ * @returns Counts of added, skipped and replaced keys
+ */
+export function applyImport(
+  plan: ImportPlan,
+  options: ImportOptions = {}
+): ImportSummary {
+  const replaceConflicts = options.replaceConflicts === true
+  const data = loadStore()
+  const summary: ImportSummary = { added: 0, skipped: 0, replaced: 0 }
+
+  const write = (item: ImportEntry): void => {
+    const hostKeys = data.keys[item.hostPort] ?? emptyHostKeys()
+    hostKeys[item.algorithm] = { ...item.entry }
+    data.keys[item.hostPort] = hostKeys
+  }
+
+  for (const item of plan.additions) {
+    const existing = data.keys[item.hostPort]?.[item.algorithm]
+    if (existing === undefined) {
+      write(item)
+      summary.added++
+    } else if (existing.key !== item.entry.key) {
+      summary.skipped++
+    }
+  }
+
+  for (const item of plan.conflicts) {
+    const existing = data.keys[item.hostPort]?.[item.algorithm]
+    if (
+      replaceConflicts &&
+      (existing === undefined || existing.key === item.existingKey)
+    ) {
+      write(item)
+      summary.replaced++
+    } else {
+      summary.skipped++
+    }
+  }
+
+  if (summary.added > 0 || summary.replaced > 0) {
+    saveStore(data)
+  }
+  debug(
+    'Imported keys: %d added, %d skipped, %d replaced',
+    summary.added,
+    summary.skipped,
+    summary.replaced
+  )
+  return summary
+}
+
+/**
+ * Import keys from a JSON string, merging with existing keys.
+ *
+ * Keys that would replace a different pinned key are skipped unless
+ * options.replaceConflicts is true. Interactive callers should use
+ * previewImport() and applyImport() so the user can review conflicts.
+ *
+ * @param json - JSON string to import
+ * @param options - Whether to replace conflicting pinned keys
+ * @returns Object with success boolean, counts, and optional error message
+ */
+export function importKeys(
+  json: string,
+  options: ImportOptions = {}
+): { success: boolean; error?: string } & Partial<ImportSummary> {
+  const preview = previewImport(json)
+  if (!preview.success) {
+    return { success: false, error: preview.error }
+  }
+  return { success: true, ...applyImport(preview.plan, options) }
 }
 
 /**
@@ -334,20 +627,5 @@ export function addManualKey(
   const algorithm = parts[0] as string
   const keyData = parts[1] as string
 
-  if (!isValidAlgorithm(algorithm)) {
-    return {
-      success: false,
-      error: `Invalid algorithm "${algorithm}". Valid algorithms: ${VALID_ALGORITHMS.join(', ')}`
-    }
-  }
-
-  if (!isValidBase64(keyData)) {
-    return {
-      success: false,
-      error: 'Invalid base64 key data'
-    }
-  }
-
-  store(host, port, algorithm, keyData)
-  return { success: true }
+  return store(host, port, algorithm, keyData)
 }

@@ -152,9 +152,20 @@ Supported algorithms: `ssh-ed25519`, `ssh-rsa`, `rsa-sha2-256`, `rsa-sha2-512`, 
 #### Export and import
 
 - **Export** downloads all trusted keys as a `webssh2-hostkeys.json` file.
-- **Import** reads a JSON file and merges the keys into the existing store. Duplicate entries are overwritten by the imported data.
+- **Import** reads a JSON file and merges the keys into the existing store.
 
-This is useful for sharing trusted keys across browsers or backing up your key store.
+Before anything is written, the import is compared with the store:
+
+- Keys for hosts that are not trusted yet, and keys identical to a stored one, import without a prompt.
+- If the file has a **different** key for a `host:port` and algorithm that is already trusted, a confirmation lists each conflict: host, port, algorithm, the current SHA-256 fingerprint and the one from the file. Choose:
+  - **Skip conflicts** (the default): import the new keys and keep the existing trusted keys.
+  - **Replace**: import the new keys and replace the listed trusted keys. Do this only if you know the host keys really changed.
+  - **Cancel**: import nothing.
+- After the import, the section reports how many keys were added, skipped and replaced.
+
+The import file is rejected as a whole if any entry is invalid: each host key must be `host:port` (a hostname or IP address, port 1–65535), each algorithm must be one of the supported algorithms above, and each key must be base64. The property names `__proto__`, `constructor` and `prototype` are rejected at every level.
+
+This is useful for sharing trusted keys across browsers or backing up your key store. Only import files from a source you trust: a replaced key makes the client trust that key for the host.
 
 ### localStorage Format
 

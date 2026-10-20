@@ -8,7 +8,8 @@ import {
   Trash2,
   Download,
   Upload,
-  Plus
+  Plus,
+  AlertTriangle
 } from 'lucide-solid'
 import type { ITerminalOptions, ITheme } from '@xterm/xterm'
 import { getStoredSettings, saveTerminalSettings } from '../utils/settings.js'
@@ -25,6 +26,7 @@ import type {
 import { hostKeyVerifyConfig } from '../stores/terminal'
 import { config as clientConfig } from '../stores/config.js'
 import * as hostKeyStore from '../services/host-key-store'
+import type { ImportPlan } from '../services/host-key-store'
 
 interface TerminalSettingsModalProps {
   isOpen: boolean
@@ -32,6 +34,12 @@ interface TerminalSettingsModalProps {
   onSave: (
     settings: Partial<ITerminalOptions> & Partial<TerminalSettings>
   ) => void
+}
+
+interface PendingImport {
+  plan: ImportPlan
+  /** SHA-256 fingerprints per conflict index: [existing, imported] */
+  fingerprints: Array<[string, string]> | null
 }
 
 interface TerminalSettingsForm {
@@ -114,7 +122,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
   const [addKeyPublicKey, setAddKeyPublicKey] = createSignal('')
   const [addKeyError, setAddKeyError] = createSignal<string | null>(null)
   const [importError, setImportError] = createSignal<string | null>(null)
+  const [importStatus, setImportStatus] = createSignal<string | null>(null)
+  const [pendingImport, setPendingImport] = createSignal<PendingImport | null>(
+    null
+  )
   let importFileInput: HTMLInputElement | undefined
+  let skipConflictsButton: HTMLButtonElement | undefined
 
   /**
    * Compute a SHA-256 fingerprint from a base64-encoded public key.
@@ -166,6 +179,56 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
     setHostKeyFingerprints(fingerprints)
   }
 
+  /**
+   * Write an import plan to the store and report the counts.
+   */
+  function finishImport(plan: ImportPlan, replaceConflicts: boolean) {
+    setPendingImport(null)
+    const summary = hostKeyStore.applyImport(plan, { replaceConflicts })
+    const unchanged =
+      plan.unchanged > 0 ? ` (${plan.unchanged} already trusted)` : ''
+    setImportStatus(
+      `Import complete: ${summary.added} added, ${summary.skipped} skipped, ${summary.replaced} replaced${unchanged}`
+    )
+    refreshFingerprints()
+  }
+
+  /**
+   * Compare an import file with the store. Import at once when no pinned key
+   * would change; otherwise ask the user how to handle the conflicts.
+   */
+  function startImport(json: string) {
+    setImportError(null)
+    setImportStatus(null)
+    setPendingImport(null)
+    const preview = hostKeyStore.previewImport(json)
+    if (!preview.success) {
+      setImportError(preview.error)
+      return
+    }
+    const { plan } = preview
+    if (plan.conflicts.length === 0) {
+      finishImport(plan, false)
+      return
+    }
+    setPendingImport({ plan, fingerprints: null })
+    requestAnimationFrame(() => skipConflictsButton?.focus())
+    const fingerprint = (key: string) =>
+      computeFingerprint(key).catch(() => '(error computing fingerprint)')
+    Promise.all(
+      plan.conflicts.map((c) =>
+        Promise.all([fingerprint(c.existingKey), fingerprint(c.entry.key)])
+      )
+    )
+      .then((fingerprints) => {
+        // Ignore results for a plan the user has already dismissed
+        if (pendingImport()?.plan === plan) {
+          setPendingImport({ plan, fingerprints })
+        }
+      })
+      .catch(() => undefined)
+  }
+
   // Refresh host key fingerprints when section is expanded
   createEffect(() => {
     if (hostKeysExpanded()) {
@@ -192,6 +255,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
           ? JSON.stringify(resolvedCustomTheme, null, 2)
           : ''
       setThemeJsonError(null)
+      setPendingImport(null)
+      setImportError(null)
+      setImportStatus(null)
       setSettings({
         fontSize:
           stored.fontSize != null &&
@@ -1199,22 +1265,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                       class="hidden"
                       onChange={(e) => {
                         setImportError(null)
+                        setImportStatus(null)
                         const file = e.currentTarget.files?.[0]
                         if (!file) return
                         const reader = new FileReader()
                         reader.onload = () => {
-                          const result = hostKeyStore.importKeys(
-                            reader.result as string
-                          )
-                          if (result.success) {
-                            refreshFingerprints()
-                          } else {
-                            setImportError(
-                              result.error != null && result.error !== ''
-                                ? result.error
-                                : 'Failed to import keys'
-                            )
-                          }
+                          startImport(reader.result as string)
                         }
                         reader.readAsText(file)
                         // Reset file input so same file can be re-selected
@@ -1224,6 +1280,111 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   </div>
                   <Show when={importError()}>
                     <p class="text-xs text-red-600">{importError()}</p>
+                  </Show>
+                  <Show when={importStatus()}>
+                    <p class="text-xs text-slate-700" role="status">
+                      {importStatus()}
+                    </p>
+                  </Show>
+
+                  {/* Import conflict confirmation */}
+                  <Show when={pendingImport()}>
+                    {(pending) => (
+                      <div
+                        class="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3"
+                        role="alertdialog"
+                        aria-labelledby="import-conflicts-title"
+                        aria-describedby="import-conflicts-desc"
+                      >
+                        <div
+                          id="import-conflicts-title"
+                          class="flex items-center gap-1.5 text-sm font-semibold text-amber-900"
+                        >
+                          <AlertTriangle class="size-4" />
+                          Import would replace {
+                            pending().plan.conflicts.length
+                          }{' '}
+                          trusted{' '}
+                          {pending().plan.conflicts.length === 1
+                            ? 'key'
+                            : 'keys'}
+                        </div>
+                        <p
+                          id="import-conflicts-desc"
+                          class="mt-1 text-xs text-amber-900"
+                        >
+                          The file has a different key for{' '}
+                          {pending().plan.conflicts.length === 1
+                            ? 'a host that is'
+                            : 'hosts that are'}{' '}
+                          already trusted. Replace a key only if you know the
+                          host key really changed.{' '}
+                          {pending().plan.additions.length} new{' '}
+                          {pending().plan.additions.length === 1
+                            ? 'key'
+                            : 'keys'}{' '}
+                          will be added either way.
+                        </p>
+                        <ul class="mt-2 space-y-2">
+                          <For each={pending().plan.conflicts}>
+                            {(conflict, index) => (
+                              <li class="rounded bg-white p-2 text-xs">
+                                <div class="flex flex-wrap items-center gap-2">
+                                  <span class="font-mono font-medium text-slate-800">
+                                    {conflict.host}
+                                  </span>
+                                  <span class="text-slate-600">
+                                    port {conflict.port}
+                                  </span>
+                                  <span class="rounded bg-slate-200 px-1.5 py-0.5 text-slate-600">
+                                    {conflict.algorithm}
+                                  </span>
+                                </div>
+                                <div class="mt-1 text-slate-500">Current</div>
+                                <div class="break-all font-mono text-slate-800">
+                                  {pending().fingerprints?.[index()]?.[0] ??
+                                    'Computing...'}
+                                </div>
+                                <div class="mt-1 text-slate-500">From file</div>
+                                <div class="break-all font-mono text-red-700">
+                                  {pending().fingerprints?.[index()]?.[1] ??
+                                    'Computing...'}
+                                </div>
+                              </li>
+                            )}
+                          </For>
+                        </ul>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                          <button
+                            ref={skipConflictsButton}
+                            type="button"
+                            class="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            onClick={() => finishImport(pending().plan, false)}
+                          >
+                            Skip conflicts
+                          </button>
+                          <button
+                            type="button"
+                            class="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+                            onClick={() => finishImport(pending().plan, true)}
+                          >
+                            Replace
+                          </button>
+                          <button
+                            type="button"
+                            class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            onClick={() => {
+                              setPendingImport(null)
+                              setImportStatus(
+                                'Import cancelled: no keys changed'
+                              )
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </Show>
                 </div>
               </Show>

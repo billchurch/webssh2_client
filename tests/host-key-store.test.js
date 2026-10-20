@@ -2,7 +2,7 @@
  * Tests for client-side host key store (TOFU logic)
  *
  * Covers: lookup, store, remove, getAll, exportKeys, importKeys,
- *         addManualKey, and loadStore resilience.
+ *         previewImport, applyImport, addManualKey, and loadStore resilience.
  */
 
 import { describe, it, beforeEach, afterEach } from 'node:test'
@@ -44,8 +44,17 @@ if (typeof globalThis.btoa !== 'function') {
 // Import SUT (after shims are in place)
 // ---------------------------------------------------------------------------
 
-const { lookup, store, remove, getAll, exportKeys, importKeys, addManualKey } =
-  await import('../client/src/services/host-key-store.ts')
+const {
+  lookup,
+  store,
+  remove,
+  getAll,
+  exportKeys,
+  importKeys,
+  previewImport,
+  applyImport,
+  addManualKey
+} = await import('../client/src/services/host-key-store.ts')
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -53,6 +62,27 @@ const { lookup, store, remove, getAll, exportKeys, importKeys, addManualKey } =
 
 const VALID_KEY = btoa('some-key-data')
 const VALID_KEY_2 = btoa('different-key')
+const ATTACKER_KEY = btoa('attacker-key')
+const ADDED_AT = '2025-01-01T00:00:00.000Z'
+
+function importFile(keys) {
+  return JSON.stringify({ version: 1, keys })
+}
+
+function storedRaw() {
+  return JSON.parse(localStorage.getItem('webssh2.hostkeys'))
+}
+
+function assertPrototypeClean() {
+  for (const name of ['ssh-ed25519', 'ssh-rsa', 'key', 'addedAt']) {
+    assert.equal(
+      Object.hasOwn(Object.prototype, name),
+      false,
+      `Object.prototype.${name} was polluted`
+    )
+  }
+  assert.equal({}['ssh-ed25519'], undefined)
+}
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -113,6 +143,18 @@ describe('host-key-store', () => {
       const result = lookup('host.example', 22, 'ssh-rsa')
       assert.equal(result.status, 'unknown')
     })
+
+    it('returns unknown for prototype property names as algorithm', () => {
+      store('host.example', 22, 'ssh-ed25519', VALID_KEY)
+      for (const algo of ['constructor', '__proto__', 'toString']) {
+        assert.equal(lookup('host.example', 22, algo).status, 'unknown', algo)
+        assert.equal(
+          lookup('host.example', 22, algo, VALID_KEY).status,
+          'unknown',
+          algo
+        )
+      }
+    })
   })
 
   // -----------------------------------------------------------------------
@@ -159,6 +201,73 @@ describe('host-key-store', () => {
       const entry = raw.keys['host.example:22']['ssh-ed25519']
       // ISO 8601 format check: YYYY-MM-DDTHH:mm:ss.sssZ
       assert.ok(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(entry.addedAt))
+    })
+
+    it('returns success for a valid key', () => {
+      const result = store('host.example', 22, 'ssh-ed25519', VALID_KEY)
+      assert.deepEqual(result, { success: true })
+    })
+
+    it('rejects an unknown algorithm without writing', () => {
+      const result = store('host.example', 22, 'bogus-algo', VALID_KEY)
+      assert.equal(result.success, false)
+      assert.ok(result.error.includes('Invalid algorithm'))
+      assert.equal(localStorage.getItem('webssh2.hostkeys'), null)
+    })
+
+    it('rejects a prototype property name as algorithm', () => {
+      for (const algo of ['__proto__', 'constructor', 'prototype']) {
+        const result = store('host.example', 22, algo, VALID_KEY)
+        assert.equal(result.success, false, algo)
+      }
+      assert.equal(localStorage.getItem('webssh2.hostkeys'), null)
+      assertPrototypeClean()
+    })
+
+    it('rejects a non-base64 key without writing', () => {
+      const result = store('host.example', 22, 'ssh-ed25519', '!!!nope!!!')
+      assert.equal(result.success, false)
+      assert.ok(result.error.includes('Invalid base64'))
+      assert.equal(localStorage.getItem('webssh2.hostkeys'), null)
+    })
+
+    it('rejects an empty key', () => {
+      const result = store('host.example', 22, 'ssh-ed25519', '')
+      assert.equal(result.success, false)
+    })
+
+    it('rejects an invalid host or port', () => {
+      assert.equal(store('', 22, 'ssh-ed25519', VALID_KEY).success, false)
+      assert.equal(
+        store('bad host', 22, 'ssh-ed25519', VALID_KEY).success,
+        false
+      )
+      assert.equal(
+        store('__proto__', 22, 'ssh-ed25519', VALID_KEY).success,
+        false
+      )
+      assert.equal(
+        store('host.example', 0, 'ssh-ed25519', VALID_KEY).success,
+        false
+      )
+      assert.equal(
+        store('host.example', 65536, 'ssh-ed25519', VALID_KEY).success,
+        false
+      )
+      assert.equal(localStorage.getItem('webssh2.hostkeys'), null)
+    })
+
+    it('accepts IPv4 and IPv6 hosts', () => {
+      assert.equal(store('192.0.2.1', 22, 'ssh-rsa', VALID_KEY).success, true)
+      assert.equal(store('2001:db8::1', 22, 'ssh-rsa', VALID_KEY).success, true)
+      assert.equal(
+        store('[2001:db8::2]', 2222, 'ssh-rsa', VALID_KEY).success,
+        true
+      )
+      assert.equal(
+        lookup('2001:db8::1', 22, 'ssh-rsa', VALID_KEY).status,
+        'trusted'
+      )
     })
   })
 
@@ -305,6 +414,134 @@ describe('host-key-store', () => {
       assert.ok(result.error.includes('Invalid algorithm'))
     })
 
+    it('reports counts for a clean import', () => {
+      const result = importKeys(
+        importFile({
+          'host.example:22': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT },
+            'ssh-rsa': { key: VALID_KEY_2, addedAt: ADDED_AT }
+          }
+        })
+      )
+      assert.deepEqual(result, {
+        success: true,
+        added: 2,
+        skipped: 0,
+        replaced: 0
+      })
+    })
+
+    it('rejects a malformed host:port', () => {
+      const bad = [
+        'host.example',
+        'host.example:',
+        ':22',
+        'host.example:0',
+        'host.example:65536',
+        'host.example:022',
+        'host.example:22a',
+        'host.example:-1',
+        'bad host:22',
+        'host/evil:22',
+        `${'a'.repeat(254)}:22`
+      ]
+      for (const hostPort of bad) {
+        const result = importKeys(
+          importFile({
+            [hostPort]: {
+              'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+            }
+          })
+        )
+        assert.equal(result.success, false, hostPort)
+        assert.ok(result.error.includes('Invalid host'), hostPort)
+      }
+      assert.deepEqual(getAll(), {})
+    })
+
+    it('accepts hostname, IPv4 and IPv6 host:port keys', () => {
+      const result = importKeys(
+        importFile({
+          'host.example:65535': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          },
+          '192.0.2.10:1': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          },
+          '2001:db8::1:22': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          }
+        })
+      )
+      assert.equal(result.success, true)
+      assert.equal(result.added, 3)
+      assert.equal(
+        lookup('2001:db8::1', 22, 'ssh-ed25519', VALID_KEY).status,
+        'trusted'
+      )
+    })
+
+    it('rejects a __proto__ host and leaves Object.prototype unchanged', () => {
+      // A JSON literal, so "__proto__" is an own property of the parsed object
+      const json = `{"version":1,"keys":{"__proto__":{"ssh-ed25519":{"key":"${ATTACKER_KEY}","addedAt":"${ADDED_AT}"}}}}`
+      const result = importKeys(json)
+      assert.equal(result.success, false)
+      assert.ok(result.error.includes('Invalid host'))
+      assertPrototypeClean()
+      assert.equal(localStorage.getItem('webssh2.hostkeys'), null)
+    })
+
+    it('rejects constructor and prototype as host', () => {
+      for (const name of ['constructor', 'prototype', '__proto__:22']) {
+        const result = importKeys(
+          importFile({
+            [name]: { 'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT } }
+          })
+        )
+        assert.equal(result.success, false, name)
+      }
+      assertPrototypeClean()
+    })
+
+    it('rejects prototype property names at every level', () => {
+      const cases = [
+        `{"version":1,"__proto__":{"x":1},"keys":{}}`,
+        `{"version":1,"keys":{"host.example:22":{"__proto__":{"key":"${VALID_KEY}","addedAt":"${ADDED_AT}"}}}}`,
+        `{"version":1,"keys":{"host.example:22":{"constructor":{"key":"${VALID_KEY}","addedAt":"${ADDED_AT}"}}}}`,
+        `{"version":1,"keys":{"host.example:22":{"ssh-ed25519":{"key":"${VALID_KEY}","addedAt":"${ADDED_AT}","__proto__":{"polluted":true}}}}}`
+      ]
+      for (const json of cases) {
+        const result = importKeys(json)
+        assert.equal(result.success, false, json)
+      }
+      assertPrototypeClean()
+      assert.equal({}.polluted, undefined)
+      assert.equal(localStorage.getItem('webssh2.hostkeys'), null)
+    })
+
+    it('rejects non-base64 key data', () => {
+      const result = importKeys(
+        importFile({
+          'host.example:22': {
+            'ssh-ed25519': { key: '!!!not-base64!!!', addedAt: ADDED_AT }
+          }
+        })
+      )
+      assert.equal(result.success, false)
+      assert.ok(result.error.includes('Invalid base64'))
+    })
+
+    it('rejects array values where objects are expected', () => {
+      assert.equal(
+        importKeys(JSON.stringify({ version: 1, keys: [] })).success,
+        false
+      )
+      assert.equal(
+        importKeys(importFile({ 'host.example:22': [] })).success,
+        false
+      )
+    })
+
     it('rejects malformed key entries', () => {
       const result = importKeys(
         JSON.stringify({
@@ -318,6 +555,155 @@ describe('host-key-store', () => {
       )
       assert.equal(result.success, false)
       assert.ok(result.error.includes('Invalid key entry'))
+    })
+  })
+
+  // -----------------------------------------------------------------------
+  // import conflicts (previewImport / applyImport)
+  // -----------------------------------------------------------------------
+
+  describe('import conflicts', () => {
+    const conflictingFile = () =>
+      importFile({
+        'prod.example:22': {
+          'ssh-ed25519': { key: ATTACKER_KEY, addedAt: ADDED_AT }
+        },
+        'new.example:22': {
+          'ssh-ed25519': { key: VALID_KEY_2, addedAt: ADDED_AT }
+        },
+        'same.example:22': {
+          'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+        }
+      })
+
+    beforeEach(() => {
+      store('prod.example', 22, 'ssh-ed25519', VALID_KEY)
+      store('same.example', 22, 'ssh-ed25519', VALID_KEY)
+    })
+
+    it('a conflict is skipped by default', () => {
+      const result = importKeys(conflictingFile())
+      assert.deepEqual(result, {
+        success: true,
+        added: 1,
+        skipped: 1,
+        replaced: 0
+      })
+      assert.equal(
+        lookup('prod.example', 22, 'ssh-ed25519', VALID_KEY).status,
+        'trusted'
+      )
+      assert.equal(
+        lookup('prod.example', 22, 'ssh-ed25519', ATTACKER_KEY).status,
+        'mismatch'
+      )
+      assert.equal(
+        lookup('new.example', 22, 'ssh-ed25519', VALID_KEY_2).status,
+        'trusted'
+      )
+    })
+
+    it('a conflict is replaced only when confirmed', () => {
+      const result = importKeys(conflictingFile(), { replaceConflicts: true })
+      assert.deepEqual(result, {
+        success: true,
+        added: 1,
+        skipped: 0,
+        replaced: 1
+      })
+      assert.equal(
+        lookup('prod.example', 22, 'ssh-ed25519', ATTACKER_KEY).status,
+        'trusted'
+      )
+    })
+
+    it('previewImport lists conflicts and writes nothing', () => {
+      const before = localStorage.getItem('webssh2.hostkeys')
+      const preview = previewImport(conflictingFile())
+      assert.equal(preview.success, true)
+      assert.equal(localStorage.getItem('webssh2.hostkeys'), before)
+
+      const { plan } = preview
+      assert.equal(plan.unchanged, 1)
+      assert.equal(plan.additions.length, 1)
+      assert.equal(plan.additions[0].hostPort, 'new.example:22')
+      assert.equal(plan.conflicts.length, 1)
+      assert.deepEqual(
+        {
+          host: plan.conflicts[0].host,
+          port: plan.conflicts[0].port,
+          algorithm: plan.conflicts[0].algorithm,
+          existingKey: plan.conflicts[0].existingKey,
+          importedKey: plan.conflicts[0].entry.key
+        },
+        {
+          host: 'prod.example',
+          port: 22,
+          algorithm: 'ssh-ed25519',
+          existingKey: VALID_KEY,
+          importedKey: ATTACKER_KEY
+        }
+      )
+    })
+
+    it('identical keys and new hosts import without conflicts', () => {
+      const preview = previewImport(
+        importFile({
+          'same.example:22': {
+            'ssh-ed25519': { key: VALID_KEY, addedAt: ADDED_AT }
+          },
+          'prod.example:22': {
+            'ssh-rsa': { key: VALID_KEY_2, addedAt: ADDED_AT }
+          }
+        })
+      )
+      assert.equal(preview.success, true)
+      assert.equal(preview.plan.conflicts.length, 0)
+      assert.deepEqual(applyImport(preview.plan), {
+        added: 1,
+        skipped: 0,
+        replaced: 0
+      })
+    })
+
+    it('does not replace a pin that changed after the preview', () => {
+      const preview = previewImport(conflictingFile())
+      // The pin changes between the preview and the user's confirmation
+      store('prod.example', 22, 'ssh-ed25519', VALID_KEY_2)
+      const summary = applyImport(preview.plan, { replaceConflicts: true })
+      assert.equal(summary.replaced, 0)
+      assert.equal(summary.skipped, 1)
+      assert.equal(
+        lookup('prod.example', 22, 'ssh-ed25519', VALID_KEY_2).status,
+        'trusted'
+      )
+    })
+
+    it('skips an addition that was pinned with another key after the preview', () => {
+      const preview = previewImport(conflictingFile())
+      store('new.example', 22, 'ssh-ed25519', VALID_KEY)
+      const summary = applyImport(preview.plan, { replaceConflicts: true })
+      assert.equal(summary.added, 0)
+      assert.equal(
+        lookup('new.example', 22, 'ssh-ed25519', VALID_KEY).status,
+        'trusted'
+      )
+    })
+
+    it('a failed preview imports nothing', () => {
+      const before = localStorage.getItem('webssh2.hostkeys')
+      const result = importKeys(
+        importFile({
+          'new.example:22': {
+            'ssh-ed25519': { key: VALID_KEY_2, addedAt: ADDED_AT }
+          },
+          'bad host:22': {
+            'ssh-ed25519': { key: VALID_KEY_2, addedAt: ADDED_AT }
+          }
+        })
+      )
+      assert.equal(result.success, false)
+      assert.equal(localStorage.getItem('webssh2.hostkeys'), before)
     })
   })
 
@@ -401,6 +787,19 @@ describe('host-key-store', () => {
       // Wrong version should reset to empty
       const all = getAll()
       assert.deepEqual(all, {})
+    })
+
+    it('ignores prototype property names already in localStorage', () => {
+      localStorage.setItem(
+        'webssh2.hostkeys',
+        `{"version":1,"keys":{"__proto__":{"ssh-ed25519":{"key":"${VALID_KEY}","addedAt":"${ADDED_AT}"}},"host.example:22":{"constructor":{"key":"${VALID_KEY}","addedAt":"${ADDED_AT}"},"ssh-rsa":{"key":"${VALID_KEY}","addedAt":"${ADDED_AT}"}}}}`
+      )
+      const all = getAll()
+      assert.deepEqual(Object.keys(all), ['host.example:22'])
+      assert.deepEqual(Object.keys(all['host.example:22']), ['ssh-rsa'])
+      store('host.example', 22, 'ssh-ed25519', VALID_KEY_2)
+      assertPrototypeClean()
+      assert.equal(Object.hasOwn(storedRaw().keys, '__proto__'), false)
     })
 
     it('handles missing keys field', () => {
