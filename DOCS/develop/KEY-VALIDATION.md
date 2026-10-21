@@ -268,35 +268,48 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
 ### 4. Add Validation to Credential Submission
 
-Update `client/src/js/utils.ts` in `getCredentials()`:
+The payload sent to the server is assembled in three steps:
+
+1. The `credentials` memo in
+   [`client/src/stores/config.ts`](../../client/src/stores/config.ts) gives
+   the base values. It reads `configWithUrlOverrides()`, which merges injected
+   config with URL parameters and drops credentials for auth methods the
+   server does not allow.
+2. The login form in
+   [`client/src/components/LoginModal.tsx`](../../client/src/components/LoginModal.tsx)
+   builds form data (`buildCredentialPayload()`). It includes a private key
+   only when `privateKeyValidation.isValid()` is true.
+3. `authenticate()` in
+   [`client/src/services/socket.ts`](../../client/src/services/socket.ts)
+   merges `credentials()` with the terminal dimensions and the form data,
+   passes the result through `sanitizeClientAuthPayload()`, and emits it.
+
+A key from the form is already validated in step 2. A key from injected
+config or the URL is not validated before it is sent. To cover every source,
+validate in `authenticate()` after the merge, with the `validatePrivateKey()`
+and `validatePrivateKeyDeep()` helpers from
+[`client/src/utils/index.ts`](../../client/src/utils/index.ts):
 
 ```typescript
-export function getCredentials(
-  formData: Record<string, unknown> | null = null,
-  terminalDimensions: { cols?: number; rows?: number } = {}
-): ClientAuthenticatePayload {
-  // ... existing code ...
+// client/src/services/socket.ts, in authenticate()
+import { validatePrivateKey, validatePrivateKeyDeep } from '../utils/index.js'
 
-  const privateKey = /* ... existing code ... */
+const authCredentials = sanitizeClientAuthPayload(mergedCredentials)
 
-  if (privateKey) {
-    // Validate before including in credentials
-    if (!validatePrivateKey(privateKey)) {
-      console.warn('Invalid private key format detected, excluding from credentials')
-      // Optionally: don't include the key, or throw an error
+const privateKey = authCredentials.privateKey ?? ''
+if (privateKey !== '') {
+  if (!validatePrivateKey(privateKey)) {
+    debug('Invalid private key format detected, excluding from credentials')
+    delete authCredentials.privateKey
+    delete authCredentials.passphrase
+  } else {
+    const deepValidation = validatePrivateKeyDeep(privateKey)
+    if (deepValidation === null) {
+      debug('Private key failed deep validation, may not work')
     } else {
-      const deepValidation = validatePrivateKeyDeep(privateKey)
-      if (!deepValidation) {
-        console.warn('Private key failed deep validation, may not work')
-      } else {
-        debug(`Private key validated as ${deepValidation.format} format`)
-      }
-      mergedConfig.privateKey = privateKey
+      debug(`Private key validated as ${deepValidation.format} format`)
     }
-    // ... passphrase handling ...
   }
-
-  // ... rest of function ...
 }
 ```
 
@@ -316,7 +329,7 @@ export function getCredentials(
 1. Create the `usePrivateKeyValidation` hook
 2. Add private key rules to `ValidationRules`
 3. Update `LoginModal` to use reactive validation
-4. Add validation logging to `getCredentials()`
+4. Add validation logging to `authenticate()` in `services/socket.ts`
 5. Test with various key formats and error cases
 6. Add unit tests for validation functions
 
