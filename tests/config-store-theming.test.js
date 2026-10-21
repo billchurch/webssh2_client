@@ -23,15 +23,28 @@ globalThis.document = dom.window.document
 const { config, initializeConfig } =
   await import('../client/src/stores/config.ts')
 
+// Write the gateway's JSON config block (or remove it when config is null)
+const setInjectedConfig = (value) => {
+  dom.window.document.getElementById('webssh2-config')?.remove()
+  if (value === null) {
+    return
+  }
+  const script = dom.window.document.createElement('script')
+  script.setAttribute('type', 'application/json')
+  script.setAttribute('id', 'webssh2-config')
+  script.textContent = JSON.stringify(value)
+  dom.window.document.head.appendChild(script)
+}
+
 describe('config-store theming wiring', () => {
   it('defaults to { enabled: false }', () => {
-    delete dom.window.webssh2Config
+    setInjectedConfig(null)
     initializeConfig()
     assert.deepStrictEqual(config().theming, { enabled: false })
   })
 
-  it('replaces (not merges) theming when window config sets it', () => {
-    dom.window.webssh2Config = {
+  it('replaces (not merges) theming when injected config sets it', () => {
+    setInjectedConfig({
       theming: {
         enabled: true,
         allowCustom: true,
@@ -40,7 +53,7 @@ describe('config-store theming wiring', () => {
         defaultTheme: 'Dracula',
         headerBackground: 'independent'
       }
-    }
+    })
     initializeConfig()
     assert.strictEqual(config().theming?.enabled, true)
     if (config().theming?.enabled === true) {
@@ -49,13 +62,13 @@ describe('config-store theming wiring', () => {
   })
 
   it('falls back to default on malformed enabled value', () => {
-    dom.window.webssh2Config = { theming: { enabled: 'maybe' } }
+    setInjectedConfig({ theming: { enabled: 'maybe' } })
     initializeConfig()
     assert.deepStrictEqual(config().theming, { enabled: false })
   })
 
   it('replaces (not merges) when transitioning from enabled to disabled', () => {
-    dom.window.webssh2Config = {
+    setInjectedConfig({
       theming: {
         enabled: true,
         allowCustom: true,
@@ -64,10 +77,10 @@ describe('config-store theming wiring', () => {
         defaultTheme: 'Dracula',
         headerBackground: 'independent'
       }
-    }
+    })
     initializeConfig()
     // Now switch to disabled
-    dom.window.webssh2Config = { theming: { enabled: false } }
+    setInjectedConfig({ theming: { enabled: false } })
     initializeConfig()
     // No stale fields should leak
     assert.deepStrictEqual(config().theming, { enabled: false })

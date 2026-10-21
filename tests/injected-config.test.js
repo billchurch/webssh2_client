@@ -1,12 +1,10 @@
 /**
  * Tests for the CSP-compatible runtime config reader.
  *
- * Runtime config is injected by the webssh2 gateway. The CSP-compatible
- * path is a `<script type="application/json" id="webssh2-config">` data
- * block; the legacy path is an inline script assigning
- * `window.webssh2Config`. The reader must prefer the JSON block and fall
- * back to the window global so the client keeps working with gateways
- * that still use the legacy placeholder.
+ * Runtime config is injected by the webssh2 gateway (>= 5.1.0) into a
+ * `<script type="application/json" id="webssh2-config">` data block. That
+ * block is the only source: the legacy `window.webssh2Config` global is no
+ * longer read, so a page without a usable block gets no injected config.
  */
 
 import { describe, it, beforeEach } from 'node:test'
@@ -53,48 +51,48 @@ describe('readInjectedConfig', () => {
     })
   })
 
-  it('prefers the JSON block over window.webssh2Config', () => {
+  it('ignores the legacy window.webssh2Config global', () => {
     setConfigBlock('{"ssh":{"port":2022}}')
     dom.window.webssh2Config = { ssh: { port: 22 } }
     assert.deepStrictEqual(readInjectedConfig(), { ssh: { port: 2022 } })
   })
 
-  it('falls back to window.webssh2Config when the block is absent', () => {
+  it('returns undefined when only window.webssh2Config is set', () => {
     dom.window.webssh2Config = { ssh: { port: 2222 } }
-    assert.deepStrictEqual(readInjectedConfig(), { ssh: { port: 2222 } })
+    assert.strictEqual(readInjectedConfig(), undefined)
   })
 
-  it('falls back when the block holds the unreplaced "null" placeholder', () => {
+  it('returns undefined when the block holds the unreplaced "null" placeholder', () => {
     setConfigBlock('null')
-    dom.window.webssh2Config = { autoConnect: true }
-    assert.deepStrictEqual(readInjectedConfig(), { autoConnect: true })
+    assert.strictEqual(readInjectedConfig(), undefined)
   })
 
-  it('falls back on malformed JSON', () => {
+  it('returns undefined for an empty block', () => {
+    setConfigBlock('   ')
+    assert.strictEqual(readInjectedConfig(), undefined)
+  })
+
+  it('returns undefined on malformed JSON', () => {
     setConfigBlock('{not json!')
-    dom.window.webssh2Config = { logLevel: 'debug' }
-    assert.deepStrictEqual(readInjectedConfig(), { logLevel: 'debug' })
+    assert.strictEqual(readInjectedConfig(), undefined)
   })
 
-  it('falls back when the block parses to a non-object', () => {
+  it('returns undefined when the block parses to a non-object', () => {
     setConfigBlock('"just a string"')
-    dom.window.webssh2Config = { logLevel: 'info' }
-    assert.deepStrictEqual(readInjectedConfig(), { logLevel: 'info' })
+    assert.strictEqual(readInjectedConfig(), undefined)
   })
 
-  it('falls back when the block parses to an array', () => {
+  it('returns undefined when the block parses to an array', () => {
     setConfigBlock('[1,2,3]')
-    dom.window.webssh2Config = { logLevel: 'info' }
-    assert.deepStrictEqual(readInjectedConfig(), { logLevel: 'info' })
+    assert.strictEqual(readInjectedConfig(), undefined)
   })
 
   it('ignores an element whose type is not application/json', () => {
     setConfigBlock('{"ssh":{"port":2022}}', { type: 'text/plain' })
-    dom.window.webssh2Config = { ssh: { port: 22 } }
-    assert.deepStrictEqual(readInjectedConfig(), { ssh: { port: 22 } })
+    assert.strictEqual(readInjectedConfig(), undefined)
   })
 
-  it('returns undefined when neither source is present', () => {
+  it('returns undefined when no block is present', () => {
     assert.strictEqual(readInjectedConfig(), undefined)
   })
 
