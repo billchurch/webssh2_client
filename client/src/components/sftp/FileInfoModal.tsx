@@ -41,6 +41,13 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
   // Display only; operations use the full entry
   const displayName = () =>
     props.entry ? formatDisplayName(props.entry.name) : ''
+  // Path with its last segment cut like the name; the full path is in title
+  const displayPath = () => {
+    const entry = props.entry
+    if (!entry) return ''
+    if (!entry.path.endsWith(entry.name)) return entry.path
+    return `${entry.path.slice(0, entry.path.length - entry.name.length)}${displayName()}`
+  }
 
   const formatDate = (isoString: string): string => {
     const date = new Date(isoString)
@@ -122,7 +129,12 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
               >
                 {displayName()}
               </p>
-              <p class="text-sm text-neutral-400">{props.entry?.path}</p>
+              <p
+                class="truncate text-sm text-neutral-400"
+                title={props.entry?.path}
+              >
+                {displayPath()}
+              </p>
             </div>
           </div>
 

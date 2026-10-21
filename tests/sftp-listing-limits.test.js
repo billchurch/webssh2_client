@@ -228,10 +228,18 @@ describe('listing cap and display (issue #167)', () => {
       /title=\{props\.transfer\.fileName\}\s*>\s*\{formatDisplayName\(props\.transfer\.fileName\)\}/
     )
 
-    // No raw name is rendered as text content anywhere in these components
+    assert.match(
+      modalSource,
+      /title=\{props\.entry\?\.path\}\s*>\s*\{displayPath\(\)\}/
+    )
+
+    // No raw name or path is rendered as text or interpolated into a
+    // label (aria-label, confirm text) anywhere in these components
     for (const source of [entrySource, modalSource, transferSource]) {
-      assert.doesNotMatch(source, />\s*\{props\.entry\??\.name\}\s*</)
+      assert.doesNotMatch(source, />\s*\{props\.entry\??\.(name|path)\}\s*</)
       assert.doesNotMatch(source, />\s*\{props\.transfer\.fileName\}\s*</)
+      assert.doesNotMatch(source, /\$\{props\.entry\??\.name\}/)
+      assert.doesNotMatch(source, /\$\{props\.transfer\.fileName\}/)
     }
   })
 })
