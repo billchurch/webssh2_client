@@ -13,7 +13,8 @@ import type { ClientTransfer, TransferId } from '../../types/sftp.js'
 import {
   formatFileSize,
   formatTransferSpeed,
-  formatTimeRemaining
+  formatTimeRemaining,
+  formatDisplayName
 } from '../../types/sftp.js'
 
 interface TransferProgressProps {
@@ -89,7 +90,7 @@ export const TransferProgress: Component<TransferProgressProps> = (props) => {
           class="flex-1 truncate text-sm text-neutral-200"
           title={props.transfer.fileName}
         >
-          {props.transfer.fileName}
+          {formatDisplayName(props.transfer.fileName)}
         </span>
 
         {/* Cancel button (only for active/pending transfers) */}

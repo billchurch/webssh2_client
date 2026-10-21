@@ -7,6 +7,7 @@
 - [Private Key Authentication](#private-key-authentication)
 - [Reauth and Credential Replay](#reauth-and-credential-replay)
 - [Keyboard-Interactive Authentication](#keyboard-interactive-authentication)
+- [SFTP File Browser](#sftp-file-browser)
 - [Security Features](#security-features)
 
 ## Terminal Configuration
@@ -130,6 +131,15 @@ WebSSH2 Client supports keyboard-interactive authentication, which allows for mo
 3. Users can enter their response in the provided input field.
 4. After submitting the response, the client sends it back to the SSH server.
 5. This process may repeat multiple times if the SSH server requires additional information.
+
+## SFTP File Browser
+
+When the server enables SFTP, the file browser panel lists, uploads, downloads and deletes files on the remote host.
+
+### Listing Limits
+
+- A directory listing keeps at most **10,000** entries. When the server sends more, the client keeps the first 10,000 and shows "Showing first 10,000 entries" in the file browser banner. Use a shell in the terminal to work with the rest of a very large directory.
+- A file name is shown cut to at most **255** characters, ending in "…". Hover over the name to see it in full. Download, delete and other operations always use the full name.
 
 ## Security Features
 
