@@ -36,7 +36,8 @@ import {
   type SftpErrorResponse,
   type ClientTransfer,
   type UploadOptions,
-  type DownloadOptions
+  type DownloadOptions,
+  MAX_LISTING_ENTRIES
 } from '../types/sftp.js'
 
 const debug = createDebug('webssh2-client:sftp-service')
@@ -712,8 +713,10 @@ const progressCallbacks = new Map<
 export interface ListDirectoryResult {
   /** The resolved path (e.g., ~ becomes /home/user) */
   path: string
-  /** Directory entries */
+  /** Directory entries, at most MAX_LISTING_ENTRIES */
   entries: SftpFileEntry[]
+  /** True when the server sent more than MAX_LISTING_ENTRIES entries */
+  truncated: boolean
 }
 
 /**
@@ -745,9 +748,12 @@ export async function listDirectory(
 
   // Return both the resolved path and entries
   // This is important because the server resolves ~ to an absolute path
+  // Keep at most MAX_LISTING_ENTRIES so a huge directory cannot stall the UI
+  const truncated = response.entries.length > MAX_LISTING_ENTRIES
   return {
     path: response.path,
-    entries: [...response.entries]
+    entries: response.entries.slice(0, MAX_LISTING_ENTRIES),
+    truncated
   }
 }
 
