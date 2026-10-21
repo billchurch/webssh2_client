@@ -147,13 +147,55 @@ export const [urlParams, setUrlParams] = createSignal<URLSearchParams>(
   new URLSearchParams()
 )
 
+// Credentials accepted as URL parameters. They are read once, kept in
+// memory and removed from the address bar so they do not linger in
+// history or leak through Referer headers.
+const URL_CREDENTIAL_PARAMS = ['password', 'privateKey', 'passphrase'] as const
+
+let retainedUrlCredentials = new URLSearchParams()
+
+// Current URL parameters plus any credentials scrubbed from the address bar
+const readUrlParams = (): URLSearchParams => {
+  const params = new URLSearchParams(window.location.search)
+  for (const [key, value] of retainedUrlCredentials.entries()) {
+    if (!params.has(key)) {
+      params.set(key, value)
+    }
+  }
+  return params
+}
+
+// Remove credential parameters from the address bar, keeping their values
+// in memory for configWithUrlOverrides()
+export function scrubUrlCredentials(): void {
+  const url = new URL(window.location.href)
+  let scrubbed = false
+  for (const key of URL_CREDENTIAL_PARAMS) {
+    const value = url.searchParams.get(key)
+    if (value !== null) {
+      retainedUrlCredentials.set(key, value)
+      url.searchParams.delete(key)
+      scrubbed = true
+    }
+  }
+  if (scrubbed) {
+    window.history.replaceState(window.history.state, '', url.toString())
+    debug('Removed credential parameters from the address bar')
+  }
+}
+
+// Test helper: forget credentials retained from a previous URL
+export function resetRetainedUrlCredentials(): void {
+  retainedUrlCredentials = new URLSearchParams()
+}
+
 // Initialize URL parameters reactively
 export function initializeUrlParams() {
-  setUrlParams(new URLSearchParams(window.location.search))
+  setUrlParams(readUrlParams())
 
   // Listen for URL changes
   const handleUrlChange = () => {
-    setUrlParams(new URLSearchParams(window.location.search))
+    setUrlParams(readUrlParams())
   }
 
   window.addEventListener('popstate', handleUrlChange)
@@ -338,6 +380,9 @@ export function initializeConfig() {
 
   setConfig(sanitizedConfig)
   debug('Config initialized:', sanitizedConfig)
+
+  scrubUrlCredentials()
+  setUrlParams(readUrlParams())
 
   return configWithUrlOverrides()
 }

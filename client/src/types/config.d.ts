@@ -68,6 +68,8 @@ export interface WebSocketConfig {
   path: string
   /** Gateway-forced Socket.IO transport order (#131); omitted = client default */
   transports?: string[]
+  /** Extra hosts (host[:port]) socket.url may point at besides the page host */
+  allowedHosts?: string[]
 }
 
 export interface SSHConfigInput {

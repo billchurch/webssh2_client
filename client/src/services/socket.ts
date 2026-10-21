@@ -96,6 +96,66 @@ export const [terminalDimensions, setTerminalDimensions] = createSignal<{
   rows: number
 }>({ cols: DEFAULT_TERMINAL_COLS, rows: DEFAULT_TERMINAL_ROWS })
 
+const SOCKET_URL_SCHEMES = new Set(['http:', 'https:', 'ws:', 'wss:'])
+
+// Resolve the Socket.IO endpoint. An injected socket.url is honored only
+// when it is a plain http(s)/ws(s) URL whose host matches the page host or
+// the injected allowedHosts list; anything else falls back to the
+// same-origin URL. Only scheme and host are returned, rebuilt from the
+// checked values, so Socket.IO cannot parse a different destination out
+// of the path, userinfo or a custom scheme.
+export function getWebSocketUrl(
+  socketConfig: Partial<WebSSH2Config['socket']> | null | undefined,
+  location: Pick<
+    Location,
+    'protocol' | 'host' | 'hostname' | 'port'
+  > = window.location
+): string {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const configuredUrl = socketConfig?.url
+  if (configuredUrl != null && configuredUrl !== '') {
+    let url: URL | null = null
+    try {
+      url = new URL(configuredUrl)
+    } catch {
+      console.warn('Ignoring invalid socket.url; using same-origin socket')
+    }
+    if (url !== null) {
+      if (
+        !SOCKET_URL_SCHEMES.has(url.protocol) ||
+        url.host === '' ||
+        url.username !== '' ||
+        url.password !== ''
+      ) {
+        console.warn(
+          'Ignoring socket.url: only http(s)/ws(s) URLs without credentials are allowed; using same-origin socket'
+        )
+      } else {
+        const allowedHosts = Array.isArray(socketConfig?.allowedHosts)
+          ? socketConfig.allowedHosts
+          : []
+        const configuredHost = url.host.toLowerCase()
+        const hostAllowed =
+          configuredHost === location.host.toLowerCase() ||
+          allowedHosts.some(
+            (allowed) =>
+              typeof allowed === 'string' &&
+              allowed.toLowerCase() === configuredHost
+          )
+        if (hostAllowed) {
+          return `${protocol}//${url.host}`
+        }
+        console.warn(
+          `Ignoring socket.url host "${url.host}": it does not match the page host "${location.host}"; using same-origin socket`
+        )
+      }
+    }
+  }
+  const host = location.hostname
+  const port = location.port || (protocol === 'wss:' ? '443' : '80')
+  return `${protocol}//${host}:${port}`
+}
+
 // Socket Service Class
 export class SocketService {
   private cleanupFunctions: Array<() => void> = []
@@ -190,13 +250,6 @@ export class SocketService {
     const socketPath = this.getSocketIOPath()
     debug('Socket connection details', { url: socketUrl, path: socketPath })
 
-    // Pass URL parameters as query to server
-    const urlParams = new URLSearchParams(window.location.search)
-    const query: Record<string, string> = {}
-    for (const [key, value] of urlParams.entries()) {
-      query[key] = value
-    }
-
     const transports = resolveTransports(
       readInjectedConfig()?.socket?.transports
     )
@@ -206,8 +259,7 @@ export class SocketService {
       withCredentials: true,
       reconnection: false,
       timeout: 20000,
-      transports,
-      query
+      transports
     }) as Socket<ServerToClientEvents, ClientToServerEvents>
 
     setSocket(newSocket)
@@ -321,16 +373,7 @@ export class SocketService {
   }
 
   private getWebSocketUrl(): string {
-    const configuredUrl = config?.socket?.url
-    if (configuredUrl != null && configuredUrl !== '') {
-      const url = new URL(configuredUrl)
-      url.protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      return url.toString()
-    }
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.hostname
-    const port = window.location.port || (protocol === 'wss:' ? '443' : '80')
-    return `${protocol}//${host}:${port}`
+    return getWebSocketUrl(config?.socket)
   }
 
   private authenticate(
