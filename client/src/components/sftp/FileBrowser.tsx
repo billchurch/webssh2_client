@@ -140,6 +140,17 @@ export const FileBrowser: Component<FileBrowserProps> = (props) => {
           </div>
         </Show>
 
+        {/* Notice banner (e.g. listing cut at MAX_LISTING_ENTRIES) */}
+        <Show when={sftpStore.notice}>
+          <div
+            class="flex items-center bg-amber-900/50 px-2 py-1 text-sm text-amber-200"
+            role="status"
+            aria-live="polite"
+          >
+            <span>{sftpStore.notice}</span>
+          </div>
+        </Show>
+
         {/* File list - min-h-0 and flex-1 required for proper scrolling in flex container */}
         <UploadDropzone onDrop={handleDrop} disabled={sftpStore.loading}>
           <section

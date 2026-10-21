@@ -8,7 +8,7 @@
  */
 
 import { createStore } from 'solid-js/store'
-import { createSignal, createRoot } from 'solid-js'
+import { createSignal, createRoot, createMemo } from 'solid-js'
 import createDebug from 'debug'
 
 import {
@@ -23,7 +23,8 @@ import {
   type TransferId,
   type SftpProgressResponse,
   type SftpStatusResponse,
-  type SftpServerConfig
+  type SftpServerConfig,
+  MAX_LISTING_ENTRIES
 } from '../types/sftp.js'
 
 const debug = createDebug('webssh2-client:sftp-store')
@@ -49,6 +50,8 @@ export interface SftpState {
   currentPath: string
   /** Directory entries */
   entries: SftpFileEntry[]
+  /** Whether the server sent more than MAX_LISTING_ENTRIES entries */
+  listingTruncated: boolean
   /** Whether currently loading */
   loading: boolean
   /** Error message if any */
@@ -71,6 +74,7 @@ const initialState: SftpState = {
   serverConfig: null,
   currentPath: '~',
   entries: [],
+  listingTruncated: false,
   loading: false,
   error: null,
   transfers: [],
@@ -91,8 +95,8 @@ const initialState: SftpState = {
 function createSftpStoreInternal() {
   const [state, setState] = createStore<SftpState>({ ...initialState })
 
-  // Sorted entries computed from state
-  const getSortedEntries = (): SftpFileEntry[] => {
+  // Sorted entries, recomputed only when entries or sort settings change
+  const sortedEntries = createMemo((): SftpFileEntry[] => {
     const entries = [...state.entries]
 
     // Filter hidden if needed
@@ -130,7 +134,7 @@ function createSftpStoreInternal() {
     })
 
     return filtered
-  }
+  })
 
   // Active transfers
   const getActiveTransfers = (): ClientTransfer[] => {
@@ -158,7 +162,16 @@ function createSftpStoreInternal() {
       return state.currentPath
     },
     get entries() {
-      return getSortedEntries()
+      return sortedEntries()
+    },
+    get listingTruncated() {
+      return state.listingTruncated
+    },
+    /** Non-error notice for the file browser banner, if any */
+    get notice(): string | null {
+      return state.listingTruncated
+        ? `Showing first ${MAX_LISTING_ENTRIES.toLocaleString('en-US')} entries`
+        : null
     },
     get rawEntries() {
       return state.entries
@@ -235,6 +248,7 @@ function createSftpStoreInternal() {
         setState({
           currentPath: result.path,
           entries: result.entries,
+          listingTruncated: result.truncated,
           loading: false,
           selectedPaths: []
         })
