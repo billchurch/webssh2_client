@@ -13,7 +13,8 @@ import type { ClientTransfer, TransferId } from '../../types/sftp.js'
 import {
   formatFileSize,
   formatTransferSpeed,
-  formatTimeRemaining
+  formatTimeRemaining,
+  formatDisplayName
 } from '../../types/sftp.js'
 
 interface TransferProgressProps {
@@ -71,7 +72,7 @@ export const TransferProgress: Component<TransferProgressProps> = (props) => {
     <div
       class="rounded-sm border border-neutral-700 bg-neutral-800 p-2"
       role="listitem"
-      aria-label={`${props.transfer.direction === 'upload' ? 'Uploading' : 'Downloading'} ${props.transfer.fileName}, ${props.transfer.percentComplete}% complete`}
+      aria-label={`${props.transfer.direction === 'upload' ? 'Uploading' : 'Downloading'} ${formatDisplayName(props.transfer.fileName)}, ${props.transfer.percentComplete}% complete`}
     >
       <div class="mb-1 flex items-center gap-2">
         {/* Direction icon */}
@@ -89,7 +90,7 @@ export const TransferProgress: Component<TransferProgressProps> = (props) => {
           class="flex-1 truncate text-sm text-neutral-200"
           title={props.transfer.fileName}
         >
-          {props.transfer.fileName}
+          {formatDisplayName(props.transfer.fileName)}
         </span>
 
         {/* Cancel button (only for active/pending transfers) */}
@@ -104,7 +105,7 @@ export const TransferProgress: Component<TransferProgressProps> = (props) => {
             class="rounded-sm p-1 text-neutral-400 hover:bg-neutral-600 hover:text-white"
             onClick={() => props.onCancel?.(props.transfer.id)}
             title="Cancel"
-            aria-label={`Cancel ${props.transfer.direction} of ${props.transfer.fileName}`}
+            aria-label={`Cancel ${props.transfer.direction} of ${formatDisplayName(props.transfer.fileName)}`}
           >
             <X class="size-4" aria-hidden="true" />
           </button>
