@@ -1,10 +1,11 @@
 import type { Component } from 'solid-js'
-import { createSignal, createEffect, createMemo, For, Show } from 'solid-js'
+import { createSignal, createEffect, createMemo, on, For, Show } from 'solid-js'
 import createDebug from 'debug'
 import { Modal } from './Modal'
 import { Key, Settings, Upload, Info, Lock } from 'lucide-solid'
 import { usePrivateKeyValidation } from '../hooks/usePrivateKeyValidation'
 import { createFieldValidator, ValidationRules } from '../utils/validation'
+import { clearSecretFields } from '../utils/login-form'
 import type { ClientAuthenticatePayload } from '../types/events.d'
 import type { SSHAuthMethod, ConnectionMode } from '../types/config.d'
 import { DEFAULT_AUTH_METHODS } from '../constants.js'
@@ -99,6 +100,22 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
       return prev
     })
   })
+
+  // Forget the password, private key and passphrase whenever the modal
+  // closes (submit, cancel or a successful login), so the typed secrets
+  // do not stay in this signal for the life of the page
+  createEffect(
+    on(
+      () => props.isOpen,
+      (isOpen) => {
+        if (!isOpen) {
+          debug('Clearing secret fields on close')
+          setFormData(clearSecretFields)
+        }
+      },
+      { defer: true }
+    )
+  )
 
   // Auto-focus on the first empty field when modal opens
   createEffect(() => {

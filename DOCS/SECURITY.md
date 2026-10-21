@@ -41,6 +41,38 @@ The client is kept compatible with a strict policy:
 - URL-parameter config merging and URL-triggered auto-connect are handled only in [`client/src/stores/config.ts`](../client/src/stores/config.ts) (`configWithUrlOverrides()`). URL parameters turn auto-connect on only when they give `host` and also a password or private key for an auth method the server allows. If the injected server config already sets `autoConnect: true`, that setting still applies when the URL gives only `host`, or gives credentials for a method the server does not allow.
 - No debugging globals: The client exposes no debugging globals (such as the Socket.IO socket or the terminal manager) on `window`/`globalThis` in production builds.
 
+## Credential Handling
+
+The login payload (`password`, `privateKey`, `passphrase`) lives in two
+places in browser memory: the socket service's stored form data
+([`client/src/services/socket.ts`](../client/src/services/socket.ts)) and
+the LoginModal form signal. The client clears them as follows:
+
+| Event                                                | Socket service payload               | LoginModal secret fields |
+| ---------------------------------------------------- | ------------------------------------ | ------------------------ |
+| Login modal closes (submit or cancel)                | Kept for the login attempt           | Cleared                  |
+| Successful `auth_result`, reconnect not allowed      | Cleared                              | Already cleared          |
+| Successful `auth_result`, `allowReconnect` is true   | Kept, so Reconnect can log in again  | Already cleared          |
+| `auth_result` failure (`auth_failed`)                | Cleared; a retry sends a new payload | Already cleared          |
+| Server disconnect, reconnect not allowed             | Cleared                              | Already cleared          |
+| Server disconnect, `allowReconnect` is true          | Kept for Reconnect                   | Already cleared          |
+| `closeConnection()` (page unload, prompt disconnect) | Cleared                              | Already cleared          |
+
+- The server sends `allowReconnect` in the `permissions` event that follows
+  a successful `auth_result`. The client decides whether to keep the payload
+  only after it has both. If a later `permissions` event turns reconnect off,
+  the client clears the payload at that time.
+- Reconnect never keeps credentials for Basic Auth sessions, because those
+  sessions have no Reconnect button.
+- Credential replay (`allowReplay`) does not need a client copy: the server
+  replays its own session credentials.
+- Host, port and username stay in the login form so a retry needs only the
+  secret again.
+
+JavaScript strings cannot be wiped in place. Clearing drops the client's
+references so the garbage collector can free them; it does not overwrite
+memory.
+
 ## Build/Tooling Safeguards
 
 - TypeScript strict mode with no `any` policy; unknown/narrowing used for untrusted data.
