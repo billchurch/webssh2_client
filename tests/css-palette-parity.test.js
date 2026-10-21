@@ -19,6 +19,19 @@ const srcDir = path.resolve(
 const appCss = fs.readFileSync(path.join(srcDir, 'app.css'), 'utf8')
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.htm', '.html']
+const SHADES = [
+  '50',
+  '100',
+  '200',
+  '300',
+  '400',
+  '500',
+  '600',
+  '700',
+  '800',
+  '900',
+  '950'
+]
 const PALETTE =
   'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
 // Any <utility>-<palette>-<shade> (bg-, border-t-, ring-offset-, ...). The
@@ -52,6 +65,27 @@ describe('CSS palette parity guard', () => {
   it('pins palette colors to v3 hex values in app.css', () => {
     assert.match(appCss, /@theme\s*{/)
     assert.ok(pinned.size > 0, 'no --color-<name>-<shade>: #hex entries')
+  })
+
+  it('pins the full v3 palette, so code merged later keeps v3 colors', () => {
+    const missing = PALETTE.split('|').flatMap((name) =>
+      SHADES.map((shade) => `${name}-${shade}`).filter(
+        (color) => !pinned.has(color)
+      )
+    )
+    assert.deepStrictEqual(missing, [])
+  })
+
+  it('keeps v3 values for spot-checked colors', () => {
+    for (const [color, hex] of [
+      ['amber-200', '#fde68a'],
+      ['blue-600', '#2563eb'],
+      ['gray-500', '#6b7280'],
+      ['rose-950', '#4c0519'],
+      ['slate-50', '#f8fafc']
+    ]) {
+      assert.match(appCss, new RegExp(`--color-${color}:\\s*${hex};`))
+    }
   })
 
   it('pins every palette color used in client sources', () => {
