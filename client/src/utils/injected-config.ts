@@ -7,10 +7,8 @@
 //   <script type="application/json" id="webssh2-config">{...}</script>
 //
 // which is inert (never executed), so it survives a strict
-// `script-src 'self'` policy. Gateways that predate the data block still
-// replace the legacy inline `window.webssh2Config = null;` script, so the
-// reader falls back to the window global when the block is absent or
-// still holds its `null` placeholder.
+// `script-src 'self'` policy. It is the only supported injection point, so
+// the client requires a gateway that writes it (webssh2 server >= 5.1.0).
 
 import type { WebSSH2Config } from '../types/config.d'
 
@@ -20,7 +18,13 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function readConfigBlock(): Partial<WebSSH2Config> | undefined {
+/**
+ * Read the gateway-injected runtime config from the
+ * `<script type="application/json" id="webssh2-config">` data block.
+ * Returns `undefined` when the block is absent, still holds its `null`
+ * placeholder, or does not contain a JSON object.
+ */
+export function readInjectedConfig(): Partial<WebSSH2Config> | undefined {
   const element = document.getElementById(CONFIG_BLOCK_ID)
   if (element === null) {
     return undefined
@@ -41,22 +45,4 @@ function readConfigBlock(): Partial<WebSSH2Config> | undefined {
     console.warn('webssh2-config block contains invalid JSON; ignoring it')
   }
   return undefined
-}
-
-/**
- * Read the gateway-injected runtime config.
- *
- * Prefers the `<script type="application/json" id="webssh2-config">` data
- * block; falls back to the legacy `window.webssh2Config` global. Returns
- * `undefined` when neither source provides a config object.
- */
-export function readInjectedConfig(): Partial<WebSSH2Config> | undefined {
-  const fromBlock = readConfigBlock()
-  if (fromBlock !== undefined) {
-    return fromBlock
-  }
-  const fromWindow: unknown = window.webssh2Config
-  return isPlainObject(fromWindow)
-    ? (fromWindow as Partial<WebSSH2Config>)
-    : undefined
 }
