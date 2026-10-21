@@ -724,10 +724,3 @@ export class SolidTerminalManager {
 
 // Export singleton instance for compatibility
 export const terminalManager = new SolidTerminalManager()
-
-// Expose terminal manager globally for testing
-if (globalThis.window !== undefined) {
-  ;(
-    globalThis as unknown as { terminalManager?: SolidTerminalManager }
-  ).terminalManager = terminalManager
-}

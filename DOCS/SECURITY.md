@@ -38,6 +38,7 @@ The client is kept compatible with a strict policy:
 - Safe DOM APIs: All dynamic UI text uses `textContent`. Icons are sourced from trusted `lucide-static` SVGs only.
 - Event handlers: No inline JavaScript event attributes are used in HTML; handlers are attached via JS.
 - URL parameters: Inputs from URL are validated and sanitized before use.
+- No debugging globals: The client exposes no debugging globals (such as the Socket.IO socket or the terminal manager) on `window`/`globalThis` in production builds.
 
 ## Build/Tooling Safeguards
 
