@@ -403,17 +403,17 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
       showCloseButton={false}
       closeOnBackdropClick={false}
     >
-      <div class="relative w-80 rounded-md border border-neutral-300 bg-white p-6 text-slate-800 shadow-md sm:w-[36rem]">
+      <div class="relative w-80 rounded-md border border-neutral-300 bg-white p-6 text-slate-800 shadow-md sm:w-xl">
         <h2 class="mb-4 text-lg font-semibold text-slate-900">
           Terminal Settings
         </h2>
         <form onSubmit={handleSubmit} class="space-y-4">
-          <fieldset class="grid grid-cols-1 items-center gap-x-4 gap-y-3 sm:grid-cols-[auto,1fr]">
+          <fieldset class="grid grid-cols-1 items-center gap-x-4 gap-y-3 sm:grid-cols-[auto_1fr]">
             <legend class="sr-only">Terminal Options</legend>
 
             {/* Font Size */}
             <label class="contents">
-              <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+              <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                 Font Size
               </span>
               <input
@@ -422,7 +422,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 min="8"
                 max="72"
                 required
-                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 value={settings().fontSize}
                 onInput={(e) =>
                   updateSetting(
@@ -436,14 +436,14 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
             {/* Font Family */}
             <label class="contents">
-              <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+              <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                 Font Family
               </span>
               <input
                 type="text"
                 name="fontFamily"
                 required
-                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 value={settings().fontFamily}
                 onInput={(e) =>
                   updateSetting('fontFamily', e.currentTarget.value)
@@ -453,12 +453,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
             {/* Cursor Blink */}
             <label class="contents">
-              <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+              <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                 Cursor Blink
               </span>
               <select
                 name="cursorBlink"
-                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 value={settings().cursorBlink ? 'true' : 'false'}
                 onChange={(e) =>
                   updateSetting('cursorBlink', e.currentTarget.value === 'true')
@@ -471,7 +471,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
             {/* Scrollback */}
             <label class="contents">
-              <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+              <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                 Scrollback
               </span>
               <input
@@ -480,7 +480,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 min="1"
                 max="200000"
                 required
-                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 value={settings().scrollback}
                 onInput={(e) =>
                   updateSetting(
@@ -494,7 +494,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
             {/* Tab Stop Width */}
             <label class="contents">
-              <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+              <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                 Tab Stop Width
               </span>
               <input
@@ -503,7 +503,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                 min="1"
                 max="100"
                 required
-                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 value={settings().tabStopWidth}
                 onInput={(e) =>
                   updateSetting(
@@ -517,12 +517,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
             {/* Bell Style */}
             <label class="contents">
-              <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+              <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                 Bell Style
               </span>
               <select
                 name="bellStyle"
-                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 value={settings().bellStyle}
                 onChange={(e) =>
                   updateSetting(
@@ -538,10 +538,10 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
             {/* Terminal Theme Section - gated on server theming.enabled */}
             <Show when={clientConfig().theming?.enabled === true}>
-              <div class="col-span-full mb-2 mt-4 border-t pt-2">
+              <div class="col-span-full mt-4 mb-2 border-t pt-2">
                 <button
                   type="button"
-                  class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden"
                   onClick={() => setThemeExpanded(!themeExpanded())}
                   aria-expanded={themeExpanded()}
                 >
@@ -562,12 +562,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
               <Show when={themeExpanded()}>
                 {/* Theme Picker */}
                 <label class="contents">
-                  <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                  <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                     Theme
                   </span>
                   <select
                     name="themeName"
-                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     value={settings().themeName}
                     onChange={(e) => {
                       // Local state only — never live-apply.
@@ -614,7 +614,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   }
                 >
                   <label class="contents">
-                    <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                    <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                       Custom JSON
                     </span>
                     <div class="flex flex-col gap-1">
@@ -622,7 +622,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                         name="customThemeJson"
                         rows={6}
                         placeholder='{"background":"#1a1b26","foreground":"#c0caf5"}'
-                        class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                         value={settings().customThemeJson}
                         onInput={(e) => {
                           // Local state only — never live-apply.
@@ -653,10 +653,10 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
             </Show>
 
             {/* Clipboard Settings Section Header */}
-            <div class="col-span-full mb-2 mt-4 border-t pt-2">
+            <div class="col-span-full mt-4 mb-2 border-t pt-2">
               <button
                 type="button"
-                class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden"
                 onClick={() => setClipboardExpanded(!clipboardExpanded())}
                 aria-expanded={clipboardExpanded()}
               >
@@ -672,12 +672,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
             <Show when={clipboardExpanded()}>
               {/* Auto-copy Selection */}
               <label class="contents">
-                <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                   Auto-copy Selection
                 </span>
                 <select
                   name="clipboardAutoSelectToCopy"
-                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   value={
                     settings().clipboardAutoSelectToCopy ? 'true' : 'false'
                   }
@@ -695,12 +695,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
               {/* Middle-click Paste */}
               <label class="contents">
-                <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                   Middle-click Paste
                 </span>
                 <select
                   name="clipboardEnableMiddleClickPaste"
-                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   value={
                     settings().clipboardEnableMiddleClickPaste
                       ? 'true'
@@ -720,12 +720,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
               {/* Keyboard Shortcuts */}
               <label class="contents">
-                <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                   Keyboard Shortcuts
                 </span>
                 <select
                   name="clipboardEnableKeyboardShortcuts"
-                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   value={
                     settings().clipboardEnableKeyboardShortcuts
                       ? 'true'
@@ -746,10 +746,10 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
             </Show>
 
             {/* Keyboard Capture Settings Section Header */}
-            <div class="col-span-full mb-2 mt-4 border-t pt-2">
+            <div class="col-span-full mt-4 mb-2 border-t pt-2">
               <button
                 type="button"
-                class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden"
                 onClick={() => setKeyboardExpanded(!keyboardExpanded())}
                 aria-expanded={keyboardExpanded()}
               >
@@ -771,12 +771,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
             <Show when={keyboardExpanded()}>
               {/* Capture Escape */}
               <label class="contents">
-                <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                   Capture Escape
                 </span>
                 <select
                   name="keyboardCaptureEscape"
-                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   value={
                     settings().keyboardCapture.captureEscape ? 'true' : 'false'
                   }
@@ -795,12 +795,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
               {/* Shift+Enter newline (billchurch/webssh2#497) */}
               <label class="contents">
-                <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                   Shift+Enter Newline
                 </span>
                 <select
                   name="shiftEnterNewline"
-                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   value={settings().shiftEnterNewline ? 'true' : 'false'}
                   onChange={(e) =>
                     updateSetting(
@@ -817,12 +817,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
               {/* Capture Ctrl+B */}
               <label class="contents">
-                <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                   Capture Ctrl+B
                 </span>
                 <select
                   name="keyboardCaptureCtrlB"
-                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   value={
                     settings().keyboardCapture.captureCtrlB ? 'true' : 'false'
                   }
@@ -841,14 +841,14 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
               {/* Custom Capture Keys */}
               <label class="contents">
-                <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                   Custom Keys
                 </span>
                 <input
                   type="text"
                   name="keyboardCaptureCustomKeys"
                   placeholder="e.g., F11, Ctrl+T, Alt+D"
-                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   value={settings().keyboardCapture.customCaptureKeys.join(
                     ', '
                   )}
@@ -869,10 +869,10 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
             </Show>
 
             {/* Prompt Sounds Settings Section Header */}
-            <div class="col-span-full mb-2 mt-4 border-t pt-2">
+            <div class="col-span-full mt-4 mb-2 border-t pt-2">
               <button
                 type="button"
-                class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden"
                 onClick={() => setSoundsExpanded(!soundsExpanded())}
                 aria-expanded={soundsExpanded()}
               >
@@ -893,12 +893,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
             <Show when={soundsExpanded()}>
               {/* Enable Sounds */}
               <label class="contents">
-                <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                   Enable Sounds
                 </span>
                 <select
                   name="promptSoundsEnabled"
-                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   value={settings().promptSounds.enabled ? 'true' : 'false'}
                   onChange={(e) => {
                     const enabled = e.currentTarget.value === 'true'
@@ -923,12 +923,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
                 {/* Info Toggle */}
                 <label class="contents">
-                  <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                  <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                     Info
                   </span>
                   <div class="flex items-center gap-2">
                     <select
-                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                       value={
                         settings().promptSounds.severities.info
                           ? 'true'
@@ -949,7 +949,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                     </select>
                     <button
                       type="button"
-                      class="shrink-0 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                      class="shrink-0 rounded-sm px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
                       onClick={() => playPromptSound('info', true)}
                       title="Test info sound"
                     >
@@ -960,12 +960,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
                 {/* Warning Toggle */}
                 <label class="contents">
-                  <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                  <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                     Warning
                   </span>
                   <div class="flex items-center gap-2">
                     <select
-                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                       value={
                         settings().promptSounds.severities.warning
                           ? 'true'
@@ -986,7 +986,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                     </select>
                     <button
                       type="button"
-                      class="shrink-0 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                      class="shrink-0 rounded-sm px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
                       onClick={() => playPromptSound('warning', true)}
                       title="Test warning sound"
                     >
@@ -997,12 +997,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
                 {/* Error Toggle */}
                 <label class="contents">
-                  <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                  <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                     Error
                   </span>
                   <div class="flex items-center gap-2">
                     <select
-                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                       value={
                         settings().promptSounds.severities.error
                           ? 'true'
@@ -1023,7 +1023,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                     </select>
                     <button
                       type="button"
-                      class="shrink-0 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                      class="shrink-0 rounded-sm px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
                       onClick={() => playPromptSound('error', true)}
                       title="Test error sound"
                     >
@@ -1034,12 +1034,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
                 {/* Success Toggle */}
                 <label class="contents">
-                  <span class="whitespace-nowrap pr-3 text-sm font-medium text-slate-700 sm:text-right">
+                  <span class="pr-3 text-sm font-medium whitespace-nowrap text-slate-700 sm:text-right">
                     Success
                   </span>
                   <div class="flex items-center gap-2">
                     <select
-                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                       value={
                         settings().promptSounds.severities.success
                           ? 'true'
@@ -1060,7 +1060,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                     </select>
                     <button
                       type="button"
-                      class="shrink-0 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                      class="shrink-0 rounded-sm px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
                       onClick={() => playPromptSound('success', true)}
                       title="Test success sound"
                     >
@@ -1073,10 +1073,10 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
 
             {/* Trusted Host Keys Section - only when client store is enabled */}
             <Show when={hostKeyVerifyConfig()?.clientStoreEnabled}>
-              <div class="col-span-full mb-2 mt-4 border-t pt-2">
+              <div class="col-span-full mt-4 mb-2 border-t pt-2">
                 <button
                   type="button"
-                  class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  class="flex w-full items-center justify-between text-sm font-semibold text-slate-900 hover:text-slate-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden"
                   onClick={() => setHostKeysExpanded(!hostKeysExpanded())}
                   aria-expanded={hostKeysExpanded()}
                 >
@@ -1117,7 +1117,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                                 <span class="font-mono font-medium text-slate-800">
                                   {hostPort}
                                 </span>
-                                <span class="rounded bg-slate-200 px-1.5 py-0.5 text-xs text-slate-600">
+                                <span class="rounded-sm bg-slate-200 px-1.5 py-0.5 text-xs text-slate-600">
                                   {algo}
                                 </span>
                               </div>
@@ -1134,7 +1134,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                             </div>
                             <button
                               type="button"
-                              class="ml-2 shrink-0 rounded p-1 text-red-500 hover:bg-red-50 hover:text-red-700"
+                              class="ml-2 shrink-0 rounded-sm p-1 text-red-500 hover:bg-red-50 hover:text-red-700"
                               onClick={() => {
                                 const parts = hostPort.split(':')
                                 const host = parts
@@ -1172,7 +1172,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   </For>
 
                   {/* Add Key Form */}
-                  <div class="mt-3 rounded-md border border-slate-200 p-3">
+                  <div class="rounded-md border border-slate-200 p-3">
                     <div class="mb-2 text-xs font-semibold text-slate-700">
                       Add Key Manually
                     </div>
@@ -1181,7 +1181,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                         <input
                           type="text"
                           placeholder="Host"
-                          class="block flex-1 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          class="block flex-1 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
                           value={addKeyHost()}
                           onInput={(e) => setAddKeyHost(e.currentTarget.value)}
                         />
@@ -1190,7 +1190,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                           placeholder="Port"
                           min="1"
                           max="65535"
-                          class="block w-20 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          class="block w-20 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
                           value={addKeyPort()}
                           onInput={(e) => setAddKeyPort(e.currentTarget.value)}
                         />
@@ -1198,7 +1198,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                       <textarea
                         placeholder="Public key (e.g., ssh-ed25519 AAAA... comment)"
                         rows={3}
-                        class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
                         value={addKeyPublicKey()}
                         onInput={(e) =>
                           setAddKeyPublicKey(e.currentTarget.value)
@@ -1209,7 +1209,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                       </Show>
                       <button
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                        class="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-hidden"
                         onClick={() => {
                           setAddKeyError(null)
                           const port = Number.parseInt(addKeyPort(), 10) || 22
@@ -1239,10 +1239,10 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   </div>
 
                   {/* Export / Import buttons */}
-                  <div class="mt-3 flex gap-2">
+                  <div class="flex gap-2">
                     <button
                       type="button"
-                      class="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                      class="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-hidden"
                       onClick={() => {
                         const json = hostKeyStore.exportKeys()
                         const blob = new Blob([json], {
@@ -1263,7 +1263,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                     </button>
                     <button
                       type="button"
-                      class="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                      class="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-hidden"
                       onClick={() => importFileInput?.click()}
                     >
                       <Upload class="size-3" />
@@ -1302,7 +1302,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   <Show when={pendingImport()}>
                     {(pending) => (
                       <div
-                        class="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3"
+                        class="rounded-md border border-amber-300 bg-amber-50 p-3"
                         role="alertdialog"
                         aria-labelledby="import-conflicts-title"
                         aria-describedby="import-conflicts-desc"
@@ -1339,7 +1339,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                         <ul class="mt-2 space-y-2">
                           <For each={pending().plan.conflicts}>
                             {(conflict, index) => (
-                              <li class="rounded bg-white p-2 text-xs">
+                              <li class="rounded-sm bg-white p-2 text-xs">
                                 <div class="flex flex-wrap items-center gap-2">
                                   <span class="font-mono font-medium text-slate-800">
                                     {conflict.host}
@@ -1347,12 +1347,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                                   <span class="text-slate-600">
                                     port {conflict.port}
                                   </span>
-                                  <span class="rounded bg-slate-200 px-1.5 py-0.5 text-slate-600">
+                                  <span class="rounded-sm bg-slate-200 px-1.5 py-0.5 text-slate-600">
                                     {conflict.algorithm}
                                   </span>
                                 </div>
                                 <div class="mt-1 text-slate-500">Current</div>
-                                <div class="break-all font-mono text-slate-800">
+                                <div class="font-mono break-all text-slate-800">
                                   {pending().fingerprints?.[index()]
                                     ?.existing ??
                                     (pending().fingerprintError
@@ -1360,7 +1360,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                                       : 'Computing...')}
                                 </div>
                                 <div class="mt-1 text-slate-500">From file</div>
-                                <div class="break-all font-mono text-red-700">
+                                <div class="font-mono break-all text-red-700">
                                   {pending().fingerprints?.[index()]
                                     ?.imported ??
                                     (pending().fingerprintError
@@ -1381,14 +1381,14 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                           <button
                             ref={skipConflictsButton}
                             type="button"
-                            class="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            class="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-hidden"
                             onClick={() => finishImport(pending().plan, false)}
                           >
                             Skip conflicts
                           </button>
                           <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:ring-offset-1 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={!canReplace(pending())}
                             title={
                               canReplace(pending())
@@ -1401,7 +1401,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                           </button>
                           <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-hidden"
                             onClick={() => {
                               setPendingImport(null)
                               setImportStatus(
@@ -1424,13 +1424,13 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
           <div class="flex justify-end gap-2 pt-4">
             <button
               type="submit"
-              class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+              class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50"
             >
               Save
             </button>
             <button
               type="button"
-              class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+              class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50"
               onClick={handleCancel}
             >
               Cancel

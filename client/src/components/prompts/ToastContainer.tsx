@@ -10,7 +10,7 @@ import { promptStore } from '../../stores/prompt-store'
 export const ToastContainer: Component = () => {
   return (
     <div
-      class="pointer-events-none fixed bottom-6 right-6 z-[1000] flex max-w-sm flex-col gap-2"
+      class="pointer-events-none fixed right-6 bottom-6 z-1000 flex max-w-sm flex-col gap-2"
       aria-label="Notifications"
       role="region"
     >

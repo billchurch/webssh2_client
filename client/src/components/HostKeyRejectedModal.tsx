@@ -23,7 +23,7 @@ export const HostKeyRejectedModal: Component<HostKeyRejectedModalProps> = (
       closeOnBackdropClick={true}
     >
       <div
-        class="relative w-80 rounded-lg border border-red-500 bg-slate-900 p-6 text-slate-100 shadow-xl sm:w-[28rem]"
+        class="relative w-80 rounded-lg border border-red-500 bg-slate-900 p-6 text-slate-100 shadow-xl sm:w-md"
         role="alertdialog"
         aria-labelledby="host-key-rejected-title"
         aria-describedby="host-key-rejected-description"
@@ -59,7 +59,7 @@ export const HostKeyRejectedModal: Component<HostKeyRejectedModalProps> = (
         <div class="flex justify-center">
           <button
             type="button"
-            class="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+            class="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-slate-900 focus:outline-hidden"
             onClick={props.onDismiss}
             autofocus
           >

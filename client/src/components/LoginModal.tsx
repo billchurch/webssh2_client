@@ -345,7 +345,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
         {includeKeyToggle && (
           <button
             type="button"
-            class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-600 px-3 py-2 text-sm font-medium text-white shadow-xs hover:bg-slate-700 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50"
             onClick={togglePrivateKeyVisibility}
           >
             <Key class="mr-2 inline-block size-4" />
@@ -375,7 +375,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
       </div>
       <button
         type="button"
-        class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-700 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        class="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-700 px-3 py-2 text-sm font-medium text-white shadow-xs hover:bg-slate-800 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50"
         onClick={() => props.onOptionsClick?.()}
         aria-label="Options"
         title="Options"
@@ -387,7 +387,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
   const renderPrivateKeySection = () => (
     <div class={shouldShowPrivateKey() ? '' : 'hidden'}>
-      <div class="mt-2 rounded border border-neutral-300 bg-neutral-50 p-3 text-neutral-800">
+      <div class="mt-2 rounded-sm border border-neutral-300 bg-neutral-50 p-3 text-neutral-800">
         <div class="relative">
           <textarea
             id="privateKeyText"
@@ -398,7 +398,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
             spellcheck={false}
             placeholder="Paste your private key here"
             rows={3}
-            class="mb-2 block w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="mb-2 block w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
             classList={{
               'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400':
                 formData().privateKey == null || formData().privateKey === '',
@@ -417,7 +417,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
           {/* Validation status indicator */}
           {formData().privateKey != null && formData().privateKey !== '' && (
-            <div class="absolute right-2 top-2">
+            <div class="absolute top-2 right-2">
               {privateKeyValidation.isValid() ? (
                 <span
                   class="text-green-500"
@@ -469,7 +469,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
           />
           <label
             for="privateKeyFile"
-            class="inline-flex cursor-pointer items-center justify-center rounded-md border border-transparent bg-slate-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            class="inline-flex cursor-pointer items-center justify-center rounded-md border border-transparent bg-slate-600 px-3 py-2 text-sm font-medium text-white shadow-xs hover:bg-slate-700 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50"
           >
             <Upload class="mr-2 inline-block size-4" /> Upload Key File
           </label>
@@ -486,7 +486,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
             spellcheck={false}
             enterkeyhint="go"
             placeholder="Key password (if encrypted)"
-            class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
             value={formData().passphrase ?? ''}
             onInput={(e) => updateFormData('passphrase', e.currentTarget.value)}
           />
@@ -496,7 +496,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   )
 
   const renderKeyboardInteractiveNotice = () => (
-    <div class="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+    <div class="rounded-sm border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
       Additional prompts may appear after connecting. Follow the on-screen
       instructions to complete keyboard interactive authentication.
     </div>
@@ -519,7 +519,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
       showCloseButton={false}
       closeOnBackdropClick={false}
     >
-      <div class="relative w-80 rounded-md border border-neutral-300 bg-white p-6 text-slate-800 shadow-md sm:w-[28rem]">
+      <div class="relative w-80 rounded-md border border-neutral-300 bg-white p-6 text-slate-800 shadow-md sm:w-md">
         <h2 class="mb-4 text-lg font-semibold text-slate-900">
           {protocol() === 'telnet' ? 'Telnet Login' : 'WebSSH2 Login'}
         </h2>
@@ -570,7 +570,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                 autocapitalize="off"
                 spellcheck={false}
                 enterkeyhint="next"
-                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 value={formData().host ?? ''}
                 onInput={(e) => updateFormData('host', e.currentTarget.value)}
               />
@@ -593,7 +593,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                 enterkeyhint="next"
                 inputmode="numeric"
                 pattern="[0-9]*"
-                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 value={(() => {
                   const port = formData().port
                   return port != null && port !== 0 && !Number.isNaN(port)
@@ -624,7 +624,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
               autocapitalize="off"
               spellcheck={false}
               enterkeyhint="next"
-              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
               value={formData().username ?? ''}
               onInput={(e) => updateFormData('username', e.currentTarget.value)}
             />
@@ -646,7 +646,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                       autocapitalize="off"
                       spellcheck={false}
                       enterkeyhint="go"
-                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                       value={formData().password ?? ''}
                       onInput={(e) =>
                         updateFormData('password', e.currentTarget.value)
@@ -655,7 +655,7 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                       onKeyUp={handleKeyUp}
                     />
                     <span
-                      class={`${capsLockActive() ? '' : 'hidden'} pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-red-500`}
+                      class={`${capsLockActive() ? '' : 'hidden'} pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-red-500`}
                     >
                       ⇪
                     </span>
@@ -684,11 +684,11 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
           {!supportsPublicKey() && renderOptionsRow(false)}
 
           {/* Submit button */}
-          <div class="mt-4">
+          <div>
             <button
               type="submit"
               disabled={!isFormValid()}
-              class="inline-flex w-full items-center justify-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex w-full items-center justify-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               Connect
             </button>

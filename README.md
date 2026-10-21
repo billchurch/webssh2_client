@@ -19,7 +19,7 @@ WebSSH2 development is supported by [Tailwind Resource Group](https://tailwindrg
 
 ## Requirements
 
-- Modern web browser with JavaScript enabled
+- Modern web browser with JavaScript enabled (Safari 16.4+, Chrome/Edge 111+, Firefox 128+)
 - WebSSH2 server 5.1.0 or newer (it writes the JSON config block this client
   reads; older servers are not supported)
 - Socket.IO v4.8.1 compatibility

@@ -75,7 +75,7 @@ export const UploadDropzone: Component<UploadDropzoneProps> = (props) => {
       {/* Drag overlay */}
       <Show when={isDragOver()}>
         <div
-          class="pointer-events-none absolute inset-0 flex items-center justify-center bg-blue-900/50 backdrop-blur-sm"
+          class="pointer-events-none absolute inset-0 flex items-center justify-center bg-blue-900/50 backdrop-blur-xs"
           role="status"
           aria-live="assertive"
         >

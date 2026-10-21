@@ -50,7 +50,7 @@ export const SpecialKeysPanel: Component<SpecialKeysPanelProps> = (props) => {
 
   return (
     <div
-      class={`absolute right-0 top-0 z-40 flex h-full w-64 flex-col border-l border-neutral-600 bg-neutral-800 transition-transform duration-200 ${
+      class={`absolute top-0 right-0 z-40 flex h-full w-64 flex-col border-l border-neutral-600 bg-neutral-800 transition-transform duration-200 ${
         isSpecialKeysOpen() ? 'translate-x-0' : 'translate-x-full'
       }`}
       aria-hidden={!isSpecialKeysOpen()}
@@ -65,7 +65,7 @@ export const SpecialKeysPanel: Component<SpecialKeysPanelProps> = (props) => {
         </div>
         <button
           type="button"
-          class="rounded p-1 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100"
+          class="rounded-sm p-1 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100"
           onClick={() => {
             setIsSpecialKeysOpen(false)
             props.onSendKey()
@@ -86,7 +86,7 @@ export const SpecialKeysPanel: Component<SpecialKeysPanelProps> = (props) => {
               <div class="mb-2">
                 <button
                   type="button"
-                  class="flex w-full items-center justify-between rounded px-2 py-1.5 text-xs font-medium uppercase tracking-wide text-neutral-400 hover:bg-neutral-700 hover:text-neutral-300"
+                  class="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-xs font-medium tracking-wide text-neutral-400 uppercase hover:bg-neutral-700 hover:text-neutral-300"
                   onClick={() => toggleCategory(category.name)}
                   aria-expanded={!isCollapsed()}
                 >
@@ -104,7 +104,7 @@ export const SpecialKeysPanel: Component<SpecialKeysPanelProps> = (props) => {
                       {(key) => (
                         <button
                           type="button"
-                          class={`rounded px-1 py-1.5 font-mono text-xs transition-colors ${
+                          class={`rounded-sm px-1 py-1.5 font-mono text-xs transition-colors ${
                             key.browserReserved === true
                               ? 'border border-dashed border-amber-700 bg-neutral-700 text-amber-400 hover:bg-neutral-600'
                               : 'bg-neutral-700 text-neutral-200 hover:bg-neutral-600'
