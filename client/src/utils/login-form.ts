@@ -19,3 +19,37 @@ export const clearSecretFields = (
   }
   return cleared
 }
+
+// Tracks which open of the login modal an async secret read belongs to.
+// Closing the modal invalidates every read still in flight, so a late
+// read cannot put a secret back into cleared form state.
+export interface SecretReadGuard {
+  current: () => number
+  isCurrent: (token: number) => boolean
+  invalidate: () => void
+}
+
+export const createSecretReadGuard = (): SecretReadGuard => {
+  let generation = 0
+  return {
+    current: () => generation,
+    isCurrent: (token) => token === generation,
+    invalidate: () => {
+      generation += 1
+    }
+  }
+}
+
+// Read a secret file and hand its text to apply() only if the guard was
+// not invalidated while the read was pending. Returns whether it applied.
+export const readSecretFile = async (
+  file: Pick<Blob, 'text'>,
+  guard: SecretReadGuard,
+  apply: (content: string) => void
+): Promise<boolean> => {
+  const token = guard.current()
+  const content = await file.text()
+  if (!guard.isCurrent(token)) return false
+  apply(content)
+  return true
+}

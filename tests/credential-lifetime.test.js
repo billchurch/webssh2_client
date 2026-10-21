@@ -29,8 +29,12 @@ globalThis.localStorage = dom.window.localStorage
 const { SocketService, socket } =
   await import('../client/src/services/socket.ts')
 const { setState } = await import('../client/src/stores/terminal.ts')
-const { clearSecretFields, LOGIN_SECRET_FIELDS } =
-  await import('../client/src/utils/login-form.ts')
+const {
+  clearSecretFields,
+  LOGIN_SECRET_FIELDS,
+  createSecretReadGuard,
+  readSecretFile
+} = await import('../client/src/utils/login-form.ts')
 
 const LOGIN = {
   host: 'ssh.example.test',
@@ -232,6 +236,68 @@ describe('LoginModal secret fields', () => {
     const input = { ...LOGIN }
     clearSecretFields(input)
     assert.deepEqual(input, LOGIN)
+  })
+
+  // A file whose text() resolves only when the test says so
+  const pendingFile = () => {
+    let resolve
+    const promise = new Promise((r) => {
+      resolve = r
+    })
+    return { file: { text: () => promise }, resolve }
+  }
+
+  it('applies a private key file read while the modal stays open', async () => {
+    const guard = createSecretReadGuard()
+    const { file, resolve } = pendingFile()
+    let formKey = ''
+    const read = readSecretFile(file, guard, (content) => {
+      formKey = content
+    })
+    resolve(LOGIN.privateKey)
+    assert.equal(await read, true)
+    assert.equal(formKey, LOGIN.privateKey)
+  })
+
+  it('discards a private key file read that finishes after close', async () => {
+    const guard = createSecretReadGuard()
+    const { file, resolve } = pendingFile()
+    let formKey = ''
+    const read = readSecretFile(file, guard, (content) => {
+      formKey = content
+    })
+    // The modal closes (and clears its fields) before the read finishes
+    guard.invalidate()
+    resolve(LOGIN.privateKey)
+    assert.equal(await read, false)
+    assert.equal(formKey, '')
+  })
+
+  it('a read started after the modal reopens is applied', async () => {
+    const guard = createSecretReadGuard()
+    guard.invalidate()
+    const { file, resolve } = pendingFile()
+    let formKey = ''
+    const read = readSecretFile(file, guard, (content) => {
+      formKey = content
+    })
+    resolve(LOGIN.privateKey)
+    assert.equal(await read, true)
+    assert.equal(formKey, LOGIN.privateKey)
+  })
+
+  it('the modal reads key files through the close guard', async () => {
+    const source = await readFile(
+      new URL('../client/src/components/LoginModal.tsx', import.meta.url),
+      'utf8'
+    )
+    assert.match(
+      source,
+      /if \(!isOpen\) \{[\s\S]*?secretReads\.invalidate\(\)/,
+      'closing the modal must invalidate pending secret reads'
+    )
+    assert.match(source, /readSecretFile\(file, secretReads,/)
+    assert.doesNotMatch(source, /await file\.text\(\)/)
   })
 
   it('the modal clears its secret fields when it closes', async () => {
