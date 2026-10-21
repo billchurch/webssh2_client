@@ -16,9 +16,9 @@ const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>')
 globalThis.window = dom.window
 globalThis.document = dom.window.document
 
-const { defaultSettings, initializeConfig } =
-  await import('../client/src/utils/index.ts')
-const { config } = await import('../client/src/stores/config.ts')
+const { defaultSettings } = await import('../client/src/utils/index.ts')
+const { config, initializeConfig } =
+  await import('../client/src/stores/config.ts')
 
 const setConfigBlock = (content) => {
   const script = dom.window.document.createElement('script')
@@ -42,14 +42,15 @@ describe('shiftEnterNewline defaults', () => {
     const block = setConfigBlock(
       JSON.stringify({ terminal: { shiftEnterNewline: true } })
     )
-    const merged = initializeConfig()
+    initializeConfig()
+    const merged = config()
     assert.equal(merged.terminal.shiftEnterNewline, true)
     assert.equal(merged.terminal.cursorBlink, true)
     block.remove()
   })
 
   it('initializeConfig stays false without injected config', () => {
-    const merged = initializeConfig()
-    assert.equal(merged.terminal.shiftEnterNewline, false)
+    initializeConfig()
+    assert.equal(config().terminal.shiftEnterNewline, false)
   })
 })
