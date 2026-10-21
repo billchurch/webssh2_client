@@ -67,12 +67,6 @@ import { promptStore } from '../stores/prompt-store.js'
 import { dispatchHeaderUpdate } from '../utils/header-dispatch.js'
 // import type { ElementId } from '../../types/dom.d'
 
-declare global {
-  interface Window {
-    webssh2Socket?: Socket<ServerToClientEvents, ClientToServerEvents>
-  }
-}
-
 const debug = createDebug('webssh2-client:socket-service')
 
 // Socket instance and reactive state
@@ -217,11 +211,6 @@ export class SocketService {
     }) as Socket<ServerToClientEvents, ClientToServerEvents>
 
     setSocket(newSocket)
-
-    // Expose socket to window for E2E testing
-    if (typeof window !== 'undefined') {
-      window.webssh2Socket = newSocket
-    }
 
     this.setupSocketListeners(newSocket)
     return newSocket
