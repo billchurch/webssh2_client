@@ -70,12 +70,22 @@ const pendingRequests = new Map<string, PendingRequest<unknown>>()
 const pendingUploadReady: Array<PendingRequest<SftpUploadReadyResponse>> = []
 
 interface PendingDownloadReady extends PendingRequest<SftpDownloadReadyResponse> {
+  /** Remote path the user requested */
+  remotePath: string
   /** Basename of the path the user requested, used to verify the server echo */
   requestedFileName?: string
+  /** Progress callback to register with the transfer */
+  onProgress?: DownloadOptions['onProgress']
 }
 
 /** FIFO queue for pending download-ready responses (server-generated transfer IDs) */
 const pendingDownloadReady: PendingDownloadReady[] = []
+
+/** Completion promises for downloads, created when download-ready arrives */
+const downloadCompletions = new Map<TransferId, Promise<SftpCompleteResponse>>()
+
+/** Download completion timeout (10 min for large files) */
+const DOWNLOAD_COMPLETE_TIMEOUT = 600000
 
 /** Server-advertised max file size in bytes (from SftpStatusResponse) */
 let serverMaxFileSize: number | null = null
@@ -275,6 +285,7 @@ export function cleanupSftpListeners(): void {
     pending.reject(new Error('SFTP service disconnected'))
   }
   pendingDownloadReady.length = 0
+  downloadCompletions.clear()
 
   // Clear active transfers
   activeTransfers.clear()
@@ -361,25 +372,32 @@ function rejectPendingRequest(key: string, error: Error): void {
 function handleDownloadReady(response: SftpDownloadReadyResponse): void {
   // Use FIFO queue (server generates transferId)
   const pending = pendingDownloadReady.shift()
+  if (!pending) {
+    // The user did not request this download: create no assembler, so the
+    // file is never saved and later chunks for this transfer are dropped
+    console.warn(
+      'Ignoring unsolicited SFTP download (no pending request):',
+      response.transferId
+    )
+    return
+  }
+
+  clearTimeout(pending.timeoutId)
+  pending.resolve(response)
+
+  // The user-clicked name is authoritative; flag a server echo that differs
   let fileName = response.fileName
-  if (pending) {
-    clearTimeout(pending.timeoutId)
-    pending.resolve(response)
-    // The user-clicked name is authoritative; flag a server echo that differs
-    if (
-      pending.requestedFileName != null &&
-      pending.requestedFileName !== '' &&
-      pending.requestedFileName !== response.fileName
-    ) {
-      debug(
-        'Download fileName mismatch: requested %o, server sent %o — using requested name',
-        pending.requestedFileName,
-        response.fileName
-      )
-      fileName = pending.requestedFileName
-    }
-  } else {
-    debug('No pending download-ready request for', response.transferId)
+  if (
+    pending.requestedFileName != null &&
+    pending.requestedFileName !== '' &&
+    pending.requestedFileName !== response.fileName
+  ) {
+    debug(
+      'Download fileName mismatch: requested %o, server sent %o — using requested name',
+      pending.requestedFileName,
+      response.fileName
+    )
+    fileName = pending.requestedFileName
   }
 
   // Create assembler for this download (sanitizes fileName, bounds memory)
@@ -391,6 +409,33 @@ function handleDownloadReady(response: SftpDownloadReadyResponse): void {
     computeDownloadByteLimit(response.fileSize, serverMaxFileSize)
   )
   activeAssemblers.set(response.transferId, assembler)
+
+  // Register tracking now, not when downloadFile resumes from its await:
+  // chunks (even the last one) and sftp-complete can arrive in the same
+  // batch as this event, and a failed save must find the transfer
+  activeTransfers.set(response.transferId, {
+    id: response.transferId,
+    direction: 'download',
+    remotePath: pending.remotePath,
+    fileName,
+    totalBytes: response.fileSize,
+    bytesTransferred: 0,
+    percentComplete: 0,
+    bytesPerSecond: 0,
+    estimatedSecondsRemaining: null,
+    startedAt: Date.now(),
+    status: 'active'
+  })
+  if (pending.onProgress) {
+    progressCallbacks.set(response.transferId, pending.onProgress)
+  }
+  const completion = createPendingRequest<SftpCompleteResponse>(
+    `complete:${response.transferId}`,
+    DOWNLOAD_COMPLETE_TIMEOUT
+  )
+  // downloadFile handles the rejection; it may settle before that awaits it
+  completion.catch(() => {})
+  downloadCompletions.set(response.transferId, completion)
 }
 
 function handleDownloadChunk(response: SftpDownloadChunkResponse): void {
@@ -426,17 +471,28 @@ function handleDownloadChunk(response: SftpDownloadChunkResponse): void {
     try {
       assembler.download()
     } catch (err) {
-      debug('Error triggering download', err)
+      const reason = err instanceof Error ? err.message : String(err)
+      // All chunks have arrived, so there is nothing left to cancel upstream
+      abortDownload(
+        response.transferId,
+        new Error(`Failed to save download: ${reason}`),
+        false
+      )
     }
   }
 }
 
 /**
- * Abort a download that violated client-side bounds: mark the transfer
- * failed, tell the gateway to stop streaming, release buffered chunks,
+ * Abort a download that violated client-side bounds or could not be
+ * saved: mark the transfer failed, tell the gateway to stop streaming
+ * (unless it has already sent everything), release buffered chunks,
  * and reject any promises waiting on the transfer.
  */
-function abortDownload(transferId: TransferId, error: Error): void {
+function abortDownload(
+  transferId: TransferId,
+  error: Error,
+  notifyServer: boolean = true
+): void {
   debug('Aborting download', transferId, error.message)
 
   const transfer = activeTransfers.get(transferId)
@@ -446,7 +502,7 @@ function abortDownload(transferId: TransferId, error: Error): void {
   }
 
   const socketInstance = getSocket()
-  if (socketInstance) {
+  if (notifyServer && socketInstance) {
     socketInstance.emit('sftp-download-cancel', { transferId })
   }
 
@@ -458,8 +514,18 @@ function abortDownload(transferId: TransferId, error: Error): void {
   rejectAllForTransfer(transferId, error)
 }
 
+/** Whether a transfer has already ended without completing */
+function hasFailedOrCancelled(transfer: ClientTransfer): boolean {
+  return transfer.status === 'failed' || transfer.status === 'cancelled'
+}
+
 function handleProgress(response: SftpProgressResponse): void {
   const transfer = activeTransfers.get(response.transferId)
+  // Late progress must not revive a transfer that already failed
+  if (transfer && hasFailedOrCancelled(transfer)) {
+    debug('Ignoring progress for ended transfer', response.transferId)
+    return
+  }
   if (transfer) {
     transfer.bytesTransferred = response.bytesTransferred
     transfer.percentComplete = response.percentComplete
@@ -477,7 +543,8 @@ function handleProgress(response: SftpProgressResponse): void {
 
 function handleComplete(response: SftpCompleteResponse): void {
   const transfer = activeTransfers.get(response.transferId)
-  if (transfer) {
+  // A transfer the client already failed (e.g. the save threw) stays failed
+  if (transfer && !hasFailedOrCancelled(transfer)) {
     transfer.status = 'completed'
     transfer.bytesTransferred = response.bytesTransferred
     transfer.percentComplete = 100
@@ -956,7 +1023,9 @@ export async function downloadFile(
         resolve: resolve as (value: unknown) => void,
         reject,
         timeoutId,
-        requestedFileName
+        remotePath,
+        requestedFileName,
+        onProgress: options.onProgress
       })
     }
   )
@@ -973,40 +1042,27 @@ export async function downloadFile(
     `size: ${readyResponse.fileSize}`
   )
 
-  // Create transfer tracking AFTER getting server-provided ID
-  const transfer: ClientTransfer = {
-    id: transferId,
-    direction: 'download',
-    remotePath,
-    fileName: requestedFileName || readyResponse.fileName,
-    totalBytes: readyResponse.fileSize,
-    bytesTransferred: 0,
-    percentComplete: 0,
-    bytesPerSecond: 0,
-    estimatedSecondsRemaining: null,
-    startedAt: Date.now(),
-    status: 'active'
-  }
-  activeTransfers.set(transferId, transfer)
-
-  // Register progress callback
-  if (options.onProgress) {
-    progressCallbacks.set(transferId, options.onProgress)
-  }
+  // handleDownloadReady registered the transfer and its completion
+  // promise, which may already have settled
+  const completion = downloadCompletions.get(transferId)
+  downloadCompletions.delete(transferId)
 
   try {
+    if (!completion) {
+      throw new Error('Download tracking was lost')
+    }
     // Wait for completion (chunks are handled by event listeners)
-    const completePromise = createPendingRequest<SftpCompleteResponse>(
-      `complete:${transferId}`,
-      600000
-    ) // 10 min timeout for large files
-    await completePromise
+    await completion
 
     debug('Download complete', transferId)
     return transferId
   } catch (error) {
-    transfer.status = 'failed'
-    transfer.error = error instanceof Error ? error.message : 'Download failed'
+    const transfer = activeTransfers.get(transferId)
+    if (transfer) {
+      transfer.status = 'failed'
+      transfer.error =
+        error instanceof Error ? error.message : 'Download failed'
+    }
     throw error
   } finally {
     // Cleanup
