@@ -1302,7 +1302,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                   <Show when={pendingImport()}>
                     {(pending) => (
                       <div
-                        class="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3"
+                        class="rounded-md border border-amber-300 bg-amber-50 p-3"
                         role="alertdialog"
                         aria-labelledby="import-conflicts-title"
                         aria-describedby="import-conflicts-desc"
@@ -1339,7 +1339,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                         <ul class="mt-2 space-y-2">
                           <For each={pending().plan.conflicts}>
                             {(conflict, index) => (
-                              <li class="rounded bg-white p-2 text-xs">
+                              <li class="rounded-sm bg-white p-2 text-xs">
                                 <div class="flex flex-wrap items-center gap-2">
                                   <span class="font-mono font-medium text-slate-800">
                                     {conflict.host}
@@ -1347,12 +1347,12 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                                   <span class="text-slate-600">
                                     port {conflict.port}
                                   </span>
-                                  <span class="rounded bg-slate-200 px-1.5 py-0.5 text-slate-600">
+                                  <span class="rounded-sm bg-slate-200 px-1.5 py-0.5 text-slate-600">
                                     {conflict.algorithm}
                                   </span>
                                 </div>
                                 <div class="mt-1 text-slate-500">Current</div>
-                                <div class="break-all font-mono text-slate-800">
+                                <div class="font-mono break-all text-slate-800">
                                   {pending().fingerprints?.[index()]
                                     ?.existing ??
                                     (pending().fingerprintError
@@ -1360,7 +1360,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                                       : 'Computing...')}
                                 </div>
                                 <div class="mt-1 text-slate-500">From file</div>
-                                <div class="break-all font-mono text-red-700">
+                                <div class="font-mono break-all text-red-700">
                                   {pending().fingerprints?.[index()]
                                     ?.imported ??
                                     (pending().fingerprintError
@@ -1381,14 +1381,14 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                           <button
                             ref={skipConflictsButton}
                             type="button"
-                            class="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            class="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-hidden"
                             onClick={() => finishImport(pending().plan, false)}
                           >
                             Skip conflicts
                           </button>
                           <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:ring-offset-1 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={!canReplace(pending())}
                             title={
                               canReplace(pending())
@@ -1401,7 +1401,7 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                           </button>
                           <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-hidden"
                             onClick={() => {
                               setPendingImport(null)
                               setImportStatus(

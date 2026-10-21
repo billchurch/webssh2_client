@@ -25,9 +25,12 @@
    * Any newly used color token needs its v3 hex here, or it renders in v4 oklch
    * (tests/css-palette-parity.test.js checks this).
    */
+  --color-amber-50: #fffbeb;
+  --color-amber-300: #fcd34d;
   --color-amber-400: #fbbf24;
   --color-amber-600: #d97706;
   --color-amber-700: #b45309;
+  --color-amber-900: #78350f;
   --color-blue-50: #eff6ff;
   --color-blue-100: #dbeafe;
   --color-blue-200: #bfdbfe;
