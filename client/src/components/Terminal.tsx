@@ -22,6 +22,7 @@ import {
   handleShiftEnterKeyEvent,
   resolveShiftEnterNewline
 } from '../utils/shift-enter.js'
+import { formatTerminalTitle } from '../utils/terminal-title.js'
 import type {
   WebSSH2Config,
   TerminalSettings,
@@ -214,9 +215,9 @@ export const TerminalComponent: Component<TerminalComponentProps> = (props) => {
     emitData(data)
   }
 
-  // Handle title changes
+  // Handle title changes (remote-controlled, so always prefixed and cleaned)
   const handleTitleChange = (title: string) => {
-    document.title = title
+    document.title = formatTerminalTitle(title)
   }
 
   // Handle terminal mount
