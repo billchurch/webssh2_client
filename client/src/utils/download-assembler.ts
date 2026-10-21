@@ -48,7 +48,8 @@ export function sanitizeDownloadFilename(name: string): string {
  *
  * Bounded by the advertised file size plus slack (5%, minimum 64 KiB to
  * tolerate rounding on tiny files), capped by the server-advertised
- * maxFileSize when known, with DOWNLOAD_HARD_CAP as the absolute backstop.
+ * maxFileSize when known, with DOWNLOAD_HARD_CAP as the absolute backstop:
+ * a server maxFileSize above the hard cap cannot raise it.
  */
 export function computeDownloadByteLimit(
   expectedSize: number,
@@ -58,7 +59,7 @@ export function computeDownloadByteLimit(
     serverMaxFileSize != null &&
     Number.isFinite(serverMaxFileSize) &&
     serverMaxFileSize > 0
-      ? serverMaxFileSize
+      ? Math.min(serverMaxFileSize, DOWNLOAD_HARD_CAP)
       : DOWNLOAD_HARD_CAP
   if (!Number.isFinite(expectedSize) || expectedSize <= 0) {
     return ceiling
