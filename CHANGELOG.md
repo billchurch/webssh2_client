@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.0.1](https://github.com/billchurch/webssh2_client/compare/v6.0.0...v6.0.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **client:** clear credentials from memory after use ([#158](https://github.com/billchurch/webssh2_client/issues/158)) ([#181](https://github.com/billchurch/webssh2_client/issues/181)) ([f17d468](https://github.com/billchurch/webssh2_client/commit/f17d4686e417068ca22df091675c138b8241dc22))
+
 ## [6.0.0](https://github.com/billchurch/webssh2_client/compare/v5.4.2...v6.0.0) (2026-10-21)
 
 
