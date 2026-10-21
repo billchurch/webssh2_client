@@ -23,6 +23,30 @@ All notable changes to this project will be documented in this file. See [standa
 * **deps:** upgrade solid-js to 1.9.16 and drop seroval overrides ([#162](https://github.com/billchurch/webssh2_client/issues/162)) ([048baa9](https://github.com/billchurch/webssh2_client/commit/048baa9cf85c8ddf12606218243f22b8d5a0a676))
 * **terminal:** prefix and sanitize remote-set tab titles ([#175](https://github.com/billchurch/webssh2_client/issues/175)) ([f44276b](https://github.com/billchurch/webssh2_client/commit/f44276b754334d0650183275e6ccb11903370056)), closes [#166](https://github.com/billchurch/webssh2_client/issues/166)
 
+
+
+### Security
+
+This release fixes three security advisories. Upgrade to 6.0.0.
+
+* **Credentials in the URL** ([GHSA-7gqv-f74c-wc87](https://github.com/billchurch/webssh2_client/security/advisories/GHSA-7gqv-f74c-wc87), moderate): `password`, `privateKey` and `passphrase` URL parameters are removed from the address bar once read, and URL query parameters are no longer copied into the Socket.IO handshake.
+* **Socket endpoint origin** ([GHSA-qgpv-r594-4c6g](https://github.com/billchurch/webssh2_client/security/advisories/GHSA-qgpv-r594-4c6g), moderate): the client connects only to a Socket.IO endpoint on the page's own origin; a different host in the injected config is logged and ignored.
+* **Dependency audit posture** ([GHSA-5ffp-x574-93gf](https://github.com/billchurch/webssh2_client/security/advisories/GHSA-5ffp-x574-93gf), moderate): dev-dependency advisories are fixed (including the `solid-js`/`seroval` line), the CI audit gate is green, and `SECURITY.md` has a current assessment. The published bundle was not affected.
+
+### Also in this release
+
+* **Tailwind CSS 4** ([#169](https://github.com/billchurch/webssh2_client/pull/169)): styles migrated from Tailwind 3 with screenshot parity against the 3.x build. See the README for minimum browser versions.
+* **SFTP downloads** ([#154](https://github.com/billchurch/webssh2_client/issues/154)): the 512 MiB cap is a hard limit whatever the server advertises, and downloads the user didn't request are no longer saved.
+* **SFTP listings** ([#167](https://github.com/billchurch/webssh2_client/issues/167)): listings show at most 10,000 entries, long names are shortened on screen, and sorting is memoized.
+* **Host-key import** ([#156](https://github.com/billchurch/webssh2_client/issues/156)): importing keys no longer silently replaces a pinned key; a conflict needs confirmation, and `__proto__` entries are rejected.
+* **Session log** ([#157](https://github.com/billchurch/webssh2_client/issues/157)): the localStorage log is size-capped and stops with a visible notice instead of throwing on quota errors.
+* **Legacy config code removed** ([#164](https://github.com/billchurch/webssh2_client/issues/164)): unused legacy config functions were deleted.
+* **Release tooling** ([#155](https://github.com/billchurch/webssh2_client/issues/155), [#159](https://github.com/billchurch/webssh2_client/issues/159)): `fix-npm-tags.sh` can't move `latest` to an older version, and workflows use least-privilege permissions and pass inputs through `env:`.
+
+### Upgrading
+
+* WebSSH2 server **5.1.0 or newer** is required (see Breaking Changes). WebSSH2 server 6.0.0, released alongside, pins this version.
+
 ## [5.4.2](https://github.com/billchurch/webssh2_client/compare/v5.4.1...v5.4.2) (2026-07-30)
 
 
