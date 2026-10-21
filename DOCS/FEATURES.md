@@ -147,3 +147,4 @@ WebSSH2 Client supports keyboard-interactive authentication, which allows for mo
 - CSP: Strict `script-src 'self'` (no inline scripts). `style-src 'self' 'unsafe-inline'` allows xterm DOM renderer and validated color updates.
 - Lint guardrails: ESLint `no-unsanitized` plugin and custom bans prevent introducing `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, string-based timers, or `new Function`.
 - URL/config validation: User inputs from URL or forms are validated and sanitized before use.
+- Remote tab titles: The remote host can set the browser tab title with the OSC 0/2 title sequences. The title always starts with the fixed prefix `WebSSH2: `, which cannot be configured. Control characters (C0/C1) and bidi override characters (U+202A–U+202E, U+2066–U+2069) are removed, the result is trimmed and cut to 80 characters, and an empty result restores the default `WebSSH2` title.
