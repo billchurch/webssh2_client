@@ -1,10 +1,15 @@
 import type { Component } from 'solid-js'
-import { createSignal, createEffect, createMemo, For, Show } from 'solid-js'
+import { createSignal, createEffect, createMemo, on, For, Show } from 'solid-js'
 import createDebug from 'debug'
 import { Modal } from './Modal'
 import { Key, Settings, Upload, Info, Lock } from 'lucide-solid'
 import { usePrivateKeyValidation } from '../hooks/usePrivateKeyValidation'
 import { createFieldValidator, ValidationRules } from '../utils/validation'
+import {
+  clearSecretFields,
+  createSecretReadGuard,
+  readSecretFile
+} from '../utils/login-form'
 import type { ClientAuthenticatePayload } from '../types/events.d'
 import type { SSHAuthMethod, ConnectionMode } from '../types/config.d'
 import { DEFAULT_AUTH_METHODS } from '../constants.js'
@@ -99,6 +104,26 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
       return prev
     })
   })
+
+  // Invalidated on close so a pending private key file read is discarded
+  const secretReads = createSecretReadGuard()
+
+  // Forget the password, private key and passphrase whenever the modal
+  // closes (submit, cancel or a successful login), so the typed secrets
+  // do not stay in this signal for the life of the page
+  createEffect(
+    on(
+      () => props.isOpen,
+      (isOpen) => {
+        if (!isOpen) {
+          debug('Clearing secret fields on close')
+          secretReads.invalidate()
+          setFormData(clearSecretFields)
+        }
+      },
+      { defer: true }
+    )
+  )
 
   // Auto-focus on the first empty field when modal opens
   createEffect(() => {
@@ -218,10 +243,14 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
     if (!supportsPublicKey()) return
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
+    // Drop the input's File reference; the key now lives only in formData
+    input.value = ''
     if (file) {
       try {
-        const content = await file.text()
-        updateFormData('privateKey', content)
+        const applied = await readSecretFile(file, secretReads, (content) =>
+          updateFormData('privateKey', content)
+        )
+        if (!applied) debug('Discarded private key read: modal closed')
         // Validation happens automatically via reactive privateKeyValidation hook
       } catch (error) {
         debug('Error reading private key file:', error)

@@ -88,6 +88,8 @@ let onDisconnectCallback: ((reason: string, extra?: unknown) => void) | null =
   null
 let onDataCallback: ((chunk: string | Uint8Array) => void) | null = null
 let focusTerminalCallback: (() => void) | null = null
+// Login payload (may hold password, privateKey, passphrase). Kept only
+// until the session no longer needs it; see clearStoredCredentials().
 let storedFormData: Partial<ClientAuthenticatePayload> | null = null
 
 // Terminal dimensions signal for reactive resizing
@@ -159,6 +161,13 @@ export function getWebSocketUrl(
 // Socket Service Class
 export class SocketService {
   private cleanupFunctions: Array<() => void> = []
+
+  // Credential lifetime for the current socket: the server sends
+  // 'permissions' (with allowReconnect) right after a successful
+  // 'auth_result', so both must arrive before the stored login payload
+  // can be released or kept for reconnect.
+  private authSucceeded = false
+  private reconnectPermissionReceived = false
 
   // Create a single debounced resize emitter for all resize events
   // This ensures consistent debouncing regardless of where resize is triggered from
@@ -244,7 +253,10 @@ export class SocketService {
     ClientToServerEvents
   > {
     debug('Initializing socket connection')
-    this.closeConnection()
+    // Keep storedFormData: it was just set for this connection attempt
+    this.teardownSocket()
+    this.authSucceeded = false
+    this.reconnectPermissionReceived = false
 
     const socketUrl = this.getWebSocketUrl()
     const socketPath = this.getSocketIOPath()
@@ -268,8 +280,42 @@ export class SocketService {
     return newSocket
   }
 
-  // Close connection
+  // Close connection and forget any stored login credentials
   closeConnection(): void {
+    this.teardownSocket()
+    this.clearStoredCredentials()
+  }
+
+  // Drop the stored login payload (password, privateKey, passphrase)
+  clearStoredCredentials(): void {
+    if (storedFormData !== null) debug('Clearing stored credentials')
+    storedFormData = null
+  }
+
+  // Whether a login payload is still held in memory
+  hasStoredCredentials(): boolean {
+    return storedFormData !== null
+  }
+
+  // Reconnect replays storedFormData, so keep it only while reconnect is
+  // offered (never for Basic Auth, which has no reconnect button)
+  private reconnectNeedsCredentials(): boolean {
+    return state.allowReconnect && !state.isBasicAuthCookiePresent
+  }
+
+  // After a successful login, release the credentials once the server has
+  // said whether reconnect is allowed and it is not
+  private releaseCredentialsIfUnneeded(): void {
+    if (
+      this.authSucceeded &&
+      this.reconnectPermissionReceived &&
+      !this.reconnectNeedsCredentials()
+    ) {
+      this.clearStoredCredentials()
+    }
+  }
+
+  private teardownSocket(): void {
     const currentSocket = socket()
     if (currentSocket) {
       debug('Closing connection')
@@ -505,6 +551,7 @@ export class SocketService {
           }
           case 'allowReconnect': {
             setState('allowReconnect', Boolean(value))
+            this.reconnectPermissionReceived = true
             break
           }
           case 'allowReplay': {
@@ -525,6 +572,7 @@ export class SocketService {
           }
         }
       })
+      this.releaseCredentialsIfUnneeded()
     })
 
     // SFTP status event - indicates if SFTP is available
@@ -613,6 +661,15 @@ export class SocketService {
       setIsHostKeyMismatchOpen(false)
       setIsHostKeyRejectedOpen(false)
       setHostKeyRejectedReason(null)
+      // 'io client disconnect' is our own close: closeConnection() clears
+      // credentials itself, and initializeSocketConnection() must keep the
+      // payload it is about to send
+      if (
+        reason !== 'io client disconnect' &&
+        !this.reconnectNeedsCredentials()
+      ) {
+        this.clearStoredCredentials()
+      }
       if (onDisconnectCallback) onDisconnectCallback(reason)
     })
 
@@ -786,10 +843,14 @@ export class SocketService {
     if (result.success) {
       setConnectionStatus('Connected')
       setConnectionStatusColor('green')
+      this.authSucceeded = true
+      this.releaseCredentialsIfUnneeded()
       if (focusTerminalCallback) focusTerminalCallback()
     } else {
       setConnectionStatus(`Authentication failed: ${result.message ?? ''}`)
       setConnectionStatusColor('red')
+      // A retry always submits a fresh payload
+      this.clearStoredCredentials()
       if (onDisconnectCallback)
         onDisconnectCallback('auth_failed', result.message)
     }
