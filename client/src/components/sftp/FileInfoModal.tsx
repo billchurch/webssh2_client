@@ -21,7 +21,7 @@ import {
 } from 'lucide-solid'
 import { Modal } from '../Modal.jsx'
 import type { SftpFileEntry } from '../../types/sftp.js'
-import { formatFileSize } from '../../types/sftp.js'
+import { formatFileSize, formatDisplayName } from '../../types/sftp.js'
 import { FileIcon } from './FileIcon.jsx'
 
 interface FileInfoModalProps {
@@ -38,6 +38,17 @@ interface FileInfoModalProps {
 }
 
 export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
+  // Display only; operations use the full entry
+  const displayName = () =>
+    props.entry ? formatDisplayName(props.entry.name) : ''
+  // Path with its last segment cut like the name; the full path is in title
+  const displayPath = () => {
+    const entry = props.entry
+    if (!entry) return ''
+    if (!entry.path.endsWith(entry.name)) return entry.path
+    return `${entry.path.slice(0, entry.path.length - entry.name.length)}${displayName()}`
+  }
+
   const formatDate = (isoString: string): string => {
     const date = new Date(isoString)
     return date.toLocaleDateString(undefined, {
@@ -57,7 +68,10 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
   }
 
   const handleDelete = () => {
-    if (props.entry && window.confirm(`Delete "${props.entry.name}"?`)) {
+    if (
+      props.entry &&
+      window.confirm(`Delete "${formatDisplayName(props.entry.name)}"?`)
+    ) {
       props.onDelete()
       props.onClose()
     }
@@ -113,9 +127,14 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
                 class="truncate font-medium text-neutral-100"
                 title={props.entry?.name}
               >
-                {props.entry?.name}
+                {displayName()}
               </p>
-              <p class="text-sm text-neutral-400">{props.entry?.path}</p>
+              <p
+                class="truncate text-sm text-neutral-400"
+                title={props.entry?.path}
+              >
+                {displayPath()}
+              </p>
             </div>
           </div>
 
@@ -202,7 +221,7 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
             type="button"
             class="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-neutral-800"
             onClick={handleDelete}
-            aria-label={`Delete ${props.entry?.name}`}
+            aria-label={`Delete ${displayName()}`}
           >
             <Trash2 class="size-4" aria-hidden="true" />
             Delete
@@ -211,7 +230,7 @@ export const FileInfoModal: Component<FileInfoModalProps> = (props) => {
             type="button"
             class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800"
             onClick={handleDownload}
-            aria-label={`Download ${props.entry?.name}`}
+            aria-label={`Download ${displayName()}`}
           >
             <Download class="size-4" aria-hidden="true" />
             Download

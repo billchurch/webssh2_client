@@ -10,7 +10,7 @@ import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { Download, Trash2 } from 'lucide-solid'
 import type { SftpFileEntry } from '../../types/sftp.js'
-import { formatFileSize } from '../../types/sftp.js'
+import { formatFileSize, formatDisplayName } from '../../types/sftp.js'
 import { FileIcon } from './FileIcon.jsx'
 
 interface FileEntryProps {
@@ -22,6 +22,9 @@ interface FileEntryProps {
 }
 
 export const FileEntry: Component<FileEntryProps> = (props) => {
+  // Display only; operations use props.entry.name and props.entry.path
+  const displayName = () => formatDisplayName(props.entry.name)
+
   const handleClick = (e: MouseEvent) => {
     e.preventDefault()
     props.onClick?.()
@@ -55,7 +58,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
       tabIndex={0}
       role="listitem"
       aria-selected={props.selected}
-      aria-label={`${props.entry.type === 'directory' ? 'Folder' : 'File'}: ${props.entry.name}${props.entry.type === 'file' ? `, ${formatFileSize(props.entry.size)}` : ''}`}
+      aria-label={`${props.entry.type === 'directory' ? 'Folder' : 'File'}: ${displayName()}${props.entry.type === 'file' ? `, ${formatFileSize(props.entry.size)}` : ''}`}
     >
       {/* Icon */}
       <span class="flex w-5 items-center justify-center">
@@ -69,7 +72,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
         }`}
         title={props.entry.name}
       >
-        {props.entry.name}
+        {displayName()}
       </span>
 
       {/* Size (for files only) */}
@@ -107,7 +110,7 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
               props.onDownload?.()
             }}
             title="Download"
-            aria-label={`Download ${props.entry.name}`}
+            aria-label={`Download ${displayName()}`}
           >
             <Download class="size-4" aria-hidden="true" />
           </button>
@@ -118,12 +121,12 @@ export const FileEntry: Component<FileEntryProps> = (props) => {
             class="rounded p-1 text-neutral-400 hover:bg-red-600 hover:text-white"
             onClick={(e) => {
               e.stopPropagation()
-              if (window.confirm(`Delete "${props.entry.name}"?`)) {
+              if (window.confirm(`Delete "${displayName()}"?`)) {
                 props.onDelete?.()
               }
             }}
             title="Delete"
-            aria-label={`Delete ${props.entry.name}`}
+            aria-label={`Delete ${displayName()}`}
           >
             <Trash2 class="size-4" aria-hidden="true" />
           </button>

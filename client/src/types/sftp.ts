@@ -456,6 +456,23 @@ export interface DownloadOptions {
   onProgress?: (progress: SftpProgressResponse) => void
 }
 
+/** Most entries kept from one directory listing; the rest are dropped */
+export const MAX_LISTING_ENTRIES = 10_000
+
+/** Most characters of a file name shown in the file browser */
+export const MAX_DISPLAY_NAME_LENGTH = 255
+
+/**
+ * Cut a file name to MAX_DISPLAY_NAME_LENGTH characters for display.
+ * Counts code points so a surrogate pair is never split. Only for
+ * rendering: operations must keep using the full name and path.
+ */
+export function formatDisplayName(name: string): string {
+  const chars = Array.from(name)
+  if (chars.length <= MAX_DISPLAY_NAME_LENGTH) return name
+  return `${chars.slice(0, MAX_DISPLAY_NAME_LENGTH - 1).join('')}\u2026`
+}
+
 /**
  * File size formatting helper
  */
