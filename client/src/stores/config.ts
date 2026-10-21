@@ -307,7 +307,7 @@ export const configWithUrlOverrides = () => {
   return mergedConfig
 }
 
-// Initialize configuration from injected config (JSON block or window) and URL
+// Initialize configuration from the injected JSON config block and URL
 export function initializeConfig() {
   const rawWindowConfig: unknown = readInjectedConfig()
   const windowConfig: Record<string, unknown> = isObject(rawWindowConfig)

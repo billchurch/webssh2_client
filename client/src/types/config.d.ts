@@ -110,9 +110,3 @@ export interface WebSSH2Config {
   protocol?: ProtocolType
   theming?: ClientThemingConfig
 }
-
-declare global {
-  interface Window {
-    webssh2Config?: Partial<WebSSH2Config>
-  }
-}

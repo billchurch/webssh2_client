@@ -20,7 +20,8 @@ WebSSH2 development is supported by [Tailwind Resource Group](https://tailwindrg
 ## Requirements
 
 - Modern web browser with JavaScript enabled
-- Compatible WebSSH2 server instance (v2.0.0 or compatible)
+- WebSSH2 server 5.1.0 or newer (it writes the JSON config block this client
+  reads; older servers are not supported)
 - Socket.IO v4.8.1 compatibility
 
 ## Installation
@@ -321,8 +322,8 @@ readline-style TUIs treat as "insert newline" rather than "submit". See
 
 ### Configuration Object
 
-The preferred, CSP-compatible way to configure the client is the inert JSON
-data block in the served HTML, which the app reads at startup:
+The client is configured through the inert, CSP-compatible JSON data block
+in the served HTML, which the app reads at startup:
 
 ```html
 <script type="application/json" id="webssh2-config">
@@ -330,30 +331,27 @@ data block in the served HTML, which the app reads at startup:
 </script>
 ```
 
-Setting `window.webssh2Config` from an inline script is still supported for
-backward compatibility, but a strict `script-src` CSP will block inline
-scripts, so new integrations should use the JSON block. When both are
-present, the JSON block wins:
+This JSON block is the only supported way to inject configuration. The client
+no longer reads `window.webssh2Config` and the HTML templates contain no
+inline script, so it needs WebSSH2 server 5.1.0 or newer. A fuller example:
 
-```javascript
-window.webssh2Config = {
-  socket: {
-    url: null, // WebSocket URL (auto-detected if null)
-    path: '/ssh/socket.io' // Socket.IO path
-  },
-  ssh: {
-    host: null, // SSH server hostname
-    port: 22, // SSH server port
-    username: null,
-    sshterm: 'xterm-color'
-  },
-  header: {
-    text: null,
-    background: 'green'
-  },
-  autoConnect: false
-}
+```html
+<script type="application/json" id="webssh2-config">
+  {
+    "socket": { "url": null, "path": "/ssh/socket.io" },
+    "ssh": {
+      "host": null,
+      "port": 22,
+      "username": null,
+      "sshterm": "xterm-color"
+    },
+    "header": { "text": null, "background": "green" },
+    "autoConnect": false
+  }
+</script>
 ```
+
+`socket.url` is auto-detected when `null`.
 
 ## Development
 

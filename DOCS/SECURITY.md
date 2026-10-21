@@ -16,9 +16,9 @@ The client is kept compatible with a strict policy:
 
 - `script-src 'self'` compatible: Runtime config is injected by the gateway
   into an inert `<script type="application/json" id="webssh2-config">` data
-  block, read by `client/src/utils/injected-config.ts`. A legacy inline
-  `window.webssh2Config = null;` script remains for older gateways; under a
-  strict policy it is blocked harmlessly and the JSON block takes over. No
+  block, read by `client/src/utils/injected-config.ts`. It is the only
+  config source; the HTML templates contain no inline scripts, so a page
+  load produces no CSP report. This needs webssh2 server 5.1.0 or newer. No
   `eval()` or string-based timers are used.
 - `style-src 'self' 'unsafe-inline'` required: xterm.js sets inline style
   attributes, so inline styles must be allowed. No untrusted CSS is injected.

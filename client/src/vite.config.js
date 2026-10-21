@@ -79,8 +79,8 @@ function htmlTemplatePlugin() {
       )
 
       // In development, inject dev config into the JSON data block so the
-      // CSP-compatible read path is exercised. In production both injection
-      // points keep their `null` placeholders for the gateway to replace.
+      // CSP-compatible read path is exercised. In production the block keeps
+      // its `null` placeholder for the gateway to replace.
       if (isDevelopment) {
         const webssh2Config = JSON.stringify({
           socket: { url: 'http://localhost:2222', path: '/ssh/socket.io' },
