@@ -30,18 +30,18 @@ packages from the September 2025 NPM supply chain attack.
 **Local scanning:**
 
 ```bash
-# Run security audit (npm audit + Trivy filesystem scan)
+# Run security audit (audit gate + Trivy filesystem scan)
 npm run security:audit
 ```
 
 **GitHub Actions CI pipeline** (runs on every pull request):
 
-| Check             | Tool        | Description                  |
-| ----------------- | ----------- | ---------------------------- |
-| Dependency audit  | `npm audit` | Checks for known vulns       |
-| Vuln scan         | Trivy       | Filesystem CRITICAL/HIGH CVE |
-| Dependency review | GitHub      | Flags risky new dependencies |
-| SARIF upload      | CodeQL      | Results in Security tab      |
+| Check             | Tool                     | Description                                |
+| ----------------- | ------------------------ | ------------------------------------------ |
+| Dependency audit  | `scripts/audit-gate.mjs` | `npm audit` HIGH/CRITICAL gate (see below) |
+| Vuln scan         | Trivy                    | Filesystem CRITICAL/HIGH CVE               |
+| Dependency review | GitHub                   | Flags risky new dependencies               |
+| SARIF upload      | CodeQL                   | Results in Security tab                    |
 
 ##### 3. Client-Specific Security
 
@@ -134,19 +134,22 @@ Please report security vulnerabilities to:
 Every pull request runs the following security checks:
 
 ```yaml
-# 1. npm audit - checks for known vulnerabilities
-npm audit --audit-level=high
+# 1. npm audit gate - HIGH/CRITICAL in production deps always fail;
+#    dev-only ones fail unless allowlisted (see "CI audit gate" below)
+node scripts/audit-gate.mjs
 
 # 2. Trivy filesystem scan - CRITICAL/HIGH severity
-aquasecurity/trivy-action@v0.33.1
+aquasecurity/trivy-action@<sha> # v0.36.0
   scan-type: 'fs'
   severity: 'CRITICAL,HIGH'
   ignore-unfixed: true
 
 # 3. GitHub Dependency Review - flags risky new deps
-actions/dependency-review-action@v4
+actions/dependency-review-action@<sha> # v5.0.0
   fail-on-severity: high
 ```
+
+All actions are pinned to full commit SHAs in `.github/workflows/ci.yml`.
 
 Results are uploaded to GitHub Security tab via SARIF format.
 
@@ -254,7 +257,7 @@ server-side rendering. WebSSH2 Client:
 npm ls solid-js seroval
 
 # Verify seroval is not in the built bundle (expect no output)
-npm run build && grep -l -E "seroval|crossSerialize" client/public/*.js
+npm run build && grep -l -E "seroval|crossSerialize|fromJSON\(" client/public/*.js
 
 # Verify no innerHTML usage
 grep -r "innerHTML" client/src/
@@ -544,7 +547,8 @@ bumps), applied via `npm audit fix`.
 ### Action taken
 
 - Ran `npm audit fix` (no `--force`); only `package-lock.json` changed.
-- Verified: `npm audit` reports **0 vulnerabilities**, the production build
+- Verified at the time (2026-06-16; superseded by the October sweeps below):
+  `npm audit` reported **0 vulnerabilities**, the production build
   (`npm run build`) succeeds, and the full test suite passes (328 tests, 0
   failures).
 
@@ -678,6 +682,85 @@ server's "open in editor" endpoint):
   the `v8.1.6` release tag in `vitejs/vite`.
 - Verified: `scripts/audit-gate.mjs` passes, `npm run check:all` passes and
   the production build (`npm run build`) succeeds.
+
+---
+
+## npm audit re-assessment (2026-10-20)
+
+Re-run against the committed lockfile for 6.0.0, after the `solid-js`
+1.9.16 upgrade, the `vite` 8.1.6 bump (see
+[Vite launch-editor advisories](#vite-launch-editor-advisories-october-2026))
+and the Tailwind CSS 4 migration.
+
+### Current state
+
+| Command | Result |
+| --- | --- |
+| `npm audit --omit=dev` | **0** advisories |
+| `npm audit` | **0** advisories |
+| `node scripts/audit-gate.mjs` | passes; `.audit-allowlist.json` is empty |
+
+The Tailwind CSS 3 chain (`braces` and its dependents, and
+`postcss-selector-parser`) was the last source of advisories. It is gone
+with the Tailwind 4 migration, as recorded under
+[Dependency chains with no upstream fix](#dependency-chains-with-no-upstream-fix).
+
+`npm audit fix` was not used for `vite`: it takes the newest release in
+range, not the smallest fix. It resolved `vite` 8.3.3 (published
+2026-10-06) and `rolldown` 1.2.12 (published 2026-09-30), two
+minor-version jumps that also rewrite the native binding and WASM runtime
+packages. Both had cleared the quarantine. `vite` 8.1.6 gives the same
+fix as one patch release whose diff could be reviewed in full.
+
+### seroval / solid-js re-assessment
+
+`seroval` is dev-only for this package and is not in the production
+bundle:
+
+- `package.json` declares no `dependencies`; `solid-js` and therefore
+  `seroval` are `devDependencies` and are compiled into the bundle by
+  Vite, not installed by consumers.
+- Inside `solid-js` 1.9.16, only `web/dist/server.js` (the SSR build,
+  selected by the `node` / `worker` / `deno` export conditions) imports
+  `seroval`. Vite resolves the `browser` condition, `web/dist/web.js`,
+  which does not.
+- The built bundle has no serializer code:
+
+```console
+$ npm run build
+$ ls client/public/webssh2-*.js
+client/public/webssh2-e1e8cf87.js
+$ grep -c -E "seroval|crossSerialize|fromJSON\(" client/public/webssh2-*.js
+0
+```
+
+A string search is a quick check, not proof: minification renames
+seroval's identifiers, and a minified bundle that imports
+`crossSerialize` contains none of those three strings.
+`tests/dependency-audit-posture.test.js` checks the module graph instead.
+It runs the production Vite build in memory and fails if any emitted
+chunk includes a module from `node_modules/seroval`,
+`node_modules/seroval-plugins` or `solid-js/web/dist/server.js`. A
+positive control builds a minified probe that imports `crossSerialize`,
+and the test fails unless that probe is detected. The test also fails
+if the lockfile ever resolves `solid-js` < 1.9.16, `seroval` /
+`seroval-plugins` < 1.6.8 or `vite` < 8.1.6, or if a runtime
+dependency is added.
+
+### Gate design: why the full audit still blocks
+
+The package has no runtime dependencies, so `npm audit --omit=dev`
+covers everything a consumer installs, and it is the half of
+`scripts/audit-gate.mjs` that has no exceptions. We considered making
+the full audit report-only. We kept it blocking with an expiring
+allowlist instead, because the build toolchain writes the shipped
+bundle: a HIGH/CRITICAL advisory in Vite, Rolldown, esbuild or the
+Solid compiler (for example GHSA-gv7w-rqvm-qjhr above) is a real risk
+to the published artifact even though it is a dev dependency. A
+report-only full audit would let new advisories of that kind merge
+unnoticed. With the allowlist, each accepted dev-only advisory needs a
+written assessment here and a re-review within 90 days. MODERATE and
+LOW advisories stay report-only and are handled in the regular sweeps.
 
 ---
 
