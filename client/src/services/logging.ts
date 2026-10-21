@@ -2,6 +2,8 @@
 import { createMemo, createRoot } from 'solid-js'
 import createDebug from 'debug'
 import { state, setState } from '../stores/terminal.js'
+import { promptStore } from '../stores/prompt-store.js'
+import { MAX_LOG_SIZE, LOG_TRAILER_RESERVE } from '../constants.js'
 import { triggerDownload } from '../utils/browser.js'
 import { formatDate } from '../utils/index.js'
 
@@ -12,6 +14,81 @@ const LOG_DATE_KEY = 'webssh2_session_log_date'
 
 // Session footer for log headers
 let sessionFooter: string | null = null
+
+type LogHaltReason = 'limit' | 'storage'
+
+// Terminal output stops here; the rest of MAX_LOG_SIZE is for closing lines
+const LOG_CONTENT_LIMIT = MAX_LOG_SIZE - LOG_TRAILER_RESERVE
+
+/**
+ * localStorage.setItem that never throws. Returns false when the write
+ * failed (quota exceeded, storage disabled, ...).
+ */
+function safeSetItem(key: string, value: string): boolean {
+  try {
+    window.localStorage.setItem(key, value)
+    return true
+  } catch (error) {
+    debug('localStorage.setItem failed for %s: %O', key, error)
+    return false
+  }
+}
+
+// Running length of the stored log, so the cap check in addToLog does not
+// depend on re-measuring the whole log for every chunk.
+let logLength = 0
+
+// Set when logging was halted; cleared once the stored log is removed by
+// a download or a clear, so logging cannot restart into a full log.
+let logFull = false
+
+function resetLogBounds(): void {
+  logLength = 0
+  logFull = false
+}
+
+/**
+ * Stop logging because the log cannot grow any further, and tell the user.
+ * The log collected so far stays in localStorage for download.
+ */
+function haltLogging(reason: LogHaltReason, markLog = true): void {
+  setState('sessionLogEnable', false)
+  logFull = true
+  // Keep Download Log / Clear Log visible for whatever did get stored,
+  // even when a later write (such as the date) failed.
+  const storedLog = window.localStorage.getItem(LOG_KEY) ?? ''
+  setState('loggedData', storedLog !== '')
+  debug('Session logging halted: %s', reason)
+
+  // Mark where the log was cut off. Only for the cap: after a storage
+  // failure another write would fail too. The marker fits in the space
+  // LOG_TRAILER_RESERVE keeps free, so the log stays within MAX_LOG_SIZE.
+  if (reason === 'limit' && markLog) {
+    const sessionLog = window.localStorage.getItem(LOG_KEY) ?? ''
+    const marker = `\r\n\r\nLog stopped (size limit reached) - ${formatDate(new Date())}\r\n`
+    if (
+      sessionLog !== '' &&
+      sessionLog.length + marker.length <= MAX_LOG_SIZE
+    ) {
+      if (safeSetItem(LOG_KEY, sessionLog + marker)) {
+        logLength = sessionLog.length + marker.length
+      }
+    }
+  }
+
+  const sizeMb = Math.round(MAX_LOG_SIZE / (1024 * 1024))
+  promptStore.addLocalToast({
+    id: `session-log-halted-${Date.now()}`,
+    type: 'toast',
+    severity: 'warning',
+    title: 'Session log stopped',
+    message:
+      reason === 'limit'
+        ? `The session log reached its ${sizeMb} MB limit. Download the log to keep it, then clear it to log again.`
+        : 'The browser could not store more of the session log. Download the log to keep it, then clear it to log again.',
+    timeout: 10000
+  })
+}
 
 interface LoggingService {
   // Reactive state
@@ -48,32 +125,84 @@ class LoggingServiceImpl implements LoggingService {
   addToLog(data: string): void {
     if (!state.sessionLogEnable) return
 
+    if (logLength + data.length > LOG_CONTENT_LIMIT) {
+      haltLogging('limit')
+      return
+    }
+
     let sessionLog = window.localStorage.getItem(LOG_KEY) ?? ''
     const isNewLog = sessionLog === ''
 
+    // The counter can be stale when another tab appends to the same log,
+    // so check the cap again against what is actually stored.
+    if (sessionLog.length + data.length > LOG_CONTENT_LIMIT) {
+      logLength = sessionLog.length
+      haltLogging('limit')
+      return
+    }
+
     sessionLog += data
-    window.localStorage.setItem(LOG_KEY, sessionLog)
+    if (!safeSetItem(LOG_KEY, sessionLog)) {
+      haltLogging('storage')
+      return
+    }
+    logLength = sessionLog.length
 
     // Update state if this is the first log entry
     if (isNewLog) {
       setState('loggedData', true)
       debug('Started logging session')
     }
+
+    // A log at the cap cannot take any more output, so stop now rather
+    // than on the next chunk.
+    if (logLength >= LOG_CONTENT_LIMIT) haltLogging('limit')
   }
 
   startLogging(): void {
     debug('Starting log session')
-    setState('sessionLogEnable', true)
-    setState('loggedData', true)
 
     const footer = sessionFooter ?? ''
     const logStartMessage = `Log Start for ${footer} - ${formatDate(new Date())}\r\n\r\n`
 
     // Add start message to log
     let sessionLog = window.localStorage.getItem(LOG_KEY) ?? ''
+    if (sessionLog === '') {
+      // Nothing stored any more, so nothing can be full
+      resetLogBounds()
+    } else {
+      setState('loggedData', true)
+      logLength = sessionLog.length
+    }
+
+    // Mark logging as active first so a refusal below goes through the
+    // same halt path (menu back to "Start Log" plus a toast).
+    setState('sessionLogEnable', true)
+    if (
+      logFull ||
+      sessionLog.length + logStartMessage.length > LOG_CONTENT_LIMIT
+    ) {
+      // The stored log is already full and already marked as cut off.
+      haltLogging('limit', false)
+      return
+    }
+
     sessionLog += logStartMessage
-    window.localStorage.setItem(LOG_KEY, sessionLog)
-    window.localStorage.setItem(LOG_DATE_KEY, new Date().toISOString())
+    if (!safeSetItem(LOG_KEY, sessionLog)) {
+      haltLogging('storage')
+      return
+    }
+    logLength = sessionLog.length
+    setState('loggedData', true)
+
+    if (!safeSetItem(LOG_DATE_KEY, new Date().toISOString())) {
+      haltLogging('storage')
+      return
+    }
+    if (logLength >= LOG_CONTENT_LIMIT) {
+      haltLogging('limit')
+      return
+    }
 
     debug('Log session started')
   }
@@ -90,10 +219,19 @@ class LoggingServiceImpl implements LoggingService {
       const logEndMessage = `\r\n\r\nLog End for ${footer} - ${formatDate(new Date())}\r\n`
 
       let sessionLog = window.localStorage.getItem(LOG_KEY) ?? ''
+      if (sessionLog.length + logEndMessage.length > MAX_LOG_SIZE) {
+        // No room left within the cap; a full log already ends with the
+        // cut-off marker.
+        debug('Log session stopped without end message (log at cap)')
+        return
+      }
       sessionLog += logEndMessage
-      window.localStorage.setItem(LOG_KEY, sessionLog)
-
-      debug('Log session stopped with end message')
+      if (safeSetItem(LOG_KEY, sessionLog)) {
+        logLength = sessionLog.length
+        debug('Log session stopped with end message')
+      } else {
+        haltLogging('storage')
+      }
     }
   }
 
@@ -108,6 +246,7 @@ class LoggingServiceImpl implements LoggingService {
     if (deleteLog) {
       window.localStorage.removeItem(LOG_KEY)
       window.localStorage.removeItem(LOG_DATE_KEY)
+      resetLogBounds()
       setState('loggedData', false)
       debug('Session log cleared from localStorage')
     }
@@ -137,14 +276,18 @@ class LoggingServiceImpl implements LoggingService {
       if (!isLogging) {
         window.localStorage.removeItem(LOG_KEY)
         window.localStorage.removeItem(LOG_DATE_KEY)
+        resetLogBounds()
         setState('loggedData', false)
         debug(
           'Log cleared from localStorage after download (logging was stopped)'
         )
       } else {
         // Keep the log in localStorage but update the date
-        window.localStorage.setItem(LOG_DATE_KEY, new Date().toISOString())
-        debug('Log kept in localStorage (logging is still active)')
+        if (safeSetItem(LOG_DATE_KEY, new Date().toISOString())) {
+          debug('Log kept in localStorage (logging is still active)')
+        } else {
+          haltLogging('storage')
+        }
       }
     } catch (error) {
       console.error('Failed to download session log:', error)
@@ -152,6 +295,7 @@ class LoggingServiceImpl implements LoggingService {
       triggerDownload(blob, filename)
       window.localStorage.removeItem(LOG_KEY)
       window.localStorage.removeItem(LOG_DATE_KEY)
+      resetLogBounds()
       setState('loggedData', false)
     }
   }
@@ -178,6 +322,7 @@ class LoggingServiceImpl implements LoggingService {
         // Clear stored log after successful recovery download
         window.localStorage.removeItem(LOG_KEY)
         window.localStorage.removeItem(LOG_DATE_KEY)
+        resetLogBounds()
         setState('loggedData', false)
         debug('Recovered log downloaded and cleared')
       } else {
