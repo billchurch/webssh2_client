@@ -95,7 +95,17 @@ WebSSH2 Client supports session logging to help capture terminal output during a
 
 - While logging is enabled, output is appended to `localStorage.webssh2_session_log`.
 - A timestamp is stored in `localStorage.webssh2_session_log_date`.
+- The log stays in `localStorage` (also across browser sessions) until you download it or clear it with Clear Log. It is plain text, so download or clear it on shared computers.
 - On the next connection, if a prior log exists, the client prompts you to download it.
+
+### Size Limit
+
+- The stored log is capped at about 4 MB (4 × 1024 × 1024 characters), below the usual ~5 MB `localStorage` quota.
+- The cap covers the whole stored log, including the closing lines, and holds when several tabs log to the same browser.
+- When the log reaches the cap, logging stops: the menu shows “Start Log” again, a line marking where the log was cut off is added, and a notice tells you the log is full and should be downloaded.
+- The same happens if the browser refuses to store more data (for example, when the `localStorage` quota is already used by other data).
+- The log collected up to that point stays available through “Download Log”. Logging can start again after the full log is downloaded or cleared.
+- The log is never rotated: the start of a session is never dropped to make room.
 
 ### Downloading
 
@@ -147,3 +157,4 @@ When the server enables SFTP, the file browser panel lists, uploads, downloads a
 - CSP: Strict `script-src 'self'` (no inline scripts). `style-src 'self' 'unsafe-inline'` allows xterm DOM renderer and validated color updates.
 - Lint guardrails: ESLint `no-unsanitized` plugin and custom bans prevent introducing `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, string-based timers, or `new Function`.
 - URL/config validation: User inputs from URL or forms are validated and sanitized before use.
+- Remote tab titles: The remote host can set the browser tab title with the OSC 0/2 title sequences. The title always starts with the fixed prefix `WebSSH2: `, which cannot be configured. Control characters (C0/C1) and bidi override characters (U+202A–U+202E, U+2066–U+2069) are removed, the result is trimmed and cut to 80 characters, and an empty result restores the default `WebSSH2` title.
