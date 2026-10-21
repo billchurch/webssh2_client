@@ -159,7 +159,7 @@ Before anything is written, the import is compared with the store:
 - Keys for hosts that are not trusted yet, and keys identical to a stored one, import without a prompt.
 - If the file has a **different** key for a `host:port` and algorithm that is already trusted, a confirmation lists each conflict: host, port, algorithm, the current SHA-256 fingerprint and the one from the file. Choose:
   - **Skip conflicts** (the default): import the new keys and keep the existing trusted keys.
-  - **Replace**: import the new keys and replace the listed trusted keys. Do this only if you know the host keys really changed.
+  - **Replace**: import the new keys and replace the listed trusted keys. Do this only if you know the host keys really changed. Replace stays disabled until both fingerprints of every conflict are shown; if they cannot be computed, only Skip conflicts and Cancel are available.
   - **Cancel**: import nothing.
 - After the import, the section reports how many keys were added, skipped and replaced.
 

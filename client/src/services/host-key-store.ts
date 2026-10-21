@@ -654,6 +654,48 @@ export function applyImport(
 }
 
 /**
+ * Compute the OpenSSH-style SHA-256 fingerprint of a base64-encoded key.
+ *
+ * @param base64Key - The base64-encoded public key
+ * @returns "SHA256:<base64 digest>"
+ */
+export async function computeFingerprint(base64Key: string): Promise<string> {
+  const bytes = Uint8Array.from(atob(base64Key), (c) => c.charCodeAt(0))
+  const hashBuffer = await crypto.subtle.digest('SHA-256', bytes)
+  const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)))
+  return `SHA256:${hashBase64}`
+}
+
+export interface ConflictFingerprints {
+  /** Fingerprint of the key currently pinned */
+  existing: string
+  /** Fingerprint of the key in the import file */
+  imported: string
+}
+
+/**
+ * Compute the old and new fingerprints for each import conflict, in order.
+ *
+ * Rejects if any fingerprint cannot be computed, so a caller never has a
+ * partial list to show before asking the user to replace keys.
+ *
+ * @param conflicts - plan.conflicts from previewImport()
+ */
+export async function fingerprintConflicts(
+  conflicts: readonly ImportConflict[]
+): Promise<ConflictFingerprints[]> {
+  return Promise.all(
+    conflicts.map(async (conflict) => {
+      const [existing, imported] = await Promise.all([
+        computeFingerprint(conflict.existingKey),
+        computeFingerprint(conflict.entry.key)
+      ])
+      return { existing, imported }
+    })
+  )
+}
+
+/**
  * Import keys from a JSON string, merging with existing keys.
  *
  * Keys that would replace a different pinned key are skipped unless

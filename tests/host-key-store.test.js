@@ -2,13 +2,15 @@
  * Tests for client-side host key store (TOFU logic)
  *
  * Covers: lookup, store, remove, getAll, exportKeys, importKeys,
- *         previewImport, applyImport, addManualKey, and loadStore resilience.
+ *         previewImport, applyImport, computeFingerprint, fingerprintConflicts,
+ *         addManualKey, and loadStore resilience.
  */
 
 import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { register } from 'node:module'
 import { pathToFileURL } from 'node:url'
+import { createHash } from 'node:crypto'
 
 await register('./tests/ts-loader.mjs', pathToFileURL('./'))
 
@@ -53,6 +55,8 @@ const {
   importKeys,
   previewImport,
   applyImport,
+  computeFingerprint,
+  fingerprintConflicts,
   addManualKey
 } = await import('../client/src/services/host-key-store.ts')
 
@@ -67,6 +71,13 @@ const ADDED_AT = '2025-01-01T00:00:00.000Z'
 
 function importFile(keys) {
   return JSON.stringify({ version: 1, keys })
+}
+
+function sshFingerprint(base64Key) {
+  const digest = createHash('sha256')
+    .update(Buffer.from(base64Key, 'base64'))
+    .digest('base64')
+  return `SHA256:${digest}`
 }
 
 function storedRaw() {
@@ -738,6 +749,44 @@ describe('host-key-store', () => {
       )
     })
 
+    it('fingerprintConflicts returns old and new fingerprints in order', async () => {
+      store('other.example', 22, 'ssh-rsa', VALID_KEY)
+      const preview = previewImport(
+        importFile({
+          'prod.example:22': {
+            'ssh-ed25519': { key: ATTACKER_KEY, addedAt: ADDED_AT }
+          },
+          'other.example:22': {
+            'ssh-rsa': { key: VALID_KEY_2, addedAt: ADDED_AT }
+          }
+        })
+      )
+      assert.equal(preview.success, true)
+      const fingerprints = await fingerprintConflicts(preview.plan.conflicts)
+      assert.deepEqual(
+        fingerprints,
+        preview.plan.conflicts.map((c) => ({
+          existing: sshFingerprint(c.existingKey),
+          imported: sshFingerprint(c.entry.key)
+        }))
+      )
+      assert.notEqual(fingerprints[0].existing, fingerprints[0].imported)
+    })
+
+    it('fingerprintConflicts rejects when any fingerprint cannot be computed', async () => {
+      const conflicts = [
+        {
+          hostPort: 'prod.example:22',
+          host: 'prod.example',
+          port: 22,
+          algorithm: 'ssh-ed25519',
+          entry: { key: ATTACKER_KEY, addedAt: ADDED_AT },
+          existingKey: '!!!not-base64!!!'
+        }
+      ]
+      await assert.rejects(fingerprintConflicts(conflicts))
+    })
+
     it('a failed preview imports nothing', () => {
       const before = localStorage.getItem('webssh2.hostkeys')
       const result = importKeys(
@@ -758,6 +807,15 @@ describe('host-key-store', () => {
   // -----------------------------------------------------------------------
   // addManualKey
   // -----------------------------------------------------------------------
+
+  describe('computeFingerprint', () => {
+    it('matches the OpenSSH SHA256 fingerprint format', async () => {
+      assert.equal(
+        await computeFingerprint(VALID_KEY),
+        sshFingerprint(VALID_KEY)
+      )
+    })
+  })
 
   describe('addManualKey', () => {
     it('parses valid OpenSSH format "algorithm base64key comment"', () => {

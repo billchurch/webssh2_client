@@ -26,7 +26,10 @@ import type {
 import { hostKeyVerifyConfig } from '../stores/terminal'
 import { config as clientConfig } from '../stores/config.js'
 import * as hostKeyStore from '../services/host-key-store'
-import type { ImportPlan } from '../services/host-key-store'
+import type {
+  ConflictFingerprints,
+  ImportPlan
+} from '../services/host-key-store'
 
 interface TerminalSettingsModalProps {
   isOpen: boolean
@@ -38,9 +41,19 @@ interface TerminalSettingsModalProps {
 
 interface PendingImport {
   plan: ImportPlan
-  /** SHA-256 fingerprints per conflict index: [existing, imported] */
-  fingerprints: Array<[string, string]> | null
+  /** SHA-256 fingerprints per conflict, in plan.conflicts order */
+  fingerprints: ConflictFingerprints[] | null
+  fingerprintError: boolean
 }
+
+/**
+ * Replace stays unavailable until the old and new fingerprint of every
+ * conflict is on screen, so a pinned key is never replaced unseen.
+ */
+const canReplace = (pending: PendingImport | null): boolean =>
+  pending !== null &&
+  pending.fingerprints !== null &&
+  pending.fingerprints.length === pending.plan.conflicts.length
 
 interface TerminalSettingsForm {
   fontSize: number
@@ -130,16 +143,6 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
   let skipConflictsButton: HTMLButtonElement | undefined
 
   /**
-   * Compute a SHA-256 fingerprint from a base64-encoded public key.
-   */
-  async function computeFingerprint(base64Key: string): Promise<string> {
-    const bytes = Uint8Array.from(atob(base64Key), (c) => c.charCodeAt(0))
-    const hashBuffer = await crypto.subtle.digest('SHA-256', bytes)
-    const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)))
-    return `SHA256:${hashBase64}`
-  }
-
-  /**
    * Refresh fingerprint cache for all stored host keys.
    */
   async function refreshFingerprints() {
@@ -160,9 +163,9 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
         tasks.push({
           hostPort,
           algo,
-          promise: computeFingerprint(entry.key).catch(
-            () => '(error computing fingerprint)'
-          )
+          promise: hostKeyStore
+            .computeFingerprint(entry.key)
+            .catch(() => '(error computing fingerprint)')
         })
       }
     }
@@ -211,22 +214,30 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
       finishImport(plan, false)
       return
     }
-    setPendingImport({ plan, fingerprints: null })
+    setPendingImport({ plan, fingerprints: null, fingerprintError: false })
     requestAnimationFrame(() => skipConflictsButton?.focus())
-    const fingerprint = (key: string) =>
-      computeFingerprint(key).catch(() => '(error computing fingerprint)')
-    Promise.all(
-      plan.conflicts.map((c) =>
-        Promise.all([fingerprint(c.existingKey), fingerprint(c.entry.key)])
-      )
-    )
+    hostKeyStore
+      .fingerprintConflicts(plan.conflicts)
       .then((fingerprints) => {
         // Ignore results for a plan the user has already dismissed
         if (pendingImport()?.plan === plan) {
-          setPendingImport({ plan, fingerprints })
+          setPendingImport({ plan, fingerprints, fingerprintError: false })
         }
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (pendingImport()?.plan === plan) {
+          setPendingImport({ plan, fingerprints: null, fingerprintError: true })
+        }
+      })
+  }
+
+  /**
+   * Replace the listed conflicts, but only once their fingerprints are shown.
+   */
+  function confirmReplace() {
+    const pending = pendingImport()
+    if (pending === null || !canReplace(pending)) return
+    finishImport(pending.plan, true)
   }
 
   // Refresh host key fingerprints when section is expanded
@@ -1342,18 +1353,30 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                                 </div>
                                 <div class="mt-1 text-slate-500">Current</div>
                                 <div class="break-all font-mono text-slate-800">
-                                  {pending().fingerprints?.[index()]?.[0] ??
-                                    'Computing...'}
+                                  {pending().fingerprints?.[index()]
+                                    ?.existing ??
+                                    (pending().fingerprintError
+                                      ? '(error computing fingerprint)'
+                                      : 'Computing...')}
                                 </div>
                                 <div class="mt-1 text-slate-500">From file</div>
                                 <div class="break-all font-mono text-red-700">
-                                  {pending().fingerprints?.[index()]?.[1] ??
-                                    'Computing...'}
+                                  {pending().fingerprints?.[index()]
+                                    ?.imported ??
+                                    (pending().fingerprintError
+                                      ? '(error computing fingerprint)'
+                                      : 'Computing...')}
                                 </div>
                               </li>
                             )}
                           </For>
                         </ul>
+                        <Show when={pending().fingerprintError}>
+                          <p class="mt-2 text-xs text-red-700" role="alert">
+                            Fingerprints could not be computed, so Replace is
+                            unavailable. Skip the conflicts or cancel.
+                          </p>
+                        </Show>
                         <div class="mt-3 flex flex-wrap gap-2">
                           <button
                             ref={skipConflictsButton}
@@ -1365,8 +1388,14 @@ export const TerminalSettingsModal: Component<TerminalSettingsModalProps> = (
                           </button>
                           <button
                             type="button"
-                            class="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
-                            onClick={() => finishImport(pending().plan, true)}
+                            class="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={!canReplace(pending())}
+                            title={
+                              canReplace(pending())
+                                ? undefined
+                                : 'Available once both fingerprints are shown'
+                            }
+                            onClick={confirmReplace}
                           >
                             Replace
                           </button>
