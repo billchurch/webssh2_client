@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.0.0](https://github.com/billchurch/webssh2_client/compare/v5.4.2...v6.0.0) (2026-10-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* the client requires WebSSH2 server 5.1.0 or newer. Runtime config is read only from the JSON config block (`<script type="application/json" id="webssh2-config">`) that server 5.1.0 introduced. `window.webssh2Config` is no longer read, so older servers, and integrations that set that global from an inline script, get no injected config (socket path, host, header, auto-connect and so on). Upgrade the server to 5.1.0+ or write the JSON block instead.
+
+### Features
+
+* drop legacy inline config script, require server 5.1.0+ ([#179](https://github.com/billchurch/webssh2_client/issues/179)) ([12c300f](https://github.com/billchurch/webssh2_client/commit/12c300f6d3a10da62292f910d34dd1a9eb6e23db)), closes [#160](https://github.com/billchurch/webssh2_client/issues/160)
+
+
+### Bug Fixes
+
+* **ci:** make audit gate fail closed on invalid allowlist reviewBy ([#152](https://github.com/billchurch/webssh2_client/issues/152)) ([22809ab](https://github.com/billchurch/webssh2_client/commit/22809ab599011f8cad3134acc43be2ea14bf85e1))
+* **client:** remove debug globals from production builds ([#177](https://github.com/billchurch/webssh2_client/issues/177)) ([4bed1ba](https://github.com/billchurch/webssh2_client/commit/4bed1ba056dbef901c4261cd03c4d9e509c83f78)), closes [#165](https://github.com/billchurch/webssh2_client/issues/165)
+* **deps:** bump vite to 8.1.6 for launch-editor advisories ([#174](https://github.com/billchurch/webssh2_client/issues/174)) ([2476838](https://github.com/billchurch/webssh2_client/commit/247683837777d3919d3c10e5ab111c98cd5a5080))
+* **deps:** remediate advisories, drop axe CLI and stylelint, gate audit ([#150](https://github.com/billchurch/webssh2_client/issues/150)) ([4a09fa2](https://github.com/billchurch/webssh2_client/commit/4a09fa27d4d5c068586d4b52abfa38fdaa42649c))
+* **deps:** upgrade solid-js to 1.9.16 and drop seroval overrides ([#162](https://github.com/billchurch/webssh2_client/issues/162)) ([048baa9](https://github.com/billchurch/webssh2_client/commit/048baa9cf85c8ddf12606218243f22b8d5a0a676))
+* **terminal:** prefix and sanitize remote-set tab titles ([#175](https://github.com/billchurch/webssh2_client/issues/175)) ([f44276b](https://github.com/billchurch/webssh2_client/commit/f44276b754334d0650183275e6ccb11903370056)), closes [#166](https://github.com/billchurch/webssh2_client/issues/166)
+
 ## [5.4.2](https://github.com/billchurch/webssh2_client/compare/v5.4.1...v5.4.2) (2026-07-30)
 
 
